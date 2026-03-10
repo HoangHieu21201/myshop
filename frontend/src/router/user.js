@@ -1,4 +1,4 @@
-const userLayoutRoutes = {
+const UserLayoutRoutes = {
   path: "/",
   component: () => import("../layouts/UserLayout.vue"),
   children: [
@@ -7,6 +7,6 @@ const userLayoutRoutes = {
   ],
 };
 
-const users = [...userAuthRoutes, userLayoutRoutes];
+const users = [UserLayoutRoutes];
 
 export default users;
