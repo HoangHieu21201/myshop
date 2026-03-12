@@ -1,12 +1,15 @@
-const UserLayoutRoutes = {
-  path: "/",
-  component: () => import("../layouts/UserLayout.vue"),
-  children: [
-  
+const user = [
+    {
+        path: '/',
+        component: () => import('../layouts/UserLayout.vue'),
+        children: [
+            {
+                path: '',
+                name: 'home',
+                component: () => import('../pages/user/index.vue')
+            },
+        ]
+    }
+];
 
-  ],
-};
-
-const users = [UserLayoutRoutes];
-
-export default users;
+export default user;

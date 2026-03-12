@@ -1,14 +1,17 @@
-<script setup>
-import userHeader from '../components/user/Header.vue';
-import userFooter from '../components/user/Footer.vue';
-</script>
-
 <template>
-    <userHeader />
-    <router-view></router-view>
-    <userFooter />
+  <div class="user-layout d-flex flex-column min-vh-100">
+    <Header />
+
+    <main class="flex-grow-1">
+      <router-view></router-view>
+    </main>
+
+    <Footer />
+  </div>
 </template>
 
-<style scoped>
-
-</style>
+<script setup>
+import Header from '../components/user/Header.vue';
+import Footer from '../components/user/Footer.vue';
+import router from '@/router';
+</script>
