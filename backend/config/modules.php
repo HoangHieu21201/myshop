@@ -31,4 +31,12 @@ return [
         'module_code' => 'admin_staff',
         'default_level' => 1
     ],
+    [
+        'module_name' => 'Quản lý Danh mục',
+        'module_code' => 'admin_categories',
+        'default_level' => 2
+    ],
+    
+    
+
 ];

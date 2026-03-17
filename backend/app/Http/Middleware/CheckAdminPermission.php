@@ -9,10 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckAdminPermission
 {
-    /**
-     * Kiểm tra xem Admin có quyền truy cập module này không
-     * @param int $permissionId (Ví dụ: 1 = Quản lý Role, 2 = Quản lý User,...)
-     */
     public function handle(Request $request, Closure $next, $permissionId): Response
     {
         $admin = $request->user();

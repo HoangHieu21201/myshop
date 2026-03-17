@@ -8,37 +8,39 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\UpdateAdminProfileRequest;
 use App\Http\Requests\UpdateAdminPasswordRequest;
+use Illuminate\Support\Str;
 
 class AdminProfileController extends Controller
 {
     public function updateProfile(UpdateAdminProfileRequest $request)
     {
         $admin = $request->user(); 
-        // Cập nhật thông tin chữ
+        
+        // Cập nhật thông tin text
         $admin->fullname = $request->fullname;
         $admin->phone = $request->phone;
         $admin->address = $request->address;
 
+        // Xử lý XÓA avatar
         if ($request->has('remove_avatar') && $request->remove_avatar == 'true') {
-            if ($admin->avatar_url) {
-                Storage::disk('public')->delete($admin->avatar_url); 
-                $admin->avatar_url = null;
-            }
+            $this->safeDeleteAvatar($admin->avatar_url);
+            $admin->avatar_url = null;
         }
+
+        // Xử lý UPLOAD avatar mới
         if ($request->hasFile('avatar')) {
-            if ($admin->avatar_url) {
-                Storage::disk('public')->delete($admin->avatar_url);
-            }
+            $this->safeDeleteAvatar($admin->avatar_url);
 
             $file = $request->file('avatar');
-            $filename = 'avatar_admin_' . $admin->id . '.' . $file->getClientOriginalExtension();
-            
+            $filename = 'avatar_admin_' . $admin->id . '_' . time() . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('avatars/admin', $filename, 'public');
             
             $admin->avatar_url = $path;
         }
 
         $admin->save();
+
+        $admin->load('role');
 
         return response()->json([
             'success' => true,
@@ -58,7 +60,21 @@ class AdminProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Mật khẩu đã được thay đổi thành công'
+            'message' => 'Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại!',
+            'require_relogin' => true 
         ]);
+    }
+
+    
+    private function safeDeleteAvatar($avatarUrl)
+    {
+        if ($avatarUrl) {
+            // Không xóa nếu avatar là link HTTP (vd: đăng nhập bằng Google)
+            if (!Str::startsWith($avatarUrl, ['http://', 'https://'])) {
+                if (Storage::disk('public')->exists($avatarUrl)) {
+                    Storage::disk('public')->delete($avatarUrl);
+                }
+            }
+        }
     }
 }

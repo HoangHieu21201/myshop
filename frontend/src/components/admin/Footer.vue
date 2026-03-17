@@ -6,13 +6,13 @@
       <div class="marquee-content position-absolute">
         <!-- Nội dung lặp lại để tạo hiệu ứng chạy vô tận -->
         <span class="marquee-item text-success mx-4">
-          MyShop <span class="text-dark">WEBSITE CÔNG NGHỆ THỜI TRANG</span> <span class="text-primary fw-bold">Version 1.0</span>
+          ThinkHub <span class="text-dark">WEBSITE CÔNG NGHỆ HIỆN ĐẠI</span> <span class="text-primary fw-bold">Version 1.0</span>
         </span>
         <span class="marquee-item text-success mx-4">
-          MyShop <span class="text-dark">WEBSITE CÔNG NGHỆ THỜI TRANG</span> <span class="text-primary fw-bold">Version 1.0</span>
+          ThinkHub <span class="text-dark">WEBSITE CÔNG NGHỆ HIỆN ĐẠI</span> <span class="text-primary fw-bold">Version 1.0</span>
         </span>
         <span class="marquee-item text-success mx-4">
-          MyShop <span class="text-dark">WEBSITE CÔNG NGHỆ THỜI TRANG</span> <span class="text-primary fw-bold">Version 1.0</span>
+          ThinkHub <span class="text-dark">WEBSITE CÔNG NGHỆ HIỆN ĐẠI</span> <span class="text-primary fw-bold">Version 1.0</span>
         </span>
       </div>
     </div>
