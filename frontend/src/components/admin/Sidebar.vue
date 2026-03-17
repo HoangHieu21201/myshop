@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, inject, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 
@@ -107,9 +107,32 @@ const route = useRoute();
 const isLoading = ref(true);
 const systemModules = ref([]);
 
-const currentAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
-const savedLevel = localStorage.getItem('admin_level') || currentAdmin.role?.level;
-const userLevel = ref(savedLevel ? parseInt(savedLevel) : 999);
+// Inject từ App.vue, cung cấp fallback ref(null) nếu Inject thất bại (chưa setup kĩ App.vue)
+const currentUser = inject('currentUser', ref(null));
+
+// Computed thông minh: Xử lý cả 2 trường hợp (F5 và Vừa Login xong)
+const userLevel = computed(() => {
+  // 1. Ưu tiên lấy từ state Provide/Inject (Dành cho trường hợp reload trang F5)
+  const user = currentUser?.value || currentUser;
+  if (user && user.role && user.role.level) {
+    return user.role.level;
+  }
+
+  // 2. Cứu cánh SPA: Nếu App.vue chưa kịp chạy lại do vừa chuyển từ trang Login
+  // -> Móc tạm dữ liệu từ localStorage để giải nguy
+  try {
+    const localAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
+    const savedLevel = localStorage.getItem('admin_level') || localAdmin.role?.level;
+    
+    if (savedLevel) {
+      return parseInt(savedLevel);
+    }
+  } catch (e) {
+    console.warn("Không thể parse localStorage cho Sidebar");
+  }
+
+  return 999; // Mặc định là quyền thấp nhất nếu cả 2 cách trên đều thất bại
+});
 
 const menuItems = ref([
   {
@@ -129,10 +152,10 @@ const menuItems = ref([
     icon: 'bi-people-fill',
     stateKey: 'users',
     children: [
-      { name: 'Nội bộ (Staff)', path: '/admin/staff', moduleCode: 'admin_staff' },
+      { name: 'Nội bộ', path: '/admin/staff', moduleCode: 'admin_staff' },
       { name: 'Khách hàng', path: '/admin/users', moduleCode: 'admin_users' }
     ]
-  }
+  },
 ]);
 
 const menuState = reactive({
@@ -174,6 +197,7 @@ const hasAccess = (code) => {
   const requiredLevel = getModuleLevel(code);
   if (!requiredLevel) return false;
 
+  // Level càng thấp thì quyền càng cao (1 là cao nhất)
   return userLevel.value <= requiredLevel;
 };
 
@@ -196,7 +220,9 @@ onMounted(() => {
   const currentPath = route.path;
   menuItems.value.forEach(item => {
     if (item.children) {
-      const isChildActive = item.children.some(subItem => currentPath.startsWith(subItem.path));
+      const isChildActive = item.children.some(subItem => {
+        return currentPath === subItem.path || currentPath.startsWith(subItem.path + '/');
+      });
       if (isChildActive) {
         menuState[item.stateKey] = true;
       }

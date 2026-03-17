@@ -78,32 +78,44 @@ const admin = [
         meta: { moduleCode: 'admin_users' },
         component: () => import('../pages/admin/account/user/Edit.vue'),
       },
-
-      //   {
-      //     path: 'products',
-      //     name: 'admin-products',
-      //     component: { template: '<div class="p-4">Trang Sản phẩm (Đang xây dựng)</div>' },
-      //   },
-      //   {
-      //     path: 'categories',
-      //     name: 'admin-categories',
-      //     component: { template: '<div class="p-4">Trang Danh mục (Đang xây dựng)</div>' },
-      //   },
-      //   {
-      //     path: 'orders',
-      //     name: 'admin-orders',
-      //     component: { template: '<div class="p-4">Trang Đơn hàng (Đang xây dựng)</div>' },
-      //   },
-      //   {
-      //     path: 'users',
-      //     name: 'admin-users',
-      //     component: { template: '<div class="p-4">Trang Khách hàng (Đang xây dựng)</div>' },
-      //   },
-      //   {
-      //     path: 'staff',
-      //     name: 'admin-staff',
-      //     component: { template: '<div class="p-4">Trang Nhân viên (Đang xây dựng)</div>' },
-      //   },
+      // ROUTE QUẢN LÝ DANH MỤC
+      {
+        path: 'categories',
+        name: 'admin-categories',
+        meta: { moduleCode: 'admin_categories' },
+        component: () => import('../pages/admin/category/Index.vue'),
+      },
+      {
+        path: 'categories/create',
+        name: 'admin-category-create',
+        meta: { moduleCode: 'admin_categories' },
+        component: () => import('../pages/admin/category/Create.vue'),
+      },
+      {
+        path: 'categories/:id/edit',
+        name: 'admin-category-edit',
+        component: () => import('../pages/admin/category/Edit.vue'),
+        meta: { moduleCode: 'admin_categories' },
+      },
+      // ROUTE QUẢN LÝ PHÒNG
+      {
+        path: 'rooms',
+        name: 'admin-rooms',
+        component: () => import('@/pages/admin/room/Index.vue'),
+        meta: { moduleCode: 'admin_rooms' },
+      },
+      {
+        path: 'rooms/create',
+        name: 'admin-rooms-create',
+        component: () => import('@/pages/admin/room/Create.vue'),
+        meta: { moduleCode: 'admin_rooms' },
+      },
+      {
+        path: 'rooms/:id/edit',
+        name: 'admin-rooms-edit',
+        component: () => import('@/pages/admin/room/Edit.vue'),
+        meta: { moduleCode: 'admin_rooms' },
+      },
     ],
   },
 ]

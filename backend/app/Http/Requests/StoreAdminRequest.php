@@ -21,7 +21,7 @@ class StoreAdminRequest extends FormRequest
             'role_id'  => ['required', 'integer', 'exists:roles,id'],
             'phone'    => ['nullable', 'string', 'max:20'],
             'status'   => ['required', 'string', Rule::in(['active', 'locked'])],
-            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'], // 5MB
+            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'],
             'address'  => ['nullable', 'string', 'max:255'],
         ];
     }

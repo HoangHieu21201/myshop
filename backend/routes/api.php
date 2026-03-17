@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Các route cho khách hàng, website frontend...
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -23,14 +22,12 @@ Route::prefix('admin')->group(function () {
     // Các API yêu cầu Admin phải đăng nhập
     Route::middleware('auth:sanctum')->group(function () {
 
+        //  API lấy thông tin Admin hiện tại 
+        Route::get('/me', [\App\Http\Controllers\Api\admin\AdminAccountController::class, 'me']);
+
         // Quản lý hồ sơ cá nhân
         Route::post('/profile', [\App\Http\Controllers\Api\admin\AdminProfileController::class, 'updateProfile']);
         Route::put('/profile/password', [\App\Http\Controllers\Api\admin\AdminProfileController::class, 'updatePassword']);
-
-        // ============================================
-        // BẢO MẬT PHÂN QUYỀN ĐỘNG THEO TỪNG MODULE
-        // Sử dụng Middleware check.module:{module_code}
-        // ============================================
 
         // Quản lý Nhân sự / Tài khoản Nội bộ (Mã module: admin_staff)
         Route::middleware(['check.module:admin_staff'])->group(function () {
@@ -59,5 +56,7 @@ Route::prefix('admin')->group(function () {
             Route::post('modules/sync', [\App\Http\Controllers\Api\admin\AdminModulePermissionController::class, 'sync']);
             Route::put('modules/{id}/level', [\App\Http\Controllers\Api\admin\AdminModulePermissionController::class, 'updateLevel']);
         });
+
+       
     });
 });

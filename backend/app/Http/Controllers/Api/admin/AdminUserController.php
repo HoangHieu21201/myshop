@@ -31,7 +31,7 @@ class AdminUserController extends Controller
         // 1. Tạo User
         $user = User::create($data);
 
-        // 2. Tạo địa chỉ mặc định (nếu có nhập)
+        // 2. Tạo địa chỉ mặc định
         if ($request->filled('shipping_address')) {
             $user->addresses()->create([
                 'customer_name'    => $user->fullName,
@@ -47,7 +47,6 @@ class AdminUserController extends Controller
         return response()->json(['success' => true, 'message' => 'Tạo tài khoản khách hàng thành công!', 'data' => $user], 201);
     }
 
-    // Lấy chi tiết (Load luôn cả địa chỉ mặc định và danh sách các địa chỉ khác)
     public function show($id)
     {
         $user = User::withTrashed()->with(['defaultAddress', 'addresses'])->findOrFail($id);
