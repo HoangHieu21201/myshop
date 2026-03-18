@@ -1,6 +1,12 @@
 <template>
-  <div class="category-index-wrapper">
-    <div class="container-fluid py-4" v-if="!isLoading">
+  <div class="category-index-wrapper pb-5 mb-5">
+    
+    <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
+      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
+      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải danh mục...</p>
+    </div>
+
+    <div class="container-fluid py-4" v-else>
       <!-- Header -->
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
@@ -12,14 +18,6 @@
             <i class="bi bi-shield-check text-success me-1"></i>
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
-          
-          <!-- FIX: Nút bật/tắt chế độ Sắp Xếp -->
-          <button class="btn px-4 py-2 fw-bold shadow-sm transition-all" 
-                  :class="isReorderMode ? 'btn-warning text-dark' : 'btn-outline-secondary bg-white'"
-                  @click="toggleReorderMode" :disabled="activeTab === 'deleted'">
-            <i class="bi" :class="isReorderMode ? 'bi-x-circle' : 'bi-arrows-move'"></i> 
-            {{ isReorderMode ? 'Hủy Sắp Xếp' : 'Sắp xếp thứ tự' }}
-          </button>
 
           <router-link :to="{ name: 'admin-category-create' }" class="btn btn-brand btn-brand-solid px-4 py-2 fw-bold shadow-sm" v-if="!isReorderMode">
             <i class="bi bi-plus-circle-fill me-1"></i> Thêm Danh Mục
@@ -29,7 +27,7 @@
 
       <!-- Tabs (Bị mờ đi khi đang ở chế độ Sắp Xếp) -->
       <div class="mb-4" :class="{'opacity-50 pe-none': isReorderMode}">
-        <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden">
+        <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden custom-scrollbar-x pb-1">
           <li class="nav-item">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'all' }" @click.prevent="switchTab('all')">
               <i class="bi bi-grid-fill me-2"></i> Tất cả
@@ -48,8 +46,8 @@
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'hidden'}">{{ categories.filter(c => c.status === 'hidden' && !c.deleted_at).length }}</span>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'deleted' }" @click.prevent="switchTab('deleted')">
+          <li class="nav-item ms-auto">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-danger" href="#" :class="{ 'active-tab': activeTab === 'deleted' }" @click.prevent="switchTab('deleted')">
               <i class="bi bi-trash3-fill me-2 text-danger"></i> Đã xóa
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'deleted'}">{{ categories.filter(c => c.deleted_at).length }}</span>
             </a>
@@ -59,22 +57,33 @@
 
       <!-- Bảng Dữ liệu -->
       <div class="card border-0 shadow-sm rounded-4 mb-4" :class="{'border-warning border-2': isReorderMode}">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h6 class="fw-bold mb-0 text-dark">
             <i class="bi" :class="isReorderMode ? 'bi-arrows-move text-warning' : 'bi-list-ul'"></i> 
             {{ isReorderMode ? 'Kéo thả dòng để thay đổi thứ tự ưu tiên' : 'Danh sách hiển thị' }}
           </h6>
           
           <div class="d-flex align-items-center gap-2">
+            
+            <!-- ĐÃ ĐỒNG BỘ: Nút Sắp xếp nằm cạnh ô tìm kiếm và chỉ hiện ở tab Hiển thị -->
+            <template v-if="activeTab === 'active' && !searchQuery">
+              <button class="btn btn-sm px-3 py-2 fw-bold shadow-sm transition-all" 
+                      :class="isReorderMode ? 'btn-warning text-dark' : 'btn-light border text-dark'"
+                      @click="toggleReorderMode">
+                <i class="bi" :class="isReorderMode ? 'bi-x-circle' : 'bi-arrows-move'"></i> 
+                {{ isReorderMode ? 'Hủy Sắp Xếp' : 'Sắp xếp thứ tự' }}
+              </button>
+            </template>
+
             <!-- Nút Lưu Thứ Tự xuất hiện khi bật Reorder Mode -->
-            <button v-if="isReorderMode" class="btn btn-warning text-dark fw-bold px-4 rounded-pill shadow-sm" @click="saveReorder" :disabled="isSavingOrder">
+            <button v-if="isReorderMode" class="btn btn-sm btn-success text-white fw-bold px-4 shadow-sm py-2" @click="saveReorder" :disabled="isSavingOrder">
               <span v-if="isSavingOrder" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-floppy-fill me-1" v-else></i> LƯU THỨ TỰ
             </button>
 
             <!-- Search box (Ẩn khi đang reorder) -->
-            <div class="search-box position-relative" style="width: 280px;" v-show="!isReorderMode">
-              <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm tên danh mục...">
+            <div class="search-box position-relative" style="width: 280px; max-width: 100%;" v-show="!isReorderMode">
+              <input type="text" class="form-control form-control-sm rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm tên danh mục...">
               <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
             </div>
           </div>
@@ -82,27 +91,33 @@
         
         <div class="card-body p-0 mt-2">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" :class="{'table-reorder': isReorderMode}">
+            <table class="table table-hover align-middle mb-0" :class="{'table-reorder': isReorderMode}" style="table-layout: fixed; width: 100%; min-width: 1000px;">
               <thead class="bg-light">
                 <tr>
                   <th v-if="isReorderMode" class="py-3 px-4 text-secondary border-0" style="width: 50px;"></th>
-                  <th class="py-3 px-4 text-secondary border-0">Thứ tự</th>
-                  <th class="py-3 px-4 text-secondary border-0">Danh mục</th>
-                  <th class="py-3 px-4 text-secondary border-0">Cấp độ</th>
-                  <th class="py-3 px-4 text-secondary border-0">Thuộc tính (Schema)</th>
-                  <th class="py-3 px-4 text-secondary border-0">Trạng thái</th>
-                  <th class="py-3 px-4 text-secondary text-center border-0" v-if="!isReorderMode">Thao tác</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 80px;">Thứ tự</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Danh mục</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 15%;">Cấp độ</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 20%;">Thuộc tính (Schema)</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái</th>
+                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;" v-if="!isReorderMode">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="displayCategories.length === 0">
-                  <td :colspan="isReorderMode ? 6 : 6" class="text-center py-5 text-muted">
+                <tr v-if="isLoading">
+                  <td :colspan="isReorderMode ? 6 : 7" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-brand mb-2" role="status"></div>
+                    <div class="small fw-semibold">Đang tải dữ liệu...</div>
+                  </td>
+                </tr>
+                <tr v-else-if="displayCategories.length === 0">
+                  <td :colspan="isReorderMode ? 6 : 7" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
                   </td>
                 </tr>
                 <!-- NATIVE HTML5 DRAG & DROP -->
                 <tr v-else v-for="(cat, index) in displayCategories" :key="cat.id" 
-                    :class="{'bg-light opacity-75': cat.deleted_at, 'drag-item': isReorderMode, 'dragging': draggedIndex === index, 'drag-over': dragOverIndex === index}"
+                    :class="{'bg-light opacity-75': cat.deleted_at || cat.status === 'hidden', 'drag-item': isReorderMode, 'dragging': draggedIndex === index, 'drag-over': dragOverIndex === index}"
                     :draggable="isReorderMode"
                     @dragstart="onDragStart(index, $event)"
                     @dragover.prevent="onDragOver(index)"
@@ -115,22 +130,24 @@
                     <i class="bi bi-grip-vertical fs-5 text-warning"></i>
                   </td>
                   
-                  <td class="px-4 fw-bold" :class="isReorderMode ? 'text-warning' : 'text-muted'">
-                    {{ isReorderMode ? index : cat.sort_order }}
+                  <!-- ĐÃ ĐỒNG BỘ: Thứ tự bắt đầu từ 1, trả về '-' nếu là null -->
+                  <td class="px-4 fw-bold text-center" :class="isReorderMode ? 'text-warning' : 'text-muted'">
+                    {{ isReorderMode ? index + 1 : (cat.sort_order ? cat.sort_order : '-') }}
                   </td>
 
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <img :src="getImageUrl(cat.thumbnail)" class="rounded-3 object-fit-cover me-3 border shadow-sm pe-none" style="width: 45px; height: 45px;">
-                      <div>
-                        <h6 class="mb-0 fw-bold text-dark">{{ cat.name }}</h6>
-                        <small class="text-muted d-block mt-1"><i class="bi bi-link-45deg"></i> {{ cat.slug }}</small>
+                      <!-- Áp dụng fallback mặc định và bắt sự kiện @error -->
+                      <img :src="getImageUrl(cat.thumbnail)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm pe-none" style="width: 45px; height: 45px;">
+                      <div class="overflow-hidden">
+                        <h6 class="mb-0 fw-bold text-dark text-truncate" :title="cat.name">{{ cat.name }}</h6>
+                        <small class="text-muted d-block mt-1 text-truncate"><i class="bi bi-link-45deg"></i> {{ cat.slug }}</small>
                       </div>
                     </div>
                   </td>
                   <td class="px-4">
                     <span v-if="!cat.parent_id" class="badge bg-primary bg-opacity-10 text-primary border border-primary">Danh mục Gốc</span>
-                    <div v-else class="text-muted small">Thuộc: <span class="fw-bold text-dark">{{ cat.parent?.name || 'Không xác định' }}</span></div>
+                    <div v-else class="text-muted small text-truncate" :title="cat.parent?.name">Thuộc: <span class="fw-bold text-dark">{{ cat.parent?.name || '---' }}</span></div>
                   </td>
                   <td class="px-4">
                     <div class="d-flex flex-wrap gap-1" style="max-width: 200px;">
@@ -139,27 +156,46 @@
                       <span v-if="cat.attributes_schema && cat.attributes_schema.length > 3" class="badge bg-light text-secondary border">...</span>
                     </div>
                   </td>
-                  <td class="px-4">
+
+                  <!-- ĐÃ ĐỒNG BỘ: Cột Trạng thái (Inline Edit) -->
+                  <td class="px-4 text-center">
                     <span v-if="cat.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
-                    <span v-else class="badge" :class="cat.status === 'active' ? 'bg-success bg-opacity-10 text-success border border-success' : 'bg-warning bg-opacity-10 text-warning border border-warning'">
-                      <i class="bi" :class="cat.status === 'active' ? 'bi-check-circle-fill' : 'bi-eye-slash-fill'"></i>
-                      {{ cat.status === 'active' ? 'Hiển thị' : 'Đang Ẩn' }}
-                    </span>
+                    <div v-else class="d-flex align-items-center justify-content-center gap-1">
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold" 
+                              style="width: 110px; font-size: 0.8rem;"
+                              :class="getStatusSelectClass(cat.localStatus || cat.status)"
+                              v-model="cat.localStatus"
+                              @change="checkStatusChange(cat)"
+                              :disabled="cat.isUpdatingStatus || isReorderMode">
+                        <option value="active">Hiển thị</option>
+                        <option value="hidden">Đang ẩn</option>
+                        <option value="maintenance" v-if="cat.type === 'room_type'">Bảo trì</option>
+                      </select>
+                      
+                      <button v-if="cat.isStatusChanged && !cat.isUpdatingStatus" @click="saveCategoryStatus(cat)" class="btn btn-sm btn-success rounded-circle shadow-sm px-2 py-1" title="Lưu">
+                        <i class="bi bi-check-lg fw-bold"></i>
+                      </button>
+                      <button v-if="cat.isStatusChanged && !cat.isUpdatingStatus" @click="cancelStatusChange(cat)" class="btn btn-sm btn-light rounded-circle shadow-sm px-2 py-1 text-danger border" title="Hủy">
+                        <i class="bi bi-x-lg fw-bold"></i>
+                      </button>
+                      <span v-if="cat.isUpdatingStatus" class="spinner-border spinner-border-sm text-brand ms-1"></span>
+                    </div>
                   </td>
+
                   <td class="px-4 text-center" v-if="!isReorderMode">
-                    <button class="btn btn-sm btn-light text-info me-2 shadow-sm" title="Xem chi tiết" @click="openQuickView(cat)">
+                    <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" title="Xem chi tiết" @click="openQuickView(cat)">
                       <i class="bi bi-eye"></i>
                     </button>
                     <template v-if="!cat.deleted_at">
-                      <router-link :to="{ name: 'admin-category-edit', params: { id: cat.id } }" class="btn btn-sm btn-light text-primary me-2 shadow-sm" title="Chỉnh sửa">
+                      <router-link :to="{ name: 'admin-category-edit', params: { id: cat.id } }" class="btn btn-sm btn-light text-primary me-2 shadow-sm border" title="Chỉnh sửa">
                         <i class="bi bi-pencil-square"></i>
                       </router-link>
-                      <button class="btn btn-sm btn-light text-danger shadow-sm" @click="confirmDelete(cat.id)" title="Đưa vào thùng rác">
+                      <button class="btn btn-sm btn-light text-danger shadow-sm border" @click="confirmDelete(cat.id, cat.name)" title="Đưa vào thùng rác">
                         <i class="bi bi-trash"></i>
                       </button>
                     </template>
                     <template v-else>
-                      <button class="btn btn-sm btn-light text-success shadow-sm" @click="restoreCategory(cat.id)" title="Khôi phục">
+                      <button class="btn btn-sm btn-light text-success shadow-sm border" @click="restoreCategory(cat.id)" title="Khôi phục">
                         <i class="bi bi-arrow-counterclockwise"></i>
                       </button>
                     </template>
@@ -184,12 +220,7 @@
       </div>
     </div>
 
-    <div v-else class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
-      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
-      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải danh mục...</p>
-    </div>
-
-    <!-- POPUP QUICK VIEW (Giữ nguyên như cũ) -->
+    <!-- POPUP QUICK VIEW -->
     <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -200,11 +231,12 @@
           <div class="modal-body p-4" v-if="selectedCategory">
             <div class="row">
               <div class="col-md-5 text-center border-end mb-4 mb-md-0">
-                <img :src="getImageUrl(selectedCategory.thumbnail)" class="rounded-4 shadow-sm border border-2 border-light object-fit-cover mb-3" style="width: 100%; max-height: 250px;">
+                <!-- Thêm sự kiện bắt lỗi ảnh cho modal -->
+                <img :src="getImageUrl(selectedCategory.thumbnail)" @error="handleImageError" class="rounded-4 shadow-sm border border-2 border-light object-fit-cover mb-3" style="width: 100%; max-height: 250px;">
                 <h5 class="fw-bold mb-1">{{ selectedCategory.name }}</h5>
                 <p class="text-muted small mb-3">/{{ selectedCategory.slug }}</p>
-                <span class="badge px-3 py-2 rounded-pill" :class="selectedCategory.status === 'active' ? 'bg-success text-white' : 'bg-warning text-dark'">
-                  {{ selectedCategory.status === 'active' ? 'Đang hiển thị' : 'Đang ẩn' }}
+                <span class="badge px-3 py-2 rounded-pill" :class="selectedCategory.status === 'active' ? 'bg-success text-white' : (selectedCategory.status === 'hidden' ? 'bg-warning text-dark' : 'bg-danger text-white')">
+                  {{ selectedCategory.status === 'active' ? 'Đang hiển thị' : (selectedCategory.status === 'hidden' ? 'Đang ẩn' : 'Bảo trì') }}
                 </span>
               </div>
               <div class="col-md-7">
@@ -220,7 +252,7 @@
                   </div>
                   <div class="mb-2 pb-2 border-bottom">
                     <span class="text-muted fw-semibold d-block mb-1"><i class="bi bi-sort-numeric-down text-brand me-1"></i>Thứ tự ưu tiên:</span>
-                    <span class="badge bg-dark text-white">{{ selectedCategory.sort_order }}</span>
+                    <span class="badge bg-dark text-white">{{ selectedCategory.sort_order || '-' }}</span>
                   </div>
                   <div class="mb-2">
                     <span class="text-muted fw-semibold d-block mb-2"><i class="bi bi-tags text-brand me-1"></i>Thuộc tính Schema:</span>
@@ -243,6 +275,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
+
+// Đã đổi lại dùng fallback image chuẩn như yêu cầu
 import defaultImage from '../../../assets/images/defaults/placeholder.png'; 
 
 const route = useRoute();
@@ -250,6 +284,7 @@ const categories = ref([]);
 const systemModules = ref([]);
 const currentPageLevel = ref(null);
 const isLoading = ref(true);
+const isFirstLoad = ref(true); 
 const searchQuery = ref('');
 const activeTab = ref('all');
 const currentPage = ref(1);
@@ -263,10 +298,14 @@ const isReorderMode = ref(false);
 const isSavingOrder = ref(false);
 const draggedIndex = ref(null);
 const dragOverIndex = ref(null);
-const reorderList = ref([]); // Danh sách clone để thao tác kéo thả
+const reorderList = ref([]); 
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+
+// Hàm xử lý ảnh Fallback cơ bản và bắt lỗi load ảnh
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
+const handleImageError = (e) => { e.target.src = defaultImage; };
+
 const getLevelColor = (level) => {
   if(!level) return 'bg-secondary';
   const l = parseInt(level);
@@ -281,7 +320,7 @@ const getLevelColor = (level) => {
 };
 
 const fetchData = async () => {
-  isLoading.value = true;
+  if (!isFirstLoad.value) isLoading.value = true;
   try {
     const [resCategories, resModules] = await Promise.all([
       fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
@@ -290,25 +329,34 @@ const fetchData = async () => {
 
     if (resCategories.ok) {
         const parsedData = await resCategories.json();
-        // Lọc mảng, và sắp xếp mặc định theo sort_order ASC
         let rawData = Array.isArray(parsedData.data) ? parsedData.data : (parsedData.data?.data || []);
-        categories.value = rawData.sort((a, b) => a.sort_order - b.sort_order);
+        
+        // Khởi tạo các cờ cho Inline Status Edit
+        categories.value = rawData.map(c => ({
+          ...c, localStatus: c.status, isStatusChanged: false, isUpdatingStatus: false
+        })).sort((a, b) => a.sort_order - b.sort_order);
     }
     if (resModules.ok) {
       systemModules.value = (await resModules.json()).data;
       const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_categories'));
       if (currentModule) currentPageLevel.value = currentModule.required_level;
     }
-  } catch (err) { console.error(err); } finally { isLoading.value = false; }
+  } catch (err) { console.error(err); } finally { 
+    isLoading.value = false;
+    isFirstLoad.value = false;
+  }
 };
 
 // ======================= DRAG AND DROP LOGIC =======================
 const toggleReorderMode = () => {
-  if (activeTab.value === 'deleted') return;
+  if (activeTab.value !== 'active') {
+    Swal.fire('Lưu ý', 'Chỉ có thể sắp xếp các danh mục đang Hiển thị!', 'info');
+    return;
+  }
+  
   isReorderMode.value = !isReorderMode.value;
   if (isReorderMode.value) {
-    // Khi bật, lấy toàn bộ danh sách đã được xử lý (lọc tab) bỏ vào list clone
-    searchQuery.value = ''; // Xóa tìm kiếm để tránh sai lệch
+    searchQuery.value = ''; 
     reorderList.value = JSON.parse(JSON.stringify(processedCategories.value));
   }
 };
@@ -317,7 +365,6 @@ const onDragStart = (index, event) => {
   draggedIndex.value = index;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.dropEffect = 'move';
-  // Dùng setTimeout để ẩn phần tử gốc đi một chút tạo hiệu ứng mượt
   setTimeout(() => event.target.classList.add('opacity-50'), 0);
 };
 
@@ -337,7 +384,6 @@ const onDragLeave = (index) => {
 
 const onDrop = (index) => {
   if (draggedIndex.value !== null && draggedIndex.value !== index) {
-    // Hoán đổi vị trí trong mảng clone
     const draggedItem = reorderList.value[draggedIndex.value];
     reorderList.value.splice(draggedIndex.value, 1);
     reorderList.value.splice(index, 0, draggedItem);
@@ -353,10 +399,10 @@ const onDragEnd = (event) => {
 
 const saveReorder = async () => {
   isSavingOrder.value = true;
-  // Cập nhật lại sort_order bắt đầu từ 0 cho mảng mới
+  // Cập nhật lại sort_order bắt đầu từ 1
   const payload = reorderList.value.map((cat, index) => ({
     id: cat.id,
-    sort_order: index
+    sort_order: index + 1
   }));
 
   try {
@@ -369,7 +415,7 @@ const saveReorder = async () => {
     if (res.ok) {
       Swal.fire({icon: 'success', title: 'Đã lưu thứ tự!', timer: 1500, showConfirmButton: false});
       isReorderMode.value = false;
-      await fetchData(); // Load lại mảng gốc
+      await fetchData(); 
     } else {
       throw new Error('Lỗi cập nhật');
     }
@@ -379,9 +425,49 @@ const saveReorder = async () => {
     isSavingOrder.value = false;
   }
 };
-// ======================= END DRAG AND DROP =======================
 
-const switchTab = (tabId) => { activeTab.value = tabId; currentPage.value = 1; };
+// ================= INLINE STATUS =================
+const getStatusSelectClass = (status) => {
+  const map = { 
+    'active': 'text-success border-success bg-success bg-opacity-10', 
+    'hidden': 'text-warning border-warning bg-warning bg-opacity-10',
+    'maintenance': 'text-danger border-danger bg-danger bg-opacity-10'
+  }; 
+  return map[status] || 'bg-light text-secondary'; 
+};
+
+const checkStatusChange = (cat) => { cat.isStatusChanged = (cat.localStatus !== cat.status); };
+const cancelStatusChange = (cat) => { cat.localStatus = cat.status; cat.isStatusChanged = false; };
+
+const saveCategoryStatus = async (cat) => {
+  cat.isUpdatingStatus = true;
+  const formData = new FormData();
+  formData.append('_method', 'PUT'); 
+  formData.append('name', cat.name);
+  formData.append('slug', cat.slug);
+  formData.append('type', cat.type); 
+  formData.append('status', cat.localStatus); 
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${cat.id}`, { method: 'POST', headers: getHeaders(), body: formData });
+    if (res.ok) {
+      cat.status = cat.localStatus; cat.isStatusChanged = false;
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
+      fetchData(); 
+    } else {
+      cancelStatusChange(cat); Swal.fire('Lỗi', 'Không thể cập nhật trạng thái', 'error');
+    }
+  } catch (error) { cancelStatusChange(cat); Swal.fire('Lỗi', 'Mất kết nối mạng', 'error'); } 
+  finally { cat.isUpdatingStatus = false; }
+};
+// ======================= END INLINE STATUS =======================
+
+const switchTab = (tabId) => { 
+  activeTab.value = tabId; 
+  currentPage.value = 1; 
+  isReorderMode.value = false; 
+};
+
 const openQuickView = (cat) => {
   selectedCategory.value = cat;
   if (!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewModal'));
@@ -404,38 +490,44 @@ const processedCategories = computed(() => {
 
 const totalPages = computed(() => Math.ceil(processedCategories.value.length / itemsPerPage) || 1);
 
-// CÔNG TẮC: Nếu đang Reorder thì show toàn bộ mảng reorderList, nếu không thì phân trang mảng processed
 const displayCategories = computed(() => {
   if (isReorderMode.value) return reorderList.value;
   const start = (currentPage.value - 1) * itemsPerPage; 
   return processedCategories.value.slice(start, start + itemsPerPage);
 });
 
-const confirmDelete = (id) => {
-  Swal.fire({ title: 'Xóa danh mục?', text: "Sẽ bị đưa vào thùng rác!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa', showLoaderOnConfirm: true,
-    preConfirm: async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, { method: 'DELETE', headers: getHeaders() });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
-        return res;
-      } catch (error) { Swal.showValidationMessage(`${error.message}`); }
-    },
-    allowOutsideClick: () => !Swal.isLoading()
-  }).then((result) => { if (result.isConfirmed) { Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false}); fetchData(); }});
+const confirmDelete = (id, name) => {
+  Swal.fire({ title: 'Xóa danh mục?', text: `Danh mục "${name}" sẽ bị đưa vào thùng rác!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true;
+      const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, { method: 'DELETE', headers: getHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
+        fetchData();
+      } else {
+        isLoading.value = false;
+        Swal.fire('Lỗi', data.message || 'Không thể xóa', 'error');
+      }
+    }
+  });
 };
 
 const restoreCategory = (id) => {
-  Swal.fire({ title: 'Khôi phục danh mục?', icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Khôi phục', showLoaderOnConfirm: true,
-    preConfirm: async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}/restore`, { method: 'POST', headers: getHeaders() });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
-        return res;
-      } catch (error) { Swal.showValidationMessage(`${error.message}`); }
+  Swal.fire({ title: 'Khôi phục danh mục?', icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Khôi phục' }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true;
+      const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}/restore`, { method: 'POST', headers: getHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
+        fetchData();
+      } else {
+        isLoading.value = false;
+        Swal.fire('Lỗi', data.message || 'Không thể khôi phục', 'error');
+      }
     }
-  }).then((result) => { if (result.isConfirmed) { Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false}); fetchData(); }});
+  });
 };
 
 onMounted(() => fetchData());
@@ -458,4 +550,9 @@ onMounted(() => fetchData());
 .drag-over { border-top: 3px solid #ffc107 !important; background-color: #fff9e6 !important; }
 .dragging { opacity: 0.5; background-color: #f8f9fa; }
 .transition-all { transition: all 0.3s ease; }
+
+.custom-scrollbar-x::-webkit-scrollbar { height: 4px; }
+.custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #c0c0c0; }
 </style>

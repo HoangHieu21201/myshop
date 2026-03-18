@@ -36,6 +36,11 @@ return [
         'module_code' => 'admin_categories',
         'default_level' => 2
     ],
+    [
+        'module_name' => 'Quản lý Thương hiệu',
+        'module_code' => 'admin_brands',
+        'default_level' => 2
+    ],
     
 
 

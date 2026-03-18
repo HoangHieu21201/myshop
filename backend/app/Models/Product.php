@@ -13,15 +13,16 @@ class Product extends Model
     protected $table = 'products';
 
     protected $fillable = [
-        'category_id', 
-        'name', 
-        'slug', 
-        'base_price', 
-        'promotional_price', 
-        'description', 
-        'thumbnail_image', 
-        'specifications', 
-        'is_featured', 
+        'category_id',
+        'brand_id',
+        'name',
+        'slug',
+        'base_price',
+        'promotional_price',
+        'description',
+        'thumbnail_image',
+        'specifications',
+        'is_featured',
         'status'
     ];
 
@@ -37,6 +38,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+    
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
     public function variants()

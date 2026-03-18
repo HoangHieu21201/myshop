@@ -58,12 +58,23 @@
         </ul>
       </div>
 
+      <!-- BỘ LỌC ĐƯỢC THIẾT KẾ CHUYÊN NGHIỆP -->
       <div class="d-flex flex-wrap gap-3 mb-4">
+        <!-- Lọc Danh mục -->
         <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
           <span class="text-muted small fw-semibold me-2"><i class="bi bi-tags-fill text-brand"></i> Danh mục:</span>
-          <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4" style="width: auto; box-shadow: none;" v-model="selectedCategoryFilter">
+          <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4 cursor-pointer" style="width: auto; box-shadow: none;" v-model="selectedCategoryFilter">
             <option value="all">Tất cả</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        
+        <!-- Lọc Thương hiệu -->
+        <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+          <span class="text-muted small fw-semibold me-2"><i class="bi bi-award-fill text-brand"></i> Thương hiệu:</span>
+          <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4 cursor-pointer" style="width: auto; box-shadow: none;" v-model="selectedBrandFilter">
+            <option value="all">Tất cả</option>
+            <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
           </select>
         </div>
       </div>
@@ -115,12 +126,22 @@
                       </div>
                     </div>
                   </td>
+                  
+                  <!-- CỘT PHÂN LOẠI (Có thêm Brand) -->
                   <td class="px-4 overflow-hidden">
-                    <div v-if="product.category" class="fw-semibold text-secondary text-truncate" :title="product.category.name">
+                    <div v-if="product.category" class="fw-semibold text-secondary text-truncate mb-1" :title="product.category.name">
                         <i class="bi bi-folder2-open me-1"></i> {{ product.category.name }}
                     </div>
-                    <div v-else class="text-danger small fst-italic text-truncate"><i class="bi bi-exclamation-triangle-fill"></i> Không xác định</div>
+                    <div v-else class="text-danger small fst-italic text-truncate mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Mất danh mục</div>
+                    
+                    <div v-if="product.brand" class="small text-muted text-truncate fw-medium" :title="product.brand.name">
+                        <i class="bi bi-award me-1"></i> {{ product.brand.name }}
+                    </div>
+                    <div v-else class="small text-black-50 fst-italic text-truncate">
+                        <i class="bi bi-award me-1"></i> No Brand
+                    </div>
                   </td>
+                  
                   <td class="px-4 text-center">
                     <div class="badge bg-light text-dark border px-2 py-1 mb-1">
                         <i class="bi bi-diagram-3-fill text-brand me-1"></i> {{ product.variants_count || 0 }} Biến thể
@@ -132,7 +153,7 @@
                   <td class="px-4 text-center">
                     <span v-if="product.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                     <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold" 
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold cursor-pointer" 
                               style="width: 120px; font-size: 0.8rem;"
                               :class="getStatusSelectClass(product.localStatus || product.status)"
                               v-model="product.localStatus"
@@ -180,6 +201,7 @@
       </div>
     </div>
 
+    <!-- MODAL QUICK VIEW -->
     <div class="modal fade" id="quickViewProductModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -195,6 +217,7 @@
                  <h5 class="mb-1 fw-bold text-dark">{{ selectedProduct.name }}</h5>
                  <div class="d-flex gap-2 align-items-center">
                     <span class="badge bg-light text-secondary border"><i class="bi bi-folder2 me-1"></i> {{ selectedProduct.category?.name }}</span>
+                    <span class="badge bg-light text-secondary border" v-if="selectedProduct.brand"><i class="bi bi-award me-1"></i> {{ selectedProduct.brand?.name }}</span>
                     <span class="badge bg-success bg-opacity-10 text-success border border-success">Tổng Tồn: {{ selectedProduct.total_stock || 0 }}</span>
                  </div>
               </div>
@@ -256,6 +279,7 @@ const route = useRoute();
 const router = useRouter();
 const products = ref([]);
 const categories = ref([]); 
+const brands = ref([]); 
 const systemAttributes = ref([]); 
 
 const isFirstLoad = ref(true);
@@ -264,6 +288,7 @@ const isTableLoading = ref(false);
 const searchQuery = ref('');
 const activeTab = ref('all');
 const selectedCategoryFilter = ref('all'); 
+const selectedBrandFilter = ref('all'); 
 const currentPageLevel = ref(null);
 
 const currentPage = ref(1);
@@ -316,6 +341,8 @@ const saveProductStatus = async (product) => {
   const formData = new FormData();
   formData.append('_method', 'PUT'); 
   formData.append('category_id', product.category_id);
+  // Cập nhật bảo toàn brand_id khi edit inline
+  if(product.brand_id) formData.append('brand_id', product.brand_id);
   formData.append('name', product.name);
   formData.append('slug', product.slug);
   formData.append('base_price', product.base_price);
@@ -385,11 +412,12 @@ const fetchData = async () => {
   }
   
   try {
-    const [resProd, resCats, resAttr, resModules] = await Promise.all([
+    const [resProd, resCats, resAttr, resModules, resBrands] = await Promise.all([
       fetch('http://127.0.0.1:8000/api/admin/products', { headers: getHeaders() }),
       fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
       fetch('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() }),
+      fetch('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() })
     ]);
     
     if (isUnmounted) return;
@@ -406,6 +434,10 @@ const fetchData = async () => {
         const systemModules = (await resModules.json()).data;
         const currentModule = systemModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_products'));
         if (currentModule) currentPageLevel.value = currentModule.required_level;
+    }
+    if (resBrands.ok) {
+        const brandData = await resBrands.json();
+        brands.value = Array.isArray(brandData.data) ? brandData.data : [];
     }
 
     if (resProd.ok) {
@@ -436,6 +468,7 @@ const processedProducts = computed(() => {
   }
   
   if (selectedCategoryFilter.value !== 'all') result = result.filter(r => r.category_id == selectedCategoryFilter.value);
+  if (selectedBrandFilter.value !== 'all') result = result.filter(r => r.brand_id == selectedBrandFilter.value);
 
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
@@ -493,6 +526,8 @@ onMounted(() => fetchData());
 .bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
 .btn-brand { background-color: #009981; border: none; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; }
 .btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; } .btn-outline-brand:hover { background-color: #009981; color: white; }
+
+.cursor-pointer { cursor: pointer; }
 
 .custom-scrollbar-x::-webkit-scrollbar { height: 4px; }
 .custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }

@@ -10,23 +10,32 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-
 class AdminCategoryController extends Controller
 {
+    private function getNextSortOrder()
+    {
+        $max = Category::max('sort_order');
+        return is_numeric($max) ? $max + 1 : 1; 
+    }
+
     public function index(Request $request)
     {
         $categories = Category::withTrashed()
             ->with('parent') 
             ->withCount('children') 
+            ->orderByRaw('sort_order IS NULL, sort_order ASC')
             ->orderBy('id', 'desc')
-            ->paginate(20);
+            ->get(); 
 
         return response()->json(['success' => true, 'data' => $categories]);
     }
 
     public function getTree()
     {
-        $categories = Category::where('status', 'active')->select('id', 'name', 'parent_id')->get();
+        $categories = Category::where('status', 'active')
+            ->select('id', 'name', 'parent_id')
+            ->orderByRaw('sort_order IS NULL, sort_order ASC')
+            ->get();
         return response()->json(['success' => true, 'data' => $categories]);
     }
 
@@ -35,11 +44,13 @@ class AdminCategoryController extends Controller
         try {
             $data = $request->except(['thumbnail', 'attributes_schema']);
 
+            $status = $data['status'] ?? 'active';
+            $data['sort_order'] = ($status === 'active') ? $this->getNextSortOrder() : null;
+
             if ($request->hasFile('thumbnail')) {
                 $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
             }
 
-            // FIX LỖI: Parse JSON string thành Array để lưu vào DB
             if ($request->has('attributes_schema')) {
                 $parsedSchema = json_decode($request->input('attributes_schema'), true);
                 $data['attributes_schema'] = is_array($parsedSchema) ? $parsedSchema : [];
@@ -63,6 +74,14 @@ class AdminCategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         $data = $request->except(['thumbnail', '_method', 'remove_thumbnail', 'attributes_schema']);
+
+        if (isset($data['status']) && $category->status !== $data['status']) {
+            if ($data['status'] === 'active') {
+                $data['sort_order'] = $this->getNextSortOrder(); 
+            } else {
+                $data['sort_order'] = null; 
+            }
+        }
 
         if ($request->hasFile('thumbnail')) {
             if ($category->thumbnail && Storage::disk('public')->exists($category->thumbnail)) {
@@ -101,6 +120,8 @@ class AdminCategoryController extends Controller
             ], 400);
         }
 
+        $category->sort_order = null;
+
         $category->slug = $category->slug . '-deleted-' . time();
         $category->save();
         
@@ -121,17 +142,23 @@ class AdminCategoryController extends Controller
         }
 
         $category->slug = $originalSlug;
+
+        if ($category->status === 'active') {
+            $category->sort_order = $this->getNextSortOrder();
+        }
+
         $category->save();
         $category->restore();
         
         return response()->json(['success' => true, 'message' => 'Khôi phục danh mục thành công!']);
     }
+    
     public function reorder(Request $request)
     {
         $request->validate([
             'categories' => 'required|array',
             'categories.*.id' => 'required|exists:categories,id',
-            'categories.*.sort_order' => 'required|integer|min:0'
+            'categories.*.sort_order' => 'required|integer|min:1'
         ]);
 
         try {

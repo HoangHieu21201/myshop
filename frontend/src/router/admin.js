@@ -116,6 +116,25 @@ const admin = [
         component: () => import('../pages/admin/product/Edit.vue'),
         meta: { moduleCode: 'admin_products' },
       },
+      // ROUTE QUẢN LÝ THƯƠNG HIỆU (BRANDS)
+      {
+        path: 'brands',
+        name: 'admin-brands',
+        component: () => import('../pages/admin/brand/Index.vue'),
+        meta: { moduleCode: 'admin_brands' },
+      },
+      {
+        path: 'brands/create',
+        name: 'admin-brands-create',
+        component: () => import('../pages/admin/brand/Create.vue'),
+        meta: { moduleCode: 'admin_brands' },
+      },
+      {
+        path: 'brands/:id/edit',
+        name: 'admin-brands-edit',
+        component: () => import('../pages/admin/brand/Edit.vue'),
+        meta: { moduleCode: 'admin_brands' },
+      },
     ],
   },
 ]

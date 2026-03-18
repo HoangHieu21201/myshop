@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -17,11 +18,11 @@ class AdminProductController extends Controller
     public function index()
     {
         $products = Product::withTrashed()
-            ->with('category:id,name')
+            ->with(['category:id,name', 'brand:id,name'])
             ->withCount('variants')
             ->withSum('variants as total_stock', 'stock_quantity')
             ->orderBy('id', 'desc')->get();
-            
+
         return response()->json(['success' => true, 'data' => $products]);
     }
 
@@ -30,7 +31,8 @@ class AdminProductController extends Controller
     {
         $product = Product::with([
             'category:id,name',
-            'variants.attributeValues' 
+            'brand:id,name',
+            'variants.attributeValues'
         ])->findOrFail($id);
 
         $product->variants->transform(function ($variant) {
@@ -38,8 +40,8 @@ class AdminProductController extends Controller
             foreach ($variant->attributeValues as $val) {
                 $attrMap[$val->attribute_id] = $val->id;
             }
-            $variant->attributes = $attrMap; 
-            unset($variant->attributeValues); 
+            $variant->attributes = $attrMap;
+            unset($variant->attributeValues);
             return $variant;
         });
 
@@ -53,7 +55,7 @@ class AdminProductController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
-            
+
             $file = $request->file('thumbnail_image');
             $fileName = 'prod_' . Str::slug($data['name']) . '_' . time() . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('products/thumbnails', $fileName, 'public');
@@ -61,7 +63,7 @@ class AdminProductController extends Controller
 
             $product = Product::create($data);
             $variantsData = json_decode($request->variants_data, true);
-            
+
             foreach ($variantsData as $index => $vData) {
                 $variantImagePath = null;
                 $imageKey = 'variant_image_' . $index;
@@ -82,7 +84,7 @@ class AdminProductController extends Controller
                 ]);
 
                 if (!empty($vData['attributes']) && is_array($vData['attributes'])) {
-                    $attributeValueIds = array_values($vData['attributes']); 
+                    $attributeValueIds = array_values($vData['attributes']);
                     $variant->attributeValues()->sync($attributeValueIds);
                 }
             }
@@ -95,22 +97,14 @@ class AdminProductController extends Controller
         }
     }
 
-    // 4. CẬP NHẬT SẢN PHẨM & ĐỒNG BỘ LẠI LƯỚI BIẾN THỂ
-    public function update(Request $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         try {
             DB::beginTransaction();
             $product = Product::findOrFail($id);
-            
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'slug' => 'required|string|unique:products,slug,'.$id,
-                'base_price' => 'required|numeric|min:0',
-                'status' => 'required|in:published,draft,hidden',
-                'variants_data' => 'required|json'
-            ]);
 
-            $data = $request->only(['category_id', 'name', 'slug', 'base_price', 'status']);
+            $data = $request->validated();
+            unset($data['variants_data']);
 
             if ($request->hasFile('thumbnail_image')) {
                 $file = $request->file('thumbnail_image');
@@ -123,7 +117,7 @@ class AdminProductController extends Controller
             $product->update($data);
 
             $variantsData = json_decode($request->variants_data, true);
-            $incomingVariantIds = array_filter(array_column($variantsData, 'id')); 
+            $incomingVariantIds = array_filter(array_column($variantsData, 'id'));
 
             ProductVariant::where('product_id', $product->id)
                 ->whereNotIn('id', $incomingVariantIds)
@@ -132,7 +126,7 @@ class AdminProductController extends Controller
             foreach ($variantsData as $index => $vData) {
                 $variantImagePath = isset($vData['current_image']) ? $vData['current_image'] : null;
                 $imageKey = 'variant_image_' . $index;
-                
+
                 if ($request->hasFile($imageKey)) {
                     $vFile = $request->file($imageKey);
                     $vFileName = 'var_' . Str::slug($vData['sku']) . '_' . time() . '.' . $vFile->getClientOriginalExtension();
@@ -149,7 +143,7 @@ class AdminProductController extends Controller
 
                 if (isset($vData['id']) && $vData['id']) {
                     $variant = ProductVariant::find($vData['id']);
-                    if($variant) $variant->update($variantPayload);
+                    if ($variant) $variant->update($variantPayload);
                 } else {
                     $variantPayload['product_id'] = $product->id;
                     $variantPayload['is_default'] = $index === 0 ? 1 : 0;
@@ -157,14 +151,13 @@ class AdminProductController extends Controller
                 }
 
                 if ($variant && !empty($vData['attributes']) && is_array($vData['attributes'])) {
-                    $attributeValueIds = array_values($vData['attributes']); 
+                    $attributeValueIds = array_values($vData['attributes']);
                     $variant->attributeValues()->sync($attributeValueIds);
                 }
             }
 
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Cập nhật sản phẩm thành công']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
@@ -177,11 +170,11 @@ class AdminProductController extends Controller
         DB::beginTransaction();
         try {
             $product = Product::findOrFail($id);
-            
+
             $product->variants()->delete();
-            
+
             $product->delete();
-            
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Sản phẩm và Biến thể đã vào thùng rác']);
         } catch (\Exception $e) {
@@ -196,11 +189,11 @@ class AdminProductController extends Controller
         DB::beginTransaction();
         try {
             $product = Product::withTrashed()->findOrFail($id);
-            
+
             $product->restore();
-            
+
             $product->variants()->withTrashed()->restore();
-            
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Sản phẩm và Biến thể đã được khôi phục']);
         } catch (\Exception $e) {
