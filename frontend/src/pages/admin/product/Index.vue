@@ -1,28 +1,28 @@
 <template>
   <div class="product-index-wrapper pb-5 mb-5">
     
-    <div class="container-fluid py-4" v-if="!isLoading">
-      
-      <!-- Header -->
+    <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
+      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
+      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải kho trang sức...</p>
+    </div>
+
+    <div class="container-fluid py-4" v-else>
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Kho Trang Sức</h3>
           <p class="text-muted mb-0">Quản lý sản phẩm gốc và tồn kho các biến thể SKU</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
-          
           <div class="border rounded px-3 py-1 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
             <i class="bi bi-shield-check text-success me-1"></i>
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
-
           <router-link :to="{ name: 'admin-products-create' }" class="btn btn-brand px-4 py-2 fw-bold shadow-sm text-white rounded-pill">
             <i class="bi bi-plus-circle me-1"></i> Thêm Sản phẩm
           </router-link>
         </div>
       </div>
 
-      <!-- TABS PHÂN LOẠI (CSS Chuẩn) -->
       <div class="mb-3">
         <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden custom-scrollbar-x pb-1">
           <li class="nav-item">
@@ -58,7 +58,6 @@
         </ul>
       </div>
 
-      <!-- BỘ LỌC MỞ RỘNG -->
       <div class="d-flex flex-wrap gap-3 mb-4">
         <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
           <span class="text-muted small fw-semibold me-2"><i class="bi bi-tags-fill text-brand"></i> Danh mục:</span>
@@ -69,7 +68,6 @@
         </div>
       </div>
 
-      <!-- BẢNG DỮ LIỆU CHÍNH -->
       <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-ul me-2"></i>Danh sách Sản phẩm</h6>
@@ -92,18 +90,22 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="paginatedProducts.length === 0">
+                <tr v-if="isTableLoading">
+                  <td colspan="5" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-brand mb-2" role="status"></div>
+                    <div class="small fw-semibold">Đang cập nhật dữ liệu...</div>
+                  </td>
+                </tr>
+                <tr v-else-if="paginatedProducts.length === 0">
                   <td colspan="5" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
                   </td>
                 </tr>
                 <tr v-else v-for="product in paginatedProducts" :key="product.id" :class="{'bg-light opacity-75': product.deleted_at}">
-                  
-                  <!-- Tên & Ảnh (Cắt chữ) -->
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
                       <div class="position-relative d-inline-block me-3 shadow-sm border rounded-3 overflow-hidden bg-white flex-shrink-0" style="width: 55px; height: 55px;">
-                        <img :src="getThumbnail(product.thumbnail_image)" class="w-100 h-100 object-fit-cover" alt="Thumb">
+                        <img :src="getThumbnail(product.thumbnail_image)" class="w-100 h-100 object-fit-cover">
                       </div>
                       <div class="overflow-hidden">
                         <div class="fw-bold text-dark fs-6 mb-1 text-truncate" :title="product.name">{{ product.name }}</div>
@@ -113,16 +115,12 @@
                       </div>
                     </div>
                   </td>
-                  
-                  <!-- Danh mục (Cắt chữ) -->
                   <td class="px-4 overflow-hidden">
                     <div v-if="product.category" class="fw-semibold text-secondary text-truncate" :title="product.category.name">
                         <i class="bi bi-folder2-open me-1"></i> {{ product.category.name }}
                     </div>
                     <div v-else class="text-danger small fst-italic text-truncate"><i class="bi bi-exclamation-triangle-fill"></i> Không xác định</div>
                   </td>
-                  
-                  <!-- Số Biến thể & Kho -->
                   <td class="px-4 text-center">
                     <div class="badge bg-light text-dark border px-2 py-1 mb-1">
                         <i class="bi bi-diagram-3-fill text-brand me-1"></i> {{ product.variants_count || 0 }} Biến thể
@@ -131,8 +129,6 @@
                         Tồn kho: {{ product.total_stock || 0 }}
                     </div>
                   </td>
-
-                  <!-- Cột Trạng thái (Sửa nhanh) -->
                   <td class="px-4 text-center">
                     <span v-if="product.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                     <div v-else class="d-flex align-items-center justify-content-center gap-1">
@@ -140,31 +136,29 @@
                               style="width: 120px; font-size: 0.8rem;"
                               :class="getStatusSelectClass(product.localStatus || product.status)"
                               v-model="product.localStatus"
-                              @change="checkStatusChange(product)">
+                              @change="checkStatusChange(product)"
+                              :disabled="product.isUpdatingStatus">
                         <option value="published">Đang bán</option>
                         <option value="draft">Bản nháp</option>
                         <option value="hidden">Đang ẩn</option>
                       </select>
-                      
-                      <!-- Nút Lưu & Hủy -->
-                      <button v-if="product.isStatusChanged" @click="saveProductStatus(product)" class="btn btn-sm btn-success rounded-circle shadow-sm px-2 py-1" title="Lưu lại">
+                      <button v-if="product.isStatusChanged && !product.isUpdatingStatus" @click="saveProductStatus(product)" class="btn btn-sm btn-success rounded-circle shadow-sm px-2 py-1">
                         <i class="bi bi-check-lg fw-bold"></i>
                       </button>
-                      <button v-if="product.isStatusChanged" @click="cancelStatusChange(product)" class="btn btn-sm btn-light rounded-circle shadow-sm px-2 py-1 text-danger border" title="Hủy bỏ">
+                      <button v-if="product.isStatusChanged && !product.isUpdatingStatus" @click="cancelStatusChange(product)" class="btn btn-sm btn-light rounded-circle shadow-sm px-2 py-1 text-danger border">
                         <i class="bi bi-x-lg fw-bold"></i>
                       </button>
+                      <span v-if="product.isUpdatingStatus" class="spinner-border spinner-border-sm text-brand ms-1"></span>
                     </div>
                   </td>
-
-                  <!-- Cột Thao Tác -->
                   <td class="px-4 text-center">
-                    <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" title="Xem Kho (Quick View)" @click="openQuickView(product.id)"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" @click="openQuickView(product.id)"><i class="bi bi-eye"></i></button>
                     <template v-if="!product.deleted_at">
-                      <router-link :to="{ name: 'admin-products-edit', params: {id: product.id} }" class="btn btn-sm btn-light text-primary me-2 shadow-sm border" title="Sửa Sản phẩm"><i class="bi bi-pencil-square"></i></router-link>
+                      <router-link :to="{ name: 'admin-products-edit', params: {id: product.id} }" class="btn btn-sm btn-light text-primary me-2 shadow-sm border"><i class="bi bi-pencil-square"></i></router-link>
                       <button class="btn btn-sm btn-light text-danger shadow-sm border" @click="confirmDelete(product.id, product.name)"><i class="bi bi-trash"></i></button>
                     </template>
                     <template v-else>
-                      <button class="btn btn-sm btn-light text-success shadow-sm border" title="Khôi phục" @click="restoreProduct(product.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
+                      <button class="btn btn-sm btn-light text-success shadow-sm border" @click="restoreProduct(product.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
                     </template>
                   </td>
                 </tr>
@@ -174,8 +168,7 @@
         </div>
       </div>
 
-      <!-- Pagination -->
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="totalPages > 1">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="totalPages > 1 && !isTableLoading">
         <span class="text-muted small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, processedProducts.length) }}</span>
         <nav>
           <ul class="pagination pagination-sm mb-0 shadow-sm">
@@ -187,12 +180,6 @@
       </div>
     </div>
 
-    <!-- MÀN HÌNH CHỜ -->
-    <div v-else class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
-      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
-      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải kho trang sức...</p>
-    </div>
-
     <div class="modal fade" id="quickViewProductModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -202,7 +189,6 @@
           </div>
           
           <div class="modal-body p-0" v-if="selectedProduct">
-            <!-- Header Sản Phẩm trong Modal -->
             <div class="p-3 bg-white border-bottom d-flex align-items-center gap-3">
               <img :src="getThumbnail(selectedProduct.thumbnail_image)" class="rounded border object-fit-cover shadow-sm" style="width: 60px; height: 60px;">
               <div>
@@ -214,7 +200,6 @@
               </div>
             </div>
             
-            <!-- Bảng Grid các Biến thể (Variants) -->
             <div class="table-responsive bg-light p-3" style="max-height: 50vh;">
               <div v-if="!selectedProduct.variants || selectedProduct.variants.length === 0" class="text-center py-4 text-muted">
                  Sản phẩm này chưa được cấu hình biến thể nào.
@@ -236,7 +221,6 @@
                     </td>
                     <td class="px-3 font-monospace fw-bold text-secondary">{{ v.sku }}</td>
                     <td class="px-3">
-                      <!-- Render Thuộc Tính từ JSON -->
                       <span v-for="(val, key) in v.attributes" :key="key" class="me-1 mb-1 badge bg-light text-dark border shadow-sm">
                           {{ getAttributeName(key) }}: <span class="text-brand">{{ getAttributeValueName(key, val) }}</span>
                       </span>
@@ -272,8 +256,10 @@ const route = useRoute();
 const router = useRouter();
 const products = ref([]);
 const categories = ref([]); 
-const systemAttributes = ref([]);
-const isLoading = ref(true);
+const systemAttributes = ref([]); 
+
+const isFirstLoad = ref(true);
+const isTableLoading = ref(false);
 
 const searchQuery = ref('');
 const activeTab = ref('all');
@@ -295,7 +281,6 @@ onBeforeUnmount(() => {
   document.body.style = '';
 });
 
-// Lấy Headers
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 const formatCurrency = (val) => { if (val === null || val === undefined || val === '' || isNaN(val)) return '---'; return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val); };
 
@@ -304,7 +289,6 @@ const getThumbnail = (url) => {
     return 'https://placehold.co/150x150/e0e0e0/6c757d?text=No+Image'; 
 };
 
-// CẤP ĐỘ TRANG
 const getLevelColor = (level) => {
   if(!level) return 'bg-secondary';
   const l = parseInt(level);
@@ -328,6 +312,7 @@ const cancelStatusChange = (product) => {
 };
 
 const saveProductStatus = async (product) => {
+  product.isUpdatingStatus = true;
   const formData = new FormData();
   formData.append('_method', 'PUT'); 
   formData.append('category_id', product.category_id);
@@ -355,6 +340,8 @@ const saveProductStatus = async (product) => {
   } catch (error) { 
     cancelStatusChange(product);
     Swal.fire('Lỗi', 'Lỗi kết nối mạng', 'error'); 
+  } finally {
+    product.isUpdatingStatus = false;
   }
 };
 
@@ -367,7 +354,6 @@ const getStatusSelectClass = (status) => {
   return map[status] || 'bg-light text-secondary'; 
 };
 
-// ================== HÀM MỞ RỘNG (DỊCH ID -> TÊN THUỘC TÍNH) ==================
 const getAttributeName = (attrId) => {
     const a = systemAttributes.value.find(x => x.id == attrId);
     return a ? a.name : `Attr_${attrId}`;
@@ -382,7 +368,6 @@ const getAttributeValueName = (attrId, valId) => {
     return `Val_${valId}`;
 };
 
-// ================== QUICK VIEW & LẤY DỮ LIỆU ==================
 const openQuickView = async (id) => {
   try {
     const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, { headers: getHeaders() });
@@ -395,7 +380,10 @@ const openQuickView = async (id) => {
 };
 
 const fetchData = async () => {
-  isLoading.value = true;
+  if (!isFirstLoad.value) {
+    isTableLoading.value = true;
+  }
+  
   try {
     const [resProd, resCats, resAttr, resModules] = await Promise.all([
       fetch('http://127.0.0.1:8000/api/admin/products', { headers: getHeaders() }),
@@ -425,11 +413,15 @@ const fetchData = async () => {
       products.value = prodData.data.map(p => ({
         ...p,
         localStatus: p.status, 
-        isStatusChanged: false
+        isStatusChanged: false,
+        isUpdatingStatus: false
       }));
     }
   } catch (err) {} finally { 
-    if(!isUnmounted) isLoading.value = false; 
+    if(!isUnmounted) {
+      isFirstLoad.value = false;
+      isTableLoading.value = false;
+    }
   }
 };
 
@@ -458,8 +450,14 @@ const paginatedProducts = computed(() => { const start = (currentPage.value - 1)
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xóa Sản phẩm?', text: `Sản phẩm "${name}" cùng toàn bộ Biến thể sẽ bị xóa!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
+      isTableLoading.value = true;
       const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, { method: 'DELETE', headers: getHeaders() });
-      if (res.ok) fetchData(); 
+      if (res.ok) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đưa vào thùng rác', showConfirmButton: false, timer: 1500 });
+        fetchData(); 
+      } else {
+        isTableLoading.value = false;
+      }
     }
   });
 };
@@ -467,8 +465,14 @@ const confirmDelete = (id, name) => {
 const restoreProduct = (id) => {
   Swal.fire({ title: 'Khôi phục?', text: "Khôi phục sản phẩm này về danh sách bán?", icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
+      isTableLoading.value = true;
       const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}/restore`, { method: 'POST', headers: getHeaders() });
-      if (res.ok) fetchData(); 
+      if (res.ok) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã khôi phục thành công', showConfirmButton: false, timer: 1500 });
+        fetchData(); 
+      } else {
+        isTableLoading.value = false;
+      }
     }
   });
 };
@@ -494,7 +498,4 @@ onMounted(() => fetchData());
 .custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #c0c0c0; }
-.cursor-pointer { cursor: pointer; }
-.hover-opacity-100:hover { opacity: 1 !important; }
-.transition-all { transition: all 0.2s ease; }
 </style>

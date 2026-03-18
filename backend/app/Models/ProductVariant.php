@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // 1. KHAI BÁO THƯ VIỆN
+use Illuminate\Database\Eloquent\SoftDeletes; 
 
 class ProductVariant extends Model
 {

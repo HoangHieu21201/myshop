@@ -756,7 +756,6 @@ onMounted(() => fetchData());
 </script>
 
 <style scoped>
-/* Tabs Styles */
 .custom-tab { color: #6c757d; border-bottom: 3px solid transparent; transition: all 0.3s; }
 .custom-tab:not(.disabled):hover { color: #009981; }
 .custom-tab.active-tab { color: #009981 !important; border-bottom-color: #009981; }
@@ -764,20 +763,17 @@ onMounted(() => fetchData());
 .active-tab .step-circle { background: #009981; color: white; }
 .form-section-title { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
 
-/* Themes & Utils */
 .bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
 .btn-brand { background-color: #009981; color: white; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; color: white; }
 .btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; } .btn-outline-brand:hover { background-color: #009981; color: white; }
 .cursor-pointer { cursor: pointer; } .hover-opacity-100:hover { opacity: 1 !important; } .hover-danger:hover { color: #dc3545 !important; }
 
-/* Table Matrix Styles */
 .bg-light-brand { background-color: #f2fcfb; }
 .variant-table th { font-size: 0.75rem; text-transform: uppercase; color: #555; vertical-align: middle; text-align: center; border-bottom: 2px solid #e9ecef; white-space: nowrap; padding: 12px; }
 .variant-table td { vertical-align: middle; padding: 8px; }
 .img-preview-sm { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; background: #fff; transition: transform 0.2s; }
 .img-preview-sm:hover { transform: scale(1.1); border-color: #009981; }
 
-/* Errors Matrix */
 .is-invalid { border-color: #dc3545 !important; background-color: #fff8f8; animation: shake 0.3s ease-in-out; }
 .row-error td { background-color: #fff5f5 !important; }
 
