@@ -78,7 +78,7 @@ const admin = [
         meta: { moduleCode: 'admin_users' },
         component: () => import('../pages/admin/account/user/Edit.vue'),
       },
-      // ROUTE QUẢN LÝ DANH MỤC
+      // ROUTE QUẢN LÝ DANH MỤC (CATEGORIES)
       {
         path: 'categories',
         name: 'admin-categories',
@@ -92,29 +92,29 @@ const admin = [
         component: () => import('../pages/admin/category/Create.vue'),
       },
       {
-        path: 'categories/:id/edit',
+        path: 'categories/edit/:id',
         name: 'admin-category-edit',
-        component: () => import('../pages/admin/category/Edit.vue'),
         meta: { moduleCode: 'admin_categories' },
+        component: () => import('../pages/admin/category/Edit.vue'),
       },
-      // ROUTE QUẢN LÝ PHÒNG
+      // ROUTE QUẢN LÝ SẢN PHẨM (PRODUCTS)
       {
-        path: 'rooms',
-        name: 'admin-rooms',
-        component: () => import('@/pages/admin/room/Index.vue'),
-        meta: { moduleCode: 'admin_rooms' },
-      },
-      {
-        path: 'rooms/create',
-        name: 'admin-rooms-create',
-        component: () => import('@/pages/admin/room/Create.vue'),
-        meta: { moduleCode: 'admin_rooms' },
+        path: 'products',
+        name: 'admin-products',
+        component: () => import('../pages/admin/product/Index.vue'),
+        meta: { moduleCode: 'admin_products' },
       },
       {
-        path: 'rooms/:id/edit',
-        name: 'admin-rooms-edit',
-        component: () => import('@/pages/admin/room/Edit.vue'),
-        meta: { moduleCode: 'admin_rooms' },
+        path: 'products/create',
+        name: 'admin-products-create',
+        component: () => import('../pages/admin/product/Create.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+      {
+        path: 'products/:id/edit',
+        name: 'admin-products-edit',
+        component: () => import('../pages/admin/product/Edit.vue'),
+        meta: { moduleCode: 'admin_products' },
       },
     ],
   },

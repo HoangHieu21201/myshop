@@ -283,19 +283,31 @@ const fetchData = async () => {
       fetch('http://127.0.0.1:8000/api/admin/users', { headers: getHeaders() }),
       fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
     ]);
-    if (resUsers.ok) users.value = (await resUsers.json()).data;
+    
+    // ĐÃ FIX LỖI CRASH RENDER TẠI ĐÂY
+    if (resUsers.ok) {
+        const parsedData = await resUsers.json();
+        // Kiểm tra thông minh: Nếu dùng get() -> parsedData.data là mảng. 
+        // Nếu dùng paginate() -> parsedData.data.data mới là mảng.
+        users.value = Array.isArray(parsedData.data) ? parsedData.data : (parsedData.data?.data || []);
+    }
+
     if (resModules.ok) {
       systemModules.value = (await resModules.json()).data;
-      const currentModule = systemModules.value.find(m => m.module_code === (route.meta.moduleCode || 'admin_users'));
+      // Dùng Optional Chaining (?.) đề phòng route.meta bị undefined gây lỗi
+      const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_users'));
       if (currentModule) currentPageLevel.value = currentModule.required_level;
     }
-  } catch (err) { console.error(err); } finally { isLoading.value = false; }
+  } catch (err) { 
+      console.error('Lỗi khi tải dữ liệu: ', err); 
+  } finally { 
+      isLoading.value = false; 
+  }
 };
 
 const switchTab = (tabId) => { activeTab.value = tabId; currentPage.value = 1; };
 
 const openQuickView = (user) => {
-  // Sắp xếp địa chỉ mặc định lên đầu
   if (user.addresses) {
     user.addresses.sort((a, b) => b.is_default - a.is_default);
   }

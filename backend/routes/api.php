@@ -32,7 +32,7 @@ Route::prefix('admin')->group(function () {
         // Quản lý Nhân sự / Tài khoản Nội bộ (Mã module: admin_staff)
         Route::middleware(['check.module:admin_staff'])->group(function () {
             Route::apiResource('staff', \App\Http\Controllers\Api\admin\AdminStaffController::class);
-            
+
             Route::post('staff/{id}/restore', [\App\Http\Controllers\Api\admin\AdminStaffController::class, 'restore']);
         });
 
@@ -40,7 +40,7 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['check.module:admin_users'])->group(function () {
             Route::apiResource('users', \App\Http\Controllers\Api\admin\AdminUserController::class);
             Route::post('users/{id}/restore', [\App\Http\Controllers\Api\admin\AdminUserController::class, 'restore']);
-            
+
             // ROUTES CHO ĐỊA CHỈ KHÁCH HÀNG
             Route::post('users/{id}/addresses', [\App\Http\Controllers\Api\admin\AdminUserAddressController::class, 'store']);
             Route::put('addresses/{id}', [\App\Http\Controllers\Api\admin\AdminUserAddressController::class, 'update']);
@@ -57,6 +57,26 @@ Route::prefix('admin')->group(function () {
             Route::put('modules/{id}/level', [\App\Http\Controllers\Api\admin\AdminModulePermissionController::class, 'updateLevel']);
         });
 
-       
+        // Nhóm bảo mật cho "Quản lý Danh mục sản phẩm" (Mã: admin_categories)
+        Route::middleware(['check.module:admin_categories'])->group(function () {
+            Route::get('categories/tree', [\App\Http\Controllers\Api\admin\AdminCategoryController::class, 'getTree']);
+
+            Route::apiResource('categories', \App\Http\Controllers\Api\admin\AdminCategoryController::class);
+            Route::post('categories/{id}/restore', [\App\Http\Controllers\Api\admin\AdminCategoryController::class, 'restore']);
+
+            Route::post('categories/reorder', [\App\Http\Controllers\Api\admin\AdminCategoryController::class, 'reorder']);
+        });
+
+
+        // Nhóm bảo mật cho "Quản lý Sản phẩm" (Mã: admin_products)
+        Route::middleware(['check.module:admin_products'])->group(function () {
+            Route::apiResource('products', \App\Http\Controllers\Api\admin\AdminProductController::class);
+
+            Route::post('products/{id}/restore', [\App\Http\Controllers\Api\admin\AdminProductController::class, 'restore']);
+
+            Route::apiResource('products', \App\Http\Controllers\Api\admin\AdminProductController::class);
+            Route::apiResource('attributes', \App\Http\Controllers\Api\admin\AdminAttributeController::class)->except(['show']);
+            Route::post('attribute-values', [\App\Http\Controllers\Api\admin\AdminAttributeValueController::class, 'store']);
+        });
     });
 });
