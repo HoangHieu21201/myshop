@@ -78,5 +78,12 @@ Route::prefix('admin')->group(function () {
             Route::apiResource('attributes', \App\Http\Controllers\Api\admin\AdminAttributeController::class)->except(['show']);
             Route::post('attribute-values', [\App\Http\Controllers\Api\admin\AdminAttributeValueController::class, 'store']);
         });
+
+        // Nhóm bảo mật cho "Quản lý Thương hiệu" (Mã: admin_brands)
+        Route::middleware(['check.module:admin_brands'])->group(function () {
+            Route::apiResource('brands', \App\Http\Controllers\Api\admin\AdminBrandController::class);
+            Route::post('brands/{id}/restore', [\App\Http\Controllers\Api\admin\AdminBrandController::class, 'restore']);
+            Route::post('brands/reorder', [\App\Http\Controllers\Api\admin\AdminBrandController::class, 'reorder']);
+        });
     });
 });

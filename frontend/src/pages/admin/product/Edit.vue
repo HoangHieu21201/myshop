@@ -48,7 +48,9 @@
                       <label class="form-label fw-bold">Đường dẫn (Slug)</label>
                       <input type="text" class="form-control bg-light text-muted font-monospace" v-model="form.slug" readonly>
                     </div>
-                    <div class="col-md-6">
+                    
+                    <!-- DANH MỤC -->
+                    <div class="col-md-4">
                       <label class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
                       <select class="form-select border-brand fw-semibold text-brand" v-model="form.category_id" required>
                         <option value="" disabled>-- Chọn danh mục --</option>
@@ -57,7 +59,20 @@
                         </template>
                       </select>
                     </div>
-                    <div class="col-md-6">
+
+                    <!-- THƯƠNG HIỆU -->
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold">Thương hiệu</label>
+                      <select class="form-select fw-semibold" v-model="form.brand_id">
+                        <option value="">-- Không có (No Brand) --</option>
+                        <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                          {{ brand.name }}
+                        </option>
+                      </select>
+                    </div>
+
+                    <!-- GIÁ GỐC -->
+                    <div class="col-md-4">
                       <label class="form-label fw-bold">Giá tham khảo (Base Price) <span class="text-danger">*</span></label>
                       <div class="input-group">
                         <input type="number" class="form-control" v-model.number="form.base_price" required min="0">
@@ -84,8 +99,9 @@
               </div>
               
               <div class="col-12 text-end border-top pt-4 mt-4">
-                <button type="button" class="btn btn-brand px-5 fw-bold text-white rounded-pill shadow-sm py-2" @click="proceedToStep2" :disabled="!canProceedToStep2">
-                  Chuyển sang Quản lý Biến thể <i class="bi bi-arrow-right ms-1"></i>
+                <button type="button" class="btn btn-brand px-5 fw-bold text-white rounded-pill shadow-sm py-2" @click="proceedToStep2" :disabled="!canProceedToStep2 || isProcessingSchema">
+                  <span v-if="isProcessingSchema" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ isProcessingSchema ? 'Đang cấu hình lưới...' : 'Chuyển sang Quản lý Biến thể' }} <i class="bi bi-arrow-right ms-1"></i>
                 </button>
               </div>
             </div>
@@ -295,13 +311,15 @@ const productId = route.params.id;
 
 const isPageLoading = ref(true);
 const isSaving = ref(false);
+const isProcessingSchema = ref(false);
 const currentStep = ref(1);
 
 const categories = ref([]);
 const systemAttributes = ref([]); 
+const brands = ref([]); 
 
 const form = ref({
-  category_id: '', name: '', slug: '', base_price: 0, isPublished: true
+  category_id: '', brand_id: '', name: '', slug: '', base_price: 0, isPublished: true
 });
 const thumbnailFile = ref(null);
 const thumbnailPreview = ref(null);
@@ -352,8 +370,65 @@ const handleThumbUpload = (e) => {
   }
 };
 
-const proceedToStep2 = () => {
-    if(variants.value.length === 0) addVariantRow(); 
+// ĐỒNG BỘ LOGIC SCHEMA NHƯ BÊN CREATE
+const proceedToStep2 = async () => {
+    isProcessingSchema.value = true;
+    
+    // Tìm danh mục đang chọn để xem Schema
+    const selectedCat = categories.value.find(c => c.id === form.value.category_id);
+    
+    if (selectedCat && selectedCat.attributes_schema && selectedCat.attributes_schema.length > 0) {
+        let addedAnyColumn = false;
+
+        for (const schemaName of selectedCat.attributes_schema) {
+            let existingAttr = systemAttributes.value.find(a => a.name.toLowerCase() === schemaName.toLowerCase());
+            let attrIdToAdd = null;
+
+            if (existingAttr) {
+                attrIdToAdd = existingAttr.id.toString();
+            } else {
+                // Tự động tạo nếu chưa có
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/api/admin/attributes', {
+                        method: 'POST',
+                        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: schemaName })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        data.data.values = []; 
+                        systemAttributes.value.push(data.data); 
+                        attrIdToAdd = data.data.id.toString();
+                    }
+                } catch(e) { console.error('Lỗi tự động tạo thuộc tính', e); }
+            }
+
+            if (attrIdToAdd && !activeAttributes.value.includes(attrIdToAdd)) {
+                activeAttributes.value.push(attrIdToAdd);
+                addedAnyColumn = true;
+            }
+        }
+        
+        if (addedAnyColumn) {
+             Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Đã nạp thuộc tính từ Danh mục', showConfirmButton: false, timer: 3000 });
+        }
+    }
+
+    if(variants.value.length === 0) {
+        addVariantRow(); 
+    } else {
+        // Đồng bộ các dòng hiện tại với các cột mới
+        variants.value.forEach(v => {
+            if(!v.attributes) v.attributes = {};
+            activeAttributes.value.forEach(attrId => {
+                if (v.attributes[attrId] === undefined) {
+                    v.attributes[attrId] = "";
+                }
+            });
+        });
+    }
+
+    isProcessingSchema.value = false;
     currentStep.value = 2;
 };
 
@@ -520,7 +595,7 @@ const deleteAttribute = async (id) => {
                     systemAttributes.value = systemAttributes.value.filter(a => a.id !== parseInt(id));
                     selectedAttrToManage.value = '';
                     if(manageAttrModalObj) manageAttrModalObj.hide();
-                    if (activeAttributes.value.includes(id.toString())) removeAttributeColumn(id);
+                    if (activeAttributes.value.includes(id.toString())) removeAttributeColumn(id.toString());
                     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 2000 });
                 }
             } catch(e) {}
@@ -584,6 +659,10 @@ const updateProduct = async () => {
         const formData = new FormData();
         formData.append('_method', 'PUT'); // Laravel Update Flag
         formData.append('category_id', form.value.category_id);
+        
+        // Đẩy thương hiệu vào form (chấp nhận rỗng/null nếu Admin xóa)
+        formData.append('brand_id', form.value.brand_id || '');
+        
         formData.append('name', form.value.name);
         formData.append('slug', form.value.slug);
         formData.append('base_price', form.value.base_price);
@@ -592,7 +671,7 @@ const updateProduct = async () => {
         if (thumbnailFile.value) formData.append('thumbnail_image', thumbnailFile.value);
 
         const variantsPayload = variants.value.map(v => ({
-            id: v.id, // Đẩy ID lên để Backend biết cái nào update, cái nào mới
+            id: v.id,
             sku: v.sku, price: v.price, promotional_price: v.promotional_price || 0,
             stock_quantity: v.stock_quantity, current_image: v.current_image, attributes: v.attributes
         }));
@@ -620,10 +699,10 @@ const updateProduct = async () => {
 
 const fetchInitialData = async () => {
     try {
-        // Fetch Dropdowns
-        const [catRes, attrRes, prodRes] = await Promise.all([
+        const [catRes, attrRes, brandRes, prodRes] = await Promise.all([
             fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
             fetch('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
+            fetch('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() }),
             fetch(`http://127.0.0.1:8000/api/admin/products/${productId}`, { headers: getHeaders() })
         ]);
         
@@ -635,6 +714,10 @@ const fetchInitialData = async () => {
             const attrData = await attrRes.json();
             systemAttributes.value = Array.isArray(attrData.data) ? attrData.data : [];
         }
+        if(brandRes.ok) {
+            const brandData = await brandRes.json();
+            brands.value = Array.isArray(brandData.data) ? brandData.data : [];
+        }
 
         // Đổ dữ liệu Sản Phẩm vào Form
         if(prodRes.ok) {
@@ -642,24 +725,22 @@ const fetchInitialData = async () => {
             form.value.name = p.name;
             form.value.slug = p.slug;
             form.value.category_id = p.category_id;
+            form.value.brand_id = p.brand_id || ''; // Nạp Brand ID cũ nếu có
             form.value.base_price = p.base_price;
             form.value.isPublished = p.status === 'published';
             if (p.thumbnail_image) thumbnailPreview.value = `http://127.0.0.1:8000/storage/${p.thumbnail_image}`;
 
             // Phục dựng lưới Variant
             if (p.variants && p.variants.length > 0) {
-                // Quét tìm tất cả các ID thuộc tính (Cột) đang được dùng
                 let foundAttrIds = new Set();
                 p.variants.forEach(v => {
                     Object.keys(v.attributes).forEach(k => foundAttrIds.add(k.toString()));
                 });
                 activeAttributes.value = Array.from(foundAttrIds);
 
-                // Map dữ liệu
                 variants.value = p.variants.map(v => {
-                    // Normalize attributes object để các key luôn là string
                     let normalizedAttrs = {};
-                    activeAttributes.value.forEach(k => normalizedAttrs[k] = ""); // Init default
+                    activeAttributes.value.forEach(k => normalizedAttrs[k] = "");
                     Object.keys(v.attributes).forEach(k => normalizedAttrs[k.toString()] = v.attributes[k]);
 
                     return {
@@ -672,7 +753,7 @@ const fetchInitialData = async () => {
                     };
                 });
             } else {
-                addVariantRow(); // Lưới trống
+                addVariantRow();
             }
         }
     } catch(e) { console.error(e); } finally {

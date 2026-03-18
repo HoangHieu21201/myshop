@@ -31,19 +31,16 @@ class Category extends Model
         ];
     }
 
-    // Quan hệ với Danh mục cha
     public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // Quan hệ với Danh mục con
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    // Quan hệ với Sản phẩm
     public function products()
     {
         return $this->hasMany(Product::class, 'category_id');

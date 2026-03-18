@@ -49,28 +49,41 @@
                       <label class="form-label fw-bold">Đường dẫn (Slug)</label>
                       <input type="text" class="form-control bg-light text-muted font-monospace" v-model="form.slug" readonly>
                     </div>
-                    <div class="col-md-6">
+                    
+                    <!-- DANH MỤC -->
+                    <div class="col-md-4">
                       <label class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
                       <select class="form-select border-brand fw-semibold text-brand" v-model="form.category_id" required>
                         <option value="" disabled>-- Chọn danh mục --</option>
-                        
                         <option v-if="categories.length === 0" value="" disabled class="text-danger">
                           ⚠️ Trống! Cần tạo Danh mục.
                         </option>
                         <option v-else v-for="cat in categories" :key="cat.id" :value="cat.id">
                           {{ cat.name }}
                         </option>
-                        
                       </select>
                     </div>
-                    <div class="col-md-6">
-                      <label class="form-label fw-bold">Giá tham khảo (Base Price) <span class="text-danger">*</span></label>
+
+                    <!-- THƯƠNG HIỆU -->
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold">Thương hiệu</label>
+                      <select class="form-select fw-semibold" v-model="form.brand_id">
+                        <option value="">-- Không có (No Brand) --</option>
+                        <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                          {{ brand.name }}
+                        </option>
+                      </select>
+                    </div>
+
+                    <!-- GIÁ GỐC -->
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold">Giá tham khảo <span class="text-danger">*</span></label>
                       <div class="input-group">
                         <input type="number" class="form-control" v-model.number="form.base_price" required min="0">
                         <span class="input-group-text bg-light">VNĐ</span>
                       </div>
-                      <small class="text-muted" style="font-size: 0.7rem;">Dùng làm giá mặc định gợi ý khi tạo biến thể</small>
                     </div>
+
                     <div class="col-md-12 mt-3">
                        <div class="alert alert-info small border-0 bg-info bg-opacity-10 text-muted m-0">
                           <i class="bi bi-info-circle me-1 text-info"></i> 
@@ -97,8 +110,9 @@
               </div>
               
               <div class="col-12 text-end border-top pt-4 mt-4">
-                <button type="button" class="btn btn-brand px-5 fw-bold text-white rounded-pill shadow-sm py-2" @click="proceedToStep2" :disabled="!canProceedToStep2">
-                  Chuyển sang Bộ tạo Biến thể <i class="bi bi-arrow-right ms-1"></i>
+                <button type="button" class="btn btn-brand px-5 fw-bold text-white rounded-pill shadow-sm py-2" @click="proceedToStep2" :disabled="!canProceedToStep2 || isProcessingSchema">
+                  <span v-if="isProcessingSchema" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ isProcessingSchema ? 'Đang cấu hình lưới...' : 'Chuyển sang Bộ tạo Biến thể' }} <i class="bi bi-arrow-right ms-1"></i>
                 </button>
               </div>
             </div>
@@ -118,7 +132,7 @@
                             <select class="form-select border-secondary fw-bold text-secondary" v-model="selectedAttrToAdd" style="min-width: 150px;">
                                 <option value="">+ Chọn thuộc tính</option>
                                 <template v-if="systemAttributes.length > 0">
-                                  <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id" :disabled="activeAttributes.includes(attr.id)">
+                                  <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id" :disabled="activeAttributes.includes(attr.id.toString())">
                                     {{ attr.name }}
                                   </option>
                                 </template>
@@ -339,15 +353,17 @@ import Swal from 'sweetalert2';
 const router = useRouter();
 const isPageLoading = ref(true);
 const isSaving = ref(false);
+const isProcessingSchema = ref(false); // Cờ trạng thái khi đọc schema
 const currentStep = ref(1);
 
 // DỮ LIỆU TỪ SERVER
 const categories = ref([]);
 const systemAttributes = ref([]); 
+const brands = ref([]); 
 
 // STATE SẢN PHẨM GỐC
 const form = ref({
-  category_id: '', name: '', slug: '', base_price: 0, isPublished: true
+  category_id: '', brand_id: '', name: '', slug: '', base_price: 0, isPublished: true
 });
 const thumbnailFile = ref(null);
 const thumbnailPreview = ref(null);
@@ -373,7 +389,6 @@ const manageAttrName = ref('');
 
 // ================= KHỞI TẠO & HÀM TIỆN ÍCH =================
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
 const canProceedToStep2 = computed(() => {
   return form.value.name && form.value.category_id && form.value.base_price >= 0 && thumbnailFile.value;
@@ -406,8 +421,69 @@ const handleThumbUpload = (e) => {
   }
 };
 
-const proceedToStep2 = () => {
-    if(variants.value.length === 0) addVariantRow(); 
+// ================= HỆ SINH THÁI SCHEMA (TỰ ĐỘNG HÓA BIẾN THỂ) =================
+const proceedToStep2 = async () => {
+    isProcessingSchema.value = true;
+    
+    // 1. Tìm danh mục đang được chọn
+    const selectedCat = categories.value.find(c => c.id === form.value.category_id);
+    
+    // 2. Nếu danh mục có attributes_schema, tiến hành đồng bộ
+    if (selectedCat && selectedCat.attributes_schema && selectedCat.attributes_schema.length > 0) {
+        
+        let addedAnyColumn = false;
+
+        for (const schemaName of selectedCat.attributes_schema) {
+            // Tìm xem thuộc tính này đã tồn tại trong DB chưa (Không phân biệt hoa thường)
+            let existingAttr = systemAttributes.value.find(a => a.name.toLowerCase() === schemaName.toLowerCase());
+            let attrIdToAdd = null;
+
+            if (existingAttr) {
+                attrIdToAdd = existingAttr.id.toString();
+            } else {
+                // CHƯA CÓ RỒI! Hệ thống tự động gọi API tạo Thuộc tính mới
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/api/admin/attributes', {
+                        method: 'POST',
+                        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: schemaName })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        data.data.values = []; // Khởi tạo mảng rỗng cho thuộc tính mới
+                        systemAttributes.value.push(data.data); // Cập nhật state
+                        attrIdToAdd = data.data.id.toString();
+                    }
+                } catch(e) { console.error('Lỗi tự động tạo thuộc tính', e); }
+            }
+
+            // Nếu đã lấy được ID (từ DB hoặc vừa tạo xong) và chưa có trên Lưới (activeAttributes)
+            if (attrIdToAdd && !activeAttributes.value.includes(attrIdToAdd)) {
+                activeAttributes.value.push(attrIdToAdd);
+                addedAnyColumn = true;
+            }
+        }
+        
+        if (addedAnyColumn && variants.value.length === 0) {
+             Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Hệ thống tự động nạp thuộc tính từ Danh mục', showConfirmButton: false, timer: 3000 });
+        }
+    }
+
+    // 3. Đồng bộ hóa mảng Biến Thể hiện tại với các Cột Thuộc Tính mới
+    if(variants.value.length === 0) {
+        addVariantRow(); 
+    } else {
+        variants.value.forEach(v => {
+            if(!v.attributes) v.attributes = {};
+            activeAttributes.value.forEach(attrId => {
+                if (v.attributes[attrId] === undefined) {
+                    v.attributes[attrId] = "";
+                }
+            });
+        });
+    }
+
+    isProcessingSchema.value = false;
     currentStep.value = 2;
 };
 
@@ -423,12 +499,12 @@ const getAttributeValues = (attrId) => {
 
 const addAttributeColumn = () => {
     if (!selectedAttrToAdd.value) return;
-    if (!activeAttributes.value.includes(selectedAttrToAdd.value)) {
-        activeAttributes.value.push(selectedAttrToAdd.value);
+    if (!activeAttributes.value.includes(selectedAttrToAdd.value.toString())) {
+        activeAttributes.value.push(selectedAttrToAdd.value.toString());
         
         variants.value.forEach(v => {
             if(!v.attributes) v.attributes = {};
-            v.attributes[selectedAttrToAdd.value] = ""; 
+            v.attributes[selectedAttrToAdd.value.toString()] = ""; 
         });
     }
     selectedAttrToAdd.value = ''; 
@@ -594,8 +670,8 @@ const deleteAttribute = async (id) => {
                     selectedAttrToManage.value = '';
                     if(manageAttrModalObj) manageAttrModalObj.hide();
                     
-                    if (activeAttributes.value.includes(id)) {
-                        removeAttributeColumn(id);
+                    if (activeAttributes.value.includes(id.toString())) {
+                        removeAttributeColumn(id.toString());
                     }
                     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 2000 });
                 }
@@ -668,6 +744,12 @@ const submitProduct = async () => {
     try {
         const formData = new FormData();
         formData.append('category_id', form.value.category_id);
+        
+        // Đã cập nhật đẩy brand_id vào form payload
+        if (form.value.brand_id) {
+            formData.append('brand_id', form.value.brand_id);
+        }
+        
         formData.append('name', form.value.name);
         formData.append('slug', form.value.slug);
         formData.append('base_price', form.value.base_price);
@@ -709,44 +791,30 @@ const submitProduct = async () => {
 
 const fetchData = async () => {
     try {
-        // CALL 1: CATEGORIES
-        try {
-            const catRes = await fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() });
-            if(catRes.ok) {
-                const catData = await catRes.json();
-                if (catData.data && Array.isArray(catData.data)) {
-                    categories.value = catData.data;
-                } else if (catData.data && Array.isArray(catData.data.data)) {
-                    categories.value = catData.data.data;
-                } else if (Array.isArray(catData)) {
-                    categories.value = catData;
-                }
-            } else {
-                console.error('API Categories báo lỗi:', catRes.status);
-            }
-        } catch(e) { 
-            console.error('Lỗi fetch Categories', e); 
-        }
+        // Tối ưu hóa gộp 3 hàm Gọi API bằng Promise.all
+        const [catRes, attrRes, brandRes] = await Promise.all([
+            fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
+            fetch('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
+            fetch('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() })
+        ]);
 
-        // CALL 2: ATTRIBUTES
-        try {
-            const attrRes = await fetch('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() });
-            if(attrRes.ok) {
-                const attrData = await attrRes.json();
-                if (attrData.data && Array.isArray(attrData.data)) {
-                    systemAttributes.value = attrData.data;
-                } else if (attrData.data && Array.isArray(attrData.data.data)) {
-                    systemAttributes.value = attrData.data.data;
-                } else if (Array.isArray(attrData)) {
-                    systemAttributes.value = attrData;
-                }
-            } else {
-                console.error("API Attributes trả về lỗi:", attrRes.status);
-            }
-        } catch(e) { 
-            console.error('Lỗi fetch Attributes', e); 
+        if(catRes.ok) {
+            const catData = await catRes.json();
+            categories.value = Array.isArray(catData.data) ? catData.data : (Array.isArray(catData.data?.data) ? catData.data.data : []);
         }
         
+        if(attrRes.ok) {
+            const attrData = await attrRes.json();
+            systemAttributes.value = Array.isArray(attrData.data) ? attrData.data : [];
+        }
+        
+        if(brandRes.ok) {
+            const brandData = await brandRes.json();
+            brands.value = Array.isArray(brandData.data) ? brandData.data : [];
+        }
+        
+    } catch(e) { 
+        console.error('Lỗi khởi tạo dữ liệu trang Create Product:', e); 
     } finally {
         isPageLoading.value = false;
     }
@@ -756,6 +824,7 @@ onMounted(() => fetchData());
 </script>
 
 <style scoped>
+/* Tabs Styles */
 .custom-tab { color: #6c757d; border-bottom: 3px solid transparent; transition: all 0.3s; }
 .custom-tab:not(.disabled):hover { color: #009981; }
 .custom-tab.active-tab { color: #009981 !important; border-bottom-color: #009981; }
@@ -763,17 +832,20 @@ onMounted(() => fetchData());
 .active-tab .step-circle { background: #009981; color: white; }
 .form-section-title { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
 
+/* Themes & Utils */
 .bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
 .btn-brand { background-color: #009981; color: white; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; color: white; }
 .btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; } .btn-outline-brand:hover { background-color: #009981; color: white; }
 .cursor-pointer { cursor: pointer; } .hover-opacity-100:hover { opacity: 1 !important; } .hover-danger:hover { color: #dc3545 !important; }
 
+/* Table Matrix Styles */
 .bg-light-brand { background-color: #f2fcfb; }
 .variant-table th { font-size: 0.75rem; text-transform: uppercase; color: #555; vertical-align: middle; text-align: center; border-bottom: 2px solid #e9ecef; white-space: nowrap; padding: 12px; }
 .variant-table td { vertical-align: middle; padding: 8px; }
 .img-preview-sm { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; background: #fff; transition: transform 0.2s; }
 .img-preview-sm:hover { transform: scale(1.1); border-color: #009981; }
 
+/* Errors Matrix */
 .is-invalid { border-color: #dc3545 !important; background-color: #fff8f8; animation: shake 0.3s ease-in-out; }
 .row-error td { background-color: #fff5f5 !important; }
 

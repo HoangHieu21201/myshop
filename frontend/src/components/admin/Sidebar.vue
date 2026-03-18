@@ -122,7 +122,7 @@ const userLevel = computed(() => {
   try {
     const localAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
     const savedLevel = localStorage.getItem('admin_level') || localAdmin.role?.level;
-    
+
     if (savedLevel) {
       return parseInt(savedLevel);
     }
@@ -156,19 +156,16 @@ const menuItems = ref([
     ]
   },
   {
-    name: 'Danh mục',
-    path: '/admin/categories',
-    icon: 'bi-tags-fill',
-    moduleCode: 'admin_categories'
-  },
-  // san pham
-  {
-    name: 'Sản phẩm & Biến thể',
-    path: '/admin/products',
+    name: 'Quản lý Sản phẩm',
     icon: 'bi-box-seam',
-    moduleCode: 'admin_products'
-  }
-  
+    stateKey: 'products',
+    children: [
+      { name: 'Danh mục', path: '/admin/categories', moduleCode: 'admin_categories' },
+      { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
+      { name: 'Sản phẩm & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
+    ]
+  },
+
 ]);
 
 const menuState = reactive({
