@@ -119,7 +119,6 @@ const userLevel = computed(() => {
   }
 
   // 2. Cứu cánh SPA: Nếu App.vue chưa kịp chạy lại do vừa chuyển từ trang Login
-  // -> Móc tạm dữ liệu từ localStorage để giải nguy
   try {
     const localAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
     const savedLevel = localStorage.getItem('admin_level') || localAdmin.role?.level;
@@ -131,7 +130,7 @@ const userLevel = computed(() => {
     console.warn("Không thể parse localStorage cho Sidebar");
   }
 
-  return 999; // Mặc định là quyền thấp nhất nếu cả 2 cách trên đều thất bại
+  return 999;
 });
 
 const menuItems = ref([

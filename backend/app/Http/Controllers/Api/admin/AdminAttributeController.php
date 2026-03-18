@@ -10,7 +10,6 @@ class AdminAttributeController extends Controller
 {
     public function index()
     {
-        // Lấy tất cả thuộc tính kèm theo các giá trị (values) của nó
         $attributes = Attribute::with('values')->orderBy('id', 'desc')->get();
         return response()->json(['success' => true, 'data' => $attributes]);
     }
@@ -19,7 +18,7 @@ class AdminAttributeController extends Controller
     {
         $request->validate(['name' => 'required|string|max:255|unique:attributes,name']);
         $attribute = Attribute::create(['name' => $request->name]);
-        $attribute->load('values'); // Load mảng values rỗng để Vue không bị lỗi undefined
+        $attribute->load('values'); 
         
         return response()->json(['success' => true, 'data' => $attribute]);
     }
@@ -36,7 +35,7 @@ class AdminAttributeController extends Controller
     public function destroy($id)
     {
         $attribute = Attribute::findOrFail($id);
-        $attribute->delete(); // Cascade sẽ tự động xóa values
+        $attribute->delete(); 
         
         return response()->json(['success' => true, 'message' => 'Đã xóa thuộc tính']);
     }

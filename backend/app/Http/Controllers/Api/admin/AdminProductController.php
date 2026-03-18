@@ -102,7 +102,6 @@ class AdminProductController extends Controller
             DB::beginTransaction();
             $product = Product::findOrFail($id);
             
-            // Validate cơ bản (Bỏ qua qua request riêng để gọn code)
             $request->validate([
                 'name' => 'required|string|max:255',
                 'slug' => 'required|string|unique:products,slug,'.$id,
@@ -113,23 +112,19 @@ class AdminProductController extends Controller
 
             $data = $request->only(['category_id', 'name', 'slug', 'base_price', 'status']);
 
-            // Xử lý ảnh chính (Nếu có up ảnh mới)
             if ($request->hasFile('thumbnail_image')) {
                 $file = $request->file('thumbnail_image');
                 $fileName = 'prod_' . Str::slug($data['name']) . '_' . time() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('products/thumbnails', $fileName, 'public');
                 $data['thumbnail_image'] = $path;
-                // Xóa ảnh cũ (Tùy chọn)
                 if ($product->thumbnail_image) Storage::disk('public')->delete($product->thumbnail_image);
             }
 
             $product->update($data);
 
-            // XỬ LÝ LƯỚI BIẾN THỂ
             $variantsData = json_decode($request->variants_data, true);
             $incomingVariantIds = array_filter(array_column($variantsData, 'id')); 
 
-            // Xóa các biến thể có trong DB nhưng bị Admin xóa trên giao diện
             ProductVariant::where('product_id', $product->id)
                 ->whereNotIn('id', $incomingVariantIds)
                 ->delete();
@@ -153,17 +148,14 @@ class AdminProductController extends Controller
                 ];
 
                 if (isset($vData['id']) && $vData['id']) {
-                    // Cập nhật biến thể cũ
                     $variant = ProductVariant::find($vData['id']);
                     if($variant) $variant->update($variantPayload);
                 } else {
-                    // Thêm biến thể mới
                     $variantPayload['product_id'] = $product->id;
                     $variantPayload['is_default'] = $index === 0 ? 1 : 0;
                     $variant = ProductVariant::create($variantPayload);
                 }
 
-                // Cập nhật lại Bảng Pivot
                 if ($variant && !empty($vData['attributes']) && is_array($vData['attributes'])) {
                     $attributeValueIds = array_values($vData['attributes']); 
                     $variant->attributeValues()->sync($attributeValueIds);
@@ -179,19 +171,41 @@ class AdminProductController extends Controller
         }
     }
 
-    // 5. XÓA MỀM
+    // 5. XÓA MỀM (Đồng bộ xóa luôn các biến thể)
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
-        return response()->json(['success' => true, 'message' => 'Sản phẩm đã chuyển vào thùng rác']);
+        DB::beginTransaction();
+        try {
+            $product = Product::findOrFail($id);
+            
+            $product->variants()->delete();
+            
+            $product->delete();
+            
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Sản phẩm và Biến thể đã vào thùng rác']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
     }
 
-    // 6. KHÔI PHỤC
+    // 6. KHÔI PHỤC (Đồng bộ khôi phục luôn các biến thể)
     public function restore($id)
     {
-        $product = Product::withTrashed()->findOrFail($id);
-        $product->restore();
-        return response()->json(['success' => true, 'message' => 'Sản phẩm đã được khôi phục']);
+        DB::beginTransaction();
+        try {
+            $product = Product::withTrashed()->findOrFail($id);
+            
+            $product->restore();
+            
+            $product->variants()->withTrashed()->restore();
+            
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Sản phẩm và Biến thể đã được khôi phục']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
     }
 }
