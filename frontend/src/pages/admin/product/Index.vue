@@ -1,0 +1,500 @@
+<template>
+  <div class="product-index-wrapper pb-5 mb-5">
+    
+    <div class="container-fluid py-4" v-if="!isLoading">
+      
+      <!-- Header -->
+      <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+          <h3 class="fw-bold text-dark mb-0">Kho Trang Sức</h3>
+          <p class="text-muted mb-0">Quản lý sản phẩm gốc và tồn kho các biến thể SKU</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
+          
+          <div class="border rounded px-3 py-1 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
+            <i class="bi bi-shield-check text-success me-1"></i>
+            Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
+          </div>
+
+          <router-link :to="{ name: 'admin-products-create' }" class="btn btn-brand px-4 py-2 fw-bold shadow-sm text-white rounded-pill">
+            <i class="bi bi-plus-circle me-1"></i> Thêm Sản phẩm
+          </router-link>
+        </div>
+      </div>
+
+      <!-- TABS PHÂN LOẠI (CSS Chuẩn) -->
+      <div class="mb-3">
+        <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden custom-scrollbar-x pb-1">
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'all' }" @click.prevent="switchTab('all')">
+              <i class="bi bi-grid-fill me-2"></i> Tất cả
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'all'}">{{ products.filter(p => !p.deleted_at).length }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'published' }" @click.prevent="switchTab('published')">
+              <i class="bi bi-check-circle-fill me-2 text-success"></i> Đang bán
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'published'}">{{ products.filter(p => p.status === 'published' && !p.deleted_at).length }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'draft' }" @click.prevent="switchTab('draft')">
+              <i class="bi bi-pencil-square me-2 text-warning"></i> Bản nháp
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'draft'}">{{ products.filter(p => p.status === 'draft' && !p.deleted_at).length }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'hidden' }" @click.prevent="switchTab('hidden')">
+              <i class="bi bi-eye-slash-fill me-2 text-secondary"></i> Đang ẩn
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'hidden'}">{{ products.filter(p => p.status === 'hidden' && !p.deleted_at).length }}</span>
+            </a>
+          </li>
+          <li class="nav-item ms-auto">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-danger" href="#" :class="{ 'active-tab': activeTab === 'deleted' }" @click.prevent="switchTab('deleted')">
+              <i class="bi bi-trash3-fill me-2"></i> Đã xóa
+              <span class="badge ms-2 rounded-pill bg-danger text-white">{{ products.filter(p => p.deleted_at).length }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- BỘ LỌC MỞ RỘNG -->
+      <div class="d-flex flex-wrap gap-3 mb-4">
+        <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+          <span class="text-muted small fw-semibold me-2"><i class="bi bi-tags-fill text-brand"></i> Danh mục:</span>
+          <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4" style="width: auto; box-shadow: none;" v-model="selectedCategoryFilter">
+            <option value="all">Tất cả</option>
+            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- BẢNG DỮ LIỆU CHÍNH -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-ul me-2"></i>Danh sách Sản phẩm</h6>
+          <div class="search-box position-relative" style="width: 300px; max-width: 100%;">
+            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm theo tên sản phẩm, SKU...">
+            <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+          </div>
+        </div>
+        
+        <div class="card-body p-0 mt-2">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1000px;">
+              <thead class="bg-light">
+                <tr>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Sản phẩm (Bản gốc)</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 20%;">Phân loại</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Số Biến thể</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái</th>
+                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="paginatedProducts.length === 0">
+                  <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
+                  </td>
+                </tr>
+                <tr v-else v-for="product in paginatedProducts" :key="product.id" :class="{'bg-light opacity-75': product.deleted_at}">
+                  
+                  <!-- Tên & Ảnh (Cắt chữ) -->
+                  <td class="px-4 py-3">
+                    <div class="d-flex align-items-center">
+                      <div class="position-relative d-inline-block me-3 shadow-sm border rounded-3 overflow-hidden bg-white flex-shrink-0" style="width: 55px; height: 55px;">
+                        <img :src="getThumbnail(product.thumbnail_image)" class="w-100 h-100 object-fit-cover" alt="Thumb">
+                      </div>
+                      <div class="overflow-hidden">
+                        <div class="fw-bold text-dark fs-6 mb-1 text-truncate" :title="product.name">{{ product.name }}</div>
+                        <div class="text-muted small fw-semibold text-success">
+                           Giá sàn: {{ formatCurrency(product.base_price) }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Danh mục (Cắt chữ) -->
+                  <td class="px-4 overflow-hidden">
+                    <div v-if="product.category" class="fw-semibold text-secondary text-truncate" :title="product.category.name">
+                        <i class="bi bi-folder2-open me-1"></i> {{ product.category.name }}
+                    </div>
+                    <div v-else class="text-danger small fst-italic text-truncate"><i class="bi bi-exclamation-triangle-fill"></i> Không xác định</div>
+                  </td>
+                  
+                  <!-- Số Biến thể & Kho -->
+                  <td class="px-4 text-center">
+                    <div class="badge bg-light text-dark border px-2 py-1 mb-1">
+                        <i class="bi bi-diagram-3-fill text-brand me-1"></i> {{ product.variants_count || 0 }} Biến thể
+                    </div>
+                    <div class="small fw-semibold mt-1" :class="(product.total_stock || 0) > 0 ? 'text-success' : 'text-danger'">
+                        Tồn kho: {{ product.total_stock || 0 }}
+                    </div>
+                  </td>
+
+                  <!-- Cột Trạng thái (Sửa nhanh) -->
+                  <td class="px-4 text-center">
+                    <span v-if="product.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
+                    <div v-else class="d-flex align-items-center justify-content-center gap-1">
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold" 
+                              style="width: 120px; font-size: 0.8rem;"
+                              :class="getStatusSelectClass(product.localStatus || product.status)"
+                              v-model="product.localStatus"
+                              @change="checkStatusChange(product)">
+                        <option value="published">Đang bán</option>
+                        <option value="draft">Bản nháp</option>
+                        <option value="hidden">Đang ẩn</option>
+                      </select>
+                      
+                      <!-- Nút Lưu & Hủy -->
+                      <button v-if="product.isStatusChanged" @click="saveProductStatus(product)" class="btn btn-sm btn-success rounded-circle shadow-sm px-2 py-1" title="Lưu lại">
+                        <i class="bi bi-check-lg fw-bold"></i>
+                      </button>
+                      <button v-if="product.isStatusChanged" @click="cancelStatusChange(product)" class="btn btn-sm btn-light rounded-circle shadow-sm px-2 py-1 text-danger border" title="Hủy bỏ">
+                        <i class="bi bi-x-lg fw-bold"></i>
+                      </button>
+                    </div>
+                  </td>
+
+                  <!-- Cột Thao Tác -->
+                  <td class="px-4 text-center">
+                    <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" title="Xem Kho (Quick View)" @click="openQuickView(product.id)"><i class="bi bi-eye"></i></button>
+                    <template v-if="!product.deleted_at">
+                      <router-link :to="{ name: 'admin-products-edit', params: {id: product.id} }" class="btn btn-sm btn-light text-primary me-2 shadow-sm border" title="Sửa Sản phẩm"><i class="bi bi-pencil-square"></i></router-link>
+                      <button class="btn btn-sm btn-light text-danger shadow-sm border" @click="confirmDelete(product.id, product.name)"><i class="bi bi-trash"></i></button>
+                    </template>
+                    <template v-else>
+                      <button class="btn btn-sm btn-light text-success shadow-sm border" title="Khôi phục" @click="restoreProduct(product.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    </template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="totalPages > 1">
+        <span class="text-muted small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, processedProducts.length) }}</span>
+        <nav>
+          <ul class="pagination pagination-sm mb-0 shadow-sm">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }"><button class="page-link text-brand" @click="currentPage--"><i class="bi bi-chevron-left"></i></button></li>
+            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }"><button class="page-link" :class="currentPage === page ? 'bg-brand border-brand text-white' : 'text-dark'" @click="currentPage = page">{{ page }}</button></li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }"><button class="page-link text-brand" @click="currentPage++"><i class="bi bi-chevron-right"></i></button></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <!-- MÀN HÌNH CHỜ -->
+    <div v-else class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
+      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
+      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải kho trang sức...</p>
+    </div>
+
+    <div class="modal fade" id="quickViewProductModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content rounded-4 border-0 shadow">
+          <div class="modal-header border-bottom pb-3 bg-light rounded-top-4">
+            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-box-seam text-brand me-2"></i>Quản lý Kho Biến thể (SKU)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          
+          <div class="modal-body p-0" v-if="selectedProduct">
+            <!-- Header Sản Phẩm trong Modal -->
+            <div class="p-3 bg-white border-bottom d-flex align-items-center gap-3">
+              <img :src="getThumbnail(selectedProduct.thumbnail_image)" class="rounded border object-fit-cover shadow-sm" style="width: 60px; height: 60px;">
+              <div>
+                 <h5 class="mb-1 fw-bold text-dark">{{ selectedProduct.name }}</h5>
+                 <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-light text-secondary border"><i class="bi bi-folder2 me-1"></i> {{ selectedProduct.category?.name }}</span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success">Tổng Tồn: {{ selectedProduct.total_stock || 0 }}</span>
+                 </div>
+              </div>
+            </div>
+            
+            <!-- Bảng Grid các Biến thể (Variants) -->
+            <div class="table-responsive bg-light p-3" style="max-height: 50vh;">
+              <div v-if="!selectedProduct.variants || selectedProduct.variants.length === 0" class="text-center py-4 text-muted">
+                 Sản phẩm này chưa được cấu hình biến thể nào.
+              </div>
+              <table v-else class="table table-hover bg-white border rounded shadow-sm mb-0 align-middle small">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th class="px-3" style="width: 50px;">Ảnh</th>
+                    <th class="px-3" style="width: 150px;">Mã SKU</th>
+                    <th class="px-3">Thuộc tính (Phân loại)</th>
+                    <th class="px-3 text-end" style="width: 120px;">Giá bán</th>
+                    <th class="px-3 text-center" style="width: 100px;">Tồn kho</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="v in selectedProduct.variants" :key="v.id">
+                    <td class="px-3">
+                        <img :src="getThumbnail(v.image_url)" class="rounded border object-fit-cover" style="width: 40px; height: 40px;">
+                    </td>
+                    <td class="px-3 font-monospace fw-bold text-secondary">{{ v.sku }}</td>
+                    <td class="px-3">
+                      <!-- Render Thuộc Tính từ JSON -->
+                      <span v-for="(val, key) in v.attributes" :key="key" class="me-1 mb-1 badge bg-light text-dark border shadow-sm">
+                          {{ getAttributeName(key) }}: <span class="text-brand">{{ getAttributeValueName(key, val) }}</span>
+                      </span>
+                    </td>
+                    <td class="px-3 text-end fw-bold text-success">{{ formatCurrency(v.price) }}</td>
+                    <td class="px-3 text-center">
+                      <span class="badge w-100 py-2" :class="v.stock_quantity > 0 ? 'bg-success' : 'bg-danger'">
+                          {{ v.stock_quantity }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+             <button type="button" class="btn btn-outline-brand rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
+
+const route = useRoute();
+const router = useRouter();
+const products = ref([]);
+const categories = ref([]); 
+const systemAttributes = ref([]);
+const isLoading = ref(true);
+
+const searchQuery = ref('');
+const activeTab = ref('all');
+const selectedCategoryFilter = ref('all'); 
+const currentPageLevel = ref(null);
+
+const currentPage = ref(1);
+const itemsPerPage = 8; 
+
+const selectedProduct = ref(null);
+let quickViewModalInstance = null;
+let isUnmounted = false;
+
+onBeforeUnmount(() => {
+  isUnmounted = true;
+  if (quickViewModalInstance) quickViewModalInstance.hide();
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  document.body.className = '';
+  document.body.style = '';
+});
+
+// Lấy Headers
+const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+const formatCurrency = (val) => { if (val === null || val === undefined || val === '' || isNaN(val)) return '---'; return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val); };
+
+const getThumbnail = (url) => { 
+    if (url) return `http://127.0.0.1:8000/storage/${url}`; 
+    return 'https://placehold.co/150x150/e0e0e0/6c757d?text=No+Image'; 
+};
+
+// CẤP ĐỘ TRANG
+const getLevelColor = (level) => {
+  if(!level) return 'bg-secondary';
+  const l = parseInt(level);
+  switch (l) {
+    case 1: return 'bg-danger text-white border-danger shadow-sm';        
+    case 2: return 'bg-warning text-dark border-warning';                  
+    case 3: return 'bg-info text-dark border-info';                        
+    case 4: return 'bg-primary bg-opacity-10 text-primary border-primary'; 
+    case 5: return 'bg-success bg-opacity-10 text-success border-success'; 
+    default: return 'bg-light text-secondary border-secondary'; 
+  }
+};
+
+const checkStatusChange = (product) => {
+  product.isStatusChanged = (product.localStatus !== product.status);
+};
+
+const cancelStatusChange = (product) => {
+  product.localStatus = product.status; 
+  product.isStatusChanged = false;
+};
+
+const saveProductStatus = async (product) => {
+  const formData = new FormData();
+  formData.append('_method', 'PUT'); 
+  formData.append('category_id', product.category_id);
+  formData.append('name', product.name);
+  formData.append('slug', product.slug);
+  formData.append('base_price', product.base_price);
+  formData.append('status', product.localStatus); 
+  formData.append('variants_data', '[]'); 
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${product.id}`, { 
+      method: 'POST', 
+      headers: getHeaders(), 
+      body: formData 
+    });
+    
+    if (res.ok) {
+      product.status = product.localStatus; 
+      product.isStatusChanged = false;
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
+    } else {
+      cancelStatusChange(product);
+      Swal.fire('Lỗi', 'Không thể cập nhật trạng thái lúc này', 'error');
+    }
+  } catch (error) { 
+    cancelStatusChange(product);
+    Swal.fire('Lỗi', 'Lỗi kết nối mạng', 'error'); 
+  }
+};
+
+const getStatusSelectClass = (status) => {
+  const map = { 
+    'published': 'text-success border-success bg-success bg-opacity-10', 
+    'draft': 'text-warning border-warning bg-warning bg-opacity-10', 
+    'hidden': 'text-secondary border-secondary bg-secondary bg-opacity-10'
+  }; 
+  return map[status] || 'bg-light text-secondary'; 
+};
+
+// ================== HÀM MỞ RỘNG (DỊCH ID -> TÊN THUỘC TÍNH) ==================
+const getAttributeName = (attrId) => {
+    const a = systemAttributes.value.find(x => x.id == attrId);
+    return a ? a.name : `Attr_${attrId}`;
+};
+
+const getAttributeValueName = (attrId, valId) => {
+    const a = systemAttributes.value.find(x => x.id == attrId);
+    if(a && a.values) {
+        const v = a.values.find(x => x.id == valId);
+        return v ? v.value : `Val_${valId}`;
+    }
+    return `Val_${valId}`;
+};
+
+// ================== QUICK VIEW & LẤY DỮ LIỆU ==================
+const openQuickView = async (id) => {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, { headers: getHeaders() });
+    if(res.ok && !isUnmounted) {
+      selectedProduct.value = (await res.json()).data;
+      if(!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewProductModal'));
+      quickViewModalInstance.show();
+    }
+  } catch(e){}
+};
+
+const fetchData = async () => {
+  isLoading.value = true;
+  try {
+    const [resProd, resCats, resAttr, resModules] = await Promise.all([
+      fetch('http://127.0.0.1:8000/api/admin/products', { headers: getHeaders() }),
+      fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
+      fetch('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
+      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+    ]);
+    
+    if (isUnmounted) return;
+
+    if (resCats.ok) {
+      const catData = await resCats.json();
+      categories.value = Array.isArray(catData.data) ? catData.data : (Array.isArray(catData.data?.data) ? catData.data.data : []);
+    }
+    if (resAttr.ok) {
+        const attrData = await resAttr.json();
+        systemAttributes.value = Array.isArray(attrData.data) ? attrData.data : [];
+    }
+    if (resModules.ok) {
+        const systemModules = (await resModules.json()).data;
+        const currentModule = systemModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_products'));
+        if (currentModule) currentPageLevel.value = currentModule.required_level;
+    }
+
+    if (resProd.ok) {
+      const prodData = await resProd.json();
+      products.value = prodData.data.map(p => ({
+        ...p,
+        localStatus: p.status, 
+        isStatusChanged: false
+      }));
+    }
+  } catch (err) {} finally { 
+    if(!isUnmounted) isLoading.value = false; 
+  }
+};
+
+const switchTab = (tabId) => { activeTab.value = tabId; currentPage.value = 1; };
+
+const processedProducts = computed(() => {
+  let result = products.value;
+  if (activeTab.value === 'deleted') { result = result.filter(r => r.deleted_at); } 
+  else {
+    result = result.filter(r => !r.deleted_at);
+    if (activeTab.value !== 'all') result = result.filter(r => r.status === activeTab.value);
+  }
+  
+  if (selectedCategoryFilter.value !== 'all') result = result.filter(r => r.category_id == selectedCategoryFilter.value);
+
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase();
+    result = result.filter(r => (r.name?.toLowerCase().includes(q)) || (r.sku?.toLowerCase().includes(q)));
+  }
+  return result;
+});
+
+const totalPages = computed(() => Math.ceil(processedProducts.value.length / itemsPerPage) || 1);
+const paginatedProducts = computed(() => { const start = (currentPage.value - 1) * itemsPerPage; return processedProducts.value.slice(start, start + itemsPerPage); });
+
+const confirmDelete = (id, name) => {
+  Swal.fire({ title: 'Xóa Sản phẩm?', text: `Sản phẩm "${name}" cùng toàn bộ Biến thể sẽ bị xóa!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý' }).then(async (result) => {
+    if (result.isConfirmed) {
+      const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, { method: 'DELETE', headers: getHeaders() });
+      if (res.ok) fetchData(); 
+    }
+  });
+};
+
+const restoreProduct = (id) => {
+  Swal.fire({ title: 'Khôi phục?', text: "Khôi phục sản phẩm này về danh sách bán?", icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Đồng ý' }).then(async (result) => {
+    if (result.isConfirmed) {
+      const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}/restore`, { method: 'POST', headers: getHeaders() });
+      if (res.ok) fetchData(); 
+    }
+  });
+};
+
+onMounted(() => fetchData());
+</script>
+
+<style scoped>
+.custom-tab { font-weight: 600 !important; color: #6c757d; border-bottom: 2px solid transparent !important; margin-bottom: -1px; transition: color 0.2s ease; }
+.custom-tab:hover { color: #009981; }
+.custom-tab.active-tab { color: #009981 !important; border-bottom: 2px solid #009981 !important; }
+.tab-badge { font-size: 0.75rem; font-weight: 600; background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; transition: all 0.2s ease; }
+.active-badge { background-color: #e6f5f2 !important; color: #009981 !important; border-color: #009981 !important; }
+
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+@keyframes shine { to { background-position: 200% center; } }
+
+.bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
+.btn-brand { background-color: #009981; border: none; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; }
+.btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; } .btn-outline-brand:hover { background-color: #009981; color: white; }
+
+.custom-scrollbar-x::-webkit-scrollbar { height: 4px; }
+.custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #c0c0c0; }
+.cursor-pointer { cursor: pointer; }
+.hover-opacity-100:hover { opacity: 1 !important; }
+.transition-all { transition: all 0.2s ease; }
+</style>

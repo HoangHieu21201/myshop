@@ -156,6 +156,20 @@ const menuItems = ref([
       { name: 'Khách hàng', path: '/admin/users', moduleCode: 'admin_users' }
     ]
   },
+  {
+    name: 'Danh mục',
+    path: '/admin/categories',
+    icon: 'bi-tags-fill',
+    moduleCode: 'admin_categories'
+  },
+  // san pham
+  {
+    name: 'Sản phẩm & Biến thể',
+    path: '/admin/products',
+    icon: 'bi-box-seam',
+    moduleCode: 'admin_products'
+  }
+  
 ]);
 
 const menuState = reactive({

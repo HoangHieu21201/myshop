@@ -7,9 +7,9 @@ return [
         'default_level' => 1
     ],
     [
-        'module_name' => 'Quản lý Sản phẩm',
+        'module_name' => 'Quản lý Sản phẩm, biến thể và Thuộc tính',
         'module_code' => 'admin_products',
-        'default_level' => 3
+        'default_level' => 2
     ],
     [
         'module_name' => 'Quản lý Đơn hàng',
@@ -22,21 +22,21 @@ return [
         'default_level' => 2
     ],
     [
-        'module_name' => 'Xem thống kê cơ bản',
+        'module_name' => 'Dashboard & Báo cáo',
         'module_code' => 'admin_dashboard',
         'default_level' => 5
     ],
     [
-        'module_name' => 'Quản lý Nhân sự',
+        'module_name' => 'Quản lý Nhân sự và Khách hàng',
         'module_code' => 'admin_staff',
         'default_level' => 1
     ],
     [
-        'module_name' => 'Quản lý Danh mục',
+        'module_name' => 'Quản lý Danh mục sản phẩm',
         'module_code' => 'admin_categories',
         'default_level' => 2
     ],
     
-    
+
 
 ];
