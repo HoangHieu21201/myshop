@@ -135,6 +135,21 @@ const admin = [
         component: () => import('../pages/admin/brand/Edit.vue'),
         meta: { moduleCode: 'admin_brands' },
       },
+      // ROUTE QUẢN LÝ ĐƠN HÀNG (ORDERS)
+      {
+        path: 'orders',
+        name: 'admin-orders',
+        component: () => import('../pages/admin/order/Index.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      },
+      {
+        path: 'orders/returns',
+        name: 'admin-orders-returns',
+        component: () => import('../pages/admin/order/Returns.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      }
+
+
     ],
   },
 ]
