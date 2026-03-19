@@ -21,6 +21,8 @@ class Product extends Model
         'promotional_price',
         'description',
         'thumbnail_image',
+        'review_count',
+        'rating_avg',
         'specifications',
         'is_featured',
         'status'

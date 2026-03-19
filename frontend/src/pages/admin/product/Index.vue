@@ -93,8 +93,8 @@
             <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1000px;">
               <thead class="bg-light">
                 <tr>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Sản phẩm (Bản gốc)</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 20%;">Phân loại</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 28%;">Sản phẩm (Bản gốc)</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 17%;">Phân loại</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Số Biến thể</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái</th>
                   <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;">Thao tác</th>
@@ -120,9 +120,21 @@
                       </div>
                       <div class="overflow-hidden">
                         <div class="fw-bold text-dark fs-6 mb-1 text-truncate" :title="product.name">{{ product.name }}</div>
-                        <div class="text-muted small fw-semibold text-success">
-                           Giá sàn: {{ formatCurrency(product.base_price) }}
+                        
+                        <!-- HIỂN THỊ GIÁ VÀ ĐÁNH GIÁ -->
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-muted small fw-semibold text-success border-end pe-2">
+                               Giá sàn: {{ formatCurrency(product.base_price) }}
+                            </div>
+                            
+                            <!-- LOGIC HIỂN THỊ ĐÁNH GIÁ (REVIEW) -->
+                            <div class="small d-flex align-items-center" :class="(product.review_count > 0) ? 'text-warning fw-bold' : 'text-muted'" :title="product.review_count > 0 ? `Điểm trung bình: ${product.rating_avg} sao` : 'Sản phẩm chưa có đánh giá'">
+                                <i class="bi" :class="(product.review_count > 0) ? 'bi-star-fill' : 'bi-star'"></i>
+                                <span class="ms-1">{{ product.review_count > 0 ? product.rating_avg : 'Chưa có ĐG' }}</span>
+                                <span class="text-secondary fw-normal ms-1" v-if="product.review_count > 0">({{ product.review_count }})</span>
+                            </div>
                         </div>
+
                       </div>
                     </div>
                   </td>
@@ -215,9 +227,18 @@
               <img :src="getThumbnail(selectedProduct.thumbnail_image)" class="rounded border object-fit-cover shadow-sm" style="width: 60px; height: 60px;">
               <div>
                  <h5 class="mb-1 fw-bold text-dark">{{ selectedProduct.name }}</h5>
-                 <div class="d-flex gap-2 align-items-center">
+                 <div class="d-flex gap-2 align-items-center flex-wrap">
                     <span class="badge bg-light text-secondary border"><i class="bi bi-folder2 me-1"></i> {{ selectedProduct.category?.name }}</span>
                     <span class="badge bg-light text-secondary border" v-if="selectedProduct.brand"><i class="bi bi-award me-1"></i> {{ selectedProduct.brand?.name }}</span>
+                    
+                    <!-- REVIEW BADGE IN QUICK VIEW -->
+                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" v-if="selectedProduct.review_count > 0">
+                        <i class="bi bi-star-fill me-1"></i> {{ selectedProduct.rating_avg }} ({{ selectedProduct.review_count }})
+                    </span>
+                    <span class="badge bg-light text-secondary border" v-else>
+                        <i class="bi bi-star me-1"></i> Chưa có ĐG
+                    </span>
+
                     <span class="badge bg-success bg-opacity-10 text-success border border-success">Tổng Tồn: {{ selectedProduct.total_stock || 0 }}</span>
                  </div>
               </div>
@@ -446,7 +467,10 @@ const fetchData = async () => {
         ...p,
         localStatus: p.status, 
         isStatusChanged: false,
-        isUpdatingStatus: false
+        isUpdatingStatus: false,
+        // Ép kiểu đề phòng null từ DB
+        review_count: p.review_count || 0,
+        rating_avg: p.rating_avg || 0
       }));
     }
   } catch (err) {} finally { 
