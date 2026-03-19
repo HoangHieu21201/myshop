@@ -41,6 +41,11 @@ return [
         'module_code' => 'admin_brands',
         'default_level' => 2
     ],
+    [
+        'module_name' => 'Quản lý Mã giảm giá',
+        'module_code' => 'admin_coupons',
+        'default_level' => 2
+    ],
     
 
 
