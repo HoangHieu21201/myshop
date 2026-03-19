@@ -3,10 +3,28 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// ============================================
+// IMPORT ADMIN CONTROLLERS
+// ============================================
+use App\Http\Controllers\Api\admin\AdminCouponController;
+use App\Http\Controllers\Api\admin\AdminAccountController;
+use App\Http\Controllers\Api\admin\AdminForgotPasswordController;
+use App\Http\Controllers\Api\admin\AdminProfileController;
+use App\Http\Controllers\Api\admin\AdminStaffController;
+use App\Http\Controllers\Api\admin\AdminUserController;
+use App\Http\Controllers\Api\admin\AdminUserAddressController;
+use App\Http\Controllers\Api\admin\AdminRoleController;
+use App\Http\Controllers\Api\admin\AdminModulePermissionController;
+use App\Http\Controllers\Api\admin\AdminCategoryController;
+use App\Http\Controllers\Api\admin\AdminProductController;
+use App\Http\Controllers\Api\admin\AdminAttributeController;
+use App\Http\Controllers\Api\admin\AdminAttributeValueController;
+use App\Http\Controllers\Api\admin\AdminBrandController;
+use App\Http\Controllers\Api\admin\AdminOrderController;
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
 
 // ============================================
 // ADMIN API ROUTES
@@ -14,76 +32,106 @@ Route::get('/user', function (Request $request) {
 Route::prefix('admin')->group(function () {
 
     // API Auth Admin (Không cần token)
-    Route::post('/login', [\App\Http\Controllers\Api\admin\AdminAccountController::class, 'login']);
-    Route::post('/register', [\App\Http\Controllers\Api\admin\AdminAccountController::class, 'store']);
-    Route::post('/forgot-password', [\App\Http\Controllers\Api\admin\AdminForgotPasswordController::class, 'sendResetLinkEmail']);
-    Route::post('/reset-password', [\App\Http\Controllers\Api\admin\AdminForgotPasswordController::class, 'resetPassword']);
+    Route::controller(AdminAccountController::class)->group(function () {
+        Route::post('login', 'login');
+        Route::post('register', 'store');
+    });
 
-    // Các API yêu cầu Admin phải đăng nhập
+    Route::controller(AdminForgotPasswordController::class)->group(function () {
+        Route::post('forgot-password', 'sendResetLinkEmail');
+        Route::post('reset-password', 'resetPassword');
+    });
+
+    // CÁC API YÊU CẦU ĐĂNG NHẬP (Sanctum)
     Route::middleware('auth:sanctum')->group(function () {
 
-        //  API lấy thông tin Admin hiện tại 
-        Route::get('/me', [\App\Http\Controllers\Api\admin\AdminAccountController::class, 'me']);
+        // API lấy thông tin Admin hiện tại 
+        Route::get('me', [AdminAccountController::class, 'me']);
 
         // Quản lý hồ sơ cá nhân
-        Route::post('/profile', [\App\Http\Controllers\Api\admin\AdminProfileController::class, 'updateProfile']);
-        Route::put('/profile/password', [\App\Http\Controllers\Api\admin\AdminProfileController::class, 'updatePassword']);
+        Route::controller(AdminProfileController::class)->group(function () {
+            Route::post('profile', 'updateProfile');
+            Route::put('profile/password', 'updatePassword');
+        });
 
-        // Quản lý Nhân sự / Tài khoản Nội bộ (Mã module: admin_staff)
+        // --------------------------------------------------------
+        // CÁC MODULE QUẢN TRỊ (Phân quyền theo module_code)
+        // --------------------------------------------------------
+
+        // Quản lý Nhân sự (Mã: admin_staff)
         Route::middleware(['check.module:admin_staff'])->group(function () {
-            Route::apiResource('staff', \App\Http\Controllers\Api\admin\AdminStaffController::class);
-
-            Route::post('staff/{id}/restore', [\App\Http\Controllers\Api\admin\AdminStaffController::class, 'restore']);
+            Route::apiResource('staff', AdminStaffController::class);
+            Route::post('staff/{id}/restore', [AdminStaffController::class, 'restore']);
         });
 
-        // Nhóm bảo mật cho "Quản lý Tài khoản (User)" (Mã: admin_users)
+        // Quản lý Khách hàng (Mã: admin_users)
         Route::middleware(['check.module:admin_users'])->group(function () {
-            Route::apiResource('users', \App\Http\Controllers\Api\admin\AdminUserController::class);
-            Route::post('users/{id}/restore', [\App\Http\Controllers\Api\admin\AdminUserController::class, 'restore']);
+            Route::apiResource('users', AdminUserController::class);
+            Route::post('users/{id}/restore', [AdminUserController::class, 'restore']);
 
-            // ROUTES CHO ĐỊA CHỈ KHÁCH HÀNG
-            Route::post('users/{id}/addresses', [\App\Http\Controllers\Api\admin\AdminUserAddressController::class, 'store']);
-            Route::put('addresses/{id}', [\App\Http\Controllers\Api\admin\AdminUserAddressController::class, 'update']);
-            Route::delete('addresses/{id}', [\App\Http\Controllers\Api\admin\AdminUserAddressController::class, 'destroy']);
-            Route::put('addresses/{id}/default', [\App\Http\Controllers\Api\admin\AdminUserAddressController::class, 'setDefault']);
+            // Địa chỉ Khách hàng
+            Route::controller(AdminUserAddressController::class)->group(function () {
+                Route::post('users/{id}/addresses', 'store');
+                Route::put('addresses/{id}', 'update');
+                Route::delete('addresses/{id}', 'destroy');
+                Route::put('addresses/{id}/default', 'setDefault');
+            });
         });
 
-        // Nhóm bảo mật cho "Quản lý Role & Cấp độ" (Mã: admin_roles)
+        // Quản lý Role & Cấp độ (Mã: admin_roles)
         Route::middleware(['check.module:admin_roles'])->group(function () {
-            Route::apiResource('roles', \App\Http\Controllers\Api\admin\AdminRoleController::class);
-
-            Route::get('modules', [\App\Http\Controllers\Api\admin\AdminModulePermissionController::class, 'index']);
-            Route::post('modules/sync', [\App\Http\Controllers\Api\admin\AdminModulePermissionController::class, 'sync']);
-            Route::put('modules/{id}/level', [\App\Http\Controllers\Api\admin\AdminModulePermissionController::class, 'updateLevel']);
+            Route::apiResource('roles', AdminRoleController::class);
+            Route::controller(AdminModulePermissionController::class)->group(function () {
+                Route::get('modules', 'index');
+                Route::post('modules/sync', 'sync');
+                Route::put('modules/{id}/level', 'updateLevel');
+            });
         });
 
-        // Nhóm bảo mật cho "Quản lý Danh mục sản phẩm" (Mã: admin_categories)
+        // Quản lý Danh mục (Mã: admin_categories)
         Route::middleware(['check.module:admin_categories'])->group(function () {
-            Route::get('categories/tree', [\App\Http\Controllers\Api\admin\AdminCategoryController::class, 'getTree']);
-
-            Route::apiResource('categories', \App\Http\Controllers\Api\admin\AdminCategoryController::class);
-            Route::post('categories/{id}/restore', [\App\Http\Controllers\Api\admin\AdminCategoryController::class, 'restore']);
-
-            Route::post('categories/reorder', [\App\Http\Controllers\Api\admin\AdminCategoryController::class, 'reorder']);
+            Route::get('categories/tree', [AdminCategoryController::class, 'getTree']);
+            Route::post('categories/{id}/restore', [AdminCategoryController::class, 'restore']);
+            Route::post('categories/reorder', [AdminCategoryController::class, 'reorder']);
+            Route::apiResource('categories', AdminCategoryController::class);
         });
 
-
-        // Nhóm bảo mật cho "Quản lý Sản phẩm" (Mã: admin_products)
+        // Quản lý Sản phẩm (Mã: admin_products)
         Route::middleware(['check.module:admin_products'])->group(function () {
-            Route::apiResource('products', \App\Http\Controllers\Api\admin\AdminProductController::class);
-
-            Route::post('products/{id}/restore', [\App\Http\Controllers\Api\admin\AdminProductController::class, 'restore']);
-
-            Route::apiResource('products', \App\Http\Controllers\Api\admin\AdminProductController::class);
-            Route::apiResource('attributes', \App\Http\Controllers\Api\admin\AdminAttributeController::class)->except(['show']);
-            Route::post('attribute-values', [\App\Http\Controllers\Api\admin\AdminAttributeValueController::class, 'store']);
+            Route::apiResource('products', AdminProductController::class);
+            Route::post('products/{id}/restore', [AdminProductController::class, 'restore']);
+            
+            Route::apiResource('attributes', AdminAttributeController::class)->except(['show']);
+            Route::post('attribute-values', [AdminAttributeValueController::class, 'store']);
         });
 
-        // Nhóm bảo mật cho "Quản lý Thương hiệu" (Mã: admin_brands)
+        // Quản lý Thương hiệu (Mã: admin_brands)
         Route::middleware(['check.module:admin_brands'])->group(function () {
-            Route::apiResource('brands', \App\Http\Controllers\Api\admin\AdminBrandController::class);
-            Route::post('brands/{id}/restore', [\App\Http\Controllers\Api\admin\AdminBrandController::class, 'restore']);
-            Route::post('brands/reorder', [\App\Http\Controllers\Api\admin\AdminBrandController::class, 'reorder']);
+            Route::apiResource('brands', AdminBrandController::class);
+            Route::post('brands/{id}/restore', [AdminBrandController::class, 'restore']);
+            Route::post('brands/reorder', [AdminBrandController::class, 'reorder']);
         });
+
+        // Quản lý Đơn hàng (Mã: admin_orders)
+        Route::middleware(['check.module:admin_orders'])->group(function () {
+            Route::controller(AdminOrderController::class)->group(function () {
+                Route::get('orders', 'index');
+                Route::get('orders/{id}', 'show');
+                Route::put('orders/{id}/status', 'updateStatus');
+                Route::delete('orders/{id}', 'destroy');
+            });
+        });
+
+        // Quản lý Coupon (Mã: admin_coupons)
+        Route::middleware(['check.module:admin_coupons'])->group(function () {
+            Route::controller(AdminCouponController::class)->group(function () {
+                Route::get('coupons', 'index');
+                Route::get('coupons/{id}', 'show');
+                Route::post('coupons', 'store'); 
+                Route::put('coupons/{id}', 'update');
+                Route::delete('coupons/{id}', 'destroy');
+            });
+        });
+
     });
 });
