@@ -135,7 +135,7 @@ const admin = [
         component: () => import('../pages/admin/brand/Edit.vue'),
         meta: { moduleCode: 'admin_brands' },
       },
-      
+
       // ROUTE QUẢN LÝ BANNER (BANNERS) - THÊM MỚI
       {
         path: 'banners',
@@ -168,9 +168,22 @@ const admin = [
         name: 'admin-orders-returns',
         component: () => import('../pages/admin/order/Returns.vue'),
         meta: { moduleCode: 'admin_orders' },
-      }
-
-
+      },
+      {
+        path: 'coupons',
+        name: 'admin-coupons',
+        component: () => import('../pages/admin/coupon/index.vue'),
+      },
+      {
+        path: 'coupons/create',
+        name: 'admin-coupon-create',
+        component: () => import('../pages/admin/coupon/create.vue'),
+      },
+      {
+        path: 'coupons/:id/edit',
+        name: 'admin-coupon-edit',
+        component: () => import('../pages/admin/coupon/edit.vue'),
+      },
     ],
   },
 ]

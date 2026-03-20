@@ -136,7 +136,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('coupons', 'index');
                 Route::get('coupons/{id}', 'show');
                 Route::post('coupons', 'store'); 
-                Route::put('coupons/{id}', 'update');
+                Route::patch('coupons/{id}', 'update');
                 Route::delete('coupons/{id}', 'destroy');
             });
         });

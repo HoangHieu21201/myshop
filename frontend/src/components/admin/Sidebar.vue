@@ -180,6 +180,7 @@ const menuItems = ref([
     stateKey: 'marketing',
     children: [
       { name: 'Quản lý Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
+      { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' }, // Đã thêm Quản lý Coupon
     ]
   },
 ]);
