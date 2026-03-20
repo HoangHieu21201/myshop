@@ -113,15 +113,6 @@ Route::prefix('admin')->group(function () {
             Route::post('brands/reorder', [AdminBrandController::class, 'reorder']);
         });
 
-        // Nhóm bảo mật cho "Quản lý Coupon" (Mã: admin_coupons)
-        Route::middleware(['check.module:admin_coupons'])->group(function () {
-            Route::get('/coupons', [AdminCouponController::class, 'index']);
-            Route::get('/coupon/{id}', [AdminCouponController::class, 'show']);
-            Route::post('/coupon', [AdminCouponController::class, 'store']);
-            Route::patch('/coupon/{id}', [AdminCouponController::class, 'update']);
-            Route::delete('/coupon/{id}', [AdminCouponController::class, 'destroy']);
-        });
-
         // Quản lý Banner (Mã: admin_banners)
         Route::middleware(['check.module:admin_banners'])->group(function () {
             Route::apiResource('banners', AdminBannerController::class);
