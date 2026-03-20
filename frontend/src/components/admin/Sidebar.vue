@@ -174,13 +174,21 @@ const menuItems = ref([
       { name: 'Hoàn trả', path: '/admin/orders/returns', moduleCode: 'admin_orders' }
     ]
   },
-
+  {
+    name: 'Marketing & Ads',
+    icon: 'bi-megaphone-fill',
+    stateKey: 'marketing',
+    children: [
+      { name: 'Quản lý Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
+    ]
+  },
 ]);
 
 const menuState = reactive({
   users: false,
   products: false,
   orders: false,
+  marketing: false,
 });
 
 const toggleMenu = (menuKey) => {

@@ -46,7 +46,11 @@ return [
         'module_code' => 'admin_coupons',
         'default_level' => 2
     ],
-    
+    [
+        'module_name' => 'Quản lý Banner & Quảng cáo',
+        'module_code' => 'admin_banners',
+        'default_level' => 2
+    ],
 
 
 ];
