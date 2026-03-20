@@ -51,6 +51,10 @@ return [
         'module_code' => 'admin_banners',
         'default_level' => 2
     ],
-
+    [
+        'module_name' => 'Quản lý Hạng thành viên',
+        'module_code' => 'admin_tiers',
+        'default_level' => 2
+    ]
 
 ];
