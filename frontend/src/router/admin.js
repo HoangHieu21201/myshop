@@ -135,6 +135,55 @@ const admin = [
         component: () => import('../pages/admin/brand/Edit.vue'),
         meta: { moduleCode: 'admin_brands' },
       },
+
+      // ROUTE QUẢN LÝ BANNER (BANNERS) - THÊM MỚI
+      {
+        path: 'banners',
+        name: 'admin-banners',
+        component: () => import('../pages/admin/banner/Index.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+      {
+        path: 'banners/create',
+        name: 'admin-banners-create',
+        component: () => import('../pages/admin/banner/Create.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+      {
+        path: 'banners/:id/edit',
+        name: 'admin-banners-edit',
+        component: () => import('../pages/admin/banner/Edit.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+
+      // ROUTE QUẢN LÝ ĐƠN HÀNG (ORDERS)
+      {
+        path: 'orders',
+        name: 'admin-orders',
+        component: () => import('../pages/admin/order/Index.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      },
+      {
+        path: 'orders/returns',
+        name: 'admin-orders-returns',
+        component: () => import('../pages/admin/order/Returns.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      },
+      {
+        path: 'coupons',
+        name: 'admin-coupons',
+        component: () => import('../pages/admin/coupon/index.vue'),
+      },
+      {
+        path: 'coupons/create',
+        name: 'admin-coupon-create',
+        component: () => import('../pages/admin/coupon/create.vue'),
+      },
+      {
+        path: 'coupons/:id/edit',
+        name: 'admin-coupon-edit',
+        component: () => import('../pages/admin/coupon/edit.vue'),
+      },
     ],
   },
 ]
