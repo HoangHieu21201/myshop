@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\admin\AdminAttributeController;
 use App\Http\Controllers\Api\admin\AdminAttributeValueController;
 use App\Http\Controllers\Api\admin\AdminBrandController;
 use App\Http\Controllers\Api\admin\AdminOrderController;
+use App\Http\Controllers\Api\admin\AdminBannerController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -110,6 +111,13 @@ Route::prefix('admin')->group(function () {
             Route::apiResource('brands', AdminBrandController::class);
             Route::post('brands/{id}/restore', [AdminBrandController::class, 'restore']);
             Route::post('brands/reorder', [AdminBrandController::class, 'reorder']);
+        });
+
+        // Quản lý Banner (Mã: admin_banners)
+        Route::middleware(['check.module:admin_banners'])->group(function () {
+            Route::apiResource('banners', AdminBannerController::class);
+            Route::post('banners/{id}/restore', [AdminBannerController::class, 'restore']);
+            Route::post('banners/reorder', [AdminBannerController::class, 'reorder']);
         });
 
         // Quản lý Đơn hàng (Mã: admin_orders)
