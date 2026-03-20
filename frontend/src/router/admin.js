@@ -184,6 +184,26 @@ const admin = [
         name: 'admin-coupon-edit',
         component: () => import('../pages/admin/coupon/edit.vue'),
       },
+
+      // ROUTE QUẢN LÝ HẠNG THÀNH VIÊN (MEMBERSHIP TIERS)
+      {
+        path: 'tiers',
+        name: 'admin-tiers',
+        component: () => import('../pages/admin/tier/Index.vue'),
+        meta: { moduleCode: 'admin_roles' }
+      },
+      {
+        path: 'tiers/create',
+        name: 'admin-tiers-create',
+        component: () => import('../pages/admin/tier/Create.vue'),
+        meta: { moduleCode: 'admin_roles' }
+      },
+      {
+        path: 'tiers/:id/edit',
+        name: 'admin-tiers-edit',
+        component: () => import('../pages/admin/tier/Edit.vue'),
+        meta: { moduleCode: 'admin_roles' }
+      }
     ],
   },
 ]
