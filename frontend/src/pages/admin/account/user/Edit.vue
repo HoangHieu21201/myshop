@@ -1,5 +1,5 @@
 <template>
-  <div class="user-edit-wrapper">
+  <div class="user-edit-wrapper pb-5 mb-5">
     <div class="container-fluid py-4" v-if="isLoaded">
       <!-- Header -->
       <div class="row mb-4 align-items-center">
@@ -17,13 +17,13 @@
       <div class="row g-4">
         <!-- ================= CỘT TRÁI: AVATAR & TRẠNG THÁI ================= -->
         <div class="col-md-4 col-lg-3">
-          <div class="card border-0 shadow-sm rounded-4 text-center p-4 h-100">
+          <div class="card border-0 shadow-sm rounded-4 text-center p-4 h-100 mb-4">
             <div class="position-relative d-inline-block mx-auto mb-3">
-              <img :src="previewAvatar" class="rounded-circle shadow-sm border border-3 border-white object-fit-cover" style="width: 140px; height: 140px;" alt="Avatar">
+              <img :src="previewAvatar" class="rounded-circle shadow-sm border border-3 border-white object-fit-cover" style="width: 140px; height: 140px;" alt="Avatar" @error="handleImageError">
               <label for="avatarUpload" class="position-absolute bottom-0 end-0 bg-brand rounded-circle shadow-sm p-2 text-white cursor-pointer" title="Đổi ảnh đại diện">
                 <i class="bi bi-camera-fill fs-6"></i>
               </label>
-              <input type="file" id="avatarUpload" class="d-none" accept="image/png, image/jpeg" @change="handleAvatarChange">
+              <input type="file" id="avatarUpload" class="d-none" accept="image/png, image/jpeg, image/webp" @change="handleAvatarChange">
             </div>
             
             <h5 class="fw-bold text-dark mb-1">{{ form.fullName || 'Khách hàng' }}</h5>
@@ -46,13 +46,14 @@
                 <option value="active" class="text-success fw-bold">Hoạt động (Active)</option>
                 <option value="locked" class="text-danger fw-bold">Khóa (Locked)</option>
               </select>
+              <div class="invalid-feedback d-block" v-if="errors.status">{{ errors.status?.[0] }}</div>
             </div>
           </div>
         </div>
 
         <!-- ================= CỘT PHẢI: TABS THÔNG TIN & ĐỊA CHỈ ================= -->
         <div class="col-md-8 col-lg-9">
-          <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card border-0 shadow-sm rounded-4 h-100 mb-4">
             
             <!-- Tabs Header -->
             <div class="card-header bg-white border-bottom-0 pt-3 pb-0 px-4">
@@ -73,62 +74,74 @@
 
             <div class="card-body p-4 pt-2">
               
-              <!-- ================= TAB 1: THÔNG TIN CHUNG ================= -->
+              <!-- ================= TAB 1: THÔNG TIN CHUNG (ĐÃ FIX GRID CÂN ĐỐI) ================= -->
               <form v-if="activeTab === 'info'" @submit.prevent="updateUser">
                 <div class="row">
                   <div class="col-md-6 mb-4">
                     <label class="form-label fw-bold text-dark">Họ và tên <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control form-control-lg bg-white border border-secondary-subtle" v-model="form.fullName" :class="{'is-invalid': errors.fullName}">
+                    <input type="text" class="form-control form-control-lg bg-white border-secondary-subtle" v-model="form.fullName" :class="{'is-invalid': errors.fullName}">
                     <div class="invalid-feedback">{{ errors.fullName?.[0] }}</div>
-                  </div>
-                  <div class="col-md-6 mb-4">
-                    <label class="form-label fw-bold text-dark">Số điện thoại</label>
-                    <input type="text" class="form-control form-control-lg bg-white border border-secondary-subtle" v-model="form.phone" :class="{'is-invalid': errors.phone}">
-                    <div class="invalid-feedback">{{ errors.phone?.[0] }}</div>
                   </div>
                   
                   <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold text-dark">Số điện thoại</label>
+                    <input type="text" class="form-control form-control-lg bg-white border-secondary-subtle" v-model="form.phone" :class="{'is-invalid': errors.phone}" @input="validatePhone">
+                    <div class="invalid-feedback">{{ errors.phone?.[0] }}</div>
+                  </div>
+                  
+                  <div class="col-md-12 mb-4">
                     <label class="form-label fw-bold text-dark">Email đăng nhập <span class="text-danger">*</span></label>
                     <div class="input-group input-group-lg shadow-sm">
                       <span class="input-group-text bg-light text-muted border-secondary-subtle"><i class="bi bi-envelope"></i></span>
                       <input type="email" class="form-control bg-white border-secondary-subtle" v-model="form.email" :class="{'is-invalid': errors.email}" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
-                      <div class="invalid-feedback">{{ errors.email?.[0] }}</div>
+                      <div class="invalid-feedback d-block" v-if="errors.email">{{ errors.email?.[0] }}</div>
                     </div>
                   </div>
                   
-                  <!-- FIX ĐIỂM MÙ 3: Thêm Password Confirmation cho luồng Admin Edit -->
                   <div class="col-md-6 mb-4">
-                    <label class="form-label fw-bold text-dark">Đổi mật khẩu <span class="text-muted fw-normal small">(Bỏ trống nếu không đổi)</span></label>
-                    <div class="input-group input-group-lg shadow-sm">
-                      <span class="input-group-text bg-white text-muted border-secondary-subtle"><i class="bi bi-key"></i></span>
-                      <input type="password" class="form-control bg-white border-secondary-subtle" v-model="form.password" placeholder="Mật khẩu mới" :class="{'is-invalid': errors.password}" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
-                      <div class="invalid-feedback">{{ errors.password?.[0] }}</div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 mb-4">
-                    <label class="form-label fw-bold text-dark">Xác nhận mật khẩu</label>
-                    <input type="password" class="form-control form-control-lg bg-white border border-secondary-subtle" v-model="form.password_confirmation" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
-                  </div>
-
-                  <div class="col-md-3 mb-4">
                     <label class="form-label fw-bold text-dark">Giới tính</label>
-                    <select class="form-select form-select-lg bg-white border border-secondary-subtle" v-model="form.gender">
+                    <select class="form-select form-select-lg bg-white border-secondary-subtle" v-model="form.gender">
                       <option value="">-- N/A --</option>
                       <option value="Nam">Nam</option>
                       <option value="Nữ">Nữ</option>
                       <option value="Khác">Khác</option>
                     </select>
                   </div>
-                  <div class="col-md-3 mb-4">
+                  <div class="col-md-6 mb-4">
                     <label class="form-label fw-bold text-dark">Ngày sinh</label>
-                    <input type="date" class="form-control form-control-lg bg-white border border-secondary-subtle" v-model="form.birthday">
+                    <input type="date" class="form-control form-control-lg bg-white border-secondary-subtle" v-model="form.birthday">
+                  </div>
+                  
+                  <!-- Phần Đổi Mật Khẩu (Trải ngang 2 cột hoàn hảo) -->
+                  <div class="col-12 mt-2 mb-3">
+                    <h6 class="fw-bold text-dark border-bottom pb-2"><i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu <span class="text-muted fw-normal small">(Bỏ trống nếu không đổi)</span></h6>
+                  </div>
+
+                  <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold text-dark">Mật khẩu mới</label>
+                    <div class="position-relative">
+                        <input :type="showPassword ? 'text' : 'password'" class="form-control form-control-lg bg-white border-secondary-subtle pe-5" v-model="form.password" placeholder="Tối thiểu 8 ký tự" :class="{'is-invalid': errors.password}" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
+                        <button type="button" class="btn border-0 position-absolute top-50 end-0 translate-middle-y text-muted me-1" @click="showPassword = !showPassword">
+                            <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback d-block" v-if="errors.password">{{ errors.password?.[0] }}</div>
+                  </div>
+
+                  <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold text-dark">Xác nhận mật khẩu</label>
+                    <div class="position-relative">
+                        <input :type="showConfirmPassword ? 'text' : 'password'" class="form-control form-control-lg bg-white border-secondary-subtle pe-5" v-model="form.password_confirmation" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
+                        <button type="button" class="btn border-0 position-absolute top-50 end-0 translate-middle-y text-muted me-1" @click="showConfirmPassword = !showConfirmPassword">
+                            <i class="bi" :class="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                        </button>
+                    </div>
                   </div>
                 </div>
 
                 <div class="text-end mt-2 pt-4 border-top">
                   <button type="button" class="btn btn-light me-2 px-4 fw-bold shadow-sm" @click="handleRestore" :disabled="isRestoring">
-                    <span v-if="isRestoring" class="spinner-border spinner-border-sm me-2"></span>Khôi phục
+                    <span v-if="isRestoring" class="spinner-border spinner-border-sm me-2"></span>Khôi phục gốc
                   </button>
                   <button type="submit" class="btn btn-brand px-5 fw-bold text-white shadow-sm" :disabled="isSavingUser">
                     <span v-if="isSavingUser" class="spinner-border spinner-border-sm me-2"></span> 
@@ -196,7 +209,7 @@
       <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải dữ liệu...</p>
     </div>
 
-    <!-- MODAL ĐỊA CHỈ -->
+    <!-- MODAL ĐỊA CHỈ (DÙNG AXIOS) -->
     <div class="modal fade" id="addressModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -209,30 +222,30 @@
               <div class="row g-3">
                 <div class="col-md-6 mb-2">
                   <label class="form-label fw-bold text-dark small">Tên người nhận <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control bg-white border border-secondary-subtle shadow-none" v-model="addrForm.customer_name" required>
+                  <input type="text" class="form-control bg-white border-secondary-subtle shadow-none" v-model="addrForm.customer_name" required>
                 </div>
                 <div class="col-md-6 mb-2">
                   <label class="form-label fw-bold text-dark small">Số điện thoại <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control bg-white border border-secondary-subtle shadow-none" v-model="addrForm.customer_phone" required>
+                  <input type="text" class="form-control bg-white border-secondary-subtle shadow-none" v-model="addrForm.customer_phone" required>
                 </div>
                 
                 <div class="col-md-4 mb-2">
                   <label class="form-label fw-bold text-dark small">Tỉnh/Thành phố <span class="text-danger">*</span></label>
-                  <select class="form-select bg-white border border-secondary-subtle shadow-none fw-semibold" v-model="selectedCityId" @change="onCityChange" required>
+                  <select class="form-select bg-white border-secondary-subtle shadow-none fw-semibold" v-model="selectedCityId" @change="onCityChange" required>
                     <option value="" disabled>-- Chọn Tỉnh/Thành --</option>
                     <option v-for="p in provinces" :key="p.id" :value="p.id">{{ p.full_name }}</option>
                   </select>
                 </div>
                 <div class="col-md-4 mb-2">
                   <label class="form-label fw-bold text-dark small">Quận/Huyện <span class="text-danger">*</span></label>
-                  <select class="form-select bg-white border border-secondary-subtle shadow-none fw-semibold" v-model="selectedDistrictId" @change="onDistrictChange" required :disabled="!selectedCityId">
+                  <select class="form-select bg-white border-secondary-subtle shadow-none fw-semibold" v-model="selectedDistrictId" @change="onDistrictChange" required :disabled="!selectedCityId">
                     <option value="" disabled>-- Chọn Quận/Huyện --</option>
                     <option v-for="d in districts" :key="d.id" :value="d.id">{{ d.full_name }}</option>
                   </select>
                 </div>
                 <div class="col-md-4 mb-2">
                   <label class="form-label fw-bold text-dark small">Phường/Xã <span class="text-danger">*</span></label>
-                  <select class="form-select bg-white border border-secondary-subtle shadow-none fw-semibold" v-model="selectedWardId" @change="onWardChange" required :disabled="!selectedDistrictId">
+                  <select class="form-select bg-white border-secondary-subtle shadow-none fw-semibold" v-model="selectedWardId" @change="onWardChange" required :disabled="!selectedDistrictId">
                     <option value="" disabled>-- Chọn Phường/Xã --</option>
                     <option v-for="w in wards" :key="w.id" :value="w.id">{{ w.full_name }}</option>
                   </select>
@@ -240,12 +253,12 @@
 
                 <div class="col-md-12 mb-2">
                   <label class="form-label fw-bold text-dark small">Địa chỉ cụ thể (Số nhà, đường) <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control bg-white border border-secondary-subtle shadow-none" v-model="addrForm.shipping_address" placeholder="VD: Số 12, Đường ABCD" required>
+                  <input type="text" class="form-control bg-white border-secondary-subtle shadow-none" v-model="addrForm.shipping_address" placeholder="VD: Số 12, Đường ABCD" required>
                 </div>
                 
                 <div class="col-12 mt-3" v-if="!addrForm.is_default">
                   <div class="form-check form-switch p-3 bg-light rounded-3 d-flex align-items-center gap-3 border border-secondary-subtle">
-                    <input class="form-check-input fs-5 m-0" type="checkbox" id="flexSwitchCheckDefault" v-model="addrForm.set_as_default">
+                    <input class="form-check-input fs-5 m-0 cursor-pointer" type="checkbox" id="flexSwitchCheckDefault" v-model="addrForm.set_as_default">
                     <label class="form-check-label fw-bold text-dark m-0 cursor-pointer" for="flexSwitchCheckDefault">Đặt làm địa chỉ mặc định</label>
                   </div>
                 </div>
@@ -269,6 +282,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 import defaultAvatar from '../../../../assets/images/defaults/avatar1.png';
 
 const route = useRoute();
@@ -284,6 +298,9 @@ const activeTab = ref('info');
 const previewAvatar = ref(defaultAvatar);
 const selectedFile = ref(null);
 const isRemoveAvatar = ref(false);
+
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const form = ref({ fullName: '', email: '', password: '', password_confirmation: '', phone: '', status: '', gender: '', birthday: '' });
 
@@ -303,18 +320,39 @@ let addressModalInstance = null;
 const addrForm = ref({ id: null, customer_name: '', customer_phone: '', shipping_address: '', city: '', district: '', ward: '', is_default: 0, set_as_default: false });
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getHeadersJson = () => ({ 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+const handleImageError = (e) => { e.target.src = defaultAvatar; };
+
+// HÀM BẮT LỖI AXIOS DÙNG CHUNG
+const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
+  if (e.response) {
+    if (e.response.status === 401) {
+      Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+    } else if (e.response.data && e.response.data.errors) {
+      errors.value = e.response.data.errors;
+      let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+      Object.values(e.response.data.errors).flat().forEach(msg => {
+          errorHtml += `<li class="mb-1">${msg}</li>`;
+      });
+      errorHtml += '</ul>';
+      Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
+    } else {
+      Swal.fire('Lỗi', e.response.data.message || defaultMsg, 'error');
+    }
+  } else {
+    Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
+  }
+};
 
 const findLocationByName = (list, name) => {
   if (!name || !list) return null;
   return list.find(item => item.full_name === name || item.name === name || name.includes(item.name));
 };
 
+// Gọi API Esgoo qua Axios
 const fetchProvinces = async () => {
   try {
-    const res = await fetch('https://esgoo.net/api-tinhthanh/1/0.htm');
-    const data = await res.json();
-    if(data.error === 0) provinces.value = data.data;
+    const res = await axios.get('https://esgoo.net/api-tinhthanh/1/0.htm');
+    if(res.data.error === 0) provinces.value = res.data.data;
   } catch(e) {}
 };
 
@@ -323,9 +361,8 @@ const onCityChange = async () => {
   selectedDistrictId.value = ''; selectedWardId.value = '';
   addrForm.value.city = provinces.value.find(p => p.id === selectedCityId.value)?.full_name || '';
   if (selectedCityId.value) {
-    const res = await fetch(`https://esgoo.net/api-tinhthanh/2/${selectedCityId.value}.htm`);
-    const data = await res.json();
-    if(data.error === 0) districts.value = data.data;
+    const res = await axios.get(`https://esgoo.net/api-tinhthanh/2/${selectedCityId.value}.htm`);
+    if(res.data.error === 0) districts.value = res.data.data;
   }
 };
 
@@ -333,9 +370,8 @@ const onDistrictChange = async () => {
   wards.value = []; selectedWardId.value = '';
   addrForm.value.district = districts.value.find(d => d.id === selectedDistrictId.value)?.full_name || '';
   if (selectedDistrictId.value) {
-    const res = await fetch(`https://esgoo.net/api-tinhthanh/3/${selectedDistrictId.value}.htm`);
-    const data = await res.json();
-    if(data.error === 0) wards.value = data.data;
+    const res = await axios.get(`https://esgoo.net/api-tinhthanh/3/${selectedDistrictId.value}.htm`);
+    if(res.data.error === 0) wards.value = res.data.data;
   }
 };
 
@@ -343,18 +379,25 @@ const onWardChange = () => {
   addrForm.value.ward = wards.value.find(w => w.id === selectedWardId.value)?.full_name || '';
 };
 
+// Tải thông tin người dùng hiện tại
 const fetchUser = async () => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/users/${route.params.id}`, { headers: getHeaders() });
-    if (res.ok) {
-      const u = (await res.json()).data;
-      form.value = { fullName: u.fullName, email: u.email, phone: u.phone, status: u.status, gender: u.gender || '', birthday: u.birthday || '', password: '', password_confirmation: '' };
-      previewAvatar.value = u.avatar_url ? `http://127.0.0.1:8000/storage/${u.avatar_url}` : defaultAvatar;
-      userAddresses.value = (u.addresses || []).sort((a, b) => b.is_default - a.is_default);
-    } else {
+    const res = await axios.get(`http://127.0.0.1:8000/api/admin/users/${route.params.id}`, { headers: getHeaders() });
+    const u = res.data.data;
+    
+    form.value = { 
+        fullName: u.fullName, email: u.email, phone: u.phone, status: u.status, 
+        gender: u.gender || '', birthday: u.birthday || '', password: '', password_confirmation: '' 
+    };
+    
+    previewAvatar.value = u.avatar_url ? `http://127.0.0.1:8000/storage/${u.avatar_url}` : defaultAvatar;
+    userAddresses.value = (u.addresses || []).sort((a, b) => b.is_default - a.is_default);
+  } catch (err) { 
+      Swal.fire('Lỗi', 'Không thể tải dữ liệu khách hàng', 'error');
       router.push({ name: 'admin-users' });
-    }
-  } catch (err) {} finally { isLoaded.value = true; }
+  } finally { 
+      isLoaded.value = true; 
+  }
 };
 
 const handleRestore = async () => {
@@ -363,19 +406,42 @@ const handleRestore = async () => {
   setTimeout(() => {
     isRestoring.value = false;
     Swal.fire({ icon: 'success', title: 'Khôi phục thành công', text: 'Dữ liệu đã được tải lại như ban đầu', timer: 1500, showConfirmButton: false });
-  }, 400); // Thêm delay nhỏ để Admin cảm nhận được hiệu ứng Loading
+  }, 400); 
 };
 
 const handleAvatarChange = (e) => {
   const file = e.target.files[0];
-  if (file) { selectedFile.value = file; previewAvatar.value = URL.createObjectURL(file); isRemoveAvatar.value = false; }
+  if (file) { 
+      if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
+          Swal.fire('Lỗi', 'Chỉ chấp nhận file ảnh (JPG, PNG, WEBP)', 'error'); return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+          Swal.fire('Lỗi', 'Dung lượng tối đa 2MB', 'error'); return;
+      }
+      selectedFile.value = file; 
+      previewAvatar.value = URL.createObjectURL(file); 
+      isRemoveAvatar.value = false; 
+  }
 };
 
-const removeAvatar = () => { selectedFile.value = null; previewAvatar.value = defaultAvatar; isRemoveAvatar.value = true; };
+const removeAvatar = () => { selectedFile.value = null; previewAvatar.value = defaultAvatar; isRemoveAvatar.value = true; document.getElementById('avatarUpload').value = ''; };
 
+const validatePhone = (e) => {
+    form.value.phone = e.target.value.replace(/\D/g, '').slice(0, 11);
+};
+
+// AXIOS: LƯU HỒ SƠ KHÁCH HÀNG
 const updateUser = async () => {
   isSavingUser.value = true;
   errors.value = {};
+  
+  if (form.value.password && form.value.password !== form.value.password_confirmation) {
+      isSavingUser.value = false;
+      errors.value = { password: ['Mật khẩu xác nhận không khớp!'] };
+      Swal.fire('Lỗi', 'Mật khẩu xác nhận không khớp!', 'warning');
+      return;
+  }
+
   const formData = new FormData();
   formData.append('_method', 'PUT'); 
   Object.keys(form.value).forEach(key => {
@@ -386,16 +452,16 @@ const updateUser = async () => {
   if (isRemoveAvatar.value) formData.append('remove_avatar', 'true');
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/users/${route.params.id}`, { method: 'POST', headers: getHeaders(), body: formData });
-    const data = await res.json();
-    if (res.ok) {
-      Swal.fire({ icon: 'success', title: 'Thành công', text: data.message, timer: 1500, showConfirmButton: false });
-      // FIX ĐIỂM MÙ 1: Load lại để đồng bộ address
-      fetchUser();
-    } else if (res.status === 422) {
-      errors.value = data.errors;
-    } else { Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra', 'error'); }
-  } catch (err) {} finally { isSavingUser.value = false; }
+    const res = await axios.post(`http://127.0.0.1:8000/api/admin/users/${route.params.id}`, formData, { headers: getHeaders() });
+    Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message, timer: 1500, showConfirmButton: false });
+    fetchUser();
+    form.value.password = '';
+    form.value.password_confirmation = '';
+  } catch (err) { 
+      handleAxiosError(err, 'Không thể cập nhật hồ sơ');
+  } finally { 
+      isSavingUser.value = false; 
+  }
 };
 
 const openAddressModal = async (mode, addr = null) => {
@@ -406,22 +472,20 @@ const openAddressModal = async (mode, addr = null) => {
     districts.value = []; wards.value = [];
   } else {
     addrForm.value = { ...addr, set_as_default: false };
-    // Khớp ID Tỉnh Thành
+    // Khớp ID Tỉnh Thành (AXIOS API)
     if (addr.city && provinces.value.length > 0) {
       const cityObj = findLocationByName(provinces.value, addr.city);
       if (cityObj) {
         selectedCityId.value = cityObj.id;
-        const res = await fetch(`https://esgoo.net/api-tinhthanh/2/${selectedCityId.value}.htm`);
-        const dData = await res.json();
-        if(dData.error === 0) {
-          districts.value = dData.data;
+        const res = await axios.get(`https://esgoo.net/api-tinhthanh/2/${selectedCityId.value}.htm`);
+        if(res.data.error === 0) {
+          districts.value = res.data.data;
           const distObj = findLocationByName(districts.value, addr.district);
           if (distObj) {
             selectedDistrictId.value = distObj.id;
-            const wRes = await fetch(`https://esgoo.net/api-tinhthanh/3/${selectedDistrictId.value}.htm`);
-            const wData = await wRes.json();
-            if(wData.error === 0) {
-              wards.value = wData.data;
+            const wRes = await axios.get(`https://esgoo.net/api-tinhthanh/3/${selectedDistrictId.value}.htm`);
+            if(wRes.data.error === 0) {
+              wards.value = wRes.data.data;
               const wardObj = findLocationByName(wards.value, addr.ward);
               if (wardObj) selectedWardId.value = wardObj.id;
             }
@@ -437,12 +501,24 @@ const openAddressModal = async (mode, addr = null) => {
 const saveAddress = async () => {
   isSavingAddr.value = true;
   const url = addrModalMode.value === 'add' ? `http://127.0.0.1:8000/api/admin/users/${route.params.id}/addresses` : `http://127.0.0.1:8000/api/admin/addresses/${addrForm.value.id}`;
-  const method = addrModalMode.value === 'add' ? 'POST' : 'PUT';
+  
   const payload = { ...addrForm.value, is_default: addrForm.value.set_as_default ? 1 : addrForm.value.is_default };
+  
   try {
-    const res = await fetch(url, { method, headers: getHeadersJson(), body: JSON.stringify(payload) });
-    if (res.ok) { addressModalInstance.hide(); fetchUser(); Swal.fire({ icon: 'success', title: 'Thành công', timer: 1500, showConfirmButton: false }); }
-  } catch (err) {} finally { isSavingAddr.value = false; }
+    if (addrModalMode.value === 'add') {
+        await axios.post(url, payload, { headers: getHeaders() });
+    } else {
+        await axios.put(url, payload, { headers: getHeaders() });
+    }
+    
+    addressModalInstance.hide(); 
+    fetchUser(); 
+    Swal.fire({ icon: 'success', title: 'Thành công', timer: 1500, showConfirmButton: false }); 
+  } catch (err) { 
+      handleAxiosError(err, 'Lỗi khi lưu địa chỉ');
+  } finally { 
+      isSavingAddr.value = false; 
+  }
 };
 
 const deleteAddress = (id) => {
@@ -454,21 +530,15 @@ const deleteAddress = (id) => {
     confirmButtonColor: '#d33',
     cancelButtonColor: '#6c757d',
     confirmButtonText: 'Đồng ý xóa',
-    showLoaderOnConfirm: true,
-    preConfirm: async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/addresses/${id}`, { method: 'DELETE', headers: getHeadersJson() });
-        if (!res.ok) throw new Error('Không thể xóa địa chỉ này');
-        return res;
-      } catch (error) {
-        Swal.showValidationMessage(`Lỗi: ${error.message}`);
-      }
-    },
-    allowOutsideClick: () => !Swal.isLoading()
   }).then(async (result) => {
     if (result.isConfirmed) {
-      await fetchUser();
-      Swal.fire({ icon: 'success', title: 'Đã xóa!', timer: 1500, showConfirmButton: false });
+      try {
+          await axios.delete(`http://127.0.0.1:8000/api/admin/addresses/${id}`, { headers: getHeaders() });
+          await fetchUser();
+          Swal.fire({ icon: 'success', title: 'Đã xóa!', timer: 1500, showConfirmButton: false });
+      } catch (err) {
+          handleAxiosError(err, 'Không thể xóa địa chỉ này');
+      }
     }
   });
 };
@@ -476,12 +546,12 @@ const deleteAddress = (id) => {
 const setDefaultAddress = async (id) => {
   settingDefaultId.value = id;
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/addresses/${id}/default`, { method: 'PUT', headers: getHeadersJson() });
-    if (res.ok) {
-      await fetchUser();
-      Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã thay đổi địa chỉ mặc định', timer: 1500, showConfirmButton: false });
-    }
-  } catch (err) {} finally {
+    await axios.put(`http://127.0.0.1:8000/api/admin/addresses/${id}/default`, {}, { headers: getHeaders() });
+    await fetchUser();
+    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã thay đổi địa chỉ mặc định', timer: 1500, showConfirmButton: false });
+  } catch (err) {
+      handleAxiosError(err, 'Lỗi cập nhật địa chỉ mặc định');
+  } finally {
     settingDefaultId.value = null;
   }
 };
@@ -502,4 +572,5 @@ onMounted(() => { fetchProvinces(); fetchUser(); });
 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
 .invalid-feedback { font-size: 0.8rem; font-weight: 500; }
+.cursor-pointer { cursor: pointer; }
 </style>

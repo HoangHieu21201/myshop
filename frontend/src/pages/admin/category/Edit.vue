@@ -55,7 +55,6 @@
                             <div class="card-body p-4">
                                 <h5 class="fw-bold mb-4 text-brand"><i class="bi bi-info-square-fill me-2"></i>Thông tin danh mục</h5>
                                 
-                                <!-- FIX: Hộp thoại báo lỗi -->
                                 <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" v-if="Object.keys(errors).length > 0">
                                     <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"></i>
                                     <div>Vui lòng kiểm tra lại các trường bị báo đỏ bên dưới.</div>
@@ -64,11 +63,11 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Tên danh mục <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" v-model="form.name" :class="{'is-invalid': errors.name || errors.slug}">
-                                        <!-- FIX LỖI 422 ẨN: Hiển thị lỗi Slug ở ô Tên -->
+                                        <input type="text" class="form-control" v-model="form.name" @input="generateSlug" :class="{'is-invalid': errors.name || errors.slug}" placeholder="VD: Nhẫn Kim Cương">
                                         <div class="invalid-feedback d-block" v-if="errors.name || errors.slug">
                                             {{ errors.name?.[0] }} <br v-if="errors.name && errors.slug" /> {{ errors.slug?.[0] }}
                                         </div>
+                                        <small class="text-muted fst-italic mt-1 d-block" v-if="!errors.name && !errors.slug">Đường dẫn (Slug) tự động cập nhật theo tên.</small>
                                     </div>
                                     
                                     <div class="col-md-6 mb-3">
@@ -82,7 +81,6 @@
                                         <div class="invalid-feedback">{{ errors.parent_id?.[0] }}</div>
                                     </div>
 
-                                    <!-- Thêm trường Thứ tự hiển thị (sort_order) -->
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label fw-bold">Thứ tự ưu tiên hiển thị</label>
                                         <input type="number" class="form-control" v-model="form.sort_order" :class="{'is-invalid': errors.sort_order}" min="0" placeholder="VD: 0, 1, 2...">
@@ -92,7 +90,8 @@
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label fw-bold">Mô tả chi tiết</label>
-                                        <textarea class="form-control" v-model="form.description" rows="3"></textarea>
+                                        <textarea class="form-control" v-model="form.description" rows="3" :class="{'is-invalid': errors.description}"></textarea>
+                                        <div class="invalid-feedback">{{ errors.description?.[0] }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -126,8 +125,8 @@
 
                                 <hr class="text-muted opacity-25 my-4">
                                 <div class="text-end">
-                                    <button type="button" class="btn btn-light me-2 px-4 shadow-sm fw-bold" @click="handleRestore" :disabled="isRestoring">
-                                      <span v-if="isRestoring" class="spinner-border spinner-border-sm me-2"></span>Khôi phục
+                                    <button type="button" class="btn btn-light me-2 px-4 shadow-sm fw-bold border" @click="handleRestore" :disabled="isRestoring">
+                                      <span v-if="isRestoring" class="spinner-border spinner-border-sm me-2"></span>Khôi phục gốc
                                     </button>
                                     <button type="submit" class="btn btn-brand btn-brand-solid px-5 fw-bold shadow-sm"
                                         :disabled="isSaving">
@@ -152,6 +151,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios'; // ĐÃ THÊM AXIOS
 import defaultImage from '../../../assets/images/defaults/placeholder.png';
 
 const router = useRouter();
@@ -166,41 +166,60 @@ const isRemoveImage = ref(false);
 const errors = ref({});
 const treeCategories = ref([]);
 
-// Bổ sung sort_order vào khởi tạo form
 const form = ref({
     name: '', slug: '', parent_id: null, description: '', status: '', sort_order: 0, attributes_schema: []
 });
 
-const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+// Cấu hình headers cho Axios
+const getHeaders = () => ({ 
+    'Accept': 'application/json', 
+    'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
+});
+
+const generateSlug = () => {
+    let slug = form.value.name.toLowerCase();
+    slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
+    slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
+    slug = slug.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
+    slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o');
+    slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u');
+    slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
+    slug = slug.replace(/đ/gi, 'd');
+    slug = slug.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-'); 
+    form.value.slug = slug;
+};
 
 const fetchTreeCategories = async () => {
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin/categories/tree', { headers: getHeaders() });
-        if (res.ok) {
-            const data = await res.json();
-            treeCategories.value = data.data;
-        }
-    } catch (e) {}
+        const res = await axios.get('http://127.0.0.1:8000/api/admin/categories/tree', { headers: getHeaders() });
+        treeCategories.value = res.data.data;
+    } catch (e) {
+        console.error("Lỗi lấy danh mục cha:", e);
+    }
 };
 
 const fetchCategory = async () => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${route.params.id}`, { headers: getHeaders() });
-    if (res.ok) {
-      const u = (await res.json()).data;
-      form.value = { 
-        name: u.name, slug: u.slug, parent_id: u.parent_id, 
-        description: u.description || '', status: u.status,
-        sort_order: u.sort_order || 0, // Lấy dữ liệu sort_order từ API
-        attributes_schema: u.attributes_schema || [] 
-      };
-      previewImage.value = u.thumbnail ? `http://127.0.0.1:8000/storage/${u.thumbnail}` : defaultImage;
-      isRemoveImage.value = false;
-      selectedFile.value = null;
-    } else {
-      router.push({ name: 'admin-categories' });
-    }
-  } catch (err) {} finally { isLoaded.value = true; }
+    const res = await axios.get(`http://127.0.0.1:8000/api/admin/categories/${route.params.id}`, { headers: getHeaders() });
+    const u = res.data.data;
+    
+    form.value = { 
+      name: u.name, slug: u.slug, parent_id: u.parent_id, 
+      description: u.description || '', status: u.status,
+      sort_order: u.sort_order || 0,
+      attributes_schema: u.attributes_schema || [] 
+    };
+    
+    previewImage.value = u.thumbnail ? `http://127.0.0.1:8000/storage/${u.thumbnail}` : defaultImage;
+    isRemoveImage.value = false;
+    selectedFile.value = null;
+    errors.value = {};
+  } catch (err) {
+    Swal.fire('Lỗi', 'Không thể tải dữ liệu danh mục', 'error');
+    router.push({ name: 'admin-categories' });
+  } finally { 
+    isLoaded.value = true; 
+  }
 };
 
 const handleRestore = async () => {
@@ -208,20 +227,28 @@ const handleRestore = async () => {
   await fetchCategory();
   setTimeout(() => {
     isRestoring.value = false;
-    Swal.fire({ icon: 'success', title: 'Khôi phục thành công', timer: 1500, showConfirmButton: false });
+    Swal.fire({ icon: 'success', title: 'Đã khôi phục dữ liệu gốc', timer: 1500, showConfirmButton: false });
   }, 400); 
 };
 
 const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+        if(file.size > 5 * 1024 * 1024) { 
+            Swal.fire('Lỗi', 'Ảnh tối đa 5MB', 'error'); 
+            return; 
+        }
         selectedFile.value = file;
         previewImage.value = URL.createObjectURL(file);
         isRemoveImage.value = false;
     }
 };
 
-const removeImage = () => { selectedFile.value = null; previewImage.value = defaultImage; isRemoveImage.value = true; };
+const removeImage = () => { 
+    selectedFile.value = null; 
+    previewImage.value = defaultImage; 
+    isRemoveImage.value = true; 
+};
 
 const addAttribute = () => {
     if(!form.value.attributes_schema) form.value.attributes_schema = [];
@@ -232,6 +259,7 @@ const removeAttribute = (index) => {
     form.value.attributes_schema.splice(index, 1);
 };
 
+// ĐÃ NÂNG CẤP AXIOS VÀ BẮT LỖI CAO CẤP
 const updateCategory = async () => {
     if (form.value.attributes_schema) {
         form.value.attributes_schema = form.value.attributes_schema.filter(attr => attr.trim() !== '');
@@ -251,7 +279,6 @@ const updateCategory = async () => {
         } else if (form.value[key] !== null && form.value[key] !== '') {
             formData.append(key, form.value[key]);
         } else if (key === 'sort_order') {
-            // Đảm bảo số 0 vẫn được gửi đi
             formData.append('sort_order', form.value[key]);
         }
     });
@@ -260,21 +287,42 @@ const updateCategory = async () => {
     if (isRemoveImage.value) formData.append('remove_thumbnail', 'true');
 
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${route.params.id}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}`, 'Accept': 'application/json' },
-            body: formData
+        const res = await axios.post(`http://127.0.0.1:8000/api/admin/categories/${route.params.id}`, formData, {
+            headers: getHeaders()
         });
-        const data = await res.json();
         
-        if (res.ok) {
-            Swal.fire({ icon: 'success', title: 'Thành công', text: data.message, timer: 1500, showConfirmButton: false });
-            fetchCategory();
-        } else if (res.status === 422) {
-            errors.value = data.errors;
-            Swal.fire('Chú ý', 'Vui lòng kiểm tra lại thông tin.', 'warning');
-        } else { Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra', 'error'); }
-    } catch (err) { Swal.fire('Lỗi', 'Mất kết nối server', 'error'); } finally { isSaving.value = false; }
+        Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message || 'Cập nhật thành công', timer: 1500, showConfirmButton: false });
+        fetchCategory();
+        
+    } catch (err) { 
+        if (err.response) {
+            if (err.response.status === 422) {
+                errors.value = err.response.data.errors || {};
+                
+                // Hiển thị list lỗi đỏ đẹp mắt
+                let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+                Object.values(errors.value).flat().forEach(msg => {
+                    errorHtml += `<li class="mb-1">${msg}</li>`;
+                });
+                errorHtml += '</ul>';
+
+                Swal.fire({ 
+                    title: 'Dữ liệu không hợp lệ', 
+                    html: errorHtml, 
+                    icon: 'error', 
+                    confirmButtonColor: '#dc3545' 
+                });
+            } else if (err.response.status === 401) {
+                Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+            } else {
+                Swal.fire('Lỗi', err.response.data.message || 'Có lỗi xảy ra', 'error');
+            }
+        } else {
+            Swal.fire('Lỗi', 'Mất kết nối server', 'error'); 
+        }
+    } finally { 
+        isSaving.value = false; 
+    }
 };
 
 onMounted(() => {
