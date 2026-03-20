@@ -82,6 +82,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios'; // ĐÃ THÊM AXIOS
 
 const route = useRoute();
 const router = useRouter();
@@ -120,18 +121,18 @@ const handleLogoUpload = (e) => {
 
 const fetchData = async () => {
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/brands/${brandId}`, { headers: getHeaders() });
-        if(res.ok) {
-            const b = (await res.json()).data;
-            form.value.name = b.name;
-            form.value.slug = b.slug;
-            form.value.description = b.description || '';
-            form.value.isActive = b.status === 'active';
-            if(b.logo) logoPreview.value = `http://127.0.0.1:8000/storage/${b.logo}`;
-        } else {
-            router.push({ name: 'admin-brands' });
-        }
-    } catch(e){} finally { isPageLoading.value = false; }
+        const res = await axios.get(`http://127.0.0.1:8000/api/admin/brands/${brandId}`, { headers: getHeaders() });
+        const b = res.data.data;
+        form.value.name = b.name;
+        form.value.slug = b.slug;
+        form.value.description = b.description || '';
+        form.value.isActive = b.status === 'active';
+        if(b.logo) logoPreview.value = `http://127.0.0.1:8000/storage/${b.logo}`;
+    } catch(e){
+        router.push({ name: 'admin-brands' });
+    } finally { 
+        isPageLoading.value = false; 
+    }
 };
 
 const updateBrand = async () => {
@@ -145,20 +146,32 @@ const updateBrand = async () => {
     if (form.value.description) formData.append('description', form.value.description);
     if (logoFile.value) formData.append('logo', logoFile.value);
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/brands/${brandId}`, {
-      method: 'POST', headers: getHeaders(), body: formData
+    const res = await axios.post(`http://127.0.0.1:8000/api/admin/brands/${brandId}`, formData, {
+      headers: getHeaders()
     });
 
-    const data = await res.json();
-    if (res.ok) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', showConfirmButton: false, timer: 1500 }).then(() => {
-        router.push({ name: 'admin-brands' });
-      });
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', showConfirmButton: false, timer: 1500 }).then(() => {
+      router.push({ name: 'admin-brands' });
+    });
+  } catch(e) { 
+    if (e.response) {
+        let errorHtml = '';
+        if (e.response.data.errors) {
+            errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+            Object.values(e.response.data.errors).flat().forEach(msg => {
+                errorHtml += `<li class="mb-1">${msg}</li>`;
+            });
+            errorHtml += '</ul>';
+        } else {
+            errorHtml = `<p class="text-danger">${e.response.data.message}</p>`;
+        }
+        Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
     } else {
-      const errorMsg = data.errors ? Object.values(data.errors).flat().join('\n') : data.message;
-      Swal.fire('Lỗi', errorMsg, 'error');
+        Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
     }
-  } catch(e) { Swal.fire('Lỗi', 'Mất kết nối', 'error'); } finally { isSaving.value = false; }
+  } finally { 
+    isSaving.value = false; 
+  }
 };
 
 onMounted(() => fetchData());
