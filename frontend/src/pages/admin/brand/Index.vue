@@ -1,13 +1,11 @@
 <template>
   <div class="brand-index-wrapper pb-5 mb-5">
     
-    <!-- SHIMMER LOAD LẦN ĐẦU TIÊN -->
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ThinkHub</h1>
       <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải dữ liệu thương hiệu...</p>
     </div>
 
-    <!-- GIAO DIỆN CHÍNH -->
     <div class="container-fluid py-4" v-else>
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
@@ -20,15 +18,12 @@
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
 
-          <!-- Đã chuyển nút Sắp xếp xuống bên dưới -->
-
           <router-link :to="{ name: 'admin-brands-create' }" class="btn btn-brand px-4 py-2 fw-bold shadow-sm text-white rounded-pill" v-if="!isReorderMode">
             <i class="bi bi-plus-circle me-1"></i> Thêm Thương hiệu
           </router-link>
         </div>
       </div>
 
-      <!-- TABS PHÂN LOẠI -->
       <div class="mb-4" :class="{'opacity-50 pe-none': isReorderMode}">
         <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden custom-scrollbar-x pb-1">
           <li class="nav-item">
@@ -66,8 +61,6 @@
           </h6>
           
           <div class="d-flex align-items-center gap-2">
-            
-            <!-- NÚT SẮP XẾP ĐÃ ĐƯỢC CHUYỂN XUỐNG ĐÂY (Chỉ hiện khi ở tab "Đang hiển thị" và không tìm kiếm) -->
             <template v-if="activeTab === 'active' && !searchQuery">
               <button class="btn btn-sm px-3 py-2 fw-bold shadow-sm transition-all" 
                       :class="isReorderMode ? 'btn-warning text-dark' : 'btn-light border text-dark'"
@@ -77,18 +70,15 @@
               </button>
             </template>
 
-            <!-- Nút Lưu Thứ Tự xuất hiện khi bật Reorder Mode -->
             <button v-if="isReorderMode" class="btn btn-sm btn-success text-white fw-bold px-4 shadow-sm py-2" @click="saveReorder" :disabled="isSavingOrder">
               <span v-if="isSavingOrder" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-floppy-fill me-1" v-else></i> LƯU THỨ TỰ
             </button>
 
-            <!-- Search box (Ẩn khi đang reorder) -->
             <div class="search-box position-relative" style="width: 280px; max-width: 100%;" v-show="!isReorderMode">
               <input type="text" class="form-control form-control-sm rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm tên thương hiệu...">
               <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
             </div>
-
           </div>
         </div>
         
@@ -132,7 +122,6 @@
                     <i class="bi bi-grip-vertical fs-5 text-warning"></i>
                   </td>
 
-                  <!-- Hiển thị '-' nếu sort_order là null (khi bị ẩn/xóa) -->
                   <td class="px-4 fw-bold text-center" :class="isReorderMode ? 'text-warning' : 'text-muted'">
                     {{ isReorderMode ? index + 1 : (brand.sort_order ? brand.sort_order : '-') }}
                   </td>
@@ -155,7 +144,6 @@
                     </div>
                   </td>
 
-                  <!-- CỘT TRẠNG THÁI (INLINE EDIT) -->
                   <td class="px-4 text-center">
                     <span v-if="brand.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                     <div v-else class="d-flex align-items-center justify-content-center gap-1">
@@ -179,7 +167,6 @@
                     </div>
                   </td>
 
-                  <!-- CỘT THAO TÁC -->
                   <td class="px-4 text-center" v-if="!isReorderMode">
                     <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" @click="openQuickView(brand)" title="Xem nhanh"><i class="bi bi-eye"></i></button>
                     <template v-if="!brand.deleted_at">
@@ -197,7 +184,6 @@
         </div>
       </div>
 
-      <!-- PHÂN TRANG (Ẩn khi đang sắp xếp) -->
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="totalPages > 1 && !isReorderMode && !isTableLoading">
         <span class="text-muted small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, processedBrands.length) }}</span>
         <nav>
@@ -210,7 +196,6 @@
       </div>
     </div>
 
-    <!-- MODAL QUICK VIEW -->
     <div class="modal fade" id="quickViewBrandModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
@@ -252,8 +237,7 @@
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
-
-// Import ảnh fallback mặc định
+import axios from 'axios';
 import defaultImage from '../../../assets/images/defaults/placeholder.png';
 
 const route = useRoute();
@@ -269,14 +253,12 @@ const currentPageLevel = ref(null);
 const currentPage = ref(1);
 const itemsPerPage = 8; 
 
-// Drag & Drop State
 const isReorderMode = ref(false);
 const isSavingOrder = ref(false);
 const draggedIndex = ref(null);
 const dragOverIndex = ref(null);
 const reorderList = ref([]);
 
-// Quick View State
 const selectedBrand = ref(null);
 let quickViewModalInstance = null;
 
@@ -287,8 +269,6 @@ onBeforeUnmount(() => {
 });
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-
-// ẢNH THAY THẾ CHUẨN MỰC
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
@@ -309,32 +289,27 @@ const fetchData = async () => {
   if (!isFirstLoad.value) isTableLoading.value = true;
   try {
     const [resBrands, resModules] = await Promise.all([
-      fetch('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+      axios.get('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
     ]);
     
-    if (resBrands.ok) {
-      const data = await resBrands.json();
-      const rawBrands = Array.isArray(data.data) ? data.data : [];
-      // Data từ BE trả về đã được sắp xếp sẵn: NULL nằm dưới cùng, số tăng dần
-      brands.value = rawBrands.map(b => ({ 
-        ...b, localStatus: b.status, isStatusChanged: false, isUpdatingStatus: false 
-      }));
-    }
-    if (resModules.ok) {
-        const systemModules = (await resModules.json()).data;
-        const currentModule = systemModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_brands'));
-        if (currentModule) currentPageLevel.value = currentModule.required_level;
-    }
-  } catch (err) {} finally { 
+    const rawBrands = Array.isArray(resBrands.data.data) ? resBrands.data.data : [];
+    brands.value = rawBrands.map(b => ({ 
+      ...b, localStatus: b.status, isStatusChanged: false, isUpdatingStatus: false 
+    }));
+
+    const systemModules = resModules.data.data;
+    const currentModule = systemModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_brands'));
+    if (currentModule) currentPageLevel.value = currentModule.required_level;
+  } catch (err) {
+    console.error(err);
+  } finally { 
     isFirstLoad.value = false;
     isTableLoading.value = false;
   }
 };
 
-// ======================= DRAG AND DROP LOGIC =======================
 const toggleReorderMode = () => {
-  // Chặn bật chế độ sắp xếp nếu không ở tab Active
   if (activeTab.value !== 'active') {
     Swal.fire('Lưu ý', 'Chỉ có thể sắp xếp các thương hiệu đang hoạt động!', 'info');
     return;
@@ -385,38 +360,34 @@ const onDragEnd = (event) => {
 
 const saveReorder = async () => {
   isSavingOrder.value = true;
-  // Bắt đầu ép số thứ tự từ 1 cho danh sách vừa kéo
   const payload = reorderList.value.map((brand, index) => ({
     id: brand.id,
     sort_order: index + 1
   }));
 
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/admin/brands/reorder', {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: payload }) 
-    });
-    
-    if (res.ok) {
-      Swal.fire({icon: 'success', title: 'Đã lưu thứ tự!', timer: 1500, showConfirmButton: false});
-      isReorderMode.value = false;
-      await fetchData(); 
-    } else {
-      throw new Error('Lỗi cập nhật');
-    }
+    await axios.post('http://127.0.0.1:8000/api/admin/brands/reorder', { items: payload }, { headers: getHeaders() });
+    Swal.fire({icon: 'success', title: 'Đã lưu thứ tự!', timer: 1500, showConfirmButton: false});
+    isReorderMode.value = false;
+    await fetchData(); 
   } catch (err) {
-    Swal.fire('Lỗi', 'Không thể cập nhật thứ tự', 'error');
+    if (err.response && err.response.data && err.response.data.errors) {
+        let errorHtml = '<ul class="text-start text-danger small mt-2" style="padding-left: 20px;">';
+        Object.values(err.response.data.errors).flat().forEach(msg => { errorHtml += `<li class="mb-1">${msg}</li>`; });
+        errorHtml += '</ul>';
+        Swal.fire({ title: 'Lỗi Dữ liệu', html: errorHtml, icon: 'error' });
+    } else {
+        Swal.fire('Lỗi', 'Không thể cập nhật thứ tự', 'error');
+    }
   } finally {
     isSavingOrder.value = false;
   }
 };
 
-// ======================= DATA DISPLAY =======================
 const switchTab = (tabId) => { 
     activeTab.value = tabId; 
     currentPage.value = 1; 
-    isReorderMode.value = false; // Tự động tắt Reorder nếu chuyển tab
+    isReorderMode.value = false;
 };
 
 const processedBrands = computed(() => {
@@ -442,7 +413,6 @@ const displayBrands = computed(() => {
   return processedBrands.value.slice(start, start + itemsPerPage);
 });
 
-// ================= INLINE STATUS =================
 const getStatusSelectClass = (status) => {
   const map = { 'active': 'text-success border-success bg-success bg-opacity-10', 'hidden': 'text-warning border-warning bg-warning bg-opacity-10' }; 
   return map[status] || 'bg-light text-secondary'; 
@@ -460,19 +430,34 @@ const saveBrandStatus = async (brand) => {
   formData.append('status', brand.localStatus); 
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/brands/${brand.id}`, { method: 'POST', headers: getHeaders(), body: formData });
-    if (res.ok) {
-      brand.status = brand.localStatus; brand.isStatusChanged = false;
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
-      fetchData(); // Bắt buộc Reload để nhận sort_order mới nhất (null hoặc Max+1) từ Backend
+    await axios.post(`http://127.0.0.1:8000/api/admin/brands/${brand.id}`, formData, { headers: getHeaders() });
+    brand.status = brand.localStatus; 
+    brand.isStatusChanged = false;
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
+    fetchData(); 
+  } catch (error) { 
+    cancelStatusChange(brand); 
+    if (error.response) {
+        if (error.response.status === 401) {
+            Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+        } else if (error.response.data && error.response.data.errors) {
+            let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+            Object.values(error.response.data.errors).flat().forEach(msg => {
+                errorHtml += `<li class="mb-1">${msg}</li>`;
+            });
+            errorHtml += '</ul>';
+            Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
+        } else {
+            Swal.fire('Lỗi', error.response.data.message || 'Không thể cập nhật trạng thái', 'error');
+        }
     } else {
-      cancelStatusChange(brand); Swal.fire('Lỗi', 'Không thể cập nhật trạng thái', 'error');
+        Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
     }
-  } catch (error) { cancelStatusChange(brand); Swal.fire('Lỗi', 'Mất kết nối', 'error'); } 
-  finally { brand.isUpdatingStatus = false; }
+  } finally { 
+    brand.isUpdatingStatus = false; 
+  }
 };
 
-// ================= QUICK VIEW =================
 const openQuickView = (brand) => {
     selectedBrand.value = brand;
     if(!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewBrandModal'));
@@ -480,16 +465,22 @@ const openQuickView = (brand) => {
 };
 const closeQuickView = () => { if(quickViewModalInstance) quickViewModalInstance.hide(); };
 
-// ================= XÓA / KHÔI PHỤC =================
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xóa Thương hiệu?', text: `Thương hiệu "${name}" sẽ bị đưa vào thùng rác!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
       isTableLoading.value = true;
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/brands/${id}`, { method: 'DELETE', headers: getHeaders() });
-      if (res.ok) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/admin/brands/${id}`, { headers: getHeaders() });
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đưa vào thùng rác', showConfirmButton: false, timer: 1500 });
-        fetchData(); // Reload để Backend tước quyền sort_order
-      } else { isTableLoading.value = false; }
+        fetchData(); 
+      } catch(e) {
+        isTableLoading.value = false;
+        if (e.response && e.response.data && e.response.data.message) {
+            Swal.fire('Lỗi', e.response.data.message, 'error');
+        } else {
+            Swal.fire('Lỗi', 'Không thể xóa', 'error');
+        }
+      }
     }
   });
 };
@@ -498,11 +489,18 @@ const restoreBrand = (id) => {
   Swal.fire({ title: 'Khôi phục?', text: "Khôi phục thương hiệu này?", icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
       isTableLoading.value = true;
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/brands/${id}/restore`, { method: 'POST', headers: getHeaders() });
-      if (res.ok) {
+      try {
+        await axios.post(`http://127.0.0.1:8000/api/admin/brands/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã khôi phục thành công', showConfirmButton: false, timer: 1500 });
-        fetchData(); // Reload để Backend cấp lại sort_order Max+1
-      } else { isTableLoading.value = false; }
+        fetchData(); 
+      } catch(e) {
+        isTableLoading.value = false;
+        if (e.response && e.response.data && e.response.data.message) {
+            Swal.fire('Lỗi', e.response.data.message, 'error');
+        } else {
+            Swal.fire('Lỗi', 'Không thể khôi phục', 'error');
+        }
+      }
     }
   });
 };
@@ -522,7 +520,6 @@ onMounted(() => fetchData());
 .bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
 .btn-brand { background-color: #009981; border: none; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; }
 
-/* Styles cho Drag Drop */
 .cursor-move { cursor: grab; }
 .cursor-move:active { cursor: grabbing; }
 .drag-item { transition: transform 0.2s ease, box-shadow 0.2s ease; }

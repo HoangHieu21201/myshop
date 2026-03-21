@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\admin\AdminAttributeValueController;
 use App\Http\Controllers\Api\admin\AdminBrandController;
 use App\Http\Controllers\Api\admin\AdminOrderController;
 use App\Http\Controllers\Api\admin\AdminBannerController;
+use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 
 // Import User
 use App\Http\Controllers\Api\client\CartController;
@@ -143,6 +144,17 @@ Route::prefix('admin')->group(function () {
                 Route::post('coupons', 'store'); 
                 Route::patch('coupons/{id}', 'update');
                 Route::delete('coupons/{id}', 'destroy');
+            });
+        });
+
+        // Quản lý Hạng thành viên (Mã: admin_roles)
+        Route::middleware(['check.module:admin_roles'])->group(function () {
+            Route::controller(AdminMembershipTierController::class)->prefix('tiers')->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/{id}', 'show');
+                Route::post('/{id}', 'update'); 
+                Route::delete('/{id}', 'destroy');
             });
         });
 

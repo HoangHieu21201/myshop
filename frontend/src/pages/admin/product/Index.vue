@@ -17,14 +17,19 @@
             <i class="bi bi-shield-check text-success me-1"></i>
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
+          <!-- Làm mới dữ liệu một cách mượt mà (Silent Load) -->
+          <button class="btn btn-light border shadow-sm fw-bold text-dark px-4 py-2" @click="fetchData(true)">
+            <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+          </button>
           <router-link :to="{ name: 'admin-products-create' }" class="btn btn-brand px-4 py-2 fw-bold shadow-sm text-white rounded-pill">
             <i class="bi bi-plus-circle me-1"></i> Thêm Sản phẩm
           </router-link>
         </div>
       </div>
 
+      <!-- TABS PHÂN LOẠI (Cho phép rớt dòng flex-wrap) -->
       <div class="mb-3">
-        <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden custom-scrollbar-x pb-1">
+        <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
           <li class="nav-item">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'all' }" @click.prevent="switchTab('all')">
               <i class="bi bi-grid-fill me-2"></i> Tất cả
@@ -60,7 +65,6 @@
 
       <!-- BỘ LỌC ĐƯỢC THIẾT KẾ CHUYÊN NGHIỆP -->
       <div class="d-flex flex-wrap gap-3 mb-4">
-        <!-- Lọc Danh mục -->
         <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
           <span class="text-muted small fw-semibold me-2"><i class="bi bi-tags-fill text-brand"></i> Danh mục:</span>
           <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4 cursor-pointer" style="width: auto; box-shadow: none;" v-model="selectedCategoryFilter">
@@ -69,7 +73,6 @@
           </select>
         </div>
         
-        <!-- Lọc Thương hiệu -->
         <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
           <span class="text-muted small fw-semibold me-2"><i class="bi bi-award-fill text-brand"></i> Thương hiệu:</span>
           <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4 cursor-pointer" style="width: auto; box-shadow: none;" v-model="selectedBrandFilter">
@@ -81,7 +84,11 @@
 
       <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-ul me-2"></i>Danh sách Sản phẩm</h6>
+          <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
+            <i class="bi bi-list-ul me-2"></i>Danh sách Sản phẩm
+            <!-- Nút loading nhỏ tinh tế thay cho màn hình trắng -->
+            <div v-if="isSilentLoading" class="spinner-border spinner-border-sm text-brand ms-2" role="status"></div>
+          </h6>
           <div class="search-box position-relative" style="width: 300px; max-width: 100%;">
             <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm theo tên sản phẩm, SKU...">
             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
@@ -96,18 +103,13 @@
                   <th class="py-3 px-4 text-secondary border-0" style="width: 28%;">Sản phẩm (Bản gốc)</th>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 17%;">Phân loại</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Số Biến thể</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái (Sửa nhanh)</th>
                   <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;">Thao tác</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr v-if="isTableLoading">
-                  <td colspan="5" class="text-center py-5 text-muted">
-                    <div class="spinner-border spinner-border-sm text-brand mb-2" role="status"></div>
-                    <div class="small fw-semibold">Đang cập nhật dữ liệu...</div>
-                  </td>
-                </tr>
-                <tr v-else-if="paginatedProducts.length === 0">
+              <!-- Mượt mà: Bảng không bị giật hay biến mất khi tải ngầm -->
+              <tbody :class="{'pe-none': isSilentLoading}">
+                <tr v-if="products.length === 0 && !isSilentLoading && !isTableLoading">
                   <td colspan="5" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
                   </td>
@@ -127,7 +129,6 @@
                                Giá sàn: {{ formatCurrency(product.base_price) }}
                             </div>
                             
-                            <!-- LOGIC HIỂN THỊ ĐÁNH GIÁ (REVIEW) -->
                             <div class="small d-flex align-items-center" :class="(product.review_count > 0) ? 'text-warning fw-bold' : 'text-muted'" :title="product.review_count > 0 ? `Điểm trung bình: ${product.rating_avg} sao` : 'Sản phẩm chưa có đánh giá'">
                                 <i class="bi" :class="(product.review_count > 0) ? 'bi-star-fill' : 'bi-star'"></i>
                                 <span class="ms-1">{{ product.review_count > 0 ? product.rating_avg : 'Chưa có ĐG' }}</span>
@@ -139,7 +140,6 @@
                     </div>
                   </td>
                   
-                  <!-- CỘT PHÂN LOẠI (Có thêm Brand) -->
                   <td class="px-4 overflow-hidden">
                     <div v-if="product.category" class="fw-semibold text-secondary text-truncate mb-1" :title="product.category.name">
                         <i class="bi bi-folder2-open me-1"></i> {{ product.category.name }}
@@ -162,11 +162,13 @@
                         Tồn kho: {{ product.total_stock || 0 }}
                     </div>
                   </td>
+                  
+                  <!-- CỘT TRẠNG THÁI (ĐÃ FIX SPINNER KHÔNG MÉO) -->
                   <td class="px-4 text-center">
                     <span v-if="product.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
-                    <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold cursor-pointer" 
-                              style="width: 120px; font-size: 0.8rem;"
+                    <div v-else class="d-flex align-items-center justify-content-center gap-1 flex-nowrap w-100">
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold cursor-pointer flex-shrink-0" 
+                              style="width: 120px; font-size: 0.8rem; border-color: #ced4da !important;"
                               :class="getStatusSelectClass(product.localStatus || product.status)"
                               v-model="product.localStatus"
                               @change="checkStatusChange(product)"
@@ -175,15 +177,23 @@
                         <option value="draft">Bản nháp</option>
                         <option value="hidden">Đang ẩn</option>
                       </select>
-                      <button v-if="product.isStatusChanged && !product.isUpdatingStatus" @click="saveProductStatus(product)" class="btn btn-sm btn-success rounded-circle shadow-sm px-2 py-1">
-                        <i class="bi bi-check-lg fw-bold"></i>
-                      </button>
-                      <button v-if="product.isStatusChanged && !product.isUpdatingStatus" @click="cancelStatusChange(product)" class="btn btn-sm btn-light rounded-circle shadow-sm px-2 py-1 text-danger border">
-                        <i class="bi bi-x-lg fw-bold"></i>
-                      </button>
-                      <span v-if="product.isUpdatingStatus" class="spinner-border spinner-border-sm text-brand ms-1"></span>
+                      
+                      <!-- KHUNG CỐ ĐỊNH CHỐNG NHẢY SPINNER/BUTTONS ĐƯỢC GIA CỐ CỨNG -->
+                      <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
+                        <div v-if="product.isUpdatingStatus" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
+                        
+                        <template v-else-if="product.isStatusChanged">
+                          <button @click="saveProductStatus(product)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0; flex-shrink: 0 !important;" title="Lưu">
+                            <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
+                          </button>
+                          <button @click="cancelStatusChange(product)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0; flex-shrink: 0 !important;" title="Hủy">
+                            <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
+                          </button>
+                        </template>
+                      </div>
                     </div>
                   </td>
+
                   <td class="px-4 text-center">
                     <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" @click="openQuickView(product.id)"><i class="bi bi-eye"></i></button>
                     <template v-if="!product.deleted_at">
@@ -231,7 +241,6 @@
                     <span class="badge bg-light text-secondary border"><i class="bi bi-folder2 me-1"></i> {{ selectedProduct.category?.name }}</span>
                     <span class="badge bg-light text-secondary border" v-if="selectedProduct.brand"><i class="bi bi-award me-1"></i> {{ selectedProduct.brand?.name }}</span>
                     
-                    <!-- REVIEW BADGE IN QUICK VIEW -->
                     <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" v-if="selectedProduct.review_count > 0">
                         <i class="bi bi-star-fill me-1"></i> {{ selectedProduct.rating_avg }} ({{ selectedProduct.review_count }})
                     </span>
@@ -295,6 +304,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios'; // ĐÃ THÊM AXIOS
 
 const route = useRoute();
 const router = useRouter();
@@ -305,6 +315,7 @@ const systemAttributes = ref([]);
 
 const isFirstLoad = ref(true);
 const isTableLoading = ref(false);
+const isSilentLoading = ref(false);
 
 const searchQuery = ref('');
 const activeTab = ref('all');
@@ -327,7 +338,9 @@ onBeforeUnmount(() => {
   document.body.style = '';
 });
 
+// AXIOS: Bỏ 'Content-Type' vì FormData hoặc Axios tự lo phần này
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+
 const formatCurrency = (val) => { if (val === null || val === undefined || val === '' || isNaN(val)) return '---'; return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val); };
 
 const getThumbnail = (url) => { 
@@ -357,12 +370,14 @@ const cancelStatusChange = (product) => {
   product.isStatusChanged = false;
 };
 
+// ==========================================
+// AXIOS: LƯU TRẠNG THÁI SẢN PHẨM
+// ==========================================
 const saveProductStatus = async (product) => {
   product.isUpdatingStatus = true;
   const formData = new FormData();
   formData.append('_method', 'PUT'); 
   formData.append('category_id', product.category_id);
-  // Cập nhật bảo toàn brand_id khi edit inline
   if(product.brand_id) formData.append('brand_id', product.brand_id);
   formData.append('name', product.name);
   formData.append('slug', product.slug);
@@ -371,23 +386,20 @@ const saveProductStatus = async (product) => {
   formData.append('variants_data', '[]'); 
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${product.id}`, { 
-      method: 'POST', 
-      headers: getHeaders(), 
-      body: formData 
+    const res = await axios.post(`http://127.0.0.1:8000/api/admin/products/${product.id}`, formData, { 
+      headers: getHeaders() 
     });
     
-    if (res.ok) {
-      product.status = product.localStatus; 
-      product.isStatusChanged = false;
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
-    } else {
-      cancelStatusChange(product);
-      Swal.fire('Lỗi', 'Không thể cập nhật trạng thái lúc này', 'error');
-    }
+    product.status = product.localStatus; 
+    product.isStatusChanged = false;
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
   } catch (error) { 
     cancelStatusChange(product);
-    Swal.fire('Lỗi', 'Lỗi kết nối mạng', 'error'); 
+    if (error.response && error.response.status === 401) {
+        Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+    } else {
+        Swal.fire('Lỗi', 'Không thể cập nhật trạng thái lúc này', 'error');
+    }
   } finally {
     product.isUpdatingStatus = false;
   }
@@ -416,73 +428,80 @@ const getAttributeValueName = (attrId, valId) => {
     return `Val_${valId}`;
 };
 
+// ==========================================
+// AXIOS: MỞ XEM NHANH CHI TIẾT
+// ==========================================
 const openQuickView = async (id) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, { headers: getHeaders() });
-    if(res.ok && !isUnmounted) {
-      selectedProduct.value = (await res.json()).data;
+    const res = await axios.get(`http://127.0.0.1:8000/api/admin/products/${id}`, { headers: getHeaders() });
+    if(!isUnmounted) {
+      selectedProduct.value = res.data.data;
       if(!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewProductModal'));
       quickViewModalInstance.show();
     }
   } catch(e){}
 };
 
-const fetchData = async () => {
-  if (!isFirstLoad.value) {
+// ==========================================
+// AXIOS: FETCH TOÀN BỘ SẢN PHẨM & CẤU HÌNH (CÓ SILENT LOAD)
+// ==========================================
+const fetchData = async (silent = false) => {
+  if (silent) {
+    isSilentLoading.value = true;
+  } else if (!isFirstLoad.value) {
     isTableLoading.value = true;
   }
   
   try {
     const [resProd, resCats, resAttr, resModules, resBrands] = await Promise.all([
-      fetch('http://127.0.0.1:8000/api/admin/products', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() })
+      axios.get('http://127.0.0.1:8000/api/admin/products', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() })
     ]);
     
     if (isUnmounted) return;
 
-    if (resCats.ok) {
-      const catData = await resCats.json();
-      categories.value = Array.isArray(catData.data) ? catData.data : (Array.isArray(catData.data?.data) ? catData.data.data : []);
-    }
-    if (resAttr.ok) {
-        const attrData = await resAttr.json();
-        systemAttributes.value = Array.isArray(attrData.data) ? attrData.data : [];
-    }
-    if (resModules.ok) {
-        const systemModules = (await resModules.json()).data;
-        const currentModule = systemModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_products'));
-        if (currentModule) currentPageLevel.value = currentModule.required_level;
-    }
-    if (resBrands.ok) {
-        const brandData = await resBrands.json();
-        brands.value = Array.isArray(brandData.data) ? brandData.data : [];
-    }
+    const catData = resCats.data;
+    categories.value = Array.isArray(catData.data) ? catData.data : (Array.isArray(catData.data?.data) ? catData.data.data : []);
+    
+    const attrData = resAttr.data;
+    systemAttributes.value = Array.isArray(attrData.data) ? attrData.data : [];
+    
+    const sysModules = resModules.data.data;
+    const currentModule = sysModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_products'));
+    if (currentModule) currentPageLevel.value = currentModule.required_level;
+    
+    const brandData = resBrands.data;
+    brands.value = Array.isArray(brandData.data) ? brandData.data : [];
 
-    if (resProd.ok) {
-      const prodData = await resProd.json();
-      products.value = prodData.data.map(p => ({
-        ...p,
-        localStatus: p.status, 
-        isStatusChanged: false,
-        isUpdatingStatus: false,
-        // Ép kiểu đề phòng null từ DB
-        review_count: p.review_count || 0,
-        rating_avg: p.rating_avg || 0
-      }));
-    }
-  } catch (err) {} finally { 
+    const prodData = resProd.data;
+    products.value = prodData.data.map(p => ({
+      ...p,
+      localStatus: p.status, 
+      isStatusChanged: false,
+      isUpdatingStatus: false,
+      review_count: p.review_count || 0,
+      rating_avg: p.rating_avg || 0
+    }));
+  } catch (err) {
+      console.error('Lỗi Axios Load Data:', err);
+  } finally { 
     if(!isUnmounted) {
       isFirstLoad.value = false;
       isTableLoading.value = false;
+      isSilentLoading.value = false;
     }
   }
 };
 
-const switchTab = (tabId) => { activeTab.value = tabId; currentPage.value = 1; };
+const switchTab = (tabId) => { 
+    activeTab.value = tabId; 
+    currentPage.value = 1; 
+};
 
+// Lọc 100% tại Frontend nhờ Computed (Trang web phản hồi 0ms)
 const processedProducts = computed(() => {
   let result = products.value;
   if (activeTab.value === 'deleted') { result = result.filter(r => r.deleted_at); } 
@@ -504,31 +523,39 @@ const processedProducts = computed(() => {
 const totalPages = computed(() => Math.ceil(processedProducts.value.length / itemsPerPage) || 1);
 const paginatedProducts = computed(() => { const start = (currentPage.value - 1) * itemsPerPage; return processedProducts.value.slice(start, start + itemsPerPage); });
 
+// ==========================================
+// AXIOS: XÓA SẢN PHẨM
+// ==========================================
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xóa Sản phẩm?', text: `Sản phẩm "${name}" cùng toàn bộ Biến thể sẽ bị xóa!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
-      isTableLoading.value = true;
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, { method: 'DELETE', headers: getHeaders() });
-      if (res.ok) {
+      isSilentLoading.value = true;
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/admin/products/${id}`, { headers: getHeaders() });
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đưa vào thùng rác', showConfirmButton: false, timer: 1500 });
-        fetchData(); 
-      } else {
-        isTableLoading.value = false;
+        fetchData(true); 
+      } catch(e) {
+        Swal.fire('Lỗi', 'Không thể xóa', 'error');
+        isSilentLoading.value = false;
       }
     }
   });
 };
 
+// ==========================================
+// AXIOS: KHÔI PHỤC SẢN PHẨM
+// ==========================================
 const restoreProduct = (id) => {
   Swal.fire({ title: 'Khôi phục?', text: "Khôi phục sản phẩm này về danh sách bán?", icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
-      isTableLoading.value = true;
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}/restore`, { method: 'POST', headers: getHeaders() });
-      if (res.ok) {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã khôi phục thành công', showConfirmButton: false, timer: 1500 });
-        fetchData(); 
-      } else {
-        isTableLoading.value = false;
+      isSilentLoading.value = true;
+      try {
+          await axios.post(`http://127.0.0.1:8000/api/admin/products/${id}/restore`, {}, { headers: getHeaders() });
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã khôi phục thành công', showConfirmButton: false, timer: 1500 });
+          fetchData(true); 
+      } catch(e) {
+          Swal.fire('Lỗi', 'Không thể khôi phục', 'error');
+          isSilentLoading.value = false;
       }
     }
   });

@@ -152,7 +152,8 @@ const menuItems = ref([
     stateKey: 'users',
     children: [
       { name: 'Nội bộ', path: '/admin/staff', moduleCode: 'admin_staff' },
-      { name: 'Khách hàng', path: '/admin/users', moduleCode: 'admin_users' }
+      { name: 'Khách hàng', path: '/admin/users', moduleCode: 'admin_users' },
+      { name: 'Hạng thành viên', path: '/admin/tiers', moduleCode: 'admin_roles' }
     ]
   },
   {
@@ -180,7 +181,7 @@ const menuItems = ref([
     stateKey: 'marketing',
     children: [
       { name: 'Quản lý Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
-      { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' }, // Đã thêm Quản lý Coupon
+      { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' },
     ]
   },
 ]);
