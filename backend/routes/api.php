@@ -23,9 +23,14 @@ use App\Http\Controllers\Api\admin\AdminBrandController;
 use App\Http\Controllers\Api\admin\AdminOrderController;
 use App\Http\Controllers\Api\admin\AdminBannerController;
 
+// Import User
+use App\Http\Controllers\Api\client\CartController;
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::get('/cart', [CartController::class, 'index']);
 
 // ============================================
 // ADMIN API ROUTES
