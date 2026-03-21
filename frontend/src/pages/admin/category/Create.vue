@@ -58,7 +58,7 @@
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Tên danh mục <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" v-model="form.name" :class="{'is-invalid': errors.name || errors.slug}"
-                                            placeholder="VD: Nhẫn Kim Cương">
+                                            placeholder="VD: Nhẫn Kim Cương" @input="generateSlug">
                                         <div class="invalid-feedback d-block" v-if="errors.name || errors.slug">
                                             {{ errors.name?.[0] }} <br v-if="errors.name && errors.slug" /> {{ errors.slug?.[0] }}
                                         </div>
@@ -78,15 +78,16 @@
 
                                     <!-- Thêm trường Thứ tự hiển thị -->
                                     <div class="col-md-12 mb-3">
-                                        <label class="form-label fw-bold">Thứ tự ưu tiên hiển thị</label>
+                                        <label class="form-label fw-bold">Thứ tự ưu tiên</label>
                                         <input type="number" class="form-control" v-model="form.sort_order" :class="{'is-invalid': errors.sort_order}" min="0" placeholder="VD: 0, 1, 2...">
                                         <div class="invalid-feedback">{{ errors.sort_order?.[0] }}</div>
-                                        <small class="text-muted fst-italic mt-1 d-block">Danh mục có số nhỏ hơn hiển thị lên trước. Mặc định: 0.</small>
+                                        <small class="text-muted fst-italic mt-1 d-block">Nhỏ hiển thị trước. Mặc định: 0.</small>
                                     </div>
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label fw-bold">Mô tả chi tiết</label>
-                                        <textarea class="form-control" v-model="form.description" rows="3" placeholder="Nhập mô tả cho danh mục này..."></textarea>
+                                        <textarea class="form-control" v-model="form.description" rows="3" placeholder="Nhập mô tả cho danh mục này..." :class="{'is-invalid': errors.description}"></textarea>
+                                        <div class="invalid-feedback">{{ errors.description?.[0] }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -141,6 +142,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 import defaultImage from '../../../assets/images/defaults/placeholder.png';
 
 const router = useRouter();
@@ -154,21 +156,27 @@ const form = ref({
     name: '', parent_id: null, description: '', status: 'active', sort_order: 0, attributes_schema: [] 
 });
 
-const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+const getHeaders = () => ({ 
+    'Accept': 'application/json', 
+    'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
+});
 
 const fetchTreeCategories = async () => {
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin/categories/tree', { headers: getHeaders() });
-        if (res.ok) {
-            const data = await res.json();
-            treeCategories.value = data.data;
-        }
-    } catch (e) {}
+        const res = await axios.get('http://127.0.0.1:8000/api/admin/categories/tree', { headers: getHeaders() });
+        treeCategories.value = res.data.data;
+    } catch (e) {
+        console.error("Lỗi lấy danh mục cha:", e);
+    }
 };
 
 const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+        if(file.size > 5 * 1024 * 1024) { 
+            Swal.fire('Lỗi', 'Ảnh tối đa 5MB', 'error'); 
+            return; 
+        }
         selectedFile.value = file;
         previewImage.value = URL.createObjectURL(file);
     }
@@ -176,6 +184,19 @@ const handleImageChange = (e) => {
 
 const addAttribute = () => { form.value.attributes_schema.push(''); };
 const removeAttribute = (index) => { form.value.attributes_schema.splice(index, 1); };
+
+const generateSlug = () => {
+    let slug = form.value.name.toLowerCase();
+    slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
+    slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
+    slug = slug.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
+    slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o');
+    slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u');
+    slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
+    slug = slug.replace(/đ/gi, 'd');
+    slug = slug.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-'); 
+    form.value.slug = slug;
+};
 
 const saveCategory = async () => {
     form.value.attributes_schema = form.value.attributes_schema.filter(attr => attr.trim() !== '');
@@ -199,21 +220,36 @@ const saveCategory = async () => {
     if (selectedFile.value) formData.append('thumbnail', selectedFile.value);
 
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin/categories', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}`, 'Accept': 'application/json' },
-            body: formData
+        const res = await axios.post('http://127.0.0.1:8000/api/admin/categories', formData, {
+            headers: getHeaders()
         });
-        const data = await res.json();
         
-        if (res.ok) {
-            Swal.fire({ icon: 'success', title: 'Thành công', text: data.message, timer: 1500, showConfirmButton: false });
-            router.push({ name: 'admin-categories' });
-        } else if (res.status === 422) {
-            errors.value = data.errors;
-            Swal.fire('Chú ý', 'Vui lòng kiểm tra lại thông tin bị báo đỏ.', 'warning');
-        } else { Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra', 'error'); }
-    } catch (err) { Swal.fire('Lỗi', 'Mất kết nối server', 'error'); } finally { isSaving.value = false; }
+        Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message || 'Đã thêm danh mục', timer: 1500, showConfirmButton: false });
+        router.push({ name: 'admin-categories' });
+
+    } catch (err) { 
+        if (err.response) {
+            if (err.response.status === 422) {
+                errors.value = err.response.data.errors || {};
+                
+                let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+                Object.values(errors.value).flat().forEach(msg => {
+                    errorHtml += `<li class="mb-1">${msg}</li>`;
+                });
+                errorHtml += '</ul>';
+
+                Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
+            } else if (err.response.status === 401) {
+                Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+            } else {
+                Swal.fire('Lỗi', err.response.data.message || 'Có lỗi xảy ra', 'error');
+            }
+        } else {
+            Swal.fire('Lỗi', 'Mất kết nối server', 'error'); 
+        }
+    } finally { 
+        isSaving.value = false; 
+    }
 };
 
 onMounted(() => { fetchTreeCategories(); });

@@ -26,6 +26,10 @@ class User extends Authenticatable
         'google_id',
         'facebook_id',
         'email_verified_at',
+        'tier_id',
+        'accumulated_spent',
+        'pending_spent',
+        'accumulated_orders',
     ];
 
     protected $hidden = [
@@ -38,6 +42,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'accumulated_spent' => 'decimal:2',
+            'pending_spent' => 'decimal:2',
+            'accumulated_orders' => 'integer',
         ];
     }
 
@@ -51,5 +58,23 @@ class User extends Authenticatable
     public function defaultAddress()
     {
         return $this->hasOne(UserAddress::class, 'user_id', 'id')->where('is_default', 1);
+    }
+
+    // 1. Lấy Hạng hiện tại của User
+    public function tier()
+    {
+        return $this->belongsTo(MembershipTier::class, 'tier_id');
+    }
+
+    // 2. Lịch sử sử dụng đặc quyền (Vệ sinh, đánh bóng...)
+    public function serviceUsages()
+    {
+        return $this->hasMany(TierServiceUsage::class, 'user_id');
+    }
+
+    // 3. Lịch sử thăng/giáng hạng
+    public function tierHistories()
+    {
+        return $this->hasMany(TierHistory::class, 'user_id');
     }
 }

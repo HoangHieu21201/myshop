@@ -17,12 +17,14 @@
             <i class="bi bi-shield-check text-success me-1"></i>
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
+          <!-- Làm mới dữ liệu một cách mượt mà (Silent) -->
           <button class="btn btn-light border shadow-sm fw-bold text-dark px-4 py-2" @click="fetchData(1, true)">
             <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
           </button>
         </div>
       </div>
 
+      <!-- TABS PHÂN LOẠI -->
       <div class="mb-3">
         <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
           <li class="nav-item">
@@ -70,6 +72,7 @@
         </ul>
       </div>
 
+      <!-- BỘ LỌC ĐƠN HÀNG -->
       <div class="d-flex flex-wrap gap-3 mb-4 align-items-center">
         <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
           <span class="text-muted small fw-semibold me-2"><i class="bi bi-credit-card-fill text-brand"></i> Thanh toán:</span>
@@ -138,9 +141,11 @@
                       <div class="small text-muted mt-1">{{ order.items_count || 0 }} Món</div>
                     </td>
 
+                    <!-- ĐÃ NÂNG CẤP: CỘT SỬA NHANH THANH TOÁN -->
                     <td class="px-3 text-center">
                       <div class="d-flex flex-column align-items-center">
                         <div class="d-flex align-items-center justify-content-center gap-1 w-100 flex-nowrap">
+                          <!-- BẢO VỆ 1 CHIỀU: Dùng hàm canPaymentTransitionTo -->
                           <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
                                   style="width: 120px; font-size: 0.75rem; border-color: #ced4da !important; flex-shrink: 0;"
                                   :class="getPaymentSelectClass(order.localPaymentStatus || order.payment_status)"
@@ -153,7 +158,9 @@
                             <option value="failed" :hidden="!canPaymentTransitionTo(order.payment_status, 'failed')">Thất bại</option>
                           </select>
                           
+                          <!-- KHUNG CỐ ĐỊNH CHỐNG NHẢY SPINNER/BUTTONS ĐƯỢC GIA CỐ CỨNG -->
                           <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
+                            <!-- Spinner chống méo tuyệt đối -->
                             <div v-if="order.isUpdatingPayment" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
                             
                             <template v-else-if="order.isPaymentStatusChanged">
@@ -172,6 +179,7 @@
                       </div>
                     </td>
 
+                    <!-- CỘT SỬA NHANH TRẠNG THÁI ĐƠN -->
                     <td class="px-3 text-center">
                       <div class="d-flex align-items-center justify-content-center gap-1 w-100 flex-nowrap">
                         <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
@@ -188,7 +196,9 @@
                           <option value="cancelled" :hidden="!canTransitionTo(order.status, 'cancelled')">Hủy đơn</option>
                         </select>
                         
+                        <!-- KHUNG CỐ ĐỊNH CHỐNG NHẢY SPINNER/BUTTONS ĐƯỢC GIA CỐ CỨNG -->
                         <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
+                          <!-- Spinner chống méo tuyệt đối -->
                           <div v-if="order.isUpdatingStatus" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
                           
                           <template v-else-if="order.isStatusChanged">
@@ -343,6 +353,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 const route = useRoute();
 const orders = ref([]);
@@ -371,7 +382,6 @@ const statusCounts = ref({
     all: 0, pending: 0, confirmed: 0, processing: 0, shipping: 0, delivered: 0, cancelled: 0, returned: 0
 });
 
-// BỘ LƯU TRỮ RAM (TAB CACHE)
 const tabCache = ref({});
 
 onBeforeUnmount(() => {
@@ -384,7 +394,10 @@ onBeforeUnmount(() => {
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
+const formatCurrency = (val) => {
+  if (val === null || val === undefined || val === '' || isNaN(val)) return '---';
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val);
+};
 const formatDate = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); };
 const formatDateTime = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleString('vi-VN'); };
 
@@ -406,7 +419,6 @@ const formatPaymentStatus = (status) => {
     return map[status] || status;
 };
 
-// CSS CHO Ô SELECT THANH TOÁN
 const getPaymentSelectClass = (status) => {
     const map = { 
       'unpaid': 'text-warning border-warning bg-warning bg-opacity-10', 
@@ -440,7 +452,6 @@ const getOrderStatusClass = (status) => {
   return map[status] || 'bg-light text-secondary'; 
 };
 
-// BẢO VỆ LUỒNG ĐƠN HÀNG 1 CHIỀU
 const allowedTransitions = {
     'pending': ['pending', 'confirmed', 'cancelled'],
     'confirmed': ['confirmed', 'processing', 'cancelled'],
@@ -492,7 +503,7 @@ const saveOrderStatus = async (order) => {
 
 const allowedPaymentTransitions = {
     'unpaid': ['unpaid', 'paid', 'failed'],
-    'paid': ['paid', 'refunded'],
+    'paid': ['paid', 'refunded'], 
     'failed': ['failed', 'unpaid', 'paid'], 
     'refunded': ['refunded'] 
 };
@@ -522,7 +533,7 @@ const savePaymentStatus = async (order) => {
 
   order.isUpdatingPayment = true;
   const payload = {
-      status: order.status, 
+      status: order.status,
       payment_status: order.localPaymentStatus,
       note: `Kế toán cập nhật thanh toán: ${formatPaymentStatus(order.localPaymentStatus)}`
   };
@@ -530,33 +541,31 @@ const savePaymentStatus = async (order) => {
   await sendUpdateRequest(order, payload, 'isUpdatingPayment', 'payment_status', order.localPaymentStatus, 'isPaymentStatusChanged');
 };
 
-// HÀM GỌI API CHUNG DÙNG CHO CẢ 2 CỘT CẬP NHẬT
 const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newValue, changedFlag) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, { 
-      method: 'PUT', 
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' }, 
-      body: JSON.stringify(payload) 
+    const res = await axios.put(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, payload, { 
+      headers: getHeaders() 
     });
     
-    if (res.ok) {
-      order[targetField] = newValue; 
-      order[changedFlag] = false;
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật hệ thống thành công', showConfirmButton: false, timer: 1500 });
-      
-      tabCache.value = {}; 
-      fetchCounts(); 
-    } else {
-      if (targetField === 'status') cancelStatusChange(order); else cancelPaymentStatusChange(order);
-      if (res.status === 401) {
-          Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
-      } else {
-          Swal.fire('Lỗi', `Máy chủ từ chối cập nhật (Lỗi ${res.status})`, 'error');
-      }
-    }
+    order[targetField] = newValue; 
+    order[changedFlag] = false;
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật hệ thống thành công', showConfirmButton: false, timer: 1500 });
+    
+    tabCache.value = {}; 
+    fetchCounts(); 
+    
   } catch (error) { 
     if (targetField === 'status') cancelStatusChange(order); else cancelPaymentStatusChange(order);
-    Swal.fire('Lỗi', 'Lỗi kết nối mạng', 'error'); 
+    
+    if (error.response) {
+      if (error.response.status === 401) {
+          Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+      } else {
+          Swal.fire('Lỗi', `Máy chủ từ chối cập nhật (Lỗi ${error.response.status})`, 'error');
+      }
+    } else {
+      Swal.fire('Lỗi', 'Lỗi kết nối mạng', 'error'); 
+    }
   } finally {
     order[loadingFlag] = false;
   }
@@ -564,9 +573,9 @@ const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newVa
 
 const openQuickView = async (id) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/orders/${id}`, { headers: getHeaders() });
-    if(res.ok && !isUnmounted) {
-      selectedOrder.value = (await res.json()).data;
+    const res = await axios.get(`http://127.0.0.1:8000/api/admin/orders/${id}`, { headers: getHeaders() });
+    if(!isUnmounted) {
+      selectedOrder.value = res.data.data;
       if(!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewOrderModal'));
       quickViewModalInstance.show();
     }
@@ -579,7 +588,7 @@ const fetchCounts = async () => {
         const requests = statuses.map(status => {
             let url = `http://127.0.0.1:8000/api/admin/orders?page=1`;
             if (status !== 'all') url += `&status=${status}`;
-            return fetch(url, { headers: getHeaders() }).then(res => res.json());
+            return axios.get(url, { headers: getHeaders() }).then(res => res.data);
         });
 
         const results = await Promise.all(requests);
@@ -589,12 +598,10 @@ const fetchCounts = async () => {
             }
         });
         statusCounts.value.all = statusCounts.value.all - (statusCounts.value.returned || 0);
-    } catch (e) {}
+    } catch (e) { console.error(e); }
 };
 
-// CƠ CHẾ CACHE-FIRST SWR
 const fetchData = async (page = 1, silent = false) => {
-  
   const cacheKey = `${activeTab.value}_${page}_${filters.value.payment_status}_${filters.value.start_date}_${filters.value.end_date}`;
 
   if (tabCache.value[cacheKey]) {
@@ -614,44 +621,43 @@ const fetchData = async (page = 1, silent = false) => {
 
   try {
     const [resOrders, resModules] = await Promise.all([
-      fetch(`http://127.0.0.1:8000/api/admin/orders?${queryParams.toString()}`, { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+      axios.get(`http://127.0.0.1:8000/api/admin/orders?${queryParams.toString()}`, { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
     ]);
     
     if (isUnmounted) return;
 
-    if (resModules.ok) {
-        const sysModules = (await resModules.json()).data;
-        const currentModule = sysModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_orders'));
-        if (currentModule) currentPageLevel.value = currentModule.required_level;
-    }
+    const sysModules = resModules.data.data;
+    const currentModule = sysModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_orders'));
+    if (currentModule) currentPageLevel.value = currentModule.required_level;
 
-    if (resOrders.ok) {
-      const result = await resOrders.json();
-      const dataPayload = result.data.data ? result.data.data : result.data; 
-      
-      const mappedOrders = dataPayload.map(o => ({
-        ...o, 
-        localStatus: o.status, 
-        isStatusChanged: false, 
-        isUpdatingStatus: false,
-        localPaymentStatus: o.payment_status,
-        isPaymentStatusChanged: false,
-        isUpdatingPayment: false
-      }));
+    const result = resOrders.data;
+    const dataPayload = result.data.data ? result.data.data : result.data; 
+    
+    const mappedOrders = dataPayload.map(o => ({
+      ...o, 
+      localStatus: o.status, 
+      isStatusChanged: false, 
+      isUpdatingStatus: false,
+      localPaymentStatus: o.payment_status,
+      isPaymentStatusChanged: false,
+      isUpdatingPayment: false
+    }));
 
-      const newPagination = result.data.last_page ? {
-          currentPage: result.data.current_page,
-          lastPage: result.data.last_page,
-          total: result.data.total
-      } : pagination.value;
+    const newPagination = result.data.last_page ? {
+        currentPage: result.data.current_page,
+        lastPage: result.data.last_page,
+        total: result.data.total
+    } : pagination.value;
 
-      orders.value = mappedOrders;
-      pagination.value = newPagination;
+    orders.value = mappedOrders;
+    pagination.value = newPagination;
 
-      tabCache.value[cacheKey] = { data: mappedOrders, pagination: newPagination };
-    }
-  } catch (err) {} finally { 
+    tabCache.value[cacheKey] = { data: mappedOrders, pagination: newPagination };
+
+  } catch (error) { 
+    console.error('Lỗi Axios Load Data:', error);
+  } finally { 
     if(!isUnmounted) {
       isFirstLoad.value = false;
       isTableLoading.value = false;

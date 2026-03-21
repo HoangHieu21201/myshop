@@ -6,15 +6,26 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProductRequest extends FormRequest
 {
-
     public function authorize(): bool
     {
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        if ($this->has('variants_data')) {
+            $variants = json_decode($this->input('variants_data'), true) ?? [];
+            foreach ($variants as $index => &$variant) {
+                $variant['image_file'] = $this->file("variant_image_{$index}");
+                $variant['current_image'] = $variant['current_image'] ?? null;
+            }
+            $this->merge(['parsed_variants' => $variants]);
+        }
+    }
+
     public function rules(): array
     {
-        $productId = $this->route('product');
+        $productId = $this->route('product'); 
 
         return [
             'category_id'       => 'required|exists:categories,id',
@@ -22,25 +33,43 @@ class UpdateProductRequest extends FormRequest
             'name'              => 'required|string|max:255',
             'slug'              => 'required|string|max:255|unique:products,slug,' . $productId,
             'base_price'        => 'required|numeric|min:0',
-            'promotional_price' => 'nullable|numeric|min:0|lte:base_price',
-            'description'       => 'nullable|string',
-            'thumbnail_image'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'specifications'    => 'nullable|json',
-            'is_featured'       => 'nullable|boolean',
+            'thumbnail_image'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
             'status'            => 'required|in:published,draft,hidden',
-
-            'variants_data'     => 'required|json',
+            
+            'parsed_variants'   => 'required|array|min:1',
+            
+            // Xử lý khó nhất: Bỏ qua check Unique SKU nếu ID của SKU đó là của chính nó
+            'parsed_variants.*.sku' => ['required', 'string', 'distinct', function($attribute, $value, $fail) {
+                $index = explode('.', $attribute)[1];
+                $variantId = $this->input("parsed_variants.{$index}.id");
+                
+                $query = \DB::table('product_variants')->where('sku', $value)->whereNull('deleted_at');
+                if ($variantId) {
+                    $query->where('id', '!=', $variantId); // Bỏ qua id hiện tại
+                }
+                
+                if($query->exists()) {
+                    $fail("Mã SKU {$value} đã tồn tại trên hệ thống.");
+                }
+            }],
+            
+            'parsed_variants.*.price'             => 'required|numeric|min:0',
+            'parsed_variants.*.promotional_price' => 'nullable|numeric|min:0|lte:parsed_variants.*.price',
+            'parsed_variants.*.stock_quantity'    => 'required|integer|min:0',
+            
+            // YÊU CẦU ẢNH: Chỉ bắt buộc nếu biến thể này chưa có ảnh cũ (current_image rỗng)
+            'parsed_variants.*.image_file'        => 'required_without:parsed_variants.*.current_image|nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'category_id.required' => 'Vui lòng chọn danh mục sản phẩm.',
-            'name.required' => 'Tên sản phẩm không được để trống.',
             'slug.unique' => 'Đường dẫn (slug) này đã tồn tại trên một sản phẩm khác.',
-            'thumbnail_image.max' => 'Kích thước ảnh tối đa là 2MB.',
-            'variants_data.required' => 'Dữ liệu biến thể không được để trống.',
+            'parsed_variants.*.sku.distinct' => 'Có mã SKU bị trùng lặp bên trong lưới biến thể đang gửi.',
+            'parsed_variants.*.promotional_price.lte' => 'Giá khuyến mãi không được lớn hơn Giá bán.',
+            'parsed_variants.*.image_file.required_without' => 'Vui lòng chọn ảnh cho biến thể mới thêm.',
+            'parsed_variants.*.image_file.max' => 'Ảnh của biến thể không được vượt quá 2MB.',
         ];
     }
 }

@@ -256,9 +256,14 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
+const route = useRoute();
 const orders = ref([]);
+const systemModules = ref([]); 
+
 const isFirstLoad = ref(true);
 const isTableLoading = ref(false);
 const isSilentLoading = ref(false);
@@ -271,15 +276,17 @@ const filters = ref({
 });
 
 const pagination = ref({ currentPage: 1, lastPage: 1, total: 0 });
+const currentPageLevel = ref(null);
 
 const selectedOrder = ref(null);
 let quickViewModalInstance = null;
 let isUnmounted = false;
 
-// Đếm số lượng đơn ở các Tab theo payment_status (của nhóm returned)
 const statusCounts = ref({
     all: 0, paid: 0, refunded: 0
 });
+
+const tabCache = ref({});
 
 onBeforeUnmount(() => {
   isUnmounted = true;
@@ -322,7 +329,6 @@ const getOrderStatusClass = (status) => {
   return map[status] || 'bg-light text-secondary'; 
 };
 
-// ĐÃ ĐỒNG BỘ: Sử dụng fetch PUT JSON chuẩn xác, thay cho POST & FormData
 const processRefund = async (order) => {
   const { value: noteText, isDismissed } = await Swal.fire({
     title: 'Xác nhận Đã Hoàn Tiền',
@@ -338,58 +344,48 @@ const processRefund = async (order) => {
   if (isDismissed) return;
 
   const payload = {
-      status: 'returned', // Trạng thái đơn luôn là trả hàng
-      payment_status: 'refunded', // Chuyển sang đã hoàn
+      status: 'returned', 
+      payment_status: 'refunded', 
       note: noteText ? `Kế toán xác nhận Hoàn tiền: ${noteText}` : 'Kế toán xác nhận Hoàn tiền'
   };
 
   try {
-    const customHeaders = {
-        ...getHeaders(),
-        'Content-Type': 'application/json'
-    };
-
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, { 
-      method: 'PUT', 
-      headers: customHeaders, 
-      body: JSON.stringify(payload) 
+    const res = await axios.put(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, payload, { 
+      headers: getHeaders() 
     });
     
-    if (res.ok) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Hoàn tiền thành công', showConfirmButton: false, timer: 1500 });
-      fetchData(pagination.value.currentPage, true); 
-      fetchCounts(); // Update số lượng trên tab
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Hoàn tiền thành công', showConfirmButton: false, timer: 1500 });
+    tabCache.value = {}; 
+    fetchData(pagination.value.currentPage, true); 
+    fetchCounts(); 
+    
+  } catch (error) { 
+    if (error.response && error.response.status === 401) {
+        Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
     } else {
-      if (res.status === 401) {
-          Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
-      } else {
-          Swal.fire('Lỗi', 'Không thể cập nhật hệ thống', 'error');
-      }
+        Swal.fire('Lỗi', 'Không thể cập nhật hệ thống', 'error');
     }
-  } catch (error) { Swal.fire('Lỗi', 'Lỗi mạng', 'error'); }
+  }
 };
 
 const openQuickView = async (id) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/orders/${id}`, { headers: getHeaders() });
-    if(res.ok && !isUnmounted) {
-      selectedOrder.value = (await res.json()).data;
+    const res = await axios.get(`http://127.0.0.1:8000/api/admin/orders/${id}`, { headers: getHeaders() });
+    if(!isUnmounted) {
+      selectedOrder.value = res.data.data;
       if(!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewOrderModal'));
       quickViewModalInstance.show();
     }
   } catch(e){}
 };
 
-// ==========================================
-// GỌI 1 API CẬP NHẬT COUNT CHUẨN
-// ==========================================
 const fetchCounts = async () => {
     try {
         const tabs = ['all', 'paid', 'refunded'];
         const requests = tabs.map(tab => {
             let url = `http://127.0.0.1:8000/api/admin/orders?page=1&status=returned`;
             if (tab !== 'all') url += `&payment_status=${tab}`;
-            return fetch(url, { headers: getHeaders() }).then(res => res.json());
+            return axios.get(url, { headers: getHeaders() }).then(res => res.data);
         });
 
         const results = await Promise.all(requests);
@@ -401,35 +397,51 @@ const fetchCounts = async () => {
     } catch (e) {}
 };
 
-// ==========================================
-// API FETCH CÓ SILENT LOAD (MƯỢT MÀ)
-// ==========================================
 const fetchData = async (page = 1, silent = false) => {
-  if (silent) {
+  const cacheKey = `${activeTab.value}_${page}_${filters.value.start_date}_${filters.value.end_date}`;
+
+  if (tabCache.value[cacheKey]) {
+      orders.value = tabCache.value[cacheKey].data;
+      pagination.value = tabCache.value[cacheKey].pagination;
       isSilentLoading.value = true;
-  } else if (!isFirstLoad.value) {
-      isTableLoading.value = true;
+  } else {
+      if (silent) isSilentLoading.value = true;
+      else if (!isFirstLoad.value) isTableLoading.value = true;
   }
   
-  // LUÔN LỌC NHỮNG ĐƠN HÀNG CÓ TRẠNG THÁI 'returned'
   let queryParams = new URLSearchParams({ page, status: 'returned' });
   if (activeTab.value !== 'all') queryParams.append('payment_status', activeTab.value);
   if (filters.value.start_date) queryParams.append('start_date', filters.value.start_date);
   if (filters.value.end_date) queryParams.append('end_date', filters.value.end_date);
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/orders?${queryParams.toString()}`, { headers: getHeaders() });
+    const [resOrders, resModules] = await Promise.all([
+      axios.get(`http://127.0.0.1:8000/api/admin/orders?${queryParams.toString()}`, { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+    ]);
+
     if (isUnmounted) return;
 
-    if (res.ok) {
-      const result = await res.json();
-      const dataPayload = result.data.data ? result.data.data : result.data; 
-      orders.value = dataPayload;
-      if (result.data.last_page) {
-          pagination.value = { currentPage: result.data.current_page, lastPage: result.data.last_page, total: result.data.total };
-      }
-    }
-  } catch (err) {} finally { 
+    const sysModules = resModules.data.data;
+    const currentModule = sysModules.find(m => m.module_code === (route.meta.moduleCode || 'admin_orders'));
+    if (currentModule) currentPageLevel.value = currentModule.required_level;
+
+    const result = resOrders.data;
+    const dataPayload = result.data.data ? result.data.data : result.data; 
+    
+    const newPagination = result.data.last_page ? {
+        currentPage: result.data.current_page,
+        lastPage: result.data.last_page,
+        total: result.data.total
+    } : pagination.value;
+
+    orders.value = dataPayload;
+    pagination.value = newPagination;
+    tabCache.value[cacheKey] = { data: dataPayload, pagination: newPagination };
+
+  } catch (err) { 
+      console.error(err);
+  } finally { 
     if(!isUnmounted) {
       isFirstLoad.value = false;
       isTableLoading.value = false;
@@ -443,7 +455,6 @@ const switchTab = (tabId) => {
     fetchData(1, true); 
 };
 
-// TÌM KIẾM OFFLINE CHO TRANG HIỆN TẠI
 const displayedOrders = computed(() => {
     let result = orders.value;
     if (searchQuery.value) {

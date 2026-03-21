@@ -78,6 +78,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios'; // ĐÃ THÊM AXIOS
 
 const router = useRouter();
 const isSaving = ref(false);
@@ -121,20 +122,34 @@ const submitBrand = async () => {
     if (form.value.description) formData.append('description', form.value.description);
     if (logoFile.value) formData.append('logo', logoFile.value);
 
-    const res = await fetch('http://127.0.0.1:8000/api/admin/brands', {
-      method: 'POST', headers: getHeaders(), body: formData
+    // AXIOS CHUẨN MỰC
+    const res = await axios.post('http://127.0.0.1:8000/api/admin/brands', formData, {
+      headers: getHeaders()
     });
 
-    const data = await res.json();
-    if (res.ok) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã tạo thương hiệu', showConfirmButton: false, timer: 1500 }).then(() => {
-        router.push({ name: 'admin-brands' });
-      });
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã tạo thương hiệu', showConfirmButton: false, timer: 1500 }).then(() => {
+      router.push({ name: 'admin-brands' });
+    });
+    
+  } catch(e) { 
+    if (e.response) {
+        let errorHtml = '';
+        if (e.response.data.errors) {
+            errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+            Object.values(e.response.data.errors).flat().forEach(msg => {
+                errorHtml += `<li class="mb-1">${msg}</li>`;
+            });
+            errorHtml += '</ul>';
+        } else {
+            errorHtml = `<p class="text-danger">${e.response.data.message}</p>`;
+        }
+        Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
     } else {
-      const errorMsg = data.errors ? Object.values(data.errors).flat().join('\n') : data.message;
-      Swal.fire('Lỗi', errorMsg, 'error');
+        Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
     }
-  } catch(e) { Swal.fire('Lỗi', 'Mất kết nối', 'error'); } finally { isSaving.value = false; }
+  } finally { 
+    isSaving.value = false; 
+  }
 };
 </script>
 

@@ -25,9 +25,9 @@
         </div>
       </div>
 
-      <!-- Tabs (Bị mờ đi khi đang ở chế độ Sắp Xếp) -->
+      <!-- TABS ĐÃ FIX RESPONSIVE: Thêm flex-wrap và gap để tự động rớt dòng mượt mà -->
       <div class="mb-4" :class="{'opacity-50 pe-none': isReorderMode}">
-        <ul class="nav nav-underline border-bottom mb-2 flex-nowrap overflow-hidden custom-scrollbar-x pb-1">
+        <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
           <li class="nav-item">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'all' }" @click.prevent="switchTab('all')">
               <i class="bi bi-grid-fill me-2"></i> Tất cả
@@ -57,15 +57,15 @@
 
       <!-- Bảng Dữ liệu -->
       <div class="card border-0 shadow-sm rounded-4 mb-4" :class="{'border-warning border-2': isReorderMode}">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
           <h6 class="fw-bold mb-0 text-dark">
             <i class="bi" :class="isReorderMode ? 'bi-arrows-move text-warning' : 'bi-list-ul'"></i> 
             {{ isReorderMode ? 'Kéo thả dòng để thay đổi thứ tự ưu tiên' : 'Danh sách hiển thị' }}
           </h6>
           
-          <div class="d-flex align-items-center gap-2">
+          <!-- THANH CÔNG CỤ ĐÃ FIX RESPONSIVE: Thêm flex-wrap -->
+          <div class="d-flex align-items-center flex-wrap gap-2">
             
-            <!-- ĐÃ ĐỒNG BỘ: Nút Sắp xếp nằm cạnh ô tìm kiếm và chỉ hiện ở tab Hiển thị -->
             <template v-if="activeTab === 'active' && !searchQuery">
               <button class="btn btn-sm px-3 py-2 fw-bold shadow-sm transition-all" 
                       :class="isReorderMode ? 'btn-warning text-dark' : 'btn-light border text-dark'"
@@ -76,7 +76,7 @@
             </template>
 
             <!-- Nút Lưu Thứ Tự xuất hiện khi bật Reorder Mode -->
-            <button v-if="isReorderMode" class="btn btn-sm btn-success text-white fw-bold px-4 shadow-sm py-2" @click="saveReorder" :disabled="isSavingOrder">
+            <button v-if="isReorderMode" class="btn btn-sm btn-warning text-dark fw-bold px-4 shadow-sm py-2" @click="saveReorder" :disabled="isSavingOrder">
               <span v-if="isSavingOrder" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-floppy-fill me-1" v-else></i> LƯU THỨ TỰ
             </button>
@@ -130,14 +130,12 @@
                     <i class="bi bi-grip-vertical fs-5 text-warning"></i>
                   </td>
                   
-                  <!-- ĐÃ ĐỒNG BỘ: Thứ tự bắt đầu từ 1, trả về '-' nếu là null -->
                   <td class="px-4 fw-bold text-center" :class="isReorderMode ? 'text-warning' : 'text-muted'">
                     {{ isReorderMode ? index + 1 : (cat.sort_order ? cat.sort_order : '-') }}
                   </td>
 
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <!-- Áp dụng fallback mặc định và bắt sự kiện @error -->
                       <img :src="getImageUrl(cat.thumbnail)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm pe-none" style="width: 45px; height: 45px;">
                       <div class="overflow-hidden">
                         <h6 class="mb-0 fw-bold text-dark text-truncate" :title="cat.name">{{ cat.name }}</h6>
@@ -157,11 +155,11 @@
                     </div>
                   </td>
 
-                  <!-- ĐÃ ĐỒNG BỘ: Cột Trạng thái (Inline Edit) -->
+                  <!-- Cột Trạng thái (Inline Edit) -->
                   <td class="px-4 text-center">
                     <span v-if="cat.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                     <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold" 
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0" 
                               style="width: 110px; font-size: 0.8rem;"
                               :class="getStatusSelectClass(cat.localStatus || cat.status)"
                               v-model="cat.localStatus"
@@ -169,16 +167,20 @@
                               :disabled="cat.isUpdatingStatus || isReorderMode">
                         <option value="active">Hiển thị</option>
                         <option value="hidden">Đang ẩn</option>
-                        <option value="maintenance" v-if="cat.type === 'room_type'">Bảo trì</option>
                       </select>
                       
-                      <button v-if="cat.isStatusChanged && !cat.isUpdatingStatus" @click="saveCategoryStatus(cat)" class="btn btn-sm btn-success rounded-circle shadow-sm px-2 py-1" title="Lưu">
-                        <i class="bi bi-check-lg fw-bold"></i>
-                      </button>
-                      <button v-if="cat.isStatusChanged && !cat.isUpdatingStatus" @click="cancelStatusChange(cat)" class="btn btn-sm btn-light rounded-circle shadow-sm px-2 py-1 text-danger border" title="Hủy">
-                        <i class="bi bi-x-lg fw-bold"></i>
-                      </button>
-                      <span v-if="cat.isUpdatingStatus" class="spinner-border spinner-border-sm text-brand ms-1"></span>
+                      <!-- Khung cố định chống nhảy -->
+                      <div class="d-flex align-items-center justify-content-start flex-shrink-0" style="min-width: 55px; height: 28px;">
+                        <div v-if="cat.isUpdatingStatus" class="spinner-border text-brand ms-1" style="width: 1.1rem; height: 1.1rem; border-width: 0.15em;" role="status"></div>
+                        <template v-else-if="cat.isStatusChanged">
+                          <button @click="saveCategoryStatus(cat)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0;" title="Lưu">
+                            <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
+                          </button>
+                          <button @click="cancelStatusChange(cat)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0;" title="Hủy">
+                            <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
+                          </button>
+                        </template>
+                      </div>
                     </div>
                   </td>
 
@@ -231,12 +233,11 @@
           <div class="modal-body p-4" v-if="selectedCategory">
             <div class="row">
               <div class="col-md-5 text-center border-end mb-4 mb-md-0">
-                <!-- Thêm sự kiện bắt lỗi ảnh cho modal -->
                 <img :src="getImageUrl(selectedCategory.thumbnail)" @error="handleImageError" class="rounded-4 shadow-sm border border-2 border-light object-fit-cover mb-3" style="width: 100%; max-height: 250px;">
                 <h5 class="fw-bold mb-1">{{ selectedCategory.name }}</h5>
                 <p class="text-muted small mb-3">/{{ selectedCategory.slug }}</p>
                 <span class="badge px-3 py-2 rounded-pill" :class="selectedCategory.status === 'active' ? 'bg-success text-white' : (selectedCategory.status === 'hidden' ? 'bg-warning text-dark' : 'bg-danger text-white')">
-                  {{ selectedCategory.status === 'active' ? 'Đang hiển thị' : (selectedCategory.status === 'hidden' ? 'Đang ẩn' : 'Bảo trì') }}
+                  {{ selectedCategory.status === 'active' ? 'Đang hiển thị' : 'Đang ẩn' }}
                 </span>
               </div>
               <div class="col-md-7">
@@ -275,8 +276,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
-// Đã đổi lại dùng fallback image chuẩn như yêu cầu
+// Import fallback image
 import defaultImage from '../../../assets/images/defaults/placeholder.png'; 
 
 const route = useRoute();
@@ -300,9 +302,29 @@ const draggedIndex = ref(null);
 const dragOverIndex = ref(null);
 const reorderList = ref([]); 
 
+// AXIOS: Header
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
-// Hàm xử lý ảnh Fallback cơ bản và bắt lỗi load ảnh
+// HÀM BẮT LỖI AXIOS DÙNG CHUNG
+const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
+  if (e.response) {
+    if (e.response.status === 401) {
+      Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+    } else if (e.response.data && e.response.data.errors) {
+      let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+      Object.values(e.response.data.errors).flat().forEach(msg => {
+          errorHtml += `<li class="mb-1">${msg}</li>`;
+      });
+      errorHtml += '</ul>';
+      Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
+    } else {
+      Swal.fire('Lỗi', e.response.data.message || defaultMsg, 'error');
+    }
+  } else {
+    Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
+  }
+};
+
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
@@ -319,29 +341,28 @@ const getLevelColor = (level) => {
   }
 };
 
+// AXIOS: FETCH DATA
 const fetchData = async () => {
   if (!isFirstLoad.value) isLoading.value = true;
   try {
     const [resCategories, resModules] = await Promise.all([
-      fetch('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
-      fetch('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+      axios.get('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
     ]);
 
-    if (resCategories.ok) {
-        const parsedData = await resCategories.json();
-        let rawData = Array.isArray(parsedData.data) ? parsedData.data : (parsedData.data?.data || []);
-        
-        // Khởi tạo các cờ cho Inline Status Edit
-        categories.value = rawData.map(c => ({
-          ...c, localStatus: c.status, isStatusChanged: false, isUpdatingStatus: false
-        })).sort((a, b) => a.sort_order - b.sort_order);
-    }
-    if (resModules.ok) {
-      systemModules.value = (await resModules.json()).data;
-      const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_categories'));
-      if (currentModule) currentPageLevel.value = currentModule.required_level;
-    }
-  } catch (err) { console.error(err); } finally { 
+    const rawData = Array.isArray(resCategories.data.data) ? resCategories.data.data : (resCategories.data.data?.data || []);
+    
+    categories.value = rawData.map(c => ({
+      ...c, localStatus: c.status, isStatusChanged: false, isUpdatingStatus: false
+    })).sort((a, b) => a.sort_order - b.sort_order);
+    
+    systemModules.value = resModules.data.data;
+    const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_categories'));
+    if (currentModule) currentPageLevel.value = currentModule.required_level;
+    
+  } catch (err) { 
+    console.error('Lỗi khi tải dữ liệu', err); 
+  } finally { 
     isLoading.value = false;
     isFirstLoad.value = false;
   }
@@ -367,21 +388,9 @@ const onDragStart = (index, event) => {
   event.dataTransfer.dropEffect = 'move';
   setTimeout(() => event.target.classList.add('opacity-50'), 0);
 };
-
-const onDragOver = (index) => {
-  event.dataTransfer.dropEffect = 'move';
-};
-
-const onDragEnter = (index) => {
-  if (draggedIndex.value !== index) {
-    dragOverIndex.value = index;
-  }
-};
-
-const onDragLeave = (index) => {
-  if (dragOverIndex.value === index) dragOverIndex.value = null;
-};
-
+const onDragOver = (index) => { event.dataTransfer.dropEffect = 'move'; };
+const onDragEnter = (index) => { if (draggedIndex.value !== index) dragOverIndex.value = index; };
+const onDragLeave = (index) => { if (dragOverIndex.value === index) dragOverIndex.value = null; };
 const onDrop = (index) => {
   if (draggedIndex.value !== null && draggedIndex.value !== index) {
     const draggedItem = reorderList.value[draggedIndex.value];
@@ -390,37 +399,27 @@ const onDrop = (index) => {
   }
   dragOverIndex.value = null;
 };
-
 const onDragEnd = (event) => {
   event.target.classList.remove('opacity-50');
   draggedIndex.value = null;
   dragOverIndex.value = null;
 };
 
+// AXIOS: LƯU SẮP XẾP
 const saveReorder = async () => {
   isSavingOrder.value = true;
-  // Cập nhật lại sort_order bắt đầu từ 1
   const payload = reorderList.value.map((cat, index) => ({
     id: cat.id,
     sort_order: index + 1
   }));
 
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/admin/categories/reorder', {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ categories: payload })
-    });
-    
-    if (res.ok) {
-      Swal.fire({icon: 'success', title: 'Đã lưu thứ tự!', timer: 1500, showConfirmButton: false});
-      isReorderMode.value = false;
-      await fetchData(); 
-    } else {
-      throw new Error('Lỗi cập nhật');
-    }
+    await axios.post('http://127.0.0.1:8000/api/admin/categories/reorder', { categories: payload }, { headers: getHeaders() });
+    Swal.fire({icon: 'success', title: 'Đã lưu thứ tự!', timer: 1500, showConfirmButton: false});
+    isReorderMode.value = false;
+    await fetchData(); 
   } catch (err) {
-    Swal.fire('Lỗi', 'Không thể cập nhật thứ tự', 'error');
+    handleAxiosError(err, 'Không thể cập nhật thứ tự');
   } finally {
     isSavingOrder.value = false;
   }
@@ -430,8 +429,7 @@ const saveReorder = async () => {
 const getStatusSelectClass = (status) => {
   const map = { 
     'active': 'text-success border-success bg-success bg-opacity-10', 
-    'hidden': 'text-warning border-warning bg-warning bg-opacity-10',
-    'maintenance': 'text-danger border-danger bg-danger bg-opacity-10'
+    'hidden': 'text-warning border-warning bg-warning bg-opacity-10'
   }; 
   return map[status] || 'bg-light text-secondary'; 
 };
@@ -439,28 +437,28 @@ const getStatusSelectClass = (status) => {
 const checkStatusChange = (cat) => { cat.isStatusChanged = (cat.localStatus !== cat.status); };
 const cancelStatusChange = (cat) => { cat.localStatus = cat.status; cat.isStatusChanged = false; };
 
+// AXIOS: CẬP NHẬT TRẠNG THÁI NHANH
 const saveCategoryStatus = async (cat) => {
   cat.isUpdatingStatus = true;
   const formData = new FormData();
   formData.append('_method', 'PUT'); 
   formData.append('name', cat.name);
   formData.append('slug', cat.slug);
-  formData.append('type', cat.type); 
   formData.append('status', cat.localStatus); 
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${cat.id}`, { method: 'POST', headers: getHeaders(), body: formData });
-    if (res.ok) {
-      cat.status = cat.localStatus; cat.isStatusChanged = false;
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
-      fetchData(); 
-    } else {
-      cancelStatusChange(cat); Swal.fire('Lỗi', 'Không thể cập nhật trạng thái', 'error');
-    }
-  } catch (error) { cancelStatusChange(cat); Swal.fire('Lỗi', 'Mất kết nối mạng', 'error'); } 
-  finally { cat.isUpdatingStatus = false; }
+    await axios.post(`http://127.0.0.1:8000/api/admin/categories/${cat.id}`, formData, { headers: getHeaders() });
+    cat.status = cat.localStatus; 
+    cat.isStatusChanged = false;
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
+    fetchData(); 
+  } catch (error) { 
+    cancelStatusChange(cat); 
+    handleAxiosError(error, 'Không thể cập nhật trạng thái');
+  } finally { 
+    cat.isUpdatingStatus = false; 
+  }
 };
-// ======================= END INLINE STATUS =======================
 
 const switchTab = (tabId) => { 
   activeTab.value = tabId; 
@@ -496,35 +494,35 @@ const displayCategories = computed(() => {
   return processedCategories.value.slice(start, start + itemsPerPage);
 });
 
+// AXIOS: ĐƯA VÀO THÙNG RÁC
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xóa danh mục?', text: `Danh mục "${name}" sẽ bị đưa vào thùng rác!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' }).then(async (result) => {
     if (result.isConfirmed) {
       isLoading.value = true;
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, { method: 'DELETE', headers: getHeaders() });
-      const data = await res.json();
-      if (res.ok) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/admin/categories/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData();
-      } else {
+      } catch(e) {
         isLoading.value = false;
-        Swal.fire('Lỗi', data.message || 'Không thể xóa', 'error');
+        handleAxiosError(e, 'Không thể xóa');
       }
     }
   });
 };
 
+// AXIOS: KHÔI PHỤC DANH MỤC
 const restoreCategory = (id) => {
   Swal.fire({ title: 'Khôi phục danh mục?', icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Khôi phục' }).then(async (result) => {
     if (result.isConfirmed) {
       isLoading.value = true;
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}/restore`, { method: 'POST', headers: getHeaders() });
-      const data = await res.json();
-      if (res.ok) {
+      try {
+        await axios.post(`http://127.0.0.1:8000/api/admin/categories/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
         fetchData();
-      } else {
+      } catch(e) {
         isLoading.value = false;
-        Swal.fire('Lỗi', data.message || 'Không thể khôi phục', 'error');
+        handleAxiosError(e, 'Không thể khôi phục');
       }
     }
   });
@@ -550,9 +548,4 @@ onMounted(() => fetchData());
 .drag-over { border-top: 3px solid #ffc107 !important; background-color: #fff9e6 !important; }
 .dragging { opacity: 0.5; background-color: #f8f9fa; }
 .transition-all { transition: all 0.3s ease; }
-
-.custom-scrollbar-x::-webkit-scrollbar { height: 4px; }
-.custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar-x::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
-.custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #c0c0c0; }
 </style>
