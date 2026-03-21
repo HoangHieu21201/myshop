@@ -1,7 +1,7 @@
 <template>
   <!-- MÀN HÌNH CHỜ: Bật lên khi đang F5 hoặc đang kiểm tra Token -->
   <div v-if="isCheckingAuth" class="vh-100 d-flex flex-column justify-content-center align-items-center bg-light">
-    <h1 class="logo-shimmer mb-3">ThinkHub</h1>
+    <h1 class="logo-shimmer mb-3">SORA</h1>
     <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">
       Đang xác thực phiên đăng nhập...
     </p>
@@ -91,7 +91,7 @@ body {
   font-size: 3.5rem;
   font-weight: 900;
   letter-spacing: -1.5px;
-  background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%);
+  background: linear-gradient(120deg, #9f273b 30%, #080808 50%, #edb2b2 70%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;

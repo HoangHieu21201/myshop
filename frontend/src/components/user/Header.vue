@@ -4,8 +4,8 @@
       <nav class="navbar navbar-expand-lg navbar-light bg-white py-3">
           <div class="container">
               <!-- Logo -->
-              <a class="navbar-brand fw-bold text-uppercase" href="/userclient" style="color: #009981; letter-spacing: 1px;">
-                  <i class="bi bi-box-seam-fill me-1"></i> MyShop
+              <a class="navbar-brand fw-bold text-uppercase" href="/" style="color: #009981; letter-spacing: 1px;">
+                  <i class="bi bi-box-seam-fill me-1"></i> SORA
               </a>
   
               <!-- Mobile Toggle -->
@@ -46,7 +46,7 @@
                       -->
   
                       <!-- Cart -->
-                      <a href="/usercart" class="position-relative text-dark fs-5">
+                      <a href="/cart" class="position-relative text-dark fs-5">
                           <i class="bi bi-bag"></i>
                           <!-- Hiển thị số lượng -->
                           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style="font-size: 0.6rem;">
