@@ -4,7 +4,7 @@ namespace App\Http\Requests\Order;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateOrderRequest extends FormRequest
+class UserUpdateOrderRequest extends FormRequest
 {
     /**
      * Xác định người dùng có quyền thực hiện request này không.

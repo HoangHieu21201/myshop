@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\client;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Http\Requests\Cart\StoreCartItemRequest;
-use App\Http\Requests\Cart\UpdateCartItemRequest;
+use App\Http\Requests\Cart\UserStoreCartItemRequest;
+use App\Http\Requests\Cart\UserUpdateCartItemRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -36,7 +36,7 @@ class CartController extends Controller
     /**
      * Thêm sản phẩm vào giỏ hàng
      */
-    public function store(StoreCartItemRequest $request)
+    public function store(UserStoreCartItemRequest $request)
     {
         try {
             DB::beginTransaction();
@@ -67,7 +67,7 @@ class CartController extends Controller
     /**
      * Cập nhật số lượng trực tiếp (dùng cho trang Giỏ hàng)
      */
-    public function update(UpdateCartItemRequest $request, CartItem $cart_item)
+    public function update(UserUpdateCartItemRequest $request, CartItem $cart_item)
     {
         $cart_item->update(['quantity' => $request->quantity]);
 

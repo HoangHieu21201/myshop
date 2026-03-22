@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreBannerRequest;
-use App\Http\Requests\UpdateBannerRequest;
+use App\Http\Requests\AdminStoreBannerRequest;
+use App\Http\Requests\AdminUpdateBannerRequest;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +29,7 @@ class AdminBannerController extends Controller
         return response()->json(['success' => true, 'data' => $banners]);
     }
 
-    public function store(StoreBannerRequest $request)
+    public function store(AdminStoreBannerRequest $request)
     {
         $data = $request->validated();
 
@@ -57,7 +57,7 @@ class AdminBannerController extends Controller
         return response()->json(['success' => true, 'data' => $banner]);
     }
 
-    public function update(UpdateBannerRequest $request, $id)
+    public function update(AdminUpdateBannerRequest $request, $id)
     {
         $banner = Banner::findOrFail($id);
         $data = $request->validated();

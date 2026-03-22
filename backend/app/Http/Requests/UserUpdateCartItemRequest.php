@@ -5,7 +5,7 @@ namespace App\Http\Requests\Cart;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\CartItem;
 
-class UpdateCartItemRequest extends FormRequest
+class UserUpdateCartItemRequest extends FormRequest
 {
     public function authorize(): bool
     {

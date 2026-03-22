@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
-use App\Http\Requests\StoreBrandRequest;
-use App\Http\Requests\UpdateBrandRequest;
+use App\Http\Requests\AdminStoreBrandRequest;
+use App\Http\Requests\AdminUpdateBrandRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,7 +29,7 @@ class AdminBrandController extends Controller
         return response()->json(['success' => true, 'data' => $brands]);
     }
 
-    public function store(StoreBrandRequest $request)
+    public function store(AdminStoreBrandRequest $request)
     {
         $data = $request->validated();
 
@@ -51,7 +51,7 @@ class AdminBrandController extends Controller
         return response()->json(['success' => true, 'data' => $brand]);
     }
 
-    public function update(UpdateBrandRequest $request, $id)
+    public function update(AdminUpdateBrandRequest $request, $id)
     {
         $brand = Brand::findOrFail($id);
         $data = $request->validated();
