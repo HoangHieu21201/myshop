@@ -15,28 +15,27 @@ class UpdateCartItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quantity' => 'required|integer|min:1'
+            'quantity' => [
+                'required',
+                'integer',
+                'min:1'
+            ],
         ];
     }
 
+    /**
+     * Sparring Partner: Kiểm tra tồn kho khi khách tăng số lượng ở trang Giỏ hàng
+     */
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if (!$validator->errors()->has('quantity')) {
-                // Sử dụng Route Model Binding để lấy item hiện tại (VD: /api/cart/{cartItem})
-                $cartItem = $this->route('cartItem');
-                
-                if ($cartItem) {
-                    $requestedQty = $this->input('quantity');
-                    $variant = $cartItem->variant;
-
-                    // Check tồn kho live khi khách hàng bấm nút "+" trong Giỏ hàng
-                    if ($variant && $variant->stock_quantity < $requestedQty) {
-                        $validator->errors()->add(
-                            'quantity',
-                            'Sản phẩm chỉ còn tối đa ' . $variant->stock_quantity . ' chiếc.'
-                        );
-                    }
+            // Lấy CartItem từ route (Giả định route là /api/cart/{cartItem})
+            $cartItem = $this->route('cart_item'); 
+            
+            if ($cartItem) {
+                $variant = $cartItem->variant;
+                if ($variant && $this->quantity > $variant->stock_quantity) {
+                    $validator->errors()->add('quantity', "Kho không đủ, tối đa bạn có thể mua là {$variant->stock_quantity} chiếc.");
                 }
             }
         });
@@ -45,8 +44,8 @@ class UpdateCartItemRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'quantity.required' => 'Vui lòng nhập số lượng.',
-            'quantity.min' => 'Số lượng tối thiểu là 1.',
+            'quantity.required' => 'Số lượng không được để trống.',
+            'quantity.min'      => 'Số lượng không được nhỏ hơn 1.',
         ];
     }
 }
