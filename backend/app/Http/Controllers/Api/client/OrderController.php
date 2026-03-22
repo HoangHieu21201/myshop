@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\client;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Order\StoreOrderRequest;
-use App\Http\Requests\Order\UpdateOrderRequest;
+use App\Http\Requests\Order\UserStoreOrderRequest;
+use App\Http\Requests\Order\UserUpdateOrderRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
@@ -40,11 +40,8 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    /**
-     * Tạo đơn hàng mới (Checkout).
-     * Đã tách validation sang StoreOrderRequest.
-     */
-    public function store(StoreOrderRequest $request)
+    
+    public function store(UserStoreOrderRequest $request)
     {
         $user = auth('sanctum')->user();
         $sessionId = $request->header('X-Cart-Session-Id');
@@ -178,9 +175,9 @@ class OrderController extends Controller
 
     /**
      * Khách hàng chủ động HỦY đơn hàng.
-     * Đã tách validation sang UpdateOrderRequest.
+     * Đã tách validation sang UserUpdateOrderRequest.
      */
-    public function update(UpdateOrderRequest $request, string $order_code)
+    public function update(UserUpdateOrderRequest $request, string $order_code)
     {
         $user = auth('sanctum')->user();
         $order = Order::where('order_code', $order_code)->firstOrFail();

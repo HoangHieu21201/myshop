@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
-use App\Http\Requests\StoreRoleRequest;
-use App\Http\Requests\UpdateRoleRequest;
+use App\Http\Requests\AdminStoreRoleRequest;
+use App\Http\Requests\AdminUpdateRoleRequest;
 
 class AdminRoleController extends Controller
 {
@@ -16,7 +16,7 @@ class AdminRoleController extends Controller
     }
 
     // Tạo mới Role
-    public function store(StoreRoleRequest $request)
+    public function store(AdminStoreRoleRequest $request)
     {
         try {
             $role = Role::create($request->only(['value', 'label', 'badgeClass', 'level']));
@@ -27,7 +27,7 @@ class AdminRoleController extends Controller
     }
 
     // Cập nhật Role
-    public function update(UpdateRoleRequest $request, $id)
+    public function update(AdminUpdateRoleRequest $request, $id)
     {
         $role = Role::findOrFail($id);
         

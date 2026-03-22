@@ -20,7 +20,7 @@
         </div>
 
         <!-- CENTER: LOGO (To, Rõ Ràng, Chính Giữa) -->
-        <div class="logo-wrapper d-flex justify-content-center" style="flex: 1;">
+        <div href="/" class="logo-wrapper d-flex justify-content-center" style="flex: 1;">
           <router-link :to="{ name: 'home' }">
             <img src="../../assets/images/logo1.png" alt="SORA Logo" class="logo-img" @error="handleLogoError">
           </router-link>

@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateAdminRequest extends FormRequest
+class AdminStoreAdminRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,22 +14,16 @@ class UpdateAdminRequest extends FormRequest
 
     public function rules(): array
     {
-        $adminId = $this->route('staff');
-
         return [
             'fullname' => ['required', 'string', 'max:100'],
-            'email'    => [
-                'required',
-                'email',
-                'max:100',
-                Rule::unique('admins', 'email')->ignore($adminId)->whereNull('deleted_at')
-            ],
-            'password' => ['nullable', 'string', 'min:8'],
-
+            'email'    => ['required', 'email', 'max:100', 'unique:admins,email'],
+            'password' => ['required', 'string', 'min:8'],
             'role_id'  => ['required', 'integer', 'exists:roles,id'],
+            
             'phone'    => ['nullable', 'string', 'max:20', 'regex:/^[0-9\-\+\s\(\)]+$/'],
             'status'   => ['required', 'string', Rule::in(['active', 'locked'])],
-            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            
+            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], 
             'address'  => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -41,8 +35,9 @@ class UpdateAdminRequest extends FormRequest
             'fullname.max'      => 'Họ và tên không được vượt quá 100 ký tự.',
             'email.required'    => 'Email không được để trống.',
             'email.email'       => 'Định dạng email không hợp lệ.',
-            'email.unique'      => 'Email này đã bị trùng với một tài khoản khác trên hệ thống.',
-            'password.min'      => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
+            'email.unique'      => 'Email này đã tồn tại trong hệ thống. Vui lòng dùng email khác.',
+            'password.required' => 'Mật khẩu không được để trống.',
+            'password.min'      => 'Mật khẩu phải có ít nhất 8 ký tự.',
             'role_id.required'  => 'Vui lòng chọn chức vụ/phân quyền.',
             'role_id.exists'    => 'Chức vụ không hợp lệ hoặc đã bị xóa.',
             'phone.regex'       => 'Số điện thoại chỉ được chứa chữ số và các ký tự (+, -, ngoặc).',
