@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\client;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Http\Requests\Cart\StoreCartItemRequest;
+use App\Http\Requests\Cart\UpdateCartItemRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,60 +20,75 @@ class CartController extends Controller
         $cart = $this->resolveCart($request);
 
         if (!$cart) {
-            return response()->json(['data' => []]);
+            return response()->json(['success' => true, 'data' => []]);
         }
 
-        // Đã chặn N+1 Query từ Model CartItem
         return response()->json([
+            'success' => true,
             'data' => $cart->items,
             'summary' => [
                 'total_items' => $cart->items->sum('quantity'),
-                'subtotal' => $cart->items->sum('subtotal')
+                'subtotal'    => $cart->items->sum('subtotal')
             ]
         ]);
     }
 
     /**
      * Thêm sản phẩm vào giỏ hàng
-     * Lưu ý: Hiện tại đang dùng Request thường, TỐT NHẤT NÊN CHUYỂN SANG StoreCartItemRequest
      */
-    public function store(Request $request)
+    public function store(StoreCartItemRequest $request)
     {
-        // Tạm thời validate cơ bản tại đây
-        $request->validate([
-            'product_variant_id' => 'required|exists:product_variants,id,deleted_at,NULL',
-            'quantity' => 'required|integer|min:1'
-        ]);
-
         try {
             DB::beginTransaction();
 
-            $cart = $this->resolveCart($request, true); // true = Tạo mới nếu chưa có
+            $cart = $this->resolveCart($request, true);
 
-            // Sử dụng Lock (Pessimistic Locking) hoặc firstOrNew để chống Race Condition (Double-click)
             $cartItem = CartItem::firstOrNew([
-                'cart_id' => $cart->id,
+                'cart_id'            => $cart->id,
                 'product_variant_id' => $request->product_variant_id,
             ]);
 
-            // Cộng dồn nếu đã tồn tại, hoặc set mới nếu chưa
             $cartItem->quantity += $request->quantity;
             $cartItem->save();
 
             DB::commit();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Đã thêm vào giỏ hàng',
-                'data' => $cartItem->load('variant')
+                'data'    => $cartItem->load('variant')
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
     /**
-     * Hợp nhất giỏ hàng (Gọi API này NGAY SAU KHI Vue 3 nhận được Token đăng nhập)
+     * Cập nhật số lượng trực tiếp (dùng cho trang Giỏ hàng)
+     */
+    public function update(UpdateCartItemRequest $request, CartItem $cart_item)
+    {
+        $cart_item->update(['quantity' => $request->quantity]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật số lượng thành công',
+            'data'    => $cart_item
+        ]);
+    }
+
+    /**
+     * Xóa món hàng khỏi giỏ
+     */
+    public function destroy(CartItem $cart_item)
+    {
+        $cart_item->delete();
+        return response()->json(['success' => true, 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng']);
+    }
+
+    /**
+     * Hợp nhất giỏ hàng Guest -> User
      */
     public function mergeCart(Request $request)
     {
@@ -79,12 +96,12 @@ class CartController extends Controller
         $user = auth('sanctum')->user();
 
         if (!$sessionId || !$user) {
-            return response()->json(['message' => 'Không đủ điều kiện merge'], 400);
+            return response()->json(['success' => false, 'message' => 'Thiếu thông tin định danh'], 400);
         }
 
         $guestCart = Cart::where('session_id', $sessionId)->first();
         if (!$guestCart || $guestCart->items->isEmpty()) {
-            return response()->json(['message' => 'Không có gì để merge']);
+            return response()->json(['success' => true, 'message' => 'Không có dữ liệu để hợp nhất']);
         }
 
         $userCart = Cart::firstOrCreate(['user_id' => $user->id]);
@@ -93,38 +110,35 @@ class CartController extends Controller
         try {
             foreach ($guestCart->items as $guestItem) {
                 $userItem = CartItem::firstOrNew([
-                    'cart_id' => $userCart->id,
+                    'cart_id'            => $userCart->id,
                     'product_variant_id' => $guestItem->product_variant_id,
                 ]);
 
-                // Logic hợp nhất: Cộng dồn số lượng
                 $userItem->quantity += $guestItem->quantity;
                 $userItem->save();
             }
 
-            // Dọn dẹp giỏ hàng rác của Guest sau khi đã merge xong
             $guestCart->delete();
 
             DB::commit();
-            return response()->json(['message' => 'Hợp nhất giỏ hàng thành công']);
+            return response()->json(['success' => true, 'message' => 'Hợp nhất giỏ hàng thành công']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Lỗi khi hợp nhất'], 500);
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
     /**
-     * Hàm nội bộ: Xác định xem đang lấy giỏ của User hay Guest
+     * Helper xác định giỏ hàng
      */
     private function resolveCart(Request $request, $createIfNotFound = false)
     {
         $user = auth('sanctum')->user();
 
         if ($user) {
-            if ($createIfNotFound) {
-                return Cart::firstOrCreate(['user_id' => $user->id]);
-            }
-            return Cart::where('user_id', $user->id)->first();
+            return $createIfNotFound 
+                ? Cart::firstOrCreate(['user_id' => $user->id]) 
+                : Cart::where('user_id', $user->id)->first();
         }
 
         $sessionId = $request->header('X-Cart-Session-Id');
@@ -132,10 +146,8 @@ class CartController extends Controller
             abort(400, 'Thiếu X-Cart-Session-Id ở Header.');
         }
 
-        if ($createIfNotFound) {
-            return Cart::firstOrCreate(['session_id' => $sessionId]);
-        }
-        
-        return Cart::where('session_id', $sessionId)->first();
+        return $createIfNotFound 
+            ? Cart::firstOrCreate(['session_id' => $sessionId]) 
+            : Cart::where('session_id', $sessionId)->first();
     }
 }
