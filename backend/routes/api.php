@@ -26,6 +26,13 @@ use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 
 // Import User
 use App\Http\Controllers\Api\client\CartController;
+use App\Http\Controllers\Api\Client\ClientHeaderController;
+
+Route::prefix('client')->group(function () {
+    Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
+
+    Route::get('search', [ClientHeaderController::class, 'search']);
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -107,7 +114,7 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['check.module:admin_products'])->group(function () {
             Route::apiResource('products', AdminProductController::class);
             Route::post('products/{id}/restore', [AdminProductController::class, 'restore']);
-            
+
             Route::apiResource('attributes', AdminAttributeController::class)->except(['show']);
             Route::post('attribute-values', [AdminAttributeValueController::class, 'store']);
         });
@@ -141,7 +148,7 @@ Route::prefix('admin')->group(function () {
             Route::controller(AdminCouponController::class)->group(function () {
                 Route::get('coupons', 'index');
                 Route::get('coupons/{id}', 'show');
-                Route::post('coupons', 'store'); 
+                Route::post('coupons', 'store');
                 Route::patch('coupons/{id}', 'update');
                 Route::delete('coupons/{id}', 'destroy');
             });
@@ -153,10 +160,9 @@ Route::prefix('admin')->group(function () {
                 Route::get('/', 'index');
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
-                Route::post('/{id}', 'update'); 
+                Route::post('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
             });
         });
-
     });
 });
