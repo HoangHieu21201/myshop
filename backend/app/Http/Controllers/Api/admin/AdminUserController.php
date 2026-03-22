@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\AdminStoreUserRequest;
+use App\Http\Requests\AdminUpdateUserRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +19,7 @@ class AdminUserController extends Controller
     }
 
     // Thêm mới
-    public function store(StoreUserRequest $request)
+    public function store(AdminStoreUserRequest $request)
     {
         try {
             $user = DB::transaction(function () use ($request) {
@@ -60,7 +60,7 @@ class AdminUserController extends Controller
         return response()->json(['success' => true, 'data' => $user]);
     }
 
-    public function update(UpdateUserRequest $request, $id)
+    public function update(AdminUpdateUserRequest $request, $id)
     {
         $user = User::findOrFail($id);
 

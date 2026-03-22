@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Cart;
 use App\Models\ProductVariant;
 
-class StoreOrderRequest extends FormRequest
+class UserStoreOrderRequest extends FormRequest
 {
     /**
      * Xác định quyền thực hiện request.

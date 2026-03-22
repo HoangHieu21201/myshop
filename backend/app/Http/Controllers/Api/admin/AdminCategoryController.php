@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\AdminStoreCategoryRequest;
+use App\Http\Requests\AdminUpdateCategoryRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class AdminCategoryController extends Controller
         return response()->json(['success' => true, 'data' => $categories]);
     }
 
-    public function store(StoreCategoryRequest $request)
+    public function store(AdminStoreCategoryRequest $request)
     {
         try {
             $data = $request->except(['thumbnail', 'attributes_schema']);
@@ -70,7 +70,7 @@ class AdminCategoryController extends Controller
         return response()->json(['success' => true, 'data' => $category]);
     }
 
-    public function update(UpdateCategoryRequest $request, $id)
+    public function update(AdminUpdateCategoryRequest $request, $id)
     {
         $category = Category::findOrFail($id);
         $data = $request->except(['thumbnail', '_method', 'remove_thumbnail', 'attributes_schema']);

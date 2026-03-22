@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
-class UpdateProductRequest extends FormRequest
+class AdminUpdateProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -43,7 +44,7 @@ class UpdateProductRequest extends FormRequest
                 $index = explode('.', $attribute)[1];
                 $variantId = $this->input("parsed_variants.{$index}.id");
                 
-                $query = \DB::table('product_variants')->where('sku', $value)->whereNull('deleted_at');
+                $query = DB::table('product_variants')->where('sku', $value)->whereNull('deleted_at');
                 if ($variantId) {
                     $query->where('id', '!=', $variantId); // Bỏ qua id hiện tại
                 }
