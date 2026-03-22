@@ -39,7 +39,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get('/cart', [CartController::class, 'index']);
-
+Route::get('/order', [CartController::class, 'index']);
 // ============================================
 // ADMIN API ROUTES
 // ============================================

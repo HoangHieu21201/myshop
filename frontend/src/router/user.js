@@ -11,7 +11,12 @@ const user = [
             {
                 path: 'cart',
                 name: 'cart',
-                component: () => import('../pages/user/cart/index.vue')
+                component: () => import('../pages/user/cart/Index.vue')
+            },
+            {
+                path: 'order',
+                name: 'order',
+                component: () => import('../pages/user/order/Index.vue')
             },
         ]
     }
