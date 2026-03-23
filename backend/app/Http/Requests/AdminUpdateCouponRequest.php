@@ -5,72 +5,86 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreCouponRequest extends FormRequest
+class AdminUpdateCouponRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return true; 
     }
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $couponId = $this->route('id');
+
         return [
             'name' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:255'
             ],
             'code' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('coupons', 'code')->whereNull('deleted_at'),
+                Rule::unique('coupons', 'code')
+                    ->ignore($couponId)
+                    ->whereNull('deleted_at'),
             ],
             'min_spend' => [
+                'sometimes',
                 'required',
                 'integer',
                 'min:1'
             ],
             'type' => [
+                'sometimes',
                 'required',
                 Rule::in(['fixed', 'percentage'])
             ],
             'value' => [
+                'sometimes',
                 'required',
                 'integer',
                 'min:1',
                 $this->type === 'percentage' ? 'max:100' : '',
             ],
             'usage_limit' => [
+                'sometimes',
                 'required',
                 'integer',
                 'min:1'
             ],
             'usage_limit_per_user' => [
+                'sometimes',
                 'required',
                 'integer',
                 'min:1'
             ],
             'expires_at' => [
+                'sometimes',
                 'required',
                 'date',
-                'after:now'
+                'after:now' 
             ],
             'status' => [
+                'sometimes',
                 'nullable',
                 Rule::in(['active', 'inactive']),
             ]
         ];
     }
 
+    /**
+     * Thông báo lỗi tiếng Việt
+     */
     public function messages(): array
     {
         return [
@@ -85,6 +99,9 @@ class StoreCouponRequest extends FormRequest
         ];
     }
 
+    /**
+     * Tên các trường 
+     */
     public function attributes(): array
     {
         return [

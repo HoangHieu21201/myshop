@@ -1,83 +1,326 @@
 <template>
-  <footer class="bg-dark text-light pt-5 pb-3 mt-auto">
+  <footer class="site-footer bg-primary-custom">
+    
+    <!-- ================= PRE-FOOTER (Thanh Niềm Tin - Màu Vàng Be e7ce7d) ================= -->
+    <div class="pre-footer py-4" style="background-color: var(--secondary);">
       <div class="container">
-          <div class="row g-4">
-              <!-- Col 1: Brand Info -->
-              <div class="col-lg-4 col-md-6">
-                  <h5 class="text-uppercase fw-bold mb-3 text-white" style="letter-spacing: 1px;">MyShop</h5>
-                  <p class="text-secondary small">
-                      Chúng tôi cung cấp những sản phẩm thời trang chất lượng cao, mang lại phong cách và sự tự tin cho bạn.
-                  </p>
-                  <div class="d-flex gap-3 mt-3">
-                      <a href="#" class="text-secondary fs-5"><i class="bi bi-facebook"></i></a>
-                      <a href="#" class="text-secondary fs-5"><i class="bi bi-instagram"></i></a>
-                      <a href="#" class="text-secondary fs-5"><i class="bi bi-twitter"></i></a>
-                      <a href="#" class="text-secondary fs-5"><i class="bi bi-youtube"></i></a>
-                  </div>
-              </div>
-  
-              <!-- Col 2: Quick Links -->
-              <div class="col-lg-2 col-md-6">
-                  <h6 class="text-white fw-bold mb-3">Liên kết nhanh</h6>
-                  <ul class="list-unstyled small text-secondary">
-                      <li class="mb-2"><a href="/" class="text-decoration-none text-secondary hover-white">Trang chủ</a></li>
-                      <li class="mb-2"><a href="/shop" class="text-decoration-none text-secondary hover-white">Sản phẩm</a></li>
-                      <li class="mb-2"><a href="/about" class="text-decoration-none text-secondary hover-white">Giới thiệu</a></li>
-                      <li class="mb-2"><a href="/contact" class="text-decoration-none text-secondary hover-white">Liên hệ</a></li>
-                  </ul>
-              </div>
-  
-              <!-- Col 3: Customer Service -->
-              <div class="col-lg-2 col-md-6">
-                  <h6 class="text-white fw-bold mb-3">Hỗ trợ</h6>
-                  <ul class="list-unstyled small text-secondary">
-                      <li class="mb-2"><a href="#" class="text-decoration-none text-secondary hover-white">Chính sách đổi trả</a></li>
-                      <li class="mb-2"><a href="#" class="text-decoration-none text-secondary hover-white">Hướng dẫn mua hàng</a></li>
-                      <li class="mb-2"><a href="#" class="text-decoration-none text-secondary hover-white">Bảo mật thông tin</a></li>
-                      <li class="mb-2"><a href="#" class="text-decoration-none text-secondary hover-white">Câu hỏi thường gặp</a></li>
-                  </ul>
-              </div>
-  
-              <!-- Col 4: Newsletter -->
-              <div class="col-lg-4 col-md-6">
-                  <h6 class="text-white fw-bold mb-3">Đăng ký nhận tin</h6>
-                  <p class="text-secondary small">Nhận thông tin khuyến mãi mới nhất từ chúng tôi.</p>
-                  <form action="#" class="mt-3" @submit.prevent>
-                      <div class="input-group">
-                          <input type="email" class="form-control bg-transparent border-secondary text-white" placeholder="Email của bạn">
-                          <button class="btn btn-primary" style="background-color: #009981; border: none;">Đăng ký</button>
-                      </div>
-                  </form>
-              </div>
+        <div class="row g-4 text-center">
+          <div class="col-6 col-md-3">
+            <div class="trust-item">
+              <i class="bi bi-truck fs-2 mb-2 d-block text-primary-custom"></i>
+              <h6 class="fw-bold font-oswald text-uppercase mb-1 text-primary-custom tracking-wide">Giao hàng miễn phí</h6>
+              <p class="text-primary-custom opacity-75 small mb-0">Cho đơn hàng từ 1.000.000đ</p>
+            </div>
           </div>
-  
-          <hr class="border-secondary my-4 opacity-25">
-  
-          <div class="row align-items-center">
-              <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                  <small class="text-secondary">&copy; {{ currentYear }} <b>MyShop</b>. All Rights Reserved.</small>
-              </div>
-              <div class="col-md-6 text-center text-md-end">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" height="20" class="me-2 bg-light rounded px-1">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="Paypal" height="20" class="me-2 bg-light rounded px-1">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" height="20" class="bg-light rounded px-1">
-              </div>
+          <div class="col-6 col-md-3">
+            <div class="trust-item">
+              <i class="bi bi-shield-check fs-2 mb-2 d-block text-primary-custom"></i>
+              <h6 class="fw-bold font-oswald text-uppercase mb-1 text-primary-custom tracking-wide">Bảo hành trọn đời</h6>
+              <p class="text-primary-custom opacity-75 small mb-0">Làm sáng & đánh bóng miễn phí</p>
+            </div>
           </div>
+          <div class="col-6 col-md-3">
+            <div class="trust-item">
+              <i class="bi bi-arrow-repeat fs-2 mb-2 d-block text-primary-custom"></i>
+              <h6 class="fw-bold font-oswald text-uppercase mb-1 text-primary-custom tracking-wide">Đổi trả dễ dàng</h6>
+              <p class="text-primary-custom opacity-75 small mb-0">Trong vòng 7 ngày đầu tiên</p>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="trust-item">
+              <i class="bi bi-headset fs-2 mb-2 d-block text-primary-custom"></i>
+              <h6 class="fw-bold font-oswald text-uppercase mb-1 text-primary-custom tracking-wide">Hỗ trợ 24/7</h6>
+              <p class="text-primary-custom opacity-75 small mb-0">Hotline: 1234.567.8910</p>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- ================= MAIN FOOTER (Nền Đỏ Sẫm 9f273b) ================= -->
+    <div class="main-footer py-5 border-bottom border-light border-opacity-10">
+      <div class="container py-3">
+        <div class="row g-5">
+          
+          <!-- Cột 1: Thương hiệu -->
+          <div class="col-lg-3 col-md-6 text-center text-md-start">
+            <a href="#" @click.prevent="safeNavigate('home')" class="d-inline-block mb-4">
+              <img src="../../assets/images/logo1.png" alt="SORA Logo" class="footer-logo filter-white" @error="handleLogoError">
+            </a>
+            <p class="text-light opacity-75 small mb-4 pe-md-3" style="line-height: 1.8;">
+              SORA mang đến những thiết kế trang sức tinh tế, tôn vinh vẻ đẹp đích thực và phong cách cá nhân của bạn. Mỗi chế tác là một tác phẩm nghệ thuật.
+            </p>
+            <div class="social-links d-flex gap-3 justify-content-center justify-content-md-start">
+              <a href="#" class="social-btn"><i class="bi bi-facebook"></i></a>
+              <a href="#" class="social-btn"><i class="bi bi-instagram"></i></a>
+              <a href="#" class="social-btn"><i class="bi bi-twitter-x"></i></a>
+              <a href="#" class="social-btn"><i class="bi bi-youtube"></i></a>
+            </div>
+          </div>
+
+          <!-- Cột 2: Liên kết nhanh -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Liên Kết Nhanh</h5>
+            <ul class="footer-links list-unstyled m-0 p-0">
+              <li><a href="#" @click.prevent="safeNavigate('home')">Trang Chủ</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('Shop')">Sản Phẩm Mới</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('collections')">Bộ Sưu Tập SORA</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('about')">Về Chúng Tôi</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('blog')">Tin Tức & Khuyến Mãi</a></li>
+            </ul>
+          </div>
+
+          <!-- Cột 3: Hỗ trợ khách hàng -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Hỗ Trợ Khách Hàng</h5>
+            <ul class="footer-links list-unstyled m-0 p-0">
+              <li><a href="#" @click.prevent="safeNavigate('contact')">Trung Tâm Trợ Giúp</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('FAQ')">Câu Hỏi Thường Gặp</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('policy')">Chính Sách Đổi Trả</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('policy')">Chính Sách Bảo Mật</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('profile')">Tra Cứu Đơn Hàng</a></li>
+            </ul>
+          </div>
+
+          <!-- Cột 4: Đăng ký nhận tin (Luxury Style) -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Nhận Bản Tin SORA</h5>
+            <p class="text-light opacity-75 small mb-4">Đăng ký để nhận thông tin về bộ sưu tập mới và các ưu đãi độc quyền.</p>
+            
+            <form @submit.prevent="subscribeNewsletter" class="newsletter-form position-relative mb-4">
+              <input type="email" class="form-control luxury-input pe-5 text-white" 
+                     placeholder="Nhập email của bạn..." 
+                     v-model="email" required>
+              <button type="submit" class="btn border-0 position-absolute end-0 top-50 translate-middle-y text-secondary-custom" 
+                      style="padding: 5px 10px;" :disabled="isSubscribing">
+                <i v-if="isSubscribing" class="spinner-border spinner-border-sm"></i>
+                <i v-else class="bi bi-arrow-right fs-5"></i>
+              </button>
+            </form>
+            
+            <div class="contact-info mt-4">
+              <p class="text-white small mb-2 fw-medium"><i class="bi bi-geo-alt text-secondary-custom me-2 fs-6"></i> 123 Đường Ngọc Hồi, Hà Nội</p>
+              <p class="text-white small mb-0 fw-medium"><i class="bi bi-envelope text-secondary-custom me-2 fs-6"></i> SORA@GMAIL.COM</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= BOTTOM FOOTER ================= -->
+    <div class="bottom-footer py-4">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+            <p class="small text-light opacity-75 mb-0 font-oswald tracking-wide" style="font-size: 0.85rem;">
+              &copy; {{ new Date().getFullYear() }} <strong class="text-white">SORA JEWELRY</strong>. ALL RIGHTS RESERVED.
+            </p>
+          </div>
+          <div class="col-md-6 text-center text-md-end">
+            <!-- Icons thanh toán an toàn -->
+            <div class="payment-methods d-flex justify-content-center justify-content-md-end gap-3 text-light opacity-75">
+              <i class="bi bi-credit-card-fill fs-4 hover-secondary" title="Visa/Mastercard"></i>
+              <i class="bi bi-wallet-fill fs-4 hover-secondary" title="Ví Điện Tử"></i>
+              <i class="bi bi-bank fs-4 hover-secondary" title="Chuyển khoản"></i>
+              <i class="bi bi-cash-stack fs-4 hover-secondary" title="COD"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   </footer>
-  </template>
-  
-  <script setup>
-  import { ref } from 'vue';
-  
-  // Lấy năm hiện tại thay thế cho <?= date('Y') ?>
-  const currentYear = ref(new Date().getFullYear());
-  </script>
-  
-  <style scoped>
-  /* Chuyển class CSS vào phần scoped của Vue */
-  .hover-white:hover { 
-      color: #fff !important; 
-      transition: 0.3s; 
-  }
-  </style>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
+
+const router = useRouter();
+const email = ref('');
+const isSubscribing = ref(false);
+
+// Hàm chống Crash Router
+const safeNavigate = (routeName, options = {}) => {
+    if (router.hasRoute(routeName)) {
+        router.push({ name: routeName, ...options });
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    } else {
+        Swal.fire({ 
+            toast: true, 
+            position: 'bottom-end', 
+            icon: 'info', 
+            title: 'Tính năng đang được phát triển!', 
+            showConfirmButton: false, 
+            timer: 2000 
+        });
+    }
+};
+
+const handleLogoError = (e) => {
+    e.target.outerHTML = '<h2 class="font-oswald fw-bold text-white m-0 tracking-wide">S O R A</h2>';
+};
+
+// Đăng ký nhận tin
+const subscribeNewsletter = () => {
+    if (!email.value) return;
+    
+    isSubscribing.value = true;
+    
+    setTimeout(() => {
+        isSubscribing.value = false;
+        Swal.fire({
+            icon: 'success',
+            title: 'Đăng ký thành công!',
+            text: 'Cảm ơn bạn đã quan tâm. Thông tin ưu đãi sẽ được gửi đến email của bạn.',
+            confirmButtonColor: '#9f273b'
+        });
+        email.value = '';
+    }, 1000);
+};
+</script>
+
+<style scoped>
+/* IMPORT FONT OSWALD */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+/* BIẾN MÀU THEO YÊU CẦU */
+:root {
+  --primary: #9f273b;
+  --secondary: #e7ce7d;
+  --accent: #cc1e2e;
+}
+
+.text-primary-custom { color: #9f273b !important; }
+.text-secondary-custom { color: #e7ce7d !important; }
+.bg-primary-custom { background-color: #9f273b !important; }
+
+/* TIỆN ÍCH CHỮ */
+.font-oswald { font-family: 'Oswald', sans-serif !important; }
+.tracking-wide { letter-spacing: 1px; }
+
+/* SITE FOOTER */
+.site-footer {
+  font-family: 'Arial', sans-serif;
+  background-color: #9f273b; /* Nền đỏ sẫm */
+}
+
+/* PRE-FOOTER (Thanh Vàng Be) */
+.trust-item {
+  transition: transform 0.3s ease;
+}
+.trust-item:hover {
+  transform: translateY(-5px);
+}
+.trust-item i, .trust-item h6, .trust-item p {
+  /* Chữ và icon màu đỏ sẫm để nổi bật trên nền vàng be */
+  color: #9f273b !important; 
+}
+
+/* MAIN FOOTER (Nền Đỏ Sẫm) */
+.main-footer {
+  background-color: #9f273b;
+}
+
+.footer-logo {
+  height: 70px; 
+  width: auto;
+  object-fit: contain;
+}
+
+/* Bộ lọc màu trắng cho Logo để nó nổi bật trên nền Đỏ sẫm */
+.filter-white {
+  filter: brightness(0) invert(1);
+}
+
+/* Các Nút Mạng Xã Hội Đơn Giản, Tinh Tế (Màu Trắng -> Vàng Be) */
+.social-links .social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3); /* Viền mờ */
+  color: #fff;
+  transition: all 0.3s ease;
+  background: transparent;
+}
+.social-links .social-btn:hover {
+  background-color: #e7ce7d;
+  border-color: #e7ce7d;
+  color: #9f273b;
+  transform: translateY(-3px);
+}
+
+/* Tiêu đề Footer */
+.footer-title {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* Danh sách Liên Kết (Trắng nhạt -> Hover: Vàng Be) */
+.footer-links li {
+  margin-bottom: 12px;
+}
+.footer-links a {
+  color: rgba(255,255,255,0.7); /* Màu trắng trong suốt */
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: inline-block;
+  position: relative;
+}
+/* Hiệu ứng gạch chân chữ cực mỏng và chuyển màu vàng be */
+.footer-links a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: #e7ce7d;
+  transition: width 0.3s ease;
+}
+.footer-links a:hover {
+  color: #e7ce7d; 
+}
+.footer-links a:hover::after {
+  width: 100%;
+}
+
+/* Form Đăng ký nhận tin - Thiết kế Luxury */
+.luxury-input {
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 40px;
+  font-size: 0.95rem;
+  color: #fff;
+  box-shadow: none !important;
+  transition: border-color 0.3s ease;
+}
+.luxury-input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+.luxury-input:focus {
+  border-bottom-color: #e7ce7d;
+}
+
+/* BOTTOM FOOTER */
+.bottom-footer {
+  background-color: #801f2f; /* Màu Đỏ Sẫm đậm hơn Main Footer 1 chút để tạo độ sâu */
+}
+.payment-methods i {
+  transition: 0.3s;
+}
+.hover-secondary:hover {
+  color: #e7ce7d !important;
+}
+</style>

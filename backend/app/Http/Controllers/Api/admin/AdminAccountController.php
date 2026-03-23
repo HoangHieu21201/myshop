@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreAdminRequest;
+use App\Http\Requests\AdminStoreAdminRequest;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AdminAccountController extends Controller
 {
-    public function store(StoreAdminRequest $request)
+    public function store(AdminStoreAdminRequest $request)
     {
         // 1. Lấy dữ liệu đã validate
         $validatedData = $request->validated();

@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
-class UpdateCategoryRequest extends FormRequest
+class AdminUpdateCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {

@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\UpdateAdminProfileRequest;
-use App\Http\Requests\UpdateAdminPasswordRequest;
+use App\Http\Requests\AdminUpdateAdminProfileRequest;
+use App\Http\Requests\AdminUpdateAdminPasswordRequest;
 use Illuminate\Support\Str;
 
 class AdminProfileController extends Controller
 {
-    public function updateProfile(UpdateAdminProfileRequest $request)
+    public function updateProfile(AdminUpdateAdminProfileRequest $request)
     {
         $admin = $request->user(); 
         
@@ -49,7 +49,7 @@ class AdminProfileController extends Controller
         ]);
     }
 
-    public function updatePassword(UpdateAdminPasswordRequest $request)
+    public function updatePassword(AdminUpdateAdminPasswordRequest $request)
     {
         $admin = $request->user();
 
