@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\client\CartController;
 use App\Http\Controllers\Api\client\OrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
+use App\Http\Controllers\Api\client\ClientHomeController;
 
 Route::prefix('client')->group(function () {
     
@@ -54,7 +55,11 @@ Route::prefix('client')->group(function () {
         Route::get('/{order_code}', 'show');    // Chi tiết đơn hàng
         Route::put('/{order_code}', 'update');  // Hủy đơn hàng
     });
+
+    // Trang chủ
+    Route::get('home-data', [ClientHomeController::class, 'index']);
 });
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
