@@ -23,6 +23,11 @@ const user = [
                 name: 'orderHistory',
                 component: () => import('../pages/user/order/OrderDetailModal.vue')
             },
+             {
+                path: 'shop',
+                name: 'shop',
+                component: () => import('../pages/user/shop/Index.vue')
+            },
         ]
     }
 ];
