@@ -124,11 +124,10 @@
                     </button>
                   </div>
                 </div>
-                <!-- Image Section -->
+                
                 <div class="ed-image bg-light" style="flex: 1;">
                   <img src="https://images.unsplash.com/photo-1605100804763-247f66126e28?q=80&w=800&auto=format&fit=crop" class="w-100 h-100 object-fit-cover" alt="Nhẫn cầu hôn">
                 </div>
-                <!-- Video Section -->
                 <div class="ed-video bg-dark" style="flex: 1;">
                   <video autoplay loop muted playsinline class="w-100 h-100 object-fit-cover" style="opacity: 0.9;">
                     <source src="https://cdn.pixabay.com/video/2020/02/24/32822-394132332_large.mp4" type="video/mp4">
@@ -136,17 +135,19 @@
                 </div>
               </div>
 
-              <!-- EDITORIAL BLOCK 2: NHẪN CƯỚI -->
+             
               <div v-if="index === 7" class="editorial-block bg-light d-flex flex-column flex-md-row align-items-stretch w-100 overflow-hidden mb-4 mt-2">
-                 <!-- Image Lifestyle -->
+                 
                  <div class="ed-image" style="flex: 1.5;">
                   <img src="https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?q=80&w=1000&auto=format&fit=crop" class="w-100 h-100 object-fit-cover" alt="Couple Rings">
                 </div>
-                <!-- Product Detail Image -->
+              
+                
                 <div class="ed-image bg-white d-flex align-items-center justify-content-center p-4" style="flex: 1;">
                   <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=600&auto=format&fit=crop" class="img-fluid object-fit-contain mix-blend-multiply" alt="Wedding Bands">
                 </div>
-                <!-- Text Section -->
+             
+                
                 <div class="ed-text d-flex flex-column justify-content-center p-5 bg-light" style="flex: 1;">
                   <h2 class="playfair-font fw-normal text-dark mb-3" style="font-size: 2.5rem;">Nhẫn Cưới</h2>
                   <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.6;">Biểu tượng của tình yêu và lời thề ước, khi hai tâm hồn trở thành một.</p>
@@ -158,10 +159,10 @@
                 </div>
               </div>
 
-              <!-- THẺ SẢN PHẨM CHUẨN (Đã sửa lỗi Hover Nút) -->
+              
               <div class="product-card group cursor-pointer d-flex flex-column mb-3 bg-white position-relative">
                 
-                <!-- Khung Hình Ảnh Cố Định -->
+              
                 <div class="img-wrapper position-relative bg-light mb-3 overflow-hidden d-flex align-items-center justify-content-center" style="aspect-ratio: 1/1;">
                   
                   <!-- Tags -->
@@ -348,7 +349,6 @@ const categories = ref([]);
 const allProducts = ref([]);
 const pagination = ref({ current_page: 1, last_page: 1, total: 0 });
 
-// === QUẢN LÝ TRẠNG THÁI BỘ LỌC ===
 const filters = reactive({
   sort: 'recommended',
   categories: [],
@@ -356,7 +356,7 @@ const filters = reactive({
   metals: []
 });
 
-// === CẤU TRÚC DỮ LIỆU SIDEBAR CAO CẤP ===
+
 const filterGroups = ref([
   {
     title: 'Danh Mục', key: 'categories', isOpen: true,
@@ -392,7 +392,7 @@ const toggleGroup = (index) => {
   filterGroups.value[index].isOpen = !filterGroups.value[index].isOpen;
 };
 
-// === CÁC HÀM TIỆN ÍCH ===
+
 const formatPrice = (price) => {
     if (!price || isNaN(price)) return 'Liên hệ';
     return new Intl.NumberFormat('vi-VN').format(price) + '₫';
@@ -445,7 +445,10 @@ const generateFakeCategories = () => {
     ];
 };
 
-// === CALL API SẢN PHẨM ===
+
+
+
+
 const buildQueryString = (page) => {
   const params = new URLSearchParams();
   params.append('page', page);
@@ -501,13 +504,14 @@ const generateFakeProducts = () => {
    pagination.value = { current_page: 1, last_page: 3, total: 36 };
 };
 
-// === XỬ LÝ SỰ KIỆN LỌC & PHÂN TRANG ===
+
+
 const filterByCategory = (categoryValue) => {
   if (!filters.categories.includes(categoryValue)) {
     filters.categories.push(categoryValue);
     applyFilters();
   }
-  // Scroll xuống khu vực sản phẩm
+  
   window.scrollTo({ top: document.querySelector('.product-grid')?.offsetTop || 500, behavior: 'smooth' });
 };
 
@@ -538,7 +542,7 @@ onMounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
-/* === TYPOGRAPHY === */
+
 .shop-page {
   font-family: 'Inter', sans-serif;
   color: #333;
