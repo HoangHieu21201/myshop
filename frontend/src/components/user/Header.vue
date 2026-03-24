@@ -13,9 +13,9 @@
           </button>
           <!-- Liên kết Desktop -->
           <div class="top-links d-none d-lg-flex gap-4">
-            <a href="#" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a>
-            <a href="#" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a>
-            <a href="#" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a>
+            <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a>
+            <a :href="{ contact }" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a>
+            <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a>
           </div>
         </div>
 
