@@ -17,22 +17,22 @@ class ClientHomeController extends Controller
      */
     public function index()
     {
-        // Khởi tạo mảng rỗng mặc định để Frontend không bị lỗi undefined
         $data = [
             'banners' => [],
             'coupons' => [],
             'categories' => [],
             'products' => [],
+            'combos' => [],
             'tiers' => []
         ];
 
         try {
-            // 1. Lấy Banners (Chỉ truy vấn nếu bảng banners đã được tạo)
+            // 1. Lấy Banners
             if (Schema::hasTable('banners')) {
                 $data['banners'] = DB::table('banners')->where('status', 'active')->orderBy('sort_order', 'asc')->get();
             }
 
-            // 2. Lấy Coupons (Chỉ truy vấn nếu bảng coupons đã được tạo)
+            // 2. Lấy Coupons
             if (Schema::hasTable('coupons')) {
                 $data['coupons'] = DB::table('coupons')
                     ->where('status', 'active')
@@ -55,22 +55,19 @@ class ClientHomeController extends Controller
             // 3. Lấy Danh mục
             if (Schema::hasTable('categories')) {
                 $catQuery = Category::where('status', 'active')->select('id', 'name', 'slug', 'thumbnail as image');
-
-                // Kiểm tra xem đã migrate cột sort_order chưa để tránh lỗi
                 if (Schema::hasColumn('categories', 'sort_order')) {
                     $catQuery->orderBy('sort_order', 'asc');
                 } else {
                     $catQuery->orderBy('id', 'asc');
                 }
-
                 $data['categories'] = $catQuery->take(6)->get();
             }
 
-            // 4. Lấy Sản phẩm & Tự động tính "Sản phẩm mới"
+            // 4. Lấy Sản phẩm
             if (Schema::hasTable('products')) {
                 $data['products'] = Product::where('status', 'published')
                     ->select('id', 'name', 'slug', 'thumbnail_image', 'base_price', 'promotional_price', 'created_at')
-                    ->orderBy('is_featured', 'desc') // Ưu tiên hàng nổi bật
+                    ->orderBy('is_featured', 'desc')
                     ->orderBy('id', 'desc')
                     ->take(8)
                     ->get()
@@ -80,7 +77,57 @@ class ClientHomeController extends Controller
                     });
             }
 
-            // 5. Lấy Hạng hội viên (Chỉ truy vấn nếu bảng đã tạo)
+            // 5. Lấy Combos & Tự động tính giá
+            if (Schema::hasTable('combos') && Schema::hasTable('combo_items')) {
+                $data['combos'] = DB::table('combos')
+                    ->where('status', 'active')
+                    ->orderBy('id', 'desc') 
+                    ->take(5) 
+                    ->get()
+                    ->map(function ($combo) {
+                        $items = DB::table('combo_items')
+                            ->join('products', 'combo_items.product_id', '=', 'products.id')
+                            ->where('combo_items.combo_id', $combo->id)
+                            ->select('products.id', 'products.name', 'products.thumbnail_image', 'products.base_price', 'products.promotional_price', 'combo_items.quantity')
+                            ->get();
+
+                        $totalBasePrice = 0;
+                        $productsArray = [];
+
+                        foreach ($items as $item) {
+                            $priceToUse = $item->promotional_price > 0 ? $item->promotional_price : $item->base_price;
+                            $totalBasePrice += ($priceToUse * $item->quantity);
+
+                            $productsArray[] = [
+                                'id' => $item->id,
+                                'name' => $item->name,
+                                'thumbnail_image' => $item->thumbnail_image
+                            ];
+                        }
+
+                        $comboPromoPrice = $totalBasePrice;
+                        if ($combo->discount_value > 0) {
+                            if ($combo->discount_type === 'percentage' || $combo->discount_type === 'percent') {
+                                $comboPromoPrice = $totalBasePrice - ($totalBasePrice * ($combo->discount_value / 100));
+                            } else {
+                                $comboPromoPrice = $totalBasePrice - $combo->discount_value;
+                            }
+                        }
+
+                        return [
+                            'id' => $combo->id,
+                            'slug' => $combo->slug, 
+                            'name' => $combo->name,
+                            'description' => $combo->description,
+                            'thumbnail_image' => $combo->thumbnail_image,
+                            'base_price' => $totalBasePrice,
+                            'promotional_price' => $comboPromoPrice > 0 ? $comboPromoPrice : 0,
+                            'products' => $productsArray
+                        ];
+                    });
+            }
+
+            // 6. Lấy Hạng hội viên
             if (Schema::hasTable('membership_tiers')) {
                 $data['tiers'] = DB::table('membership_tiers')
                     ->where('min_spent', '>', 0)
@@ -94,7 +141,6 @@ class ClientHomeController extends Controller
                 'data' => $data
             ]);
         } catch (\Exception $e) {
-            // NẾU CÓ LỖI (Ví dụ sai tên cột), VẪN TRẢ VỀ 200 KÈM DATA RỖNG ĐỂ MÀN HÌNH FRONTEND KHÔNG BỊ SẬP
             return response()->json([
                 'success' => false,
                 'message' => 'Cảnh báo Backend: ' . $e->getMessage(),
