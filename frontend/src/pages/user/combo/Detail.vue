@@ -93,7 +93,11 @@
                     <!-- NẾU ADMIN ĐÃ CỐ ĐỊNH PHIÊN BẢN -->
                     <div v-if="item.product_variant_id" class="text-muted small mt-2 font-oswald tracking-wide text-uppercase">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                       Phiên bản cố định: 
+=======
+                      Phiên bản: 
+>>>>>>> Stashed changes
 =======
                       Phiên bản: 
 >>>>>>> Stashed changes
@@ -104,7 +108,11 @@
                     </div>
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     <!-- THIẾT KẾ MA TRẬN CHỌN THUỘC TÍNH TÙY CHỈNH -->
+=======
+                    <!-- THIẾT KẾ MA TRẬN CHỌN THUỘC TÍNH (ĐÃ FIX LỖI MÀU SẮC) -->
+>>>>>>> Stashed changes
 =======
                     <!-- THIẾT KẾ MA TRẬN CHỌN THUỘC TÍNH (ĐÃ FIX LỖI MÀU SẮC) -->
 >>>>>>> Stashed changes
@@ -245,11 +253,14 @@ const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currenc
 const getImage = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : 'https://placehold.co/400x300';
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 const getDisplayImage = (item) => {
     if (item.product_variant_id && item.variant && item.variant.image_url) {
         return getImage(item.variant.image_url);
     }
 =======
+=======
+>>>>>>> Stashed changes
 // THUẬT TOÁN ĐỔI ẢNH THEO BIẾN THỂ
 const getDisplayImage = (item) => {
     // 1. Nếu admin đã chọn sẵn 1 biến thể cố định có ảnh
@@ -258,6 +269,9 @@ const getDisplayImage = (item) => {
     }
     
     // 2. Nếu khách hàng chọn đủ thuộc tính và ra 1 biến thể cụ thể có ảnh
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     if (!item.product_variant_id) {
         const selectedVar = getSelectedVariant(item.id);
@@ -266,23 +280,33 @@ const getDisplayImage = (item) => {
         }
     }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     return getImage(item.product?.thumbnail_image);
 };
 
 =======
+=======
+>>>>>>> Stashed changes
     
     // 3. Fallback: Dùng ảnh gốc của sản phẩm
     return getImage(item.product?.thumbnail_image);
 };
 
 // ĐÃ THU NHỎ SIZE LIGHTBOX ẢNH
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 const viewFullImage = (url) => {
   Swal.fire({
     imageUrl: url, 
     imageAlt: 'Product Image', 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     width: 600, 
+=======
+    width: 600, // Đã chỉnh kích thước nhỏ lại để tinh tế hơn
+>>>>>>> Stashed changes
 =======
     width: 600, // Đã chỉnh kích thước nhỏ lại để tinh tế hơn
 >>>>>>> Stashed changes
@@ -424,6 +448,7 @@ const fetchDetail = async (slug) => {
         
         itemMatrices.value[item.id] = finalMatrix;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
         // ĐÃ THÊM: TỰ ĐỘNG CHỌN NẾU SẢN PHẨM CHỈ CÓ DUY NHẤT 1 BIẾN THỂ
         if (item.product?.variants && item.product.variants.length === 1) {
@@ -434,6 +459,8 @@ const fetchDetail = async (slug) => {
                 });
             }
         }
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
       }
@@ -488,6 +515,7 @@ const addToCart = async () => {
   
   try {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       const token = localStorage.getItem('auth_token'); 
       const sessionId = localStorage.getItem('cart_session_id'); 
       
@@ -508,10 +536,15 @@ const addToCart = async () => {
       const msg = error.response?.data?.message || 'Không thể thêm vào giỏ hàng. Vui lòng thử lại!';
       Swal.fire('Lỗi', msg, 'error');
 =======
+=======
+>>>>>>> Stashed changes
       console.log("Đang gửi lên Server Data Giỏ hàng:", payload);
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm Combo vào Túi mua sắm', showConfirmButton: false, timer: 1500 });
   } catch (error) {
       Swal.fire('Lỗi', 'Không thể thêm vào giỏ hàng. Vui lòng thử lại!', 'error');
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   } finally {
       isAddingToCart.value = false;
@@ -562,7 +595,11 @@ onUnmounted(() => {
 .cursor-zoom-in { cursor: zoom-in; }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 /* FIX CSS LỖI VUE SCOPED: GỠ :ROOT VÀ FIX CỨNG MÃ HEXA */
+=======
+/* Gỡ bỏ CSS Variable ảo để dùng trực tiếp mã Hex ổn định */
+>>>>>>> Stashed changes
 =======
 /* Gỡ bỏ CSS Variable ảo để dùng trực tiếp mã Hex ổn định */
 >>>>>>> Stashed changes
@@ -600,17 +637,23 @@ onUnmounted(() => {
 }
 .attr-chip:hover .chip-inner {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     border-color: #e7ce7d; /* Viền Vàng Gold */
     color: #9f273b;
 }
 .attr-chip.selected .chip-inner {
     background-color: #9f273b; /* Đỏ Sẫm */
 =======
+=======
+>>>>>>> Stashed changes
     border-color: #e7ce7d;
     color: #9f273b;
 }
 .attr-chip.selected .chip-inner {
     background-color: #9f273b;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     border-color: #9f273b;
     color: #fff !important;

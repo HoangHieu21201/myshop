@@ -13,6 +13,7 @@
           </button>
           <!-- Liên kết Desktop -->
           <div class="top-links d-none d-lg-flex gap-4">
+<<<<<<< Updated upstream
             <!-- khai bao bang route link thay vi dung the a -->
             <!-- <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a> -->
             <router-link :to="{ name: 'about' }" class="top-link" >VỀ SORA</router-link>
@@ -20,6 +21,11 @@
             <router-link :to="{ name: 'contact' }" class="top-link">LIÊN HỆ</router-link>
             <!-- <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a> -->
             <router-link :to="{ name: 'services' }" class="top-link">DỊCH VỤ</router-link>
+=======
+            <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a>
+            <a :href="{ contact }" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a>
+            <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a>
+>>>>>>> Stashed changes
           </div>
         </div>
 
@@ -107,11 +113,16 @@
 
             <!-- MEGA MENU SẢN PHẨM "shop"-->
             
+<<<<<<< Updated upstream
             <!-- MEGA MENU SẢN PHẨM "shop"-->
             
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
               <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
               <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
+=======
+            <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
+              <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
+>>>>>>> Stashed changes
                 SẢN PHẨM
               </a>
 

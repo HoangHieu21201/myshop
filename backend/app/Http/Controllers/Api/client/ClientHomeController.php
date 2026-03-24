@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class ClientHomeController extends Controller
 {
-    /**
-     * API gom toàn bộ dữ liệu cho Trang chủ
-     */
     public function index()
     {
         $data = [

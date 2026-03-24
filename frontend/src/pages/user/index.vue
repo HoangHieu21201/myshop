@@ -78,6 +78,7 @@
                 <button @click="saveCoupon(coupon.code)" class="btn btn-sm btn-outline-primary-luxury mt-3 rounded-0 fw-bold tracking-widest text-uppercase">
                   Lưu Mã Nhận Ưu Đãi
                 </button>
+<<<<<<< Updated upstream
               </div>
             </div>
           </div>
@@ -211,11 +212,130 @@
                   <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
                 </div>
                 <router-link :to="'/combo/' + combo.slug" class="stretched-link"></router-link>
+=======
+>>>>>>> Stashed changes
               </div>
             </swiper-slide>
           </swiper>
         </div>
-      </section>
+      </div>
+    </section>
+
+<<<<<<< Updated upstream
+    <section class="blog-section py-5" style="background-color: #f9f9f9;">
+      <div class="container py-4">
+        <div class="text-center mb-5">
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Cẩm Nang</h6>
+          <h3 class="font-serif fw-bold text-dark mb-3 display-6">Kiến Thức Trang Sức</h3>
+          <div class="divider-gold mx-auto"></div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-4" v-for="i in 3" :key="i">
+            <div class="blog-card group cursor-pointer bg-white p-3 shadow-sm border border-light">
+              <div class="ratio ratio-4x3 overflow-hidden mb-3">
+                <img :src="`https://images.unsplash.com/photo-1573408301145-b98c46544ea6?q=80&w=600&auto=format&fit=crop&sig=${i}`" loading="lazy" class="object-fit-cover transition-transform duration-700 group-hover-scale" alt="Blog">
+              </div>
+              <small class="text-gold tracking-widest text-uppercase fw-bold">Tư Vấn</small>
+              <h5 class="font-serif fw-bold text-primary-luxury mt-2 group-hover-text-accent transition-colors">
+                {{ ['Bí Quyết Chọn Nhẫn Cầu Hôn Kim Cương Hoàn Hảo', 'Cách Bảo Quản Trang Sức Vàng 18K Sáng Bóng Trọn Đời', 'Xu Hướng Trang Sức Ngọc Trai Lên Ngôi Năm Nay'][i-1] }}
+              </h5>
+              <p class="text-dark fw-light mt-2 mb-0" style="font-size: 0.9rem;">Khám phá những bí quyết độc quyền từ chuyên gia kim hoàn SORA để...</p>
+            </div>
+          </div>
+=======
+    <section class="categories-section py-5 bg-white">
+      <div class="container py-4 text-center">
+        <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Lựa Chọn Di Sản</h6>
+        <h3 class="font-serif fw-bold text-dark mb-5 display-6">Danh Mục Trang Sức</h3>
+        
+        <div class="row g-4 justify-content-center">
+          <div v-for="cat in data.categories" :key="cat.id" class="col-6 col-md-4 col-lg-2">
+            <router-link :to="`/category/${cat.id}`" class="text-decoration-none group d-block">
+              <div class="ratio ratio-1x1 overflow-hidden mx-auto mb-3 border border-1 border-secondary border-opacity-10 p-1">
+                <img :src="getImageUrl(cat.image)" class="object-fit-cover transition-transform duration-500 group-hover-scale filter-brightness" alt="Category" @error="handleImageError">
+              </div>
+              <h6 class="text-dark font-serif fw-bold group-hover-text-primary transition-colors fs-5">{{ cat.name }}</h6>
+              <div class="divider-gold mx-auto mt-2 scale-0 group-hover-scale-100 transition-transform"></div>
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="brand-story-section py-5" style="background-color: #fcfaf8;">
+      <div class="container py-5">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <div class="position-relative p-3">
+              <div class="border border-gold position-absolute w-100 h-100 top-0 start-0 translate-middle-x ms-4 mt-4 z-index-1"></div>
+              <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?q=80&w=800&auto=format&fit=crop" class="w-100 position-relative z-index-2 shadow-sm" alt="Craftsmanship" loading="lazy">
+            </div>
+          </div>
+          <div class="col-lg-6 ps-lg-5">
+            <h6 class="text-gold tracking-widest text-uppercase fw-bold mb-2">Nghệ Thuật Chế Tác</h6>
+            <h2 class="font-serif fw-bold text-primary-luxury display-5 mb-4">Tinh Hoa Hội Tụ<br>Trong Từng Giọt Vàng</h2>
+            <p class="text-dark fw-light mb-4 lh-lg" style="font-size: 1.1rem;">
+              Tại SORA, mỗi món trang sức không chỉ là vật trang điểm, mà là một tác phẩm nghệ thuật mang đậm dấu ấn cá nhân. Bằng đôi bàn tay tài hoa của những nghệ nhân kim hoàn hàng đầu, chúng tôi biến những viên đá thô ráp thành biểu tượng của sự sang trọng, quyền quý và trường tồn cùng thời gian.
+            </p>
+            <router-link to="/about" class="btn btn-outline-primary-luxury px-4 py-3 text-uppercase tracking-widest fw-bold rounded-0 border-2">
+              Khám Phá Câu Chuyện
+            </router-link>
+          </div>
+>>>>>>> Stashed changes
+        </div>
+      </div>
+    </section>
+
+<<<<<<< Updated upstream
+=======
+    <section class="products-section py-5 my-3 container bg-white">
+      <div class="d-flex justify-content-between align-items-end mb-5 pb-3 border-bottom border-secondary border-opacity-10">
+        <div>
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Xu Hướng</h6>
+          <h3 class="font-serif fw-bold text-dark mb-0 display-6">Tuyệt Tác Mới Nhất</h3>
+        </div>
+        <router-link to="/products" class="btn btn-outline-primary-luxury rounded-0 px-4 py-2 text-uppercase tracking-widest text-sm fw-bold">
+          Xem Bộ Sưu Tập
+        </router-link>
+      </div>
+
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+        <div class="col" v-for="product in data.products" :key="product.id">
+          <div class="product-card h-100 position-relative group bg-white">
+            
+            <div class="position-relative overflow-hidden bg-light product-img-wrapper">
+              <button class="wishlist-btn position-absolute top-0 end-0 m-3 z-index-2 border-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <i class="bi bi-suit-heart fs-5 text-muted hover-text-accent transition-colors" style="margin-top: 2px;"></i>
+              </button>
+              
+              <span v-if="product.is_new" class="badge bg-primary-luxury position-absolute top-0 start-0 m-3 px-3 py-2 rounded-0 tracking-widest shadow-sm z-index-2">MỚI</span>
+              
+              <router-link :to="`/product/${product.slug}`" class="d-block ratio ratio-1x1">
+                <img :src="getImageUrl(product.thumbnail_image)" class="object-fit-cover transition-transform duration-700 hover-scale" alt="Product" @error="handleImageError">
+              </router-link>
+              
+              <div class="quick-view-overlay position-absolute bottom-0 start-0 w-100 p-0 z-index-2 translate-y-100 group-hover-translate-y-0 transition-transform duration-300">
+                <button class="btn btn-primary-luxury w-100 rounded-0 fw-bold tracking-widest text-uppercase py-3 shadow-none border-0 fs-6">
+                  <i class="bi bi-bag me-2"></i> Thêm Vào Giỏ
+                </button>
+              </div>
+            </div>
+
+            <div class="text-center pt-4 pb-3 px-2">
+              <router-link :to="`/product/${product.slug}`" class="text-decoration-none">
+                <h6 class="text-dark font-serif text-truncate mb-2 cursor-pointer hover-text-primary" style="font-size: 1.15rem;">{{ product.name }}</h6>
+              </router-link>
+              <div class="price-wrap mt-2 d-flex justify-content-center align-items-center gap-2">
+                <span class="text-primary-luxury fw-bold fs-5">{{ formatCurrency(product.base_price) }}</span>
+                <span v-if="product.promotional_price" class="text-muted text-decoration-line-through small">{{ formatCurrency(product.promotional_price) }}</span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="blog-section py-5" style="background-color: #f9f9f9;">
       <div class="container py-4">
@@ -241,6 +361,7 @@
       </div>
     </section>
 
+>>>>>>> Stashed changes
     <section class="membership-banner py-5 position-relative" style="background-color: var(--color-primary);">
       <div class="container position-relative z-index-2 py-5 text-center">
         <i class="bi bi-gem text-gold display-4 mb-3"></i>
@@ -272,6 +393,7 @@
 import { reactive, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 
+<<<<<<< Updated upstream
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination, Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -281,6 +403,8 @@ import 'swiper/css/navigation';
 const swiperModules = [Pagination, Navigation, Autoplay];
 const isLoading = ref(true);
 
+=======
+>>>>>>> Stashed changes
 const data = reactive({
   banners: [],
   coupons: [],
