@@ -55,6 +55,11 @@ return [
         'module_name' => 'Quản lý Hạng thành viên',
         'module_code' => 'admin_tiers',
         'default_level' => 2
-    ]
+    ],
+    [
+        'module_name' => 'Quản lý Combo sản phẩm',
+        'module_code' => 'admin_combos',
+        'default_level' => 2
+    ],
 
 ];

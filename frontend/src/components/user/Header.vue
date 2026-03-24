@@ -1,10 +1,10 @@
 <template>
   <header class="site-header bg-white sticky-top">
     <div class="container position-relative">
-      
+
       <!-- ================= TẦNG 1: TOOLS, LOGO & ICONS ================= -->
       <div class="header-tier-top d-flex justify-content-between align-items-center pt-3 pb-2">
-        
+
         <!-- LEFT: Các liên kết phụ (Mobile ẩn, hiển thị nút Menu) -->
         <div class="top-links-wrapper d-flex align-items-center" style="flex: 1;">
           <!-- Nút Menu Mobile -->
@@ -34,40 +34,53 @@
 
           <!-- USER MENU DROPDOWN -->
           <div class="user-menu-wrapper position-relative" ref="userMenuContainer">
-            <button @click="toggleUserMenu" class="btn border-0 p-0 bg-transparent icon-link hover-primary transition-color">
+            <button @click="toggleUserMenu"
+              class="btn border-0 p-0 bg-transparent icon-link hover-primary transition-color">
               <i class="bi bi-person"></i>
             </button>
 
             <!-- Bảng tài khoản xổ xuống -->
             <transition name="fade">
-              <div v-if="isUserMenuOpen" class="user-dropdown shadow-lg rounded-4 border bg-white position-absolute end-0 mt-3 py-2" style="width: 220px; z-index: 1050;">
-                
+              <div v-if="isUserMenuOpen"
+                class="user-dropdown shadow-lg rounded-4 border bg-white position-absolute end-0 mt-3 py-2"
+                style="width: 220px; z-index: 1050;">
+
                 <!-- NẾU ĐÃ ĐĂNG NHẬP -->
                 <template v-if="user">
                   <div class="px-4 py-2 border-bottom mb-2 bg-light">
                     <div class="fw-bold text-truncate">{{ user.fullName || 'Thành viên' }}</div>
                     <div class="small text-muted font-monospace text-truncate">{{ user.email }}</div>
                   </div>
-                  <a href="#" @click.prevent="safeNavigate('profile')" class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i class="bi bi-person-circle me-2 text-muted"></i>Tài khoản của tôi</a>
-                  <a href="#" @click.prevent="safeNavigate('orders')" class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i class="bi bi-box-seam me-2 text-muted"></i>Đơn mua</a>
-                  <a href="#" @click.prevent="safeNavigate('wishlist')" class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i class="bi bi-heart text-danger me-2"></i>Yêu thích</a>
+                  <a href="#" @click.prevent="safeNavigate('profile')"
+                    class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
+                      class="bi bi-person-circle me-2 text-muted"></i>Tài khoản của tôi</a>
+                  <a href="#" @click.prevent="safeNavigate('orders')"
+                    class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
+                      class="bi bi-box-seam me-2 text-muted"></i>Đơn mua</a>
+                  <a href="#" @click.prevent="safeNavigate('wishlist')"
+                    class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
+                      class="bi bi-heart text-danger me-2"></i>Yêu thích</a>
                   <div class="dropdown-divider my-2"></div>
-                  <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
+                  <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i
+                      class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
                 </template>
-                
                 <!-- NẾU CHƯA ĐĂNG NHẬP -->
                 <template v-else>
                   <div class="p-3 text-center">
                     <p class="small text-muted mb-3">Đăng nhập để theo dõi đơn hàng và ưu đãi</p>
-                    <a href="#" @click.prevent="safeNavigate('login')" class="btn btn-brand w-100 fw-bold rounded-pill text-white mb-2 text-decoration-none">Đăng Nhập</a>
-                    <div class="small">Chưa có tài khoản? <a href="#" @click.prevent="safeNavigate('register')" class="text-primary-custom fw-bold text-decoration-none">Đăng ký</a></div>
+                    <a href="#" @click.prevent="safeNavigate('login')"
+                      class="btn btn-brand w-100 fw-bold rounded-pill text-white mb-2 text-decoration-none">Đăng
+                      Nhập</a>
+                    <div class="small">Chưa có tài khoản? <a href="#" @click.prevent="safeNavigate('register')"
+                        class="text-primary-custom fw-bold text-decoration-none">Đăng ký</a></div>
                   </div>
                 </template>
               </div>
             </transition>
           </div>
 
-          <a href="#" @click.prevent="safeNavigate('stores')" class="icon-link hover-primary transition-color d-none d-md-block">
+          <a href="#" @click.prevent="safeNavigate('stores')"
+            class="icon-link hover-primary transition-color d-none d-md-block">
             <i class="bi bi-geo-alt"></i>
           </a>
 
@@ -79,13 +92,14 @@
       </div>
 
       <!-- ================= TẦNG 2: NAVIGATION & SEARCH ================= -->
-      <div class="header-tier-bottom d-none d-lg-flex justify-content-center align-items-center position-relative pb-2 mt-2">
-        
+      <div
+        class="header-tier-bottom d-none d-lg-flex justify-content-center align-items-center position-relative pb-2 mt-2">
+
         <!-- MAIN NAVIGATION CĂN GIỮA -->
         <nav class="main-nav">
           <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5">
             <li><router-link :to="{ name: 'home' }" class="nav-item-link">XU HƯỚNG</router-link></li>
-            
+
             <!-- MEGA MENU SẢN PHẨM -->
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
               <a href="#" @click.prevent="safeNavigate('Shop')" class="nav-item-link d-flex align-items-center">
@@ -93,21 +107,24 @@
               </a>
 
               <transition name="fade-slide">
-                <div v-show="isMegaMenuOpen" class="mega-menu-wrapper shadow-lg border-top border-3 border-primary-custom">
+                <div v-show="isMegaMenuOpen"
+                  class="mega-menu-wrapper shadow-lg border-top border-3 border-primary-custom">
                   <div class="d-flex text-start">
                     <div class="mega-category-list p-4 bg-light border-end">
-                      <h6 class="fw-bold mb-3 text-uppercase text-muted font-oswald" style="letter-spacing: 1px;">Danh Mục</h6>
+                      <h6 class="fw-bold mb-3 text-uppercase text-muted font-oswald" style="letter-spacing: 1px;">Danh
+                        Mục
+                      </h6>
                       <ul class="list-unstyled m-0">
                         <li v-for="cat in categories" :key="cat.id" class="mb-2" @mouseenter="hoveredCategory = cat">
-                          <a href="#" @click.prevent="safeNavigate('Shop', { query: { category: cat.slug } })" 
-                             class="mega-cat-link d-flex justify-content-between align-items-center fw-semibold text-decoration-none"
-                             :class="{'text-primary-custom': hoveredCategory?.id === cat.id}">
+                          <a href="#" @click.prevent="safeNavigate('Shop', { query: { category: cat.slug } })"
+                            class="mega-cat-link d-flex justify-content-between align-items-center fw-semibold text-decoration-none"
+                            :class="{ 'text-primary-custom': hoveredCategory?.id === cat.id }">
                             {{ cat.name }} <i class="bi bi-arrow-right-short opacity-50"></i>
                           </a>
                         </li>
                       </ul>
                     </div>
-                    
+
                     <div class="mega-products-preview p-4 flex-grow-1 bg-white">
                       <h6 class="fw-bold mb-3 text-uppercase text-muted font-oswald" style="letter-spacing: 1px;">
                         Nổi bật: {{ hoveredCategory ? hoveredCategory.name : 'Mới Nhất' }}
@@ -116,10 +133,12 @@
                         <div class="col-3" v-for="prod in hoveredCategory.top_products" :key="prod.id">
                           <div class="mega-product-card cursor-pointer" @click="goToProduct(prod.slug)">
                             <div class="mega-img-wrap bg-light rounded-3 mb-2 overflow-hidden border">
-                              <img :src="getImage(prod.thumbnail_image)" class="w-100 h-100 object-fit-cover transition-transform" alt="Product">
+                              <img :src="getImage(prod.thumbnail_image)"
+                                class="w-100 h-100 object-fit-cover transition-transform" alt="Product">
                             </div>
                             <h6 class="small fw-bold text-truncate mb-1">{{ prod.name }}</h6>
-                            <div class="text-danger fw-bold small">{{ formatCurrency(prod.promotional_price || prod.base_price) }}</div>
+                            <div class="text-danger fw-bold small">{{ formatCurrency(prod.promotional_price ||
+                              prod.base_price) }}</div>
                           </div>
                         </div>
                       </div>
@@ -130,7 +149,10 @@
               </transition>
             </li>
 
-            <li><a href="#" @click.prevent="safeNavigate('collections')" class="nav-item-link">BỘ SƯU TẬP</a></li>
+
+            <router-link :to="{ name: 'client-combos' }" class="nav-item-link">
+              BỘ SƯU TẬP
+            </router-link>
             <li><a href="#" @click.prevent="safeNavigate('gifts')" class="nav-item-link">QUÀ TẶNG</a></li>
             <li><a href="#" @click.prevent="safeNavigate('blog')" class="nav-item-link">TIN TỨC</a></li>
           </ul>
@@ -139,14 +161,12 @@
         <!-- SEARCH BAR -->
         <div class="search-trigger-wrapper position-absolute end-0 d-flex align-items-center">
           <span class="text-muted fw-light opacity-50 me-3" style="font-size: 1.2rem;">|</span>
-          
+
           <div class="search-box-luxury position-relative" ref="searchContainer">
             <form @submit.prevent="handleSearch" class="position-relative d-flex align-items-center">
-              <input type="text" class="form-control bg-transparent border-0 shadow-none pe-4 font-oswald tracking-wide" 
-                     placeholder="Tìm kiếm..." 
-                     v-model="searchQuery" 
-                     @input="onSearchInput"
-                     @focus="showSearchResults = true">
+              <input type="text" class="form-control bg-transparent border-0 shadow-none pe-4 font-oswald tracking-wide"
+                placeholder="Tìm kiếm..." v-model="searchQuery" @input="onSearchInput"
+                @focus="showSearchResults = true">
               <button type="submit" class="btn border-0 p-0 position-absolute end-0 text-dark hover-primary">
                 <i v-if="isFetchingSearch" class="spinner-border spinner-border-sm text-muted"></i>
                 <i v-else class="bi bi-search fs-6"></i>
@@ -155,13 +175,17 @@
             </form>
 
             <transition name="fade">
-              <div v-if="showSearchResults && searchQuery.length > 0" class="search-results-dropdown shadow-lg rounded-4 overflow-hidden border mt-2 bg-white position-absolute end-0" style="width: 320px; z-index: 1050;">
-                
+              <div v-if="showSearchResults && searchQuery.length > 0"
+                class="search-results-dropdown shadow-lg rounded-4 overflow-hidden border mt-2 bg-white position-absolute end-0"
+                style="width: 320px; z-index: 1050;">
+
                 <div v-if="categoryResults.length > 0" class="p-2 bg-light border-bottom text-start">
-                  <div class="small fw-bold text-muted text-uppercase px-2 mb-1" style="font-size: 0.7rem;">Danh mục</div>
+                  <div class="small fw-bold text-muted text-uppercase px-2 mb-1" style="font-size: 0.7rem;">Danh mục
+                  </div>
                   <ul class="list-unstyled m-0">
                     <li v-for="cat in categoryResults" :key="cat.id">
-                      <a href="#" @click.prevent="goToCategory(cat.slug)" class="d-block px-3 py-2 text-dark text-decoration-none hover-bg-light rounded fw-semibold">
+                      <a href="#" @click.prevent="goToCategory(cat.slug)"
+                        class="d-block px-3 py-2 text-dark text-decoration-none hover-bg-light rounded fw-semibold">
                         <i class="bi bi-folder2-open me-2 text-primary-custom"></i> {{ cat.name }}
                       </a>
                     </li>
@@ -174,24 +198,30 @@
                   </div>
                   <ul class="list-unstyled m-0">
                     <li v-for="prod in searchResults" :key="prod.id">
-                      <a href="#" @click.prevent="goToProduct(prod.slug)" class="d-flex align-items-center px-2 py-2 text-dark text-decoration-none hover-bg-light rounded gap-3">
-                        <img :src="getImage(prod.thumbnail_image)" class="rounded border object-fit-cover bg-white" style="width: 40px; height: 40px;">
+                      <a href="#" @click.prevent="goToProduct(prod.slug)"
+                        class="d-flex align-items-center px-2 py-2 text-dark text-decoration-none hover-bg-light rounded gap-3">
+                        <img :src="getImage(prod.thumbnail_image)" class="rounded border object-fit-cover bg-white"
+                          style="width: 40px; height: 40px;">
                         <div class="overflow-hidden">
                           <div class="small fw-bold text-truncate" v-html="highlightText(prod.name)"></div>
-                          <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price || prod.base_price) }}</div>
+                          <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price ||
+                            prod.base_price)
+                          }}</div>
                         </div>
                       </a>
                     </li>
                   </ul>
                 </div>
 
-                <div v-if="!isFetchingSearch && categoryResults.length === 0 && searchResults.length === 0" class="p-4 text-center text-muted">
+                <div v-if="!isFetchingSearch && categoryResults.length === 0 && searchResults.length === 0"
+                  class="p-4 text-center text-muted">
                   <i class="bi bi-emoji-frown fs-3 d-block mb-2"></i>
                   <span class="small">Không tìm thấy kết quả cho "{{ searchQuery }}"</span>
                 </div>
-                
+
                 <div v-if="searchResults.length > 0" class="p-2 border-top bg-light text-center">
-                  <a href="#" @click.prevent="handleSearch" class="small fw-bold text-primary-custom text-decoration-none">
+                  <a href="#" @click.prevent="handleSearch"
+                    class="small fw-bold text-primary-custom text-decoration-none">
                     Xem tất cả <i class="bi bi-arrow-right"></i>
                   </a>
                 </div>
@@ -202,7 +232,6 @@
 
       </div>
     </div>
-    
     <div class="border-bottom opacity-50"></div>
   </header>
 </template>
@@ -257,8 +286,8 @@ const fetchHeaderData = async () => {
     const res = await axios.get(`${BACKEND_URL}/api/client/header-data`);
     if (res.data.success) {
       categories.value = res.data.data.categories;
-      if(categories.value.length > 0) hoveredCategory.value = categories.value[0];
-      if(res.data.data.config) sysConfig.value = { ...sysConfig.value, ...res.data.data.config };
+      if (categories.value.length > 0) hoveredCategory.value = categories.value[0];
+      if (res.data.data.config) sysConfig.value = { ...sysConfig.value, ...res.data.data.config };
     }
   } catch (error) { console.error('Lỗi tải Menu:', error); }
 };
@@ -266,14 +295,14 @@ const fetchHeaderData = async () => {
 // --- CẬP NHẬT MỚI: HÀM LẤY USER THẬT TỪ SERVER ĐỂ KIỂM TRA TOKEN ---
 const fetchUserProfile = async () => {
   const token = localStorage.getItem('auth_token');
-  if (!token) return; 
+  if (!token) return;
 
   try {
     // Gọi API của bạn để check token (giả sử là /api/user)
     const res = await axios.get(`${BACKEND_URL}/api/user`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    user.value = res.data; 
+    user.value = res.data;
     localStorage.setItem('userData', JSON.stringify(res.data));
   } catch (error) {
     console.error("Token hết hạn hoặc chưa đăng nhập hợp lệ:", error);
@@ -292,7 +321,7 @@ const performSearch = async (query) => {
   isFetchingSearch.value = true;
   try {
     const res = await axios.get(`${BACKEND_URL}/api/client/search`, { params: { keyword: query } });
-    if(res.data.success) {
+    if (res.data.success) {
       searchResults.value = res.data.data.products;
       categoryResults.value = res.data.data.categories;
       isCategoryFallback.value = res.data.data.is_category_fallback;
@@ -342,7 +371,7 @@ const handleLogout = () => {
     showCancelButton: true, confirmButtonColor: '#9f273b', cancelButtonColor: '#6c757d', confirmButtonText: 'Đăng xuất'
   }).then((result) => {
     if (result.isConfirmed) {
-      localStorage.removeItem('userData'); 
+      localStorage.removeItem('userData');
       localStorage.removeItem('auth_token');
       user.value = null;
       isUserMenuOpen.value = false; // Đóng menu sau khi đăng xuất
@@ -354,7 +383,6 @@ const handleLogout = () => {
 
 onMounted(() => {
   fetchHeaderData();
-  
   // --- CẬP NHẬT MỚI: Đọc data local & gọi hàm kiểm tra server ---
   const userData = localStorage.getItem('userData');
   if (userData) {
@@ -362,7 +390,6 @@ onMounted(() => {
   }
   fetchUserProfile();
   // -------------------------------------------------------------
-  
   document.addEventListener('click', handleClickOutside);
 });
 
@@ -380,21 +407,54 @@ onUnmounted(() => {
   --accent: #cc1e2e;
 }
 
-.text-primary-custom { color: #9f273b !important; }
-.bg-primary-custom { background-color: #9f273b !important; }
-.border-primary-custom { border-color: #9f273b !important; }
+.text-primary-custom {
+  color: #9f273b !important;
+}
 
-.btn-brand { background-color: #9f273b; border: none; transition: 0.2s; color: white !important;}
-.btn-brand:hover { background-color: #801f2f; color: white !important;}
+.bg-primary-custom {
+  background-color: #9f273b !important;
+}
 
-.hover-primary:hover { color: #9f273b !important; }
-.transition-color { transition: color 0.2s ease; }
-.hover-bg-light:hover { background-color: #f8f9fa; }
+.border-primary-custom {
+  border-color: #9f273b !important;
+}
 
-.font-oswald { font-family: 'Oswald', sans-serif !important; }
-.tracking-wide { letter-spacing: 0.5px; }
+.btn-brand {
+  background-color: #9f273b;
+  border: none;
+  transition: 0.2s;
+  color: white !important;
+}
 
-.site-header { z-index: 1040; background-color: #fff; }
+.btn-brand:hover {
+  background-color: #801f2f;
+  color: white !important;
+}
+
+.hover-primary:hover {
+  color: #9f273b !important;
+}
+
+.transition-color {
+  transition: color 0.2s ease;
+}
+
+.hover-bg-light:hover {
+  background-color: #f8f9fa;
+}
+
+.font-oswald {
+  font-family: 'Oswald', sans-serif !important;
+}
+
+.tracking-wide {
+  letter-spacing: 0.5px;
+}
+
+.site-header {
+  z-index: 1040;
+  background-color: #fff;
+}
 
 .top-link {
   font-family: 'Oswald', sans-serif;
@@ -405,7 +465,10 @@ onUnmounted(() => {
   letter-spacing: 1px;
   transition: color 0.2s ease;
 }
-.top-link:hover { color: #9f273b; }
+
+.top-link:hover {
+  color: #9f273b;
+}
 
 .icon-link {
   color: #333;
@@ -426,10 +489,10 @@ onUnmounted(() => {
   border: 1px solid #fff;
 }
 
-.logo-img { 
-  height: 80px; 
-  width: auto; 
-  object-fit: contain; 
+.logo-img {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
   display: block;
 }
 
@@ -437,7 +500,7 @@ onUnmounted(() => {
   color: #333;
   text-decoration: none;
   font-family: 'Oswald', sans-serif;
-  font-weight: 500; 
+  font-weight: 500;
   font-size: 1rem;
   letter-spacing: 1.5px;
   padding: 5px 0;
@@ -456,20 +519,29 @@ onUnmounted(() => {
   background-color: #9f273b;
   transition: width 0.3s ease;
 }
-.nav-item-link:hover { color: #9f273b; }
-.nav-item-link:hover::after { width: 100%; }
+
+.nav-item-link:hover {
+  color: #9f273b;
+}
+
+.nav-item-link:hover::after {
+  width: 100%;
+}
 
 .search-box-luxury {
   width: 220px;
 }
+
 .search-box-luxury input {
   font-size: 0.85rem;
   color: #333;
 }
+
 .search-box-luxury input:focus {
   outline: none;
   box-shadow: none;
 }
+
 .search-underline {
   position: absolute;
   bottom: 0;
@@ -479,7 +551,8 @@ onUnmounted(() => {
   background-color: #ddd;
   transition: background-color 0.3s ease;
 }
-.search-box-luxury input:focus ~ .search-underline {
+
+.search-box-luxury input:focus~.search-underline {
   background-color: #9f273b;
   height: 2px;
 }
@@ -496,24 +569,71 @@ onUnmounted(() => {
   margin-top: 10px;
   cursor: default;
 }
+
 .mega-cat-link {
   color: #333;
   padding: 8px 12px;
   border-radius: 6px;
   transition: all 0.2s;
 }
-.mega-cat-link:hover { background-color: #f9f9f9; color: #9f273b; padding-left: 16px; }
-.mega-product-card { transition: transform 0.2s ease; }
-.mega-product-card:hover { transform: translateY(-5px); }
-.mega-product-card:hover h6 { color: #9f273b; }
-.mega-img-wrap { aspect-ratio: 1; }
 
-.search-results-dropdown, .user-dropdown { border-color: #eee !important; box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important; }
-.dropdown-item { font-size: 0.9rem; transition: background 0.2s; color: #333; }
-.dropdown-item:hover { background-color: #f8f9fa; color: #9f273b; }
+.mega-cat-link:hover {
+  background-color: #f9f9f9;
+  color: #9f273b;
+  padding-left: 16px;
+}
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
-.fade-slide-enter-from, .fade-slide-leave-to { opacity: 0; transform: translate(-50%, 10px); }
+.mega-product-card {
+  transition: transform 0.2s ease;
+}
+
+.mega-product-card:hover {
+  transform: translateY(-5px);
+}
+
+.mega-product-card:hover h6 {
+  color: #9f273b;
+}
+
+.mega-img-wrap {
+  aspect-ratio: 1;
+}
+
+.search-results-dropdown,
+.user-dropdown {
+  border-color: #eee !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dropdown-item {
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  color: #333;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #9f273b;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 10px);
+}
 </style>

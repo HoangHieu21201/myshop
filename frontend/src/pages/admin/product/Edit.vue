@@ -799,11 +799,10 @@ const updateProduct = async () => {
 // ================= AXIOS: KHỞI TẠO DỮ LIỆU EDIT =================
 const fetchInitialData = async () => {
     try {
-        const [catRes, attrRes, brandRes, prodRes] = await Promise.all([
-            axios.get('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
+        const [catRes, attrRes, brandRes] = await Promise.all([
+            axios.get('http://127.0.0.1:8000/api/admin/categories?status=active', { headers: getHeaders() }),
             axios.get('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() }),
-            axios.get(`http://127.0.0.1:8000/api/admin/products/${productId}`, { headers: getHeaders() })
+            axios.get('http://127.0.0.1:8000/api/admin/brands?status=active', { headers: getHeaders() })
         ]);
 
         const catData = catRes.data;

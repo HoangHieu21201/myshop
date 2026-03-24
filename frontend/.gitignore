@@ -37,3 +37,7 @@ __screenshots__/
 
 # .env
 .env
+# frontend\.env
+frontend\.env
+# backend\.env
+backend\.env
