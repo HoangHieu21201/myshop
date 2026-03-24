@@ -33,6 +33,11 @@ const user = [
                 name: 'register',
                 component: () => import('../pages/user/auth/Register.vue')
             },
+            {
+                path: 'shop',
+                name: 'shop',
+                component: () => import('../pages/user/shop/Index.vue')
+            },
         ]
     }
 ];
