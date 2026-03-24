@@ -181,6 +181,47 @@
         </div>
       </section>
 
+      <section class="combo-section py-5 overflow-hidden" style="background-color: #fbf9f6;" v-if="data.combos && data.combos.length > 0">
+        <div class="container text-center mb-5">
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Đồng Điệu</h6>
+          <h3 class="font-serif fw-bold text-dark display-6 mb-3">Bộ Sưu Tập Giới Hạn</h3>
+          <div class="divider-gold mx-auto"></div>
+        </div>
+
+        <div class="container pb-5">
+          <swiper
+            :modules="swiperModules"
+            :slides-per-view="1"
+            :breakpoints="{
+              '576': { slidesPerView: 2, spaceBetween: 20 },
+              '768': { slidesPerView: 3, spaceBetween: 25 },
+              '1024': { slidesPerView: 4, spaceBetween: 30 },
+            }"
+            :loop="true"
+            :pagination="{ clickable: true }"
+            :autoplay="{ delay: 3500, disableOnInteraction: false }"
+            class="combo-swiper-multi"
+          >
+            <swiper-slide v-for="combo in data.combos" :key="combo.id" class="h-auto">
+              <div class="bg-white p-3 text-center border border-secondary border-opacity-10 shadow-sm h-100 position-relative group">
+                <div class="mb-3 overflow-hidden position-relative ratio ratio-1x1 bg-light">
+                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover transition-transform duration-700 hover-scale" @error="handleImageError">
+                  <div class="position-absolute inset-0 bg-dark bg-opacity-25 opacity-0 group-hover-opacity-100 transition-all d-flex align-items-center justify-content-center z-index-2">
+                    <span class="btn btn-sm btn-light rounded-0 text-uppercase tracking-widest fw-bold">Xem Chi Tiết</span>
+                  </div>
+                </div>
+                <h6 class="font-serif fw-bold text-dark text-truncate px-2 group-hover-text-primary transition-colors" style="font-size: 1.1rem;">{{ combo.name }}</h6>
+                <div class="mt-2 d-flex flex-column align-items-center">
+                  <span class="text-primary-luxury fw-bold fs-6">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
+                  <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
+                </div>
+                <router-link :to="'/combo/' + combo.slug" class="stretched-link"></router-link>
+              </div>
+            </swiper-slide>
+          </swiper>
+        </div>
+      </section>
+
       <section class="blog-section py-5" style="background-color: #f9f9f9;">
         <div class="container py-4">
           <div class="text-center mb-5">
@@ -237,6 +278,13 @@
 import { ref, reactive, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Pagination, Navigation, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
+const swiperModules = [Pagination, Navigation, Autoplay];
 const isLoading = ref(true);
 
 const data = reactive({
@@ -244,13 +292,13 @@ const data = reactive({
   coupons: [],
   categories: [],
   products: [],
+  combos: [],
   tiers: []
 });
 
 const API_BASE = 'http://127.0.0.1:8000/api'; 
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : '/default-luxury.jpg';
 
-// Cập nhật ảnh lỗi thành hình nhẫn kim cương cực xịn
 const handleImageError = (e) => { 
   e.target.src = 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=600&auto=format&fit=crop'; 
 };
@@ -275,6 +323,7 @@ const fetchHomepageData = async () => {
       data.coupons = result.data.coupons || [];
       data.categories = result.data.categories || [];
       data.products = result.data.products || [];
+      data.combos = result.data.combos || [];
       data.tiers = result.data.tiers || [];
     }
   } catch (error) {
@@ -313,6 +362,7 @@ onMounted(() => {
 .z-index-1 { z-index: 1; }
 .z-index-2 { z-index: 2; }
 .z-index-max { z-index: 9999; }
+.inset-0 { inset: 0; }
 
 .text-gold { color: #e7ce7d !important; }
 .text-primary-luxury { color: #9f273b !important; }
@@ -364,13 +414,15 @@ onMounted(() => {
 .group:hover .group-hover-text-accent { color: #cc1e2e !important; }
 .scale-0 { transform: scaleX(0); }
 .group:hover .group-hover-scale-100 { transform: scaleX(1); }
-.transition-colors { transition: color 0.3s ease; }
+.transition-colors { transition: background-color 0.5s ease, color 0.5s ease; }
 .transition-transform { transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1); }
 .hover-translate-up:hover { transform: translateY(-10px); }
 .filter-brightness { filter: brightness(0.95); transition: filter 0.5s; }
 .group:hover .filter-brightness { filter: brightness(1); }
+.opacity-0 { opacity: 0; }
+.group:hover .group-hover-opacity-100 { opacity: 1 !important; }
+.transition-all { transition: all 0.4s ease; }
 
-/* --- PRODUCT CARD STYLES --- */
 .product-card { 
   border: 1px solid transparent; 
   transition: all 0.4s ease; 
@@ -392,4 +444,31 @@ onMounted(() => {
 .translate-y-100 { transform: translateY(100%); opacity: 0; }
 .group:hover .group-hover-translate-y-0 { transform: translateY(0); opacity: 1; }
 .quick-view-overlay { background: transparent; }
+
+/* --- COMBO SLIDER (MULTI-ITEM) --- */
+.combo-swiper-multi {
+  padding-bottom: 50px; 
+}
+.stretched-link::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  content: "";
+}
+:deep(.swiper-pagination-bullet) {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-gold);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+:deep(.swiper-pagination-bullet-active) {
+  background-color: var(--color-primary) !important;
+  width: 20px;
+  border-radius: 5px;
+  opacity: 1;
+}
 </style>
