@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
-use App\Http\Requests\StoreAdminRequest;
-use App\Http\Requests\UpdateAdminRequest;
+use App\Http\Requests\AdminStoreAdminRequest;
+use App\Http\Requests\AdminUpdateAdminRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth; 
@@ -19,7 +19,7 @@ class AdminStaffController extends Controller
     }
 
     // Thêm mới tài khoản
-    public function store(StoreAdminRequest $request)
+    public function store(AdminStoreAdminRequest $request)
     {
         $data = $request->except(['password', 'avatar']);
         $data['password'] = Hash::make($request->password);
@@ -42,7 +42,7 @@ class AdminStaffController extends Controller
     }
 
     // Cập nhật thông tin
-    public function update(UpdateAdminRequest $request, $id)
+    public function update(AdminUpdateAdminRequest $request, $id)
     {
         $admin = Admin::findOrFail($id);
 

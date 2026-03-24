@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\ProductVariant;
-use App\Http\Requests\UpdateOrderRequest;
+use App\Http\Requests\AdminUpdateOrderRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth; 
@@ -75,7 +75,7 @@ class AdminOrderController extends Controller
         return response()->json(['success' => true, 'data' => $order]);
     }
 
-    public function updateStatus(UpdateOrderRequest $request, $id)
+    public function updateStatus(AdminUpdateOrderRequest $request, $id)
     {
         DB::beginTransaction();
         try {

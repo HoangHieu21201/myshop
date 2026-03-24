@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
+use App\Http\Requests\AdminStoreProductRequest;
+use App\Http\Requests\AdminUpdateProductRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -50,7 +50,7 @@ class AdminProductController extends Controller
     }
 
     // 3. TẠO MỚI SẢN PHẨM & BIẾN THỂ
-    public function store(StoreProductRequest $request)
+    public function store(AdminStoreProductRequest $request)
     {
         try {
             DB::beginTransaction();
@@ -97,7 +97,7 @@ class AdminProductController extends Controller
         }
     }
 
-    public function update(UpdateProductRequest $request, $id)
+    public function update(AdminUpdateProductRequest $request, $id)
     {
         try {
             DB::beginTransaction();

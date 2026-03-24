@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCouponRequest;
-use App\Http\Requests\UpdateCouponRequest;
+use App\Http\Requests\AdminStoreCouponRequest;
+use App\Http\Requests\AdminUpdateCouponRequest;
 use Illuminate\Http\Request;
 use App\Models\Coupon;
 
@@ -23,7 +23,7 @@ class AdminCouponController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCouponRequest $request)
+    public function store(AdminStoreCouponRequest $request)
     {
         try {
             $data = $request->validated();
@@ -53,7 +53,7 @@ class AdminCouponController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCouponRequest $request, string $id)
+    public function update(AdminUpdateCouponRequest $request, string $id)
     {
         $coupon = Coupon::findOrFail($id);
 

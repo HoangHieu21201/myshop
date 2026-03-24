@@ -26,12 +26,45 @@ use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 
 // Import User
 use App\Http\Controllers\Api\client\CartController;
+use App\Http\Controllers\Api\client\OrderController;
+use App\Http\Controllers\Api\Client\ClientHeaderController;
+use App\Http\Controllers\Api\client\ClientHomeController;
+
+Route::prefix('client')->group(function () {
+    
+    // Header & Tìm kiếm
+    Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
+    Route::get('search', [ClientHeaderController::class, 'search']);
+
+    // MODULE GIỎ HÀNG (Cart)
+    // Thỏa mãn: Thêm, Xem, Tăng/Giảm, Xóa 1, Xóa tất cả, Hợp nhất
+    Route::controller(CartController::class)->prefix('cart')->group(function () {
+        Route::get('/', 'index');               // Xem giỏ hàng
+        Route::post('/', 'store');              // Thêm vào giỏ
+        Route::put('/{cartItem}', 'update');    // Cập nhật số lượng
+        Route::delete('/{cartItem}', 'destroy');// Xóa 1 sản phẩm
+        Route::post('/clear', 'clear');         // Xóa toàn bộ giỏ
+        Route::post('/merge', 'mergeCart');     // Hợp nhất giỏ khi login
+    });
+
+    // MODULE ĐƠN HÀNG (Orders)
+    // Thỏa mãn: Đặt hàng, Xem lịch sử, Chi tiết, Hủy đơn
+    Route::controller(OrderController::class)->prefix('orders')->group(function () {
+        Route::get('/', 'index');               // Danh sách đơn hàng (Lịch sử)
+        Route::post('/', 'store');              // Đặt hàng (Checkout)
+        Route::get('/{order_code}', 'show');    // Chi tiết đơn hàng
+        Route::put('/{order_code}', 'update');  // Hủy đơn hàng
+    });
+
+    // Trang chủ
+    Route::get('home-data', [ClientHomeController::class, 'index']);
+});
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/cart', [CartController::class, 'index']);
 
 // ============================================
 // ADMIN API ROUTES
@@ -107,7 +140,7 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['check.module:admin_products'])->group(function () {
             Route::apiResource('products', AdminProductController::class);
             Route::post('products/{id}/restore', [AdminProductController::class, 'restore']);
-            
+
             Route::apiResource('attributes', AdminAttributeController::class)->except(['show']);
             Route::post('attribute-values', [AdminAttributeValueController::class, 'store']);
         });
@@ -141,7 +174,7 @@ Route::prefix('admin')->group(function () {
             Route::controller(AdminCouponController::class)->group(function () {
                 Route::get('coupons', 'index');
                 Route::get('coupons/{id}', 'show');
-                Route::post('coupons', 'store'); 
+                Route::post('coupons', 'store');
                 Route::patch('coupons/{id}', 'update');
                 Route::delete('coupons/{id}', 'destroy');
             });
@@ -153,10 +186,9 @@ Route::prefix('admin')->group(function () {
                 Route::get('/', 'index');
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
-                Route::post('/{id}', 'update'); 
+                Route::post('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
             });
         });
-
     });
 });
