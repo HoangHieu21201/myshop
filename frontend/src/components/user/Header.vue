@@ -107,7 +107,10 @@
 
             <!-- MEGA MENU SẢN PHẨM "shop"-->
             
+            <!-- MEGA MENU SẢN PHẨM "shop"-->
+            
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
+              <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
               <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
                 SẢN PHẨM
               </a>

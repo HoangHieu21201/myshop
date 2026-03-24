@@ -70,11 +70,13 @@ Route::prefix('client')->group(function () {
         Route::get('/{slug}', 'show');
     });
 
+    // Trang chủ
+    Route::get('/home-data', [ClientHomeController::class, 'index']);
 });
 
-// ============================================
-// SHOP API ROUTES
-// ============================================
+
+
+
 Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/info', [ShopController::class, 'shopInfo']); 
     Route::get('/products', [ShopController::class, 'index']);
