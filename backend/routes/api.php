@@ -76,7 +76,7 @@ Route::prefix('client')->group(function () {
 // SHOP API ROUTES
 // ============================================
 Route::prefix('shop/{shop_slug}')->group(function () {
-    Route::get('/info', [ShopController::class, 'shopInfo']);
+    Route::get('/info', [ShopController::class, 'shopInfo']); 
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
     Route::get('/products/{slug}', [ShopController::class, 'show']);
