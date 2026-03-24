@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\Client\ShopController;
 // ============================================
 // IMPORT ADMIN CONTROLLERS
 // ============================================
@@ -23,15 +24,20 @@ use App\Http\Controllers\Api\admin\AdminBrandController;
 use App\Http\Controllers\Api\admin\AdminOrderController;
 use App\Http\Controllers\Api\admin\AdminBannerController;
 use App\Http\Controllers\Api\admin\AdminMembershipTierController;
+use App\Http\Controllers\Api\admin\AdminComboController;
 
 // Import User
 use App\Http\Controllers\Api\client\CartController;
 use App\Http\Controllers\Api\client\OrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
+use App\Http\Controllers\Api\Auth\AuthController;
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::prefix('client')->group(function () {
-    
+
     // Header & Tìm kiếm
     Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
     Route::get('search', [ClientHeaderController::class, 'search']);
@@ -42,7 +48,7 @@ Route::prefix('client')->group(function () {
         Route::get('/', 'index');               // Xem giỏ hàng
         Route::post('/', 'store');              // Thêm vào giỏ
         Route::put('/{cartItem}', 'update');    // Cập nhật số lượng
-        Route::delete('/{cartItem}', 'destroy');// Xóa 1 sản phẩm
+        Route::delete('/{cartItem}', 'destroy'); // Xóa 1 sản phẩm
         Route::post('/clear', 'clear');         // Xóa toàn bộ giỏ
         Route::post('/merge', 'mergeCart');     // Hợp nhất giỏ khi login
     });
@@ -56,9 +62,25 @@ Route::prefix('client')->group(function () {
         Route::put('/{order_code}', 'update');  // Hủy đơn hàng
     });
 
+    Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
+        Route::get('/', 'index');
+        Route::get('/{slug}', 'show');
+    });
+
     // Trang chủ
     Route::get('home-data', [ClientHomeController::class, 'index']);
 });
+
+
+
+
+Route::prefix('shop/{shop_slug}')->group(function () {
+    Route::get('/info', [ShopController::class, 'shopInfo']);
+    Route::get('/products', [ShopController::class, 'index']);
+    Route::get('/products/featured', [ShopController::class, 'featured']);
+    Route::get('/products/{slug}', [ShopController::class, 'show']);
+});
+Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
 
 
 Route::get('/user', function (Request $request) {
@@ -182,12 +204,27 @@ Route::prefix('admin')->group(function () {
 
         // Quản lý Hạng thành viên (Mã: admin_roles)
         Route::middleware(['check.module:admin_roles'])->group(function () {
+            Route::post('roles/{id}/restore', [AdminRoleController::class, 'restore']);
+
             Route::controller(AdminMembershipTierController::class)->prefix('tiers')->group(function () {
                 Route::get('/', 'index');
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
                 Route::post('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+            });
+        });
+
+        // Quản lý Combo (Mã: admin_combos)
+        Route::middleware(['check.module:admin_combos'])->group(function () {
+            Route::controller(AdminComboController::class)->prefix('combos')->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/{combo}', 'show');
+                Route::put('/{combo}', 'update');
+                Route::patch('/{combo}/status', 'updateStatus');
+                Route::delete('/{combo}', 'destroy');
+                Route::post('/{combo}/restore', 'restore');
             });
         });
     });

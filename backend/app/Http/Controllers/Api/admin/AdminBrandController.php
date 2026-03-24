@@ -18,14 +18,21 @@ class AdminBrandController extends Controller
         return is_numeric($max) ? $max + 1 : 1;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $brands = Brand::withTrashed()
-            ->withCount('products')
-            ->orderByRaw('sort_order IS NULL, sort_order ASC')
-            ->orderBy('id', 'desc')
-            ->get();
+        $query = Brand::query();
 
+        if ($request->has('status') && $request->status === 'active') {
+            $query->where('status', 'active');
+        } else {
+            $query->withTrashed();
+        }
+
+        $brands = $query->withCount('products')
+            ->orderByRaw('sort_order IS NULL, sort_order ASC') 
+            ->orderBy('id', 'desc') 
+            ->get();
+            
         return response()->json(['success' => true, 'data' => $brands]);
     }
 

@@ -15,17 +15,24 @@ class AdminCategoryController extends Controller
     private function getNextSortOrder()
     {
         $max = Category::max('sort_order');
-        return is_numeric($max) ? $max + 1 : 1; 
+        return is_numeric($max) ? $max + 1 : 1;
     }
 
     public function index(Request $request)
     {
-        $categories = Category::withTrashed()
-            ->with('parent') 
-            ->withCount('children') 
+        $query = Category::query();
+
+        if ($request->has('status') && $request->status === 'active') {
+            $query->where('status', 'active'); 
+        } else {
+            $query->withTrashed();
+        }
+
+        $categories = $query->with('parent')
+            ->withCount('children')
             ->orderByRaw('sort_order IS NULL, sort_order ASC')
             ->orderBy('id', 'desc')
-            ->get(); 
+            ->get();
 
         return response()->json(['success' => true, 'data' => $categories]);
     }
@@ -77,9 +84,9 @@ class AdminCategoryController extends Controller
 
         if (isset($data['status']) && $category->status !== $data['status']) {
             if ($data['status'] === 'active') {
-                $data['sort_order'] = $this->getNextSortOrder(); 
+                $data['sort_order'] = $this->getNextSortOrder();
             } else {
-                $data['sort_order'] = null; 
+                $data['sort_order'] = null;
             }
         }
 
@@ -111,11 +118,11 @@ class AdminCategoryController extends Controller
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
-        
+
         $activeChildrenCount = Category::where('parent_id', $id)->count();
         if ($activeChildrenCount > 0) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Không thể xóa! Danh mục này đang chứa ' . $activeChildrenCount . ' danh mục con. Hãy chuyển danh mục con sang nơi khác trước.'
             ], 400);
         }
@@ -124,8 +131,8 @@ class AdminCategoryController extends Controller
 
         $category->slug = $category->slug . '-deleted-' . time();
         $category->save();
-        
-        $category->delete(); 
+
+        $category->delete();
         return response()->json(['success' => true, 'message' => 'Đã chuyển danh mục vào thùng rác!']);
     }
 
@@ -136,7 +143,7 @@ class AdminCategoryController extends Controller
         $originalSlug = preg_replace('/-deleted-\d+$/', '', $category->slug);
         if (Category::where('slug', $originalSlug)->whereNull('deleted_at')->exists()) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Tên danh mục này đã được sử dụng bởi một danh mục khác trong thời gian bị xóa.'
             ], 400);
         }
@@ -149,10 +156,10 @@ class AdminCategoryController extends Controller
 
         $category->save();
         $category->restore();
-        
+
         return response()->json(['success' => true, 'message' => 'Khôi phục danh mục thành công!']);
     }
-    
+
     public function reorder(Request $request)
     {
         $request->validate([
@@ -162,8 +169,8 @@ class AdminCategoryController extends Controller
         ]);
 
         try {
-            DB::transaction(function() use ($request) {
-                foreach($request->categories as $item) {
+            DB::transaction(function () use ($request) {
+                foreach ($request->categories as $item) {
                     Category::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
                 }
             });
