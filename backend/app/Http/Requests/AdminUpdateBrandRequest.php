@@ -19,7 +19,7 @@ class AdminUpdateBrandRequest extends FormRequest
         return [
             'name'        => 'required|string|max:255',
             'slug'        => ['required', 'string', 'max:255', Rule::unique('brands', 'slug')->ignore($id)->whereNull('deleted_at')],
-            'logo'        => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
+            'logo'        => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:15360', //15mb
             'description' => 'nullable|string|max:5000',
             'status'      => 'required|in:active,hidden',
         ];
@@ -34,7 +34,7 @@ class AdminUpdateBrandRequest extends FormRequest
             'slug.unique'      => 'Đường dẫn (slug) này đã bị trùng với thương hiệu khác.',
             'logo.image'       => 'File tải lên phải là hình ảnh.',
             'logo.mimes'       => 'Định dạng ảnh không hợp lệ (Chỉ hỗ trợ jpeg, png, jpg, webp, svg).',
-            'logo.max'         => 'Kích thước logo không được vượt quá 2MB.',
+            'logo.max'         => 'Kích thước logo không được vượt quá 15MB.',
             'status.in'        => 'Trạng thái không hợp lệ.',
         ];
     }

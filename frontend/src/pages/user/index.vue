@@ -168,6 +168,7 @@
                 <span class="text-primary-luxury fw-bold fs-5">{{ formatCurrency(product.base_price) }}</span>
                 <span v-if="product.promotional_price" class="text-muted text-decoration-line-through small">{{ formatCurrency(product.promotional_price) }}</span>
               </div>
+
             </div>
 
           </div>

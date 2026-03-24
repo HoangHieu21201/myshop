@@ -11,11 +11,10 @@ class AdminRoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::orderBy('level', 'asc')->get();
+        $roles = Role::withTrashed()->orderBy('level', 'asc')->get();
         return response()->json(['success' => true, 'data' => $roles]);
     }
 
-    // Tạo mới Role
     public function store(AdminStoreRoleRequest $request)
     {
         try {
@@ -26,7 +25,6 @@ class AdminRoleController extends Controller
         }
     }
 
-    // Cập nhật Role
     public function update(AdminUpdateRoleRequest $request, $id)
     {
         $role = Role::findOrFail($id);
@@ -53,5 +51,17 @@ class AdminRoleController extends Controller
 
         $role->delete();
         return response()->json(['success' => true, 'message' => 'Đã xóa Role thành công']);
+    }
+
+    public function restore($id)
+    {
+        try {
+            $role = Role::withTrashed()->findOrFail($id);
+            $role->restore();
+            
+            return response()->json(['success' => true, 'message' => 'Đã khôi phục Role thành công']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
+        }
     }
 }
