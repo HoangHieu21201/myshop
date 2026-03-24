@@ -839,9 +839,9 @@ const submitProduct = async () => {
 const fetchData = async () => {
     try {
         const [catRes, attrRes, brandRes] = await Promise.all([
-            axios.get('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
+            axios.get('http://127.0.0.1:8000/api/admin/categories?status=active', { headers: getHeaders() }),
             axios.get('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/admin/brands', { headers: getHeaders() })
+            axios.get('http://127.0.0.1:8000/api/admin/brands?status=active', { headers: getHeaders() })
         ]);
 
         const catData = catRes.data;

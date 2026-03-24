@@ -1,8 +1,7 @@
 <template>
   <footer class="site-footer bg-primary-custom">
     
-    <!-- ================= PRE-FOOTER (Thanh Niềm Tin - Màu Vàng Be e7ce7d) ================= -->
-    <div class="pre-footer py-4" style="background-color: var(--secondary);">
+    <!-- <div class="pre-footer py-4" style="background-color: var(--secondary);">
       <div class="container">
         <div class="row g-4 text-center">
           <div class="col-6 col-md-3">
@@ -35,14 +34,12 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
-    <!-- ================= MAIN FOOTER (Nền Đỏ Sẫm 9f273b) ================= -->
     <div class="main-footer py-5 border-bottom border-light border-opacity-10">
       <div class="container py-3">
         <div class="row g-5">
           
-          <!-- Cột 1: Thương hiệu -->
           <div class="col-lg-3 col-md-6 text-center text-md-start">
             <a href="#" @click.prevent="safeNavigate('home')" class="d-inline-block mb-4">
               <img src="../../assets/images/logo1.png" alt="SORA Logo" class="footer-logo filter-white" @error="handleLogoError">
@@ -58,7 +55,6 @@
             </div>
           </div>
 
-          <!-- Cột 2: Liên kết nhanh -->
           <div class="col-lg-3 col-md-6">
             <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Liên Kết Nhanh</h5>
             <ul class="footer-links list-unstyled m-0 p-0">
@@ -70,7 +66,6 @@
             </ul>
           </div>
 
-          <!-- Cột 3: Hỗ trợ khách hàng -->
           <div class="col-lg-3 col-md-6">
             <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Hỗ Trợ Khách Hàng</h5>
             <ul class="footer-links list-unstyled m-0 p-0">
@@ -82,7 +77,6 @@
             </ul>
           </div>
 
-          <!-- Cột 4: Đăng ký nhận tin (Luxury Style) -->
           <div class="col-lg-3 col-md-6">
             <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Nhận Bản Tin SORA</h5>
             <p class="text-light opacity-75 small mb-4">Đăng ký để nhận thông tin về bộ sưu tập mới và các ưu đãi độc quyền.</p>
@@ -108,7 +102,6 @@
       </div>
     </div>
 
-    <!-- ================= BOTTOM FOOTER ================= -->
     <div class="bottom-footer py-4">
       <div class="container">
         <div class="row align-items-center">
@@ -118,7 +111,6 @@
             </p>
           </div>
           <div class="col-md-6 text-center text-md-end">
-            <!-- Icons thanh toán an toàn -->
             <div class="payment-methods d-flex justify-content-center justify-content-md-end gap-3 text-light opacity-75">
               <i class="bi bi-credit-card-fill fs-4 hover-secondary" title="Visa/Mastercard"></i>
               <i class="bi bi-wallet-fill fs-4 hover-secondary" title="Ví Điện Tử"></i>
@@ -142,7 +134,6 @@ const router = useRouter();
 const email = ref('');
 const isSubscribing = ref(false);
 
-// Hàm chống Crash Router
 const safeNavigate = (routeName, options = {}) => {
     if (router.hasRoute(routeName)) {
         router.push({ name: routeName, ...options });
@@ -163,7 +154,6 @@ const handleLogoError = (e) => {
     e.target.outerHTML = '<h2 class="font-oswald fw-bold text-white m-0 tracking-wide">S O R A</h2>';
 };
 
-// Đăng ký nhận tin
 const subscribeNewsletter = () => {
     if (!email.value) return;
     
@@ -183,10 +173,8 @@ const subscribeNewsletter = () => {
 </script>
 
 <style scoped>
-/* IMPORT FONT OSWALD */
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
-/* BIẾN MÀU THEO YÊU CẦU */
 :root {
   --primary: #9f273b;
   --secondary: #e7ce7d;
@@ -195,31 +183,23 @@ const subscribeNewsletter = () => {
 
 .text-primary-custom { color: #9f273b !important; }
 .text-secondary-custom { color: #e7ce7d !important; }
-.bg-primary-custom { background-color: #9f273b !important; }
+.bg-primary-custom { background-color: #ffffff !important; }
 
-/* TIỆN ÍCH CHỮ */
 .font-oswald { font-family: 'Oswald', sans-serif !important; }
 .tracking-wide { letter-spacing: 1px; }
 
-/* SITE FOOTER */
 .site-footer {
   font-family: 'Arial', sans-serif;
-  background-color: #9f273b; /* Nền đỏ sẫm */
+  background-color: #9f273b;
 }
 
-/* PRE-FOOTER (Thanh Vàng Be) */
 .trust-item {
   transition: transform 0.3s ease;
 }
 .trust-item:hover {
   transform: translateY(-5px);
 }
-.trust-item i, .trust-item h6, .trust-item p {
-  /* Chữ và icon màu đỏ sẫm để nổi bật trên nền vàng be */
-  color: #9f273b !important; 
-}
 
-/* MAIN FOOTER (Nền Đỏ Sẫm) */
 .main-footer {
   background-color: #9f273b;
 }
@@ -230,12 +210,10 @@ const subscribeNewsletter = () => {
   object-fit: contain;
 }
 
-/* Bộ lọc màu trắng cho Logo để nó nổi bật trên nền Đỏ sẫm */
 .filter-white {
   filter: brightness(0) invert(1);
 }
 
-/* Các Nút Mạng Xã Hội Đơn Giản, Tinh Tế (Màu Trắng -> Vàng Be) */
 .social-links .social-btn {
   display: flex;
   align-items: center;
@@ -243,7 +221,7 @@ const subscribeNewsletter = () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.3); /* Viền mờ */
+  border: 1px solid rgba(255,255,255,0.3);
   color: #fff;
   transition: all 0.3s ease;
   background: transparent;
@@ -255,7 +233,6 @@ const subscribeNewsletter = () => {
   transform: translateY(-3px);
 }
 
-/* Tiêu đề Footer */
 .footer-title {
   color: #fff;
   font-size: 1.1rem;
@@ -263,19 +240,17 @@ const subscribeNewsletter = () => {
   letter-spacing: 1px;
 }
 
-/* Danh sách Liên Kết (Trắng nhạt -> Hover: Vàng Be) */
 .footer-links li {
   margin-bottom: 12px;
 }
 .footer-links a {
-  color: rgba(255,255,255,0.7); /* Màu trắng trong suốt */
+  color: rgba(255,255,255,0.7);
   text-decoration: none;
   font-size: 0.95rem;
   transition: all 0.3s ease;
   display: inline-block;
   position: relative;
 }
-/* Hiệu ứng gạch chân chữ cực mỏng và chuyển màu vàng be */
 .footer-links a::after {
   content: '';
   position: absolute;
@@ -293,7 +268,6 @@ const subscribeNewsletter = () => {
   width: 100%;
 }
 
-/* Form Đăng ký nhận tin - Thiết kế Luxury */
 .luxury-input {
   border: none;
   border-bottom: 1px solid rgba(255,255,255,0.3);
@@ -313,9 +287,8 @@ const subscribeNewsletter = () => {
   border-bottom-color: #e7ce7d;
 }
 
-/* BOTTOM FOOTER */
 .bottom-footer {
-  background-color: #801f2f; /* Màu Đỏ Sẫm đậm hơn Main Footer 1 chút để tạo độ sâu */
+  background-color: #801f2f;
 }
 .payment-methods i {
   transition: 0.3s;
