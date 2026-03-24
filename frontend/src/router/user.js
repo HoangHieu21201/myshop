@@ -11,7 +11,7 @@ const user = [
             {
                 path: 'cart',
                 name: 'cart',
-                component: () => import('../pages/user/cart/Index.vue')
+                component: () => import('../pages/user/cart/index.vue')
             },
             {
                 path: 'order',
@@ -23,7 +23,17 @@ const user = [
                 name: 'orderHistory',
                 component: () => import('../pages/user/order/OrderDetailModal.vue')
             },
-             {
+            {
+                path: 'login',
+                name: 'login',
+                component: () => import('../pages/user/auth/Login.vue')
+            },
+            {
+                path: 'register',
+                name: 'register',
+                component: () => import('../pages/user/auth/Register.vue')
+            },
+            {
                 path: 'shop',
                 name: 'shop',
                 component: () => import('../pages/user/shop/Index.vue')

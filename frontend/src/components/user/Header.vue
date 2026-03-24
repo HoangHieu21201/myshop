@@ -28,7 +28,6 @@
 
         <!-- RIGHT: ICONS (Yêu thích, Tài khoản, Cửa hàng, Giỏ hàng) -->
         <div class="header-icons d-flex justify-content-end align-items-center gap-4" style="flex: 1;">
-          <!-- ĐÃ FIX: Đổi router-link thành the a + safeNavigate để chống Crash -->
           <a href="#" @click.prevent="safeNavigate('wishlist')" class="icon-link hover-primary transition-color">
             <i class="bi bi-heart"></i>
           </a>
@@ -42,6 +41,8 @@
             <!-- Bảng tài khoản xổ xuống -->
             <transition name="fade">
               <div v-if="isUserMenuOpen" class="user-dropdown shadow-lg rounded-4 border bg-white position-absolute end-0 mt-3 py-2" style="width: 220px; z-index: 1050;">
+                
+                <!-- NẾU ĐÃ ĐĂNG NHẬP -->
                 <template v-if="user">
                   <div class="px-4 py-2 border-bottom mb-2 bg-light">
                     <div class="fw-bold text-truncate">{{ user.fullName || 'Thành viên' }}</div>
@@ -53,6 +54,8 @@
                   <div class="dropdown-divider my-2"></div>
                   <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
                 </template>
+                
+                <!-- NẾU CHƯA ĐĂNG NHẬP -->
                 <template v-else>
                   <div class="p-3 text-center">
                     <p class="small text-muted mb-3">Đăng nhập để theo dõi đơn hàng và ưu đãi</p>
@@ -75,7 +78,7 @@
         </div>
       </div>
 
-      <!-- ================= TẦNG 2: NAVIGATION & SEARCH (Mô phỏng Cartier) ================= -->
+      <!-- ================= TẦNG 2: NAVIGATION & SEARCH ================= -->
       <div class="header-tier-bottom d-none d-lg-flex justify-content-center align-items-center position-relative pb-2 mt-2">
         
         <!-- MAIN NAVIGATION CĂN GIỮA -->
@@ -89,7 +92,6 @@
                 SẢN PHẨM
               </a>
 
-              <!-- Bảng Mega Menu (Được giữ nguyên chức năng cực xịn) -->
               <transition name="fade-slide">
                 <div v-show="isMegaMenuOpen" class="mega-menu-wrapper shadow-lg border-top border-3 border-primary-custom">
                   <div class="d-flex text-start">
@@ -134,7 +136,7 @@
           </ul>
         </nav>
 
-        <!-- SEARCH BAR TỐI GIẢN (Nằm góc phải của tầng 2) -->
+        <!-- SEARCH BAR -->
         <div class="search-trigger-wrapper position-absolute end-0 d-flex align-items-center">
           <span class="text-muted fw-light opacity-50 me-3" style="font-size: 1.2rem;">|</span>
           
@@ -149,11 +151,9 @@
                 <i v-if="isFetchingSearch" class="spinner-border spinner-border-sm text-muted"></i>
                 <i v-else class="bi bi-search fs-6"></i>
               </button>
-              <!-- Gạch chân hiệu ứng sang trọng -->
               <div class="search-underline"></div>
             </form>
 
-            <!-- DROPDOWN KẾT QUẢ TÌM KIẾM -->
             <transition name="fade">
               <div v-if="showSearchResults && searchQuery.length > 0" class="search-results-dropdown shadow-lg rounded-4 overflow-hidden border mt-2 bg-white position-absolute end-0" style="width: 320px; z-index: 1050;">
                 
@@ -203,13 +203,12 @@
       </div>
     </div>
     
-    <!-- THANH BORDER DƯỚI CÙNG (Chạy viền nhẹ cho phân cách với nội dung trang) -->
     <div class="border-bottom opacity-50"></div>
   </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -235,122 +234,144 @@ const isCategoryFallback = ref(false);
 let searchDebounce = null;
 const isFetchingSearch = ref(false);
 
-const getHeaders = () => {
-    const token = localStorage.getItem('auth_token');
-    return token ? { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } : { 'Accept': 'application/json' };
-};
-
 const cartItemCount = ref(0);
 
 const safeNavigate = (routeName, options = {}) => {
-    if (router.hasRoute(routeName)) {
-        router.push({ name: routeName, ...options });
-    } else {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Tính năng đang được phát triển!', showConfirmButton: false, timer: 2000 });
-    }
+  if (router.hasRoute(routeName)) {
+    router.push({ name: routeName, ...options });
+  } else {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Tính năng đang được phát triển!', showConfirmButton: false, timer: 2000 });
+  }
 };
 
 const getImage = (path) => path ? `${BACKEND_URL}/storage/${path}` : 'https://placehold.co/100x100?text=No+Image';
 const handleLogoError = (e) => { e.target.outerHTML = '<h2 class="font-oswald fw-bold text-dark m-0 tracking-wide">S O R A</h2>'; };
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 const highlightText = (text) => {
-    if (!searchQuery.value) return text;
-    return text.replace(new RegExp(`(${searchQuery.value})`, 'gi'), '<mark class="text-primary-custom bg-transparent p-0">$1</mark>');
+  if (!searchQuery.value) return text;
+  return text.replace(new RegExp(`(${searchQuery.value})`, 'gi'), '<mark class="text-primary-custom bg-transparent p-0">$1</mark>');
 };
 
 const fetchHeaderData = async () => {
-    try {
-        const res = await axios.get(`${BACKEND_URL}/api/client/header-data`);
-        if (res.data.success) {
-            categories.value = res.data.data.categories;
-            if(categories.value.length > 0) hoveredCategory.value = categories.value[0];
-            if(res.data.data.config) sysConfig.value = { ...sysConfig.value, ...res.data.data.config };
-        }
-    } catch (error) { console.error('Lỗi tải Menu:', error); }
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/client/header-data`);
+    if (res.data.success) {
+      categories.value = res.data.data.categories;
+      if(categories.value.length > 0) hoveredCategory.value = categories.value[0];
+      if(res.data.data.config) sysConfig.value = { ...sysConfig.value, ...res.data.data.config };
+    }
+  } catch (error) { console.error('Lỗi tải Menu:', error); }
 };
 
+// --- CẬP NHẬT MỚI: HÀM LẤY USER THẬT TỪ SERVER ĐỂ KIỂM TRA TOKEN ---
+const fetchUserProfile = async () => {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return; 
+
+  try {
+    // Gọi API của bạn để check token (giả sử là /api/user)
+    const res = await axios.get(`${BACKEND_URL}/api/user`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    user.value = res.data; 
+    localStorage.setItem('userData', JSON.stringify(res.data));
+  } catch (error) {
+    console.error("Token hết hạn hoặc chưa đăng nhập hợp lệ:", error);
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('userData');
+    user.value = null;
+  }
+};
+// -------------------------------------------------------------------
+
 const performSearch = async (query) => {
-    if (!query) {
-        searchResults.value = []; categoryResults.value = []; isCategoryFallback.value = false;
-        return;
+  if (!query) {
+    searchResults.value = []; categoryResults.value = []; isCategoryFallback.value = false;
+    return;
+  }
+  isFetchingSearch.value = true;
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/client/search`, { params: { keyword: query } });
+    if(res.data.success) {
+      searchResults.value = res.data.data.products;
+      categoryResults.value = res.data.data.categories;
+      isCategoryFallback.value = res.data.data.is_category_fallback;
     }
-    isFetchingSearch.value = true;
-    try {
-        const res = await axios.get(`${BACKEND_URL}/api/client/search`, { params: { keyword: query } });
-        if(res.data.success) {
-            searchResults.value = res.data.data.products;
-            categoryResults.value = res.data.data.categories;
-            isCategoryFallback.value = res.data.data.is_category_fallback;
-        }
-    } catch (e) { console.error(e); } finally { isFetchingSearch.value = false; }
+  } catch (e) { console.error(e); } finally { isFetchingSearch.value = false; }
 };
 
 const onSearchInput = (e) => {
-    const query = e.target.value.trim();
-    if (!query) {
-        showSearchResults.value = false; searchResults.value = []; categoryResults.value = [];
-        return;
-    }
-    showSearchResults.value = true;
-    if (searchDebounce) clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => { performSearch(query); }, 300);
+  const query = e.target.value.trim();
+  if (!query) {
+    showSearchResults.value = false; searchResults.value = []; categoryResults.value = [];
+    return;
+  }
+  showSearchResults.value = true;
+  if (searchDebounce) clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => { performSearch(query); }, 300);
 };
 
 const handleSearch = () => {
-    if (searchQuery.value.trim()) {
-        showSearchResults.value = false;
-        safeNavigate('Shop', { query: { q: searchQuery.value } });
-    }
+  if (searchQuery.value.trim()) {
+    showSearchResults.value = false;
+    safeNavigate('Shop', { query: { q: searchQuery.value } });
+  }
 };
 
 const goToProduct = (slug) => {
-    showSearchResults.value = false; isMegaMenuOpen.value = false;
-    safeNavigate('ProductDetail', { params: { slug } });
+  showSearchResults.value = false; isMegaMenuOpen.value = false;
+  safeNavigate('ProductDetail', { params: { slug } });
 };
 
 const goToCategory = (slug) => {
-    showSearchResults.value = false; isMegaMenuOpen.value = false;
-    safeNavigate('Shop', { query: { category: slug } });
+  showSearchResults.value = false; isMegaMenuOpen.value = false;
+  safeNavigate('Shop', { query: { category: slug } });
 };
 
 const toggleUserMenu = () => { isUserMenuOpen.value = !isUserMenuOpen.value; };
 const toggleMobileMenu = () => { };
 
 const handleClickOutside = (e) => {
-    if (userMenuContainer.value && !userMenuContainer.value.contains(e.target)) isUserMenuOpen.value = false;
-    if (searchContainer.value && !searchContainer.value.contains(e.target)) showSearchResults.value = false;
+  if (userMenuContainer.value && !userMenuContainer.value.contains(e.target)) isUserMenuOpen.value = false;
+  if (searchContainer.value && !searchContainer.value.contains(e.target)) showSearchResults.value = false;
 };
 
 const handleLogout = () => {
-    Swal.fire({
-        title: 'Đăng xuất?', text: 'Bạn có chắc muốn đăng xuất khỏi tài khoản?', icon: 'question',
-        showCancelButton: true, confirmButtonColor: '#9f273b', cancelButtonColor: '#6c757d', confirmButtonText: 'Đăng xuất'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            localStorage.removeItem('userData'); localStorage.removeItem('auth_token');
-            user.value = null;
-            safeNavigate('home');
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đăng xuất', showConfirmButton: false, timer: 1500 });
-        }
-    });
+  Swal.fire({
+    title: 'Đăng xuất?', text: 'Bạn có chắc muốn đăng xuất khỏi tài khoản?', icon: 'question',
+    showCancelButton: true, confirmButtonColor: '#9f273b', cancelButtonColor: '#6c757d', confirmButtonText: 'Đăng xuất'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem('userData'); 
+      localStorage.removeItem('auth_token');
+      user.value = null;
+      isUserMenuOpen.value = false; // Đóng menu sau khi đăng xuất
+      safeNavigate('home');
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đăng xuất', showConfirmButton: false, timer: 1500 });
+    }
+  });
 };
 
 onMounted(() => {
-    fetchHeaderData();
-    const userData = localStorage.getItem('userData');
-    if (userData) user.value = JSON.parse(userData);
-    document.addEventListener('click', handleClickOutside);
+  fetchHeaderData();
+  
+  // --- CẬP NHẬT MỚI: Đọc data local & gọi hàm kiểm tra server ---
+  const userData = localStorage.getItem('userData');
+  if (userData) {
+    user.value = JSON.parse(userData);
+  }
+  fetchUserProfile();
+  // -------------------------------------------------------------
+  
+  document.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
 <style scoped>
-/* ========================================================
-   NHẬP FONT OSWALD CHO NAV LINK VÀ CHỮ SANG TRỌNG
-   ======================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
 :root {
@@ -370,14 +391,11 @@ onUnmounted(() => {
 .transition-color { transition: color 0.2s ease; }
 .hover-bg-light:hover { background-color: #f8f9fa; }
 
-/* Font Tiện ích */
 .font-oswald { font-family: 'Oswald', sans-serif !important; }
 .tracking-wide { letter-spacing: 0.5px; }
 
-/* MAIN HEADER */
 .site-header { z-index: 1040; background-color: #fff; }
 
-/* TẦNG 1: TOP LINKS, LOGO, ICONS */
 .top-link {
   font-family: 'Oswald', sans-serif;
   font-size: 0.8rem;
@@ -408,7 +426,6 @@ onUnmounted(() => {
   border: 1px solid #fff;
 }
 
-/* ĐÃ FIX THEO YÊU CẦU: Logo to hơn chiếm trọn không gian */
 .logo-img { 
   height: 80px; 
   width: auto; 
@@ -416,7 +433,6 @@ onUnmounted(() => {
   display: block;
 }
 
-/* TẦNG 2: NAVIGATION LINKS */
 .nav-item-link {
   color: #333;
   text-decoration: none;
@@ -429,7 +445,6 @@ onUnmounted(() => {
   transition: color 0.2s ease;
 }
 
-/* Hiệu ứng gạch chân sang trọng khi Hover Menu */
 .nav-item-link::after {
   content: '';
   position: absolute;
@@ -444,7 +459,6 @@ onUnmounted(() => {
 .nav-item-link:hover { color: #9f273b; }
 .nav-item-link:hover::after { width: 100%; }
 
-/* TÌM KIẾM TỐI GIẢN (SANG TRỌNG) */
 .search-box-luxury {
   width: 220px;
 }
@@ -470,7 +484,6 @@ onUnmounted(() => {
   height: 2px;
 }
 
-/* MEGA MENU PANEL */
 .mega-menu-wrapper {
   position: absolute;
   top: 100%;
@@ -495,12 +508,10 @@ onUnmounted(() => {
 .mega-product-card:hover h6 { color: #9f273b; }
 .mega-img-wrap { aspect-ratio: 1; }
 
-/* DROPDOWNS */
 .search-results-dropdown, .user-dropdown { border-color: #eee !important; box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important; }
 .dropdown-item { font-size: 0.9rem; transition: background 0.2s; color: #333; }
 .dropdown-item:hover { background-color: #f8f9fa; color: #9f273b; }
 
-/* VUE ANIMATIONS */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
