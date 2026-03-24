@@ -27,7 +27,7 @@
         <div class="py-5">
           <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#dee2e6" viewBox="0 0 256 256" class="mb-3"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM184,96H72a8,8,0,0,1,0-16H184a8,8,0,0,1,0,16Zm0,32H72a8,8,0,0,1,0-16H184a8,8,0,0,1,0,16Zm-40,32H72a8,8,0,0,1,0-16h72a8,8,0,0,1,0,16Z"></path></svg>
           <p class="fs-5 text-secondary mb-4 font-serif">Bạn chưa thực hiện đơn hàng nào.</p>
-          <button @click="router.push('/products')" class="btn btn-primary-custom rounded-0 px-5 py-3 text-uppercase text-white">Khám phá ngay</button>
+          <button @click="router.push('/shop')" class="btn btn-primary-custom rounded-0 px-5 py-3 text-uppercase text-white">Khám phá ngay</button>
         </div>
       </div>
 

@@ -13,9 +13,19 @@
           </button>
           <!-- Liên kết Desktop -->
           <div class="top-links d-none d-lg-flex gap-4">
+<<<<<<< Updated upstream
+            <!-- khai bao bang route link thay vi dung the a -->
+            <!-- <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a> -->
+            <router-link :to="{ name: 'about' }" class="top-link" >VỀ SORA</router-link>
+            <!-- <a :href="{ contact }" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a> -->
+            <router-link :to="{ name: 'contact' }" class="top-link">LIÊN HỆ</router-link>
+            <!-- <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a> -->
+            <router-link :to="{ name: 'services' }" class="top-link">DỊCH VỤ</router-link>
+=======
             <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a>
             <a :href="{ contact }" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a>
             <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a>
+>>>>>>> Stashed changes
           </div>
         </div>
 
@@ -101,9 +111,18 @@
           <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5">
             <li><router-link :to="{ name: 'home' }" class="nav-item-link">XU HƯỚNG</router-link></li>
 
-            <!-- MEGA MENU SẢN PHẨM -->
+            <!-- MEGA MENU SẢN PHẨM "shop"-->
+            
+<<<<<<< Updated upstream
+            <!-- MEGA MENU SẢN PHẨM "shop"-->
+            
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
-              <a href="#" @click.prevent="safeNavigate('Shop')" class="nav-item-link d-flex align-items-center">
+              <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
+              <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
+=======
+            <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
+              <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
+>>>>>>> Stashed changes
                 SẢN PHẨM
               </a>
 
@@ -117,7 +136,7 @@
                       </h6>
                       <ul class="list-unstyled m-0">
                         <li v-for="cat in categories" :key="cat.id" class="mb-2" @mouseenter="hoveredCategory = cat">
-                          <a href="#" @click.prevent="safeNavigate('Shop', { query: { category: cat.slug } })"
+                          <a href="#" @click.prevent="safeNavigate('shop', { query: { category: cat.slug } })"
                             class="mega-cat-link d-flex justify-content-between align-items-center fw-semibold text-decoration-none"
                             :class="{ 'text-primary-custom': hoveredCategory?.id === cat.id }">
                             {{ cat.name }} <i class="bi bi-arrow-right-short opacity-50"></i>
@@ -345,7 +364,7 @@ const onSearchInput = (e) => {
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     showSearchResults.value = false;
-    safeNavigate('Shop', { query: { q: searchQuery.value } });
+    safeNavigate('shop', { query: { q: searchQuery.value } });
   }
 };
 
@@ -356,7 +375,7 @@ const goToProduct = (slug) => {
 
 const goToCategory = (slug) => {
   showSearchResults.value = false; isMegaMenuOpen.value = false;
-  safeNavigate('Shop', { query: { category: slug } });
+  safeNavigate('shop', { query: { category: slug } });
 };
 
 const toggleUserMenu = () => { isUserMenuOpen.value = !isUserMenuOpen.value; };
