@@ -48,6 +48,26 @@ const user = [
         name: 'client-combo-detail',
         component: () => import('../pages/user/combo/Detail.vue'),
       },
+      {
+        path: 'favourite',
+        name: 'favourite',
+        component: () => import('../pages/user/favourite/index.vue')
+      },
+      {
+        path: 'about',
+        name: 'about',
+        component: () => import('../pages/user/about/index.vue')
+      },
+      {
+        path: 'contact',
+        name: 'contact',
+        component: () => import('../pages/user/contact/index.vue')
+      },
+      {
+        path: 'services',
+        name: 'services',
+        component: () => import('../pages/user/services/index.vue')
+      },
     ],
   },
 ]
