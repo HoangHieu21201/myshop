@@ -52,4 +52,19 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class, 'product_id');
     }
+
+    // Scope lọc sản phẩm đủ điều kiện cấu hình
+    public function scopeAvailableForConfig($query)
+    {
+        return $query->where('status', 'published')
+            ->whereHas('category', function ($q) {
+                $q->where('status', 'active');
+            })
+            ->where(function ($q) {
+                $q->whereNull('brand_id')
+                  ->orWhereHas('brand', function ($subQ) {
+                      $subQ->where('status', 'active');
+                  });
+            });
+    }
 }

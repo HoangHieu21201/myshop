@@ -14,19 +14,29 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminProductController extends Controller
 {
-    // 1. LẤY DANH SÁCH (Bao gồm cả Đã xóa)
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::withTrashed()
-            ->with(['category:id,name', 'brand:id,name'])
+        $query = Product::query();
+
+        if (!$request->has('status')) {
+            $query->withTrashed();
+        }
+
+        if ($request->has('status') && $request->status === 'published') {
+            $query->availableForConfig();
+        } elseif ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $products = $query->with(['category:id,name', 'brand:id,name'])
             ->withCount('variants')
             ->withSum('variants as total_stock', 'stock_quantity')
-            ->orderBy('id', 'desc')->get();
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json(['success' => true, 'data' => $products]);
     }
 
-    // 2. XEM CHI TIẾT (Cho Quick View & Edit)
     public function show($id)
     {
         $product = Product::with([
@@ -49,7 +59,6 @@ class AdminProductController extends Controller
         return response()->json(['success' => true, 'data' => $product]);
     }
 
-    // 3. TẠO MỚI SẢN PHẨM & BIẾN THỂ
     public function store(AdminStoreProductRequest $request)
     {
         try {
@@ -58,8 +67,7 @@ class AdminProductController extends Controller
 
             $file = $request->file('thumbnail_image');
             $fileName = 'prod_' . Str::slug($data['name']) . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('products/thumbnails', $fileName, 'public');
-            $data['thumbnail_image'] = $path;
+            $data['thumbnail_image'] = $file->storeAs('products/thumbnails', $fileName, 'public');
 
             $product = Product::create($data);
             $variantsData = json_decode($request->variants_data, true);
@@ -67,6 +75,7 @@ class AdminProductController extends Controller
             foreach ($variantsData as $index => $vData) {
                 $variantImagePath = null;
                 $imageKey = 'variant_image_' . $index;
+                
                 if ($request->hasFile($imageKey)) {
                     $vFile = $request->file($imageKey);
                     $vFileName = 'var_' . Str::slug($vData['sku']) . '_' . time() . '.' . $vFile->getClientOriginalExtension();
@@ -84,8 +93,7 @@ class AdminProductController extends Controller
                 ]);
 
                 if (!empty($vData['attributes']) && is_array($vData['attributes'])) {
-                    $attributeValueIds = array_values($vData['attributes']);
-                    $variant->attributeValues()->sync($attributeValueIds);
+                    $variant->attributeValues()->sync(array_values($vData['attributes']));
                 }
             }
 
@@ -107,11 +115,10 @@ class AdminProductController extends Controller
             unset($data['variants_data']);
 
             if ($request->hasFile('thumbnail_image')) {
+                if ($product->thumbnail_image) Storage::disk('public')->delete($product->thumbnail_image);
                 $file = $request->file('thumbnail_image');
                 $fileName = 'prod_' . Str::slug($data['name']) . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('products/thumbnails', $fileName, 'public');
-                $data['thumbnail_image'] = $path;
-                if ($product->thumbnail_image) Storage::disk('public')->delete($product->thumbnail_image);
+                $data['thumbnail_image'] = $file->storeAs('products/thumbnails', $fileName, 'public');
             }
 
             $product->update($data);
@@ -124,7 +131,7 @@ class AdminProductController extends Controller
                 ->delete();
 
             foreach ($variantsData as $index => $vData) {
-                $variantImagePath = isset($vData['current_image']) ? $vData['current_image'] : null;
+                $variantImagePath = $vData['current_image'] ?? null;
                 $imageKey = 'variant_image_' . $index;
 
                 if ($request->hasFile($imageKey)) {
@@ -141,7 +148,7 @@ class AdminProductController extends Controller
                     'image_url' => $variantImagePath,
                 ];
 
-                if (isset($vData['id']) && $vData['id']) {
+                if (!empty($vData['id'])) {
                     $variant = ProductVariant::find($vData['id']);
                     if ($variant) $variant->update($variantPayload);
                 } else {
@@ -151,8 +158,7 @@ class AdminProductController extends Controller
                 }
 
                 if ($variant && !empty($vData['attributes']) && is_array($vData['attributes'])) {
-                    $attributeValueIds = array_values($vData['attributes']);
-                    $variant->attributeValues()->sync($attributeValueIds);
+                    $variant->attributeValues()->sync(array_values($vData['attributes']));
                 }
             }
 
@@ -164,15 +170,12 @@ class AdminProductController extends Controller
         }
     }
 
-    // 5. XÓA MỀM (Đồng bộ xóa luôn các biến thể)
     public function destroy($id)
     {
         DB::beginTransaction();
         try {
             $product = Product::findOrFail($id);
-
             $product->variants()->delete();
-
             $product->delete();
 
             DB::commit();
@@ -183,15 +186,12 @@ class AdminProductController extends Controller
         }
     }
 
-    // 6. KHÔI PHỤC (Đồng bộ khôi phục luôn các biến thể)
     public function restore($id)
     {
         DB::beginTransaction();
         try {
             $product = Product::withTrashed()->findOrFail($id);
-
             $product->restore();
-
             $product->variants()->withTrashed()->restore();
 
             DB::commit();

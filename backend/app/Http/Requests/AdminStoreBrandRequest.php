@@ -16,7 +16,7 @@ class AdminStoreBrandRequest extends FormRequest
         return [
             'name'        => 'required|string|max:255',
             'slug'        => 'required|string|max:255|unique:brands,slug',
-            'logo'        => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
+            'logo'        => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:15360', //15mb
             'description' => 'nullable|string|max:5000',
             'status'      => 'required|in:active,hidden',
         ];
@@ -31,7 +31,7 @@ class AdminStoreBrandRequest extends FormRequest
             'slug.unique'      => 'Đường dẫn (slug) này đã tồn tại, vui lòng chọn tên khác.',
             'logo.image'       => 'File tải lên phải là hình ảnh.',
             'logo.mimes'       => 'Định dạng ảnh không hợp lệ (Chỉ hỗ trợ jpeg, png, jpg, webp, svg).',
-            'logo.max'         => 'Kích thước logo không được vượt quá 2MB.',
+            'logo.max'         => 'Kích thước logo không được vượt quá 15MB.',
             'status.required'  => 'Trạng thái không được để trống.',
             'status.in'        => 'Trạng thái không hợp lệ.',
         ];

@@ -203,7 +203,27 @@ const admin = [
         name: 'admin-tiers-edit',
         component: () => import('../pages/admin/tier/Edit.vue'),
         meta: { moduleCode: 'admin_roles' }
+      },
+      // ROUTE QUẢN LÝ COMBO SẢN PHẨM (PRODUCT COMBOS)
+      {
+        path: 'combos',
+        name: 'admin-combos',
+        component: () => import('../pages/admin/combo/Index.vue'),
+        meta: { moduleCode: 'admin_combos' }
+      },
+      {
+        path: 'combos/create',
+        name: 'admin-combos-create',
+        component: () => import('../pages/admin/combo/Create.vue'),
+        meta: { moduleCode: 'admin_combos' }
+      },
+      {
+        path: 'combos/:id/edit',
+        name: 'admin-combos-edit',
+        component: () => import('../pages/admin/combo/Edit.vue'),
+        meta: { moduleCode: 'admin_combos' }
       }
+
     ],
   },
 ]
