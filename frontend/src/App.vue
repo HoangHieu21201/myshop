@@ -1,8 +1,10 @@
 <template>
   <div v-if="isCheckingAuth" class="vh-100 d-flex flex-column justify-content-center align-items-center bg-light">
-    <h1 class="logo-shimmer mb-3">SORA</h1>
-    <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">
-    </p>
+    
+    <div class="logo-pulse-wrapper mb-4">
+      <img src="@/assets/images/icon-logo.png" alt="SORA Logo" class="logo-pulse-img">
+    </div>
+
   </div>
 
   <router-view v-else></router-view>
@@ -54,7 +56,6 @@ const checkAuthentication = async () => {
     localStorage.removeItem('admin_level');
     currentUser.value = null;
     
-    // Đá về trang login
     router.push('/admin/login');
   } finally {
     isCheckingAuth.value = false;
@@ -67,19 +68,43 @@ onMounted(() => {
 </script>
 
 <style>
-/* CSS Reset cơ bản & CSS dùng chung toàn cục */
 body {
   margin: 0;
   padding: 0;
   background-color: #f8f9fa;
 }
 
-/* Hiệu ứng Shimmer từ ThinkHub mang ra dùng chung */
+.logo-pulse-wrapper {
+  display: inline-block;
+}
+
+.logo-pulse-img {
+  width: 140px; 
+  height: auto;
+  object-fit: contain;
+  animation: luxury-pulse 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes luxury-pulse {
+  0% {
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 5px rgba(159, 39, 59, 0.2)) brightness(1);
+  }
+  100% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 25px rgba(159, 39, 59, 0.8)) brightness(1.15);
+  }
+}
+
+.tracking-widest {
+  letter-spacing: 0.25em;
+}
+
 .logo-shimmer {
   font-size: 3.5rem;
   font-weight: 900;
   letter-spacing: -1.5px;
-  background: linear-gradient(120deg, #9f273b 30%, #080808 50%, #edb2b2 70%);
+  background: linear-gradient(120deg, #9f273b 30%, #cc1e2e 50%, #9f273b 70%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
@@ -89,9 +114,5 @@ body {
 
 @keyframes shine {
   to { background-position: 200% center; }
-}
-
-.tracking-widest {
-  letter-spacing: 0.25em;
 }
 </style>

@@ -164,6 +164,7 @@ const menuItems = ref([
       { name: 'Danh mục', path: '/admin/categories', moduleCode: 'admin_categories' },
       { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
       { name: 'Sản phẩm & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
+      { name: 'Combo sản phẩm', path: '/admin/combos', moduleCode: 'admin_combos' },
     ]
   },
   {
