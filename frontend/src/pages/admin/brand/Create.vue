@@ -106,7 +106,7 @@ const generateSlug = () => {
 const handleLogoUpload = (e) => {
   const f = e.target.files[0];
   if(f) { 
-      if(f.size > 2 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh tối đa 2MB', 'error'); return; }
+      if(f.size > 15 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); return; }
       logoFile.value = f; 
       logoPreview.value = URL.createObjectURL(f); 
   }

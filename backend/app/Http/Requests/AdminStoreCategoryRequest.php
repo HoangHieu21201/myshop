@@ -30,7 +30,7 @@ class AdminStoreCategoryRequest extends FormRequest
             'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
             'description' => ['nullable', 'string', 'max:5000'],
             'status' => ['required', Rule::in(['active', 'hidden'])],
-            'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], 
+            'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:15360'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'attributes_schema' => ['nullable', 'string'], 
         ];
@@ -48,7 +48,7 @@ class AdminStoreCategoryRequest extends FormRequest
             'status.in' => 'Trạng thái không hợp lệ.',
             'thumbnail.image' => 'File tải lên phải là định dạng hình ảnh.',
             'thumbnail.mimes' => 'Hình ảnh chỉ hỗ trợ: jpeg, png, jpg, webp.',
-            'thumbnail.max' => 'Kích thước ảnh không được vượt quá 5MB.',
+            'thumbnail.max' => 'Kích thước ảnh không được vượt quá 15MB.',
             'sort_order.integer' => 'Thứ tự ưu tiên phải là một số nguyên.',
             'sort_order.min' => 'Thứ tự ưu tiên không được là số âm.',
         ];

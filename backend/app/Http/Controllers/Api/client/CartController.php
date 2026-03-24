@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
-use App\Http\Requests\Cart\StoreCartItemRequest;
-use App\Http\Requests\Cart\UpdateCartItemRequest;
+use App\Http\Requests\Cart\UserStoreCartItemRequest;
+use App\Http\Requests\Cart\UserUpdateCartItemRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -42,9 +42,9 @@ class CartController extends Controller
 
     /**
      * [YÊU CẦU: THÊM VÀO GIỎ HÀNG]
-     * Chống thêm sản phẩm hết hàng và vượt tồn kho (Validate trong StoreCartItemRequest)
+     * Chống thêm sản phẩm hết hàng và vượt tồn kho (Validate trong UserStoreCartItemRequest)
      */
-    public function store(StoreCartItemRequest $request)
+    public function store(UserStoreCartItemRequest $request)
     {
         try {
             return DB::transaction(function () use ($request) {
@@ -80,11 +80,7 @@ class CartController extends Controller
         }
     }
 
-    /**
-     * [YÊU CẦU: TĂNG/GIẢM SỐ LƯỢNG]
-     * Sử dụng UpdateCartItemRequest để check tồn kho live
-     */
-    public function update(UpdateCartItemRequest $request, CartItem $cartItem)
+    public function update(UserUpdateCartItemRequest $request, CartItem $cartItem)
     {
         // Route model binding tự động tìm $cartItem qua ID trên URL
         $cartItem->update(['quantity' => $request->quantity]);

@@ -2,14 +2,12 @@
   <div class="role-index-wrapper pb-5 mb-5">
     
     <div class="container-fluid py-4" v-if="!isPageLoading">
-      <!-- Header -->
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Quản lý Phân Quyền & Cấp Độ</h3>
           <p class="text-muted mb-0 mt-1 small">Thiết lập chức vụ và giới hạn truy cập cho từng trang</p>
         </div>
         
-        <!-- ĐÃ FIX RESPONSIVE: Thêm flex-wrap để tự động rớt dòng trên Mobile -->
         <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
           <div class="border rounded px-3 py-1 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
             <i class="bi bi-shield-check text-success me-1"></i>
@@ -22,7 +20,6 @@
         </div>
       </div>
 
-      <!-- TABS CHỨC NĂNG (ĐÃ FIX RESPONSIVE) -->
       <div class="mb-4">
         <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
           <li class="nav-item">
@@ -44,12 +41,18 @@
         </ul>
       </div>
 
-      <!-- DANH SÁCH ROLE -->
+      <!-- TAB 1: DANH SÁCH ROLE -->
       <div v-if="activeTab === 'roles'" class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-ul me-2"></i>Danh sách Roles</h6>
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-ul me-2"></i>Danh sách Roles</h6>
+            <select class="form-select form-select-sm ms-2 border-0 bg-light fw-semibold text-secondary" v-model="roleFilterStatus" style="width: 140px; box-shadow: none;" @change="currentPageRoles = 1">
+              <option value="active">Đang hoạt động</option>
+              <option value="deleted">Đã xóa</option>
+            </select>
+          </div>
           <div class="search-box position-relative" style="width: 280px; max-width: 100%;">
-            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" placeholder="Tìm kiếm role...">
+            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQueryRoles" @input="currentPageRoles = 1" placeholder="Tìm kiếm role...">
             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
           </div>
         </div>
@@ -68,15 +71,15 @@
               <tbody>
                 <tr v-if="isLoadingRoles">
                   <td colspan="5" class="text-center py-5 text-muted">
-                    <span class="spinner-border spinner-border-sm me-2 text-brand"></span> Đang tải dữ liệu Roles...
+                    <span class="spinner-border spinner-border-sm me-2 text-brand"></span> Đang tải dữ liệu...
                   </td>
                 </tr>
-                <tr v-else-if="filteredRoles.length === 0">
+                <tr v-else-if="paginatedRoles.length === 0">
                   <td colspan="5" class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không tìm thấy Role nào.
+                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không tìm thấy dữ liệu.
                   </td>
                 </tr>
-                <tr v-else v-for="role in filteredRoles" :key="role.id">
+                <tr v-else v-for="role in paginatedRoles" :key="role.id" :class="{'bg-light opacity-75': role.deleted_at}">
                   <td class="px-4 fw-bold text-muted font-monospace">#{{ role.id }}</td>
                   <td class="px-4 fw-semibold">
                     <span class="badge rounded-pill px-3 py-2" :class="role.badgeClass || 'bg-secondary'">{{ role.label }}</span>
@@ -84,18 +87,24 @@
                   <td class="px-4 text-muted font-monospace small">{{ role.value }}</td>
                   <td class="px-4">
                     <span class="badge border py-2 px-3 shadow-sm" :class="getLevelColor(role.level)">
-                      <i class="bi bi-star-fill me-1" v-if="role.level === 1"></i>
-                      Cấp {{ role.level || 5 }}
+                      <i class="bi bi-star-fill me-1" v-if="role.level === 1"></i> Cấp {{ role.level || 5 }}
                     </span>
                   </td>
                   <td class="px-4 text-center">
                     <div class="d-flex justify-content-center gap-1">
-                      <button class="btn btn-sm btn-light text-primary shadow-sm border" @click="openRoleModal('edit', role)" title="Sửa">
-                        <i class="bi bi-pencil-square"></i>
-                      </button>
-                      <button class="btn btn-sm btn-light text-danger shadow-sm border" @click="confirmDeleteRole(role.id, role.label)" :disabled="role.id === 1" title="Xóa">
-                        <i class="bi bi-trash"></i>
-                      </button>
+                      <template v-if="!role.deleted_at">
+                        <button class="btn btn-sm btn-light text-primary shadow-sm border" @click="openRoleModal('edit', role)" title="Sửa">
+                          <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light text-danger shadow-sm border" @click="confirmDeleteRole(role.id, role.label)" :disabled="role.id === 1" title="Xóa">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </template>
+                      <template v-else>
+                        <button class="btn btn-sm btn-light text-success shadow-sm border" @click="restoreRole(role.id)" title="Khôi phục">
+                          <i class="bi bi-arrow-counterclockwise"></i> Khôi phục
+                        </button>
+                      </template>
                     </div>
                   </td>
                 </tr>
@@ -103,22 +112,41 @@
             </table>
           </div>
         </div>
+        <!-- Phân trang Roles -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top" v-if="totalPageRoles > 1">
+          <span class="text-muted small">
+            Hiển thị {{ (currentPageRoles - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPageRoles * itemsPerPage, processedRoles.length) }}
+          </span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0 shadow-sm">
+              <li class="page-item" :class="{ disabled: currentPageRoles === 1 }">
+                <button class="page-link text-brand" @click="currentPageRoles--"><i class="bi bi-chevron-left"></i></button>
+              </li>
+              <li class="page-item" v-for="page in totalPageRoles" :key="page" :class="{ active: currentPageRoles === page }">
+                <button class="page-link" :class="currentPageRoles === page ? 'bg-brand border-brand text-white' : 'text-dark'" @click="currentPageRoles = page">
+                  {{ page }}
+                </button>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPageRoles === totalPageRoles }">
+                <button class="page-link text-brand" @click="currentPageRoles++"><i class="bi bi-chevron-right"></i></button>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
 
-      <!-- CÀI ĐẶT MODULES -->
+      <!-- TAB 2: CÀI ĐẶT MODULES -->
       <div v-if="activeTab === 'modules'" class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-hdd-network me-2"></i>Yêu cầu cấp độ truy cập</h6>
-            <div>
-              <button v-if="isSuperAdmin" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-4 py-2 shadow-sm" @click="syncModules" :disabled="isSyncing">
-                <i class="bi bi-arrow-repeat me-1" :class="{'bi-spin': isSyncing}"></i> 
-                {{ isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ cấu hình trang mới' }}
-              </button>
-              <span v-if="!isSuperAdmin" class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2">
-                <i class="bi bi-lock-fill me-1"></i> Chỉ Super Admin mới được cấu hình
-              </span>
-            </div>
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-hdd-network me-2"></i>Cấp độ truy cập trang</h6>
+            <button v-if="isSuperAdmin" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" @click="syncModules" :disabled="isSyncing">
+              <i class="bi bi-arrow-repeat me-1" :class="{'bi-spin': isSyncing}"></i> {{ isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ hệ thống' }}
+            </button>
+          </div>
+          <div class="search-box position-relative" style="width: 280px; max-width: 100%;">
+            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQueryModules" @input="currentPageModules = 1" placeholder="Tìm kiếm trang/module...">
+            <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
           </div>
         </div>
         <div class="card-body p-0 mt-2">
@@ -138,13 +166,12 @@
                     <span class="spinner-border spinner-border-sm me-2 text-brand"></span> Đang tải cấu hình trang...
                   </td>
                 </tr>
-                <tr v-else-if="systemModules.length === 0">
+                <tr v-else-if="paginatedModules.length === 0">
                   <td colspan="4" class="text-center py-5 text-muted">
-                    <i class="bi bi-hdd me-2 fs-3 d-block opacity-50 mb-2"></i>
-                    Chưa có dữ liệu. Vui lòng nhấn "Đồng bộ cấu hình trang mới".
+                    <i class="bi bi-hdd me-2 fs-3 d-block opacity-50 mb-2"></i> Không có dữ liệu.
                   </td>
                 </tr>
-                <tr v-else v-for="module in systemModules" :key="module.id">
+                <tr v-else v-for="module in paginatedModules" :key="module.id">
                   <td class="px-4 fw-bold text-dark">{{ module.module_name }}</td>
                   <td class="px-4">
                     <span class="text-muted font-monospace small bg-light border px-2 py-1 rounded">{{ module.module_code }}</span>
@@ -153,7 +180,6 @@
                     <div class="d-flex align-items-center justify-content-center gap-2">
                       <span v-if="editingModuleId !== module.id" class="badge shadow-sm px-3 py-2" :class="getLevelColor(module.required_level)">Cấp {{ module.required_level }}</span>
                       
-                      <!-- ĐÃ NÂNG CẤP: Nút +/- tiện lợi thay vì nhập input text -->
                       <div v-if="isSuperAdmin && editingModuleId === module.id" class="input-group input-group-sm shadow-sm border border-brand rounded" style="width: 100px;">
                         <button class="btn btn-light bg-white text-brand border-end" type="button" @click="editLevelValue > 1 ? editLevelValue-- : null"><i class="bi bi-dash"></i></button>
                         <input type="text" class="form-control text-center fw-bold text-brand px-0 bg-white" :value="editLevelValue" readonly>
@@ -162,19 +188,13 @@
                     </div>
                   </td>
                   <td class="px-4 text-center">
-                    <button v-if="isSuperAdmin && editingModuleId !== module.id" 
-                            class="btn btn-sm btn-outline-brand fw-semibold rounded-pill px-3 shadow-sm" 
-                            @click="startEditModule(module)">
+                    <button v-if="isSuperAdmin && editingModuleId !== module.id" class="btn btn-sm btn-outline-brand fw-semibold rounded-pill px-3 shadow-sm" @click="startEditModule(module)">
                       <i class="bi bi-sliders me-1"></i> Đổi cấp
                     </button>
                     
                     <div v-if="isSuperAdmin && editingModuleId === module.id" class="d-flex justify-content-center gap-1">
-                      <button class="btn btn-sm btn-success fw-bold px-3 rounded-pill shadow-sm" @click="saveModuleLevel(module.id)" :disabled="isSavingLevel">
-                        <i class="bi bi-check-lg"></i> Lưu
-                      </button>
-                      <button class="btn btn-sm btn-light border text-danger rounded-pill px-3 shadow-sm" @click="editingModuleId = null">
-                        Hủy
-                      </button>
+                      <button class="btn btn-sm btn-success fw-bold px-3 rounded-pill shadow-sm" @click="saveModuleLevel(module.id)" :disabled="isSavingLevel"><i class="bi bi-check-lg"></i> Lưu</button>
+                      <button class="btn btn-sm btn-light border text-danger rounded-pill px-3 shadow-sm" @click="editingModuleId = null">Hủy</button>
                     </div>
 
                     <span v-if="!isSuperAdmin" class="text-muted small"><i class="bi bi-dash-lg"></i> Không có quyền</span>
@@ -183,6 +203,27 @@
               </tbody>
             </table>
           </div>
+        </div>
+        <!-- Phân trang Modules -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top" v-if="totalPageModules > 1">
+          <span class="text-muted small">
+            Hiển thị {{ (currentPageModules - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPageModules * itemsPerPage, processedModules.length) }}
+          </span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0 shadow-sm">
+              <li class="page-item" :class="{ disabled: currentPageModules === 1 }">
+                <button class="page-link text-brand" @click="currentPageModules--"><i class="bi bi-chevron-left"></i></button>
+              </li>
+              <li class="page-item" v-for="page in totalPageModules" :key="page" :class="{ active: currentPageModules === page }">
+                <button class="page-link" :class="currentPageModules === page ? 'bg-brand border-brand text-white' : 'text-dark'" @click="currentPageModules = page">
+                  {{ page }}
+                </button>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPageModules === totalPageModules }">
+                <button class="page-link text-brand" @click="currentPageModules++"><i class="bi bi-chevron-right"></i></button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
@@ -194,7 +235,7 @@
       </p>
     </div>
 
-    <!-- MODAL THÊM / SỬA ROLE (CÓ BẮT LỖI INLINE VÀ NÚT TĂNG GIẢM) -->
+    <!-- MODAL THÊM / SỬA ROLE -->
     <div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow rounded-4">
@@ -223,12 +264,9 @@
                 </div>
               </div>
 
-              <!-- ĐÃ NÂNG CẤP: CỘT CHỌN CẤP ĐỘ BẰNG NÚT KÈM PAD PREVIEW QUYỀN HẠN -->
               <div class="mb-3 p-4 bg-light rounded-4 border border-light-subtle shadow-sm">
                 <label class="form-label fw-bold text-brand mb-3">Định vị Cấp độ (Level) <span class="text-danger">*</span></label>
-                
                 <div class="d-flex align-items-stretch gap-4 flex-wrap flex-md-nowrap">
-                    <!-- Nút +/- -->
                     <div class="input-group shadow-sm flex-shrink-0 border border-brand rounded" style="width: 140px; height: fit-content;">
                         <button class="btn btn-light bg-white border-end" type="button" @click="roleForm.level > 1 && roleForm.id !== 1 ? roleForm.level-- : null" :disabled="roleForm.id === 1">
                             <i class="bi bi-dash-lg text-brand fw-bold"></i>
@@ -238,8 +276,6 @@
                             <i class="bi bi-plus-lg text-brand fw-bold"></i>
                         </button>
                     </div>
-
-                    <!-- Pad Preview Các trang được truy cập -->
                     <div class="flex-grow-1 p-3 bg-white rounded-3 border border-info border-opacity-50 shadow-sm w-100">
                         <h6 class="fw-bold text-info mb-3" style="font-size: 0.85rem;">
                             <i class="bi bi-eye-fill me-1"></i>Trang mà cấp độ này có thể truy cập:
@@ -252,10 +288,9 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="mt-3">
                     <small class="text-danger d-block fw-semibold" v-if="roleForm.id === 1"><i class="bi bi-x-octagon-fill me-1"></i>Không thể thay đổi Cấp độ của Super Admin gốc.</small>
-                    <small class="text-muted d-block fst-italic" v-else><i class="bi bi-info-circle-fill me-1"></i>Số Level càng nhỏ thì quyền hạn càng lớn (Ví dụ: Cấp 2 có thể xem các trang yêu cầu Cấp 2, 3, 4, 5).</small>
+                    <small class="text-muted d-block fst-italic" v-else><i class="bi bi-info-circle-fill me-1"></i>Số Level càng nhỏ thì quyền hạn càng lớn.</small>
                 </div>
               </div>
 
@@ -290,51 +325,50 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ THÊM AXIOS
+import axios from 'axios';
 
 const route = useRoute();
-
-// Kiểm tra quyền Super Admin
-const isSuperAdmin = computed(() => {
-  return localStorage.getItem('admin_role') == 1;
-});
-
+const isSuperAdmin = computed(() => localStorage.getItem('admin_role') == 1);
 const isPageLoading = ref(true);
 
 const activeTab = ref('roles');
-const searchQuery = ref('');
-const currentPageLevel = ref(null); 
+const itemsPerPage = 8; 
 
+// State Roles
 const roles = ref([]);
 const isLoadingRoles = ref(false);
+const roleFilterStatus = ref('active');
+const searchQueryRoles = ref('');
+const currentPageRoles = ref(1);
 const isSaving = ref(false);
 
+// State Modules
 const systemModules = ref([]);
 const isLoadingModules = ref(false);
+const searchQueryModules = ref('');
+const currentPageModules = ref(1);
 const editingModuleId = ref(null);
 const editLevelValue = ref(1);
 const isSavingLevel = ref(false);
 const isSyncing = ref(false);
+const currentPageLevel = ref(null); 
 
 const modalMode = ref('create');
 let bRoleModal = null;
 const roleForm = ref({ id: null, label: '', value: '', badgeClass: '', level: 5 });
-const errors = ref({}); // LƯU LỖI INLINE
+const errors = ref({}); 
 
-const getHeaders = () => {
-  return {
-    'Accept': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-  };
-};
+const getHeaders = () => ({
+  'Accept': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+});
 
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
   if (e.response) {
     if (e.response.status === 401) {
       Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
     } else if (e.response.data && e.response.data.errors) {
-      errors.value = e.response.data.errors; // Gán để hiện lỗi đỏ ở form
+      errors.value = e.response.data.errors; 
       let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
       Object.values(e.response.data.errors).flat().forEach(msg => {
           errorHtml += `<li class="mb-1">${msg}</li>`;
@@ -362,25 +396,50 @@ const getLevelColor = (level) => {
   }
 };
 
-// ================= LỌC ROLES =================
-const filteredRoles = computed(() => {
-  if (!searchQuery.value) return roles.value;
-  const q = searchQuery.value.toLowerCase();
-  return roles.value.filter(r => 
-    r.label.toLowerCase().includes(q) || r.value.toLowerCase().includes(q)
-  );
+// ================= TÍNH TOÁN DANH SÁCH ROLES =================
+const processedRoles = computed(() => {
+  let res = roles.value;
+  if (roleFilterStatus.value === 'deleted') {
+    res = res.filter(r => r.deleted_at);
+  } else {
+    res = res.filter(r => !r.deleted_at);
+  }
+  if (searchQueryRoles.value) {
+    const q = searchQueryRoles.value.toLowerCase();
+    res = res.filter(r => r.label.toLowerCase().includes(q) || r.value.toLowerCase().includes(q));
+  }
+  return res;
 });
 
-// THUẬT TOÁN PREVIEW CÁC TRANG CÓ THỂ TRUY CẬP TỪ LEVEL ĐANG CHỌN
+const paginatedRoles = computed(() => {
+  const start = (currentPageRoles.value - 1) * itemsPerPage;
+  return processedRoles.value.slice(start, start + itemsPerPage);
+});
+const totalPageRoles = computed(() => Math.ceil(processedRoles.value.length / itemsPerPage) || 1);
+
+// ================= TÍNH TOÁN DANH SÁCH MODULES =================
+const processedModules = computed(() => {
+  let res = systemModules.value;
+  if (searchQueryModules.value) {
+    const q = searchQueryModules.value.toLowerCase();
+    res = res.filter(m => m.module_name.toLowerCase().includes(q) || m.module_code.toLowerCase().includes(q));
+  }
+  return res;
+});
+
+const paginatedModules = computed(() => {
+  const start = (currentPageModules.value - 1) * itemsPerPage;
+  return processedModules.value.slice(start, start + itemsPerPage);
+});
+const totalPageModules = computed(() => Math.ceil(processedModules.value.length / itemsPerPage) || 1);
+
 const accessibleModulesPreview = computed(() => {
     if (!roleForm.value.level) return [];
-    // Filter ra các trang có required_level LỚN HƠN HOẶC BẰNG với level của Role (Level nhỏ = Quyền cao)
     return systemModules.value
         .filter(m => roleForm.value.level <= m.required_level)
         .sort((a,b) => a.required_level - b.required_level);
 });
 
-// ================= API CALLS =================
 const fetchRoles = async () => {
   isLoadingRoles.value = true;
   try {
@@ -411,10 +470,9 @@ const fetchModules = async () => {
   }
 };
 
-// ================= ROLE ACTIONS =================
 const openRoleModal = (mode, role = null) => {
   modalMode.value = mode;
-  errors.value = {}; // Reset mảng lỗi khi mở lại modal
+  errors.value = {}; 
 
   roleForm.value = mode === 'edit' && role 
     ? { id: role.id, label: role.label, value: role.value, badgeClass: role.badgeClass || '', level: role.level || 5 }
@@ -471,7 +529,27 @@ const confirmDeleteRole = (id, roleName) => {
   });
 };
 
-// ================= MODULE ACTIONS =================
+const restoreRole = (id) => {
+  Swal.fire({
+    title: 'Khôi phục Role?',
+    text: "Chức vụ này sẽ hoạt động trở lại.",
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#009981',
+    confirmButtonText: 'Khôi phục ngay'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const res = await axios.post(`http://127.0.0.1:8000/api/admin/roles/${id}/restore`, {}, { headers: getHeaders() });
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Thành công', text: res.data.message, showConfirmButton: false, timer: 1500 });
+        fetchRoles(); 
+      } catch (err) { 
+        handleAxiosError(err, 'Không thể khôi phục Role này');
+      }
+    }
+  });
+};
+
 const syncModules = async () => {
   isSyncing.value = true;
   try {
@@ -494,7 +572,7 @@ const saveModuleLevel = async (moduleId) => {
   isSavingLevel.value = true;
   try {
     const payload = { required_level: editLevelValue.value };
-    const res = await axios.put(`http://127.0.0.1:8000/api/admin/modules/${moduleId}/level`, payload, { headers: getHeaders() });
+    await axios.put(`http://127.0.0.1:8000/api/admin/modules/${moduleId}/level`, payload, { headers: getHeaders() });
     
     const target = systemModules.value.find(m => m.id === moduleId);
     if(target) target.required_level = editLevelValue.value;
@@ -515,67 +593,26 @@ const switchTab = (tab) => {
   activeTab.value = tab;
 };
 
-// ================= CHẠY LẦN ĐẦU =================
 onMounted(async () => {
-  isPageLoading.value = true; // Bật màn hình Logo Shimmer
-  
+  isPageLoading.value = true; 
   await Promise.all([fetchRoles(), fetchModules()]);
-  
   isPageLoading.value = false; 
 });
 </script>
 
 <style scoped>
-.logo-shimmer {
-  font-size: 3.5rem;
-  font-weight: 900;
-  letter-spacing: -1.5px;
-  background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%);
-  background-size: 200% auto;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: shine 1.5s linear infinite;
-}
-
-@keyframes shine {
-  to { background-position: 200% center; }
-}
-
-.custom-tab {
-  font-weight: 600 !important;
-  color: #6c757d;
-  border-bottom: 2px solid transparent !important;
-  margin-bottom: -1px;
-  transition: color 0.2s ease;
-}
-
-.custom-tab:hover {
-  color: #009981;
-}
-
-.custom-tab.active-tab {
-  color: #009981 !important;
-  border-bottom: 2px solid #009981 !important;
-}
-
-/* Buttons & Colors */
-.bg-brand { background-color: #009981 !important; }
-.text-brand { color: #009981 !important; }
-.border-brand { border-color: #009981 !important; }
-.btn-brand { background-color: #009981; border: none; transition: 0.2s; }
-.btn-brand:hover { background-color: #007a67; }
-.btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; }
-.btn-outline-brand:hover { background-color: #009981; color: white; }
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+@keyframes shine { to { background-position: 200% center; } }
+.custom-tab { font-weight: 600 !important; color: #6c757d; border-bottom: 2px solid transparent !important; margin-bottom: -1px; transition: color 0.2s ease; }
+.custom-tab:hover { color: #009981; }
+.custom-tab.active-tab { color: #009981 !important; border-bottom: 2px solid #009981 !important; }
+.bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
+.btn-brand { background-color: #009981; border: none; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; }
+.btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; } .btn-outline-brand:hover { background-color: #009981; color: white; }
 .form-control:focus, .form-select:focus { border-color: #009981; box-shadow: 0 0 0 0.25rem rgba(0, 153, 129, 0.25); }
-
-/* Nút xoay Sync */
 .bi-spin { display: inline-block; animation: bi-spin 2s infinite linear; }
 @keyframes bi-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(359deg); } }
-
-/* Form Error Styles */
 .invalid-feedback { font-size: 0.8rem; }
-
 .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #00998150; border-radius: 10px; }

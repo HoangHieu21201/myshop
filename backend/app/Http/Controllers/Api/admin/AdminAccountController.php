@@ -12,20 +12,13 @@ class AdminAccountController extends Controller
 {
     public function store(AdminStoreAdminRequest $request)
     {
-        // 1. Lấy dữ liệu đã validate
         $validatedData = $request->validated();
-
-        // 2. Băm mật khẩu
         $validatedData['password'] = Hash::make($validatedData['password']);
         $validatedData['email_verified_at'] = now();
-
-        // Gán role mặc định (Bạn có thể cân nhắc lấy từ request thay vì hardcode 12)
         $validatedData['role_id'] = 12;
         $validatedData['status'] = 'active';
 
         $admin = Admin::create($validatedData);
-
-        // [FIX: Eager Load] Nạp sẵn role cho admin mới tạo để Frontend có ngay data chuẩn
         $admin->load('role');
 
         return response()->json([
@@ -42,7 +35,6 @@ class AdminAccountController extends Controller
             'password' => 'required'
         ]);
 
-        // [FIX] Eager-load role ngay từ bước đăng nhập
         $admin = Admin::with('role')->where('email', $request->email)->first();
 
         if (!$admin || !Hash::check($request->password, $admin->password)) {
@@ -67,9 +59,28 @@ class AdminAccountController extends Controller
     public function me(Request $request)
     {
         $admin = $request->user()->load('role');
+        
         return response()->json([
             'success' => true,
             'data'    => $admin
         ]);
+    }
+
+    public function restore($id)
+    {
+        try {
+            $admin = Admin::withTrashed()->findOrFail($id);
+            $admin->restore();
+            
+            return response()->json([
+                'success' => true, 
+                'message' => 'Khôi phục tài khoản thành công'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
