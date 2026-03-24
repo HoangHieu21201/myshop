@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\Client\ShopController;
 // ============================================
 // IMPORT ADMIN CONTROLLERS
 // ============================================
@@ -63,6 +64,17 @@ Route::prefix('client')->group(function () {
     // Trang chủ
     Route::get('home-data', [ClientHomeController::class, 'index']);
 });
+
+
+
+
+Route::prefix('shop/{shop_slug}')->group(function () {
+    Route::get('/info', [ShopController::class, 'shopInfo']); 
+    Route::get('/products', [ShopController::class, 'index']);
+    Route::get('/products/featured', [ShopController::class, 'featured']);
+    Route::get('/products/{slug}', [ShopController::class, 'show']);
+});
+Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
 
 
 Route::get('/user', function (Request $request) {
