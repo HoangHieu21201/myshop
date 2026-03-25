@@ -636,4 +636,4 @@ onUnmounted(() => {
   opacity: 0;
   transform: translate(-50%, 10px);
 }
-</style>
+</style>:

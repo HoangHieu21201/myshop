@@ -71,9 +71,6 @@ Route::prefix('client')->group(function () {
     Route::get('home-data', [ClientHomeController::class, 'index']);
 });
 
-
-
-
 Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/info', [ShopController::class, 'shopInfo']);
     Route::get('/products', [ShopController::class, 'index']);

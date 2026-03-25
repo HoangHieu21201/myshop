@@ -112,7 +112,7 @@ const handleResetPassword = async () => {
       });
     }
   } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể kết nối máy chủ!', confirmButtonColor: '#009981' });
+    Swal.fire({ icon: error, title: 'Lỗi', text: 'Không thể kết nối máy chủ!', confirmButtonColor: '#009981' });
   } finally {
     isLoading.value = false;
   }

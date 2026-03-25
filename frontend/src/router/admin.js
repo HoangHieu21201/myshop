@@ -9,7 +9,16 @@ const admin = [
     name: 'admin-register',
     component: () => import('../pages/admin/auth/Register.vue'),
   },
-
+  {
+    path: '/admin/forgot-password',
+    name: 'admin-forgot-password',
+    component: () => import('../pages/admin/auth/ForgotPassword.vue'),
+  },
+  {
+    path: '/admin/reset-password',
+    name: 'admin-reset-password',
+    component: () => import('../pages/admin/auth/ResetPassword.vue'),
+  },
   {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
@@ -23,16 +32,6 @@ const admin = [
         path: '/admin/profile',
         name: 'admin-profile',
         component: () => import('../pages/admin/account/Profile.vue'),
-      },
-      {
-        path: '/admin/forgot-password',
-        name: 'admin-forgot-password',
-        component: () => import('../pages/admin/auth/ForgotPassword.vue'),
-      },
-      {
-        path: 'reset-password',
-        name: 'admin-reset-password',
-        component: () => import('../pages/admin/auth/ResetPassword.vue'),
       },
       {
         path: 'roles',
@@ -190,40 +189,39 @@ const admin = [
         path: 'tiers',
         name: 'admin-tiers',
         component: () => import('../pages/admin/tier/Index.vue'),
-        meta: { moduleCode: 'admin_roles' }
+        meta: { moduleCode: 'admin_roles' },
       },
       {
         path: 'tiers/create',
         name: 'admin-tiers-create',
         component: () => import('../pages/admin/tier/Create.vue'),
-        meta: { moduleCode: 'admin_roles' }
+        meta: { moduleCode: 'admin_roles' },
       },
       {
         path: 'tiers/:id/edit',
         name: 'admin-tiers-edit',
         component: () => import('../pages/admin/tier/Edit.vue'),
-        meta: { moduleCode: 'admin_roles' }
+        meta: { moduleCode: 'admin_roles' },
       },
       // ROUTE QUẢN LÝ COMBO SẢN PHẨM (PRODUCT COMBOS)
       {
         path: 'combos',
         name: 'admin-combos',
         component: () => import('../pages/admin/combo/Index.vue'),
-        meta: { moduleCode: 'admin_combos' }
+        meta: { moduleCode: 'admin_combos' },
       },
       {
         path: 'combos/create',
         name: 'admin-combos-create',
         component: () => import('../pages/admin/combo/Create.vue'),
-        meta: { moduleCode: 'admin_combos' }
+        meta: { moduleCode: 'admin_combos' },
       },
       {
         path: 'combos/:id/edit',
         name: 'admin-combos-edit',
         component: () => import('../pages/admin/combo/Edit.vue'),
-        meta: { moduleCode: 'admin_combos' }
-      }
-
+        meta: { moduleCode: 'admin_combos' },
+      },
     ],
   },
 ]
