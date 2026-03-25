@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
 
 // Controllers Client
+use App\Http\Controllers\Api\client\ProductDetailController;
 use App\Http\Controllers\Api\client\ClientCartController;
 use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
@@ -75,13 +76,13 @@ Route::prefix('client')->group(function () {
 });
 
 
-
-
 Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/info', [ShopController::class, 'shopInfo']); 
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
-    Route::get('/products/{slug}', [ShopController::class, 'show']);
+    
+    // ĐÃ SỬA: Dùng ProductDetailController thay vì ShopController
+    Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
 });
 Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
 
