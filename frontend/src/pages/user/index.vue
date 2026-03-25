@@ -78,6 +78,7 @@
                 <button @click="saveCoupon(coupon.code)" class="btn btn-sm btn-outline-primary-luxury mt-3 rounded-0 fw-bold tracking-widest text-uppercase">
                   Lưu Mã Nhận Ưu Đãi
                 </button>
+<<<<<<< Updated upstream
               </div>
             </div>
           </div>
@@ -171,6 +172,166 @@
 
             </div>
 
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="combo-section py-5 overflow-hidden" style="background-color: #fbf9f6;" v-if="data.combos && data.combos.length > 0">
+        <div class="container text-center mb-5">
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Đồng Điệu</h6>
+          <h3 class="font-serif fw-bold text-dark display-6 mb-3">Bộ Sưu Tập Giới Hạn</h3>
+          <div class="divider-gold mx-auto"></div>
+        </div>
+
+        <div class="container pb-5">
+          <swiper
+            :modules="swiperModules"
+            :slides-per-view="1"
+            :breakpoints="{
+              '576': { slidesPerView: 2, spaceBetween: 20 },
+              '768': { slidesPerView: 3, spaceBetween: 25 },
+              '1024': { slidesPerView: 4, spaceBetween: 30 },
+            }"
+            :loop="true"
+            :pagination="{ clickable: true }"
+            :autoplay="{ delay: 3500, disableOnInteraction: false }"
+            class="combo-swiper-multi"
+          >
+            <swiper-slide v-for="combo in data.combos" :key="combo.id" class="h-auto">
+              <div class="bg-white p-3 text-center border border-secondary border-opacity-10 shadow-sm h-100 position-relative group">
+                <div class="mb-3 overflow-hidden position-relative ratio ratio-1x1 bg-light">
+                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover transition-transform duration-700 hover-scale" @error="handleImageError">
+                  <div class="position-absolute inset-0 bg-dark bg-opacity-25 opacity-0 group-hover-opacity-100 transition-all d-flex align-items-center justify-content-center z-index-2">
+                    <span class="btn btn-sm btn-light rounded-0 text-uppercase tracking-widest fw-bold">Xem Chi Tiết</span>
+                  </div>
+                </div>
+                <h6 class="font-serif fw-bold text-dark text-truncate px-2 group-hover-text-primary transition-colors" style="font-size: 1.1rem;">{{ combo.name }}</h6>
+                <div class="mt-2 d-flex flex-column align-items-center">
+                  <span class="text-primary-luxury fw-bold fs-6">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
+                  <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
+                </div>
+                <router-link :to="'/combo/' + combo.slug" class="stretched-link"></router-link>
+=======
+>>>>>>> Stashed changes
+              </div>
+            </swiper-slide>
+          </swiper>
+        </div>
+      </div>
+    </section>
+
+<<<<<<< Updated upstream
+    <section class="blog-section py-5" style="background-color: #f9f9f9;">
+      <div class="container py-4">
+        <div class="text-center mb-5">
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Cẩm Nang</h6>
+          <h3 class="font-serif fw-bold text-dark mb-3 display-6">Kiến Thức Trang Sức</h3>
+          <div class="divider-gold mx-auto"></div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-4" v-for="i in 3" :key="i">
+            <div class="blog-card group cursor-pointer bg-white p-3 shadow-sm border border-light">
+              <div class="ratio ratio-4x3 overflow-hidden mb-3">
+                <img :src="`https://images.unsplash.com/photo-1573408301145-b98c46544ea6?q=80&w=600&auto=format&fit=crop&sig=${i}`" loading="lazy" class="object-fit-cover transition-transform duration-700 group-hover-scale" alt="Blog">
+              </div>
+              <small class="text-gold tracking-widest text-uppercase fw-bold">Tư Vấn</small>
+              <h5 class="font-serif fw-bold text-primary-luxury mt-2 group-hover-text-accent transition-colors">
+                {{ ['Bí Quyết Chọn Nhẫn Cầu Hôn Kim Cương Hoàn Hảo', 'Cách Bảo Quản Trang Sức Vàng 18K Sáng Bóng Trọn Đời', 'Xu Hướng Trang Sức Ngọc Trai Lên Ngôi Năm Nay'][i-1] }}
+              </h5>
+              <p class="text-dark fw-light mt-2 mb-0" style="font-size: 0.9rem;">Khám phá những bí quyết độc quyền từ chuyên gia kim hoàn SORA để...</p>
+            </div>
+          </div>
+=======
+    <section class="categories-section py-5 bg-white">
+      <div class="container py-4 text-center">
+        <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Lựa Chọn Di Sản</h6>
+        <h3 class="font-serif fw-bold text-dark mb-5 display-6">Danh Mục Trang Sức</h3>
+        
+        <div class="row g-4 justify-content-center">
+          <div v-for="cat in data.categories" :key="cat.id" class="col-6 col-md-4 col-lg-2">
+            <router-link :to="`/category/${cat.id}`" class="text-decoration-none group d-block">
+              <div class="ratio ratio-1x1 overflow-hidden mx-auto mb-3 border border-1 border-secondary border-opacity-10 p-1">
+                <img :src="getImageUrl(cat.image)" class="object-fit-cover transition-transform duration-500 group-hover-scale filter-brightness" alt="Category" @error="handleImageError">
+              </div>
+              <h6 class="text-dark font-serif fw-bold group-hover-text-primary transition-colors fs-5">{{ cat.name }}</h6>
+              <div class="divider-gold mx-auto mt-2 scale-0 group-hover-scale-100 transition-transform"></div>
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="brand-story-section py-5" style="background-color: #fcfaf8;">
+      <div class="container py-5">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <div class="position-relative p-3">
+              <div class="border border-gold position-absolute w-100 h-100 top-0 start-0 translate-middle-x ms-4 mt-4 z-index-1"></div>
+              <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?q=80&w=800&auto=format&fit=crop" class="w-100 position-relative z-index-2 shadow-sm" alt="Craftsmanship" loading="lazy">
+            </div>
+          </div>
+          <div class="col-lg-6 ps-lg-5">
+            <h6 class="text-gold tracking-widest text-uppercase fw-bold mb-2">Nghệ Thuật Chế Tác</h6>
+            <h2 class="font-serif fw-bold text-primary-luxury display-5 mb-4">Tinh Hoa Hội Tụ<br>Trong Từng Giọt Vàng</h2>
+            <p class="text-dark fw-light mb-4 lh-lg" style="font-size: 1.1rem;">
+              Tại SORA, mỗi món trang sức không chỉ là vật trang điểm, mà là một tác phẩm nghệ thuật mang đậm dấu ấn cá nhân. Bằng đôi bàn tay tài hoa của những nghệ nhân kim hoàn hàng đầu, chúng tôi biến những viên đá thô ráp thành biểu tượng của sự sang trọng, quyền quý và trường tồn cùng thời gian.
+            </p>
+            <router-link to="/about" class="btn btn-outline-primary-luxury px-4 py-3 text-uppercase tracking-widest fw-bold rounded-0 border-2">
+              Khám Phá Câu Chuyện
+            </router-link>
+          </div>
+>>>>>>> Stashed changes
+        </div>
+      </div>
+    </section>
+
+<<<<<<< Updated upstream
+=======
+    <section class="products-section py-5 my-3 container bg-white">
+      <div class="d-flex justify-content-between align-items-end mb-5 pb-3 border-bottom border-secondary border-opacity-10">
+        <div>
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Xu Hướng</h6>
+          <h3 class="font-serif fw-bold text-dark mb-0 display-6">Tuyệt Tác Mới Nhất</h3>
+        </div>
+        <router-link to="/products" class="btn btn-outline-primary-luxury rounded-0 px-4 py-2 text-uppercase tracking-widest text-sm fw-bold">
+          Xem Bộ Sưu Tập
+        </router-link>
+      </div>
+
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+        <div class="col" v-for="product in data.products" :key="product.id">
+          <div class="product-card h-100 position-relative group bg-white">
+            
+            <div class="position-relative overflow-hidden bg-light product-img-wrapper">
+              <button class="wishlist-btn position-absolute top-0 end-0 m-3 z-index-2 border-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <i class="bi bi-suit-heart fs-5 text-muted hover-text-accent transition-colors" style="margin-top: 2px;"></i>
+              </button>
+              
+              <span v-if="product.is_new" class="badge bg-primary-luxury position-absolute top-0 start-0 m-3 px-3 py-2 rounded-0 tracking-widest shadow-sm z-index-2">MỚI</span>
+              
+              <router-link :to="`/product/${product.slug}`" class="d-block ratio ratio-1x1">
+                <img :src="getImageUrl(product.thumbnail_image)" class="object-fit-cover transition-transform duration-700 hover-scale" alt="Product" @error="handleImageError">
+              </router-link>
+              
+              <div class="quick-view-overlay position-absolute bottom-0 start-0 w-100 p-0 z-index-2 translate-y-100 group-hover-translate-y-0 transition-transform duration-300">
+                <button class="btn btn-primary-luxury w-100 rounded-0 fw-bold tracking-widest text-uppercase py-3 shadow-none border-0 fs-6">
+                  <i class="bi bi-bag me-2"></i> Thêm Vào Giỏ
+                </button>
+              </div>
+            </div>
+
+            <div class="text-center pt-4 pb-3 px-2">
+              <router-link :to="`/product/${product.slug}`" class="text-decoration-none">
+                <h6 class="text-dark font-serif text-truncate mb-2 cursor-pointer hover-text-primary" style="font-size: 1.15rem;">{{ product.name }}</h6>
+              </router-link>
+              <div class="price-wrap mt-2 d-flex justify-content-center align-items-center gap-2">
+                <span class="text-primary-luxury fw-bold fs-5">{{ formatCurrency(product.base_price) }}</span>
+                <span v-if="product.promotional_price" class="text-muted text-decoration-line-through small">{{ formatCurrency(product.promotional_price) }}</span>
+              </div>
+
+            </div>
+
           </div>
         </div>
       </div>
@@ -200,6 +361,7 @@
       </div>
     </section>
 
+>>>>>>> Stashed changes
     <section class="membership-banner py-5 position-relative" style="background-color: var(--color-primary);">
       <div class="container position-relative z-index-2 py-5 text-center">
         <i class="bi bi-gem text-gold display-4 mb-3"></i>
@@ -231,11 +393,24 @@
 import { reactive, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 
+<<<<<<< Updated upstream
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Pagination, Navigation, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
+const swiperModules = [Pagination, Navigation, Autoplay];
+const isLoading = ref(true);
+
+=======
+>>>>>>> Stashed changes
 const data = reactive({
   banners: [],
   coupons: [],
   categories: [],
   products: [],
+  combos: [],
   tiers: []
 });
 
@@ -266,6 +441,7 @@ const fetchHomepageData = async () => {
       data.coupons = result.data.coupons || [];
       data.categories = result.data.categories || [];
       data.products = result.data.products || [];
+      data.combos = result.data.combos || [];
       data.tiers = result.data.tiers || [];
     }
   } catch (error) {
@@ -302,6 +478,7 @@ onMounted(() => {
 .z-index-1 { z-index: 1; }
 .z-index-2 { z-index: 2; }
 .z-index-max { z-index: 9999; }
+.inset-0 { inset: 0; }
 
 .text-gold { color: #e7ce7d !important; }
 .text-primary-luxury { color: #9f273b !important; }
@@ -353,13 +530,15 @@ onMounted(() => {
 .group:hover .group-hover-text-accent { color: #cc1e2e !important; }
 .scale-0 { transform: scaleX(0); }
 .group:hover .group-hover-scale-100 { transform: scaleX(1); }
-.transition-colors { transition: color 0.3s ease; }
+.transition-colors { transition: background-color 0.5s ease, color 0.5s ease; }
 .transition-transform { transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1); }
 .hover-translate-up:hover { transform: translateY(-10px); }
 .filter-brightness { filter: brightness(0.95); transition: filter 0.5s; }
 .group:hover .filter-brightness { filter: brightness(1); }
+.opacity-0 { opacity: 0; }
+.group:hover .group-hover-opacity-100 { opacity: 1 !important; }
+.transition-all { transition: all 0.4s ease; }
 
-/* --- PRODUCT CARD STYLES --- */
 .product-card { 
   border: 1px solid transparent; 
   transition: all 0.4s ease; 
@@ -381,4 +560,31 @@ onMounted(() => {
 .translate-y-100 { transform: translateY(100%); opacity: 0; }
 .group:hover .group-hover-translate-y-0 { transform: translateY(0); opacity: 1; }
 .quick-view-overlay { background: transparent; }
+
+/* --- COMBO SLIDER (MULTI-ITEM) --- */
+.combo-swiper-multi {
+  padding-bottom: 50px; 
+}
+.stretched-link::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  content: "";
+}
+:deep(.swiper-pagination-bullet) {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-gold);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+:deep(.swiper-pagination-bullet-active) {
+  background-color: var(--color-primary) !important;
+  width: 20px;
+  border-radius: 5px;
+  opacity: 1;
+}
 </style>
