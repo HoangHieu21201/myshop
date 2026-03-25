@@ -38,6 +38,12 @@ const user = [
         name: 'shop',
         component: () => import('../pages/user/shop/Index.vue'),
       },
+      // ĐÃ THÊM ROUTE CHO TRANG CHI TIẾT SẢN PHẨM Ở ĐÂY
+      {
+        path: 'shop/:shop_slug/product/:slug',
+        name: 'productDetail',
+        component: () => import('../pages/user/productdetail/Index.vue'), // Đảm bảo đường dẫn import này đúng với dự án của bạn
+      },
       {
         path: 'combos',
         name: 'client-combos',
