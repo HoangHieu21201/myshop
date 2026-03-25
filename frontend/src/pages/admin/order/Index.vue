@@ -141,26 +141,24 @@
                       <div class="small text-muted mt-1">{{ order.items_count || 0 }} Món</div>
                     </td>
 
-                    <!-- ĐÃ NÂNG CẤP: CỘT SỬA NHANH THANH TOÁN -->
+                    <!-- CỘT SỬA NHANH THANH TOÁN -->
                     <td class="px-3 text-center">
                       <div class="d-flex flex-column align-items-center">
                         <div class="d-flex align-items-center justify-content-center gap-1 w-100 flex-nowrap">
-                          <!-- BẢO VỆ 1 CHIỀU: Dùng hàm canPaymentTransitionTo -->
+                          <!-- BẢO VỆ GIAO DIỆN: Khóa cứng dropdown nếu đơn Đã Giao, Hủy hoặc Hoàn trả -->
                           <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
                                   style="width: 120px; font-size: 0.75rem; border-color: #ced4da !important; flex-shrink: 0;"
                                   :class="getPaymentSelectClass(order.localPaymentStatus || order.payment_status)"
                                   v-model="order.localPaymentStatus"
                                   @change="checkPaymentStatusChange(order)"
-                                  :disabled="order.isUpdatingPayment || order.status === 'cancelled' || order.status === 'returned' || order.payment_status === 'refunded'">
+                                  :disabled="order.isUpdatingPayment || ['delivered', 'cancelled', 'returned'].includes(order.status) || order.payment_status === 'refunded'">
                             <option value="unpaid" :hidden="!canPaymentTransitionTo(order.payment_status, 'unpaid')">Chưa TT</option>
                             <option value="paid" :hidden="!canPaymentTransitionTo(order.payment_status, 'paid')">Đã TT</option>
                             <option value="refunded" :hidden="!canPaymentTransitionTo(order.payment_status, 'refunded')">Đã hoàn tiền</option>
                             <option value="failed" :hidden="!canPaymentTransitionTo(order.payment_status, 'failed')">Thất bại</option>
                           </select>
                           
-                          <!-- KHUNG CỐ ĐỊNH CHỐNG NHẢY SPINNER/BUTTONS ĐƯỢC GIA CỐ CỨNG -->
                           <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
-                            <!-- Spinner chống méo tuyệt đối -->
                             <div v-if="order.isUpdatingPayment" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
                             
                             <template v-else-if="order.isPaymentStatusChanged">
@@ -182,12 +180,13 @@
                     <!-- CỘT SỬA NHANH TRẠNG THÁI ĐƠN -->
                     <td class="px-3 text-center">
                       <div class="d-flex align-items-center justify-content-center gap-1 w-100 flex-nowrap">
+                        <!-- BẢO VỆ GIAO DIỆN: Khóa cứng dropdown nếu đơn Đã Giao, Hủy hoặc Hoàn trả -->
                         <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
                                 style="width: 120px; font-size: 0.75rem; border-color: #ced4da !important; flex-shrink: 0;"
                                 :class="getOrderStatusClass(order.localStatus || order.status)"
                                 v-model="order.localStatus"
                                 @change="checkStatusChange(order)"
-                                :disabled="order.isUpdatingStatus || order.status === 'cancelled' || order.status === 'returned'">
+                                :disabled="order.isUpdatingStatus || ['delivered', 'cancelled', 'returned'].includes(order.status)">
                           <option value="pending" :hidden="!canTransitionTo(order.status, 'pending')">Chờ duyệt</option>
                           <option value="confirmed" :hidden="!canTransitionTo(order.status, 'confirmed')">Đã xác nhận</option>
                           <option value="processing" :hidden="!canTransitionTo(order.status, 'processing')">Đang chuẩn bị</option>
@@ -196,9 +195,7 @@
                           <option value="cancelled" :hidden="!canTransitionTo(order.status, 'cancelled')">Hủy đơn</option>
                         </select>
                         
-                        <!-- KHUNG CỐ ĐỊNH CHỐNG NHẢY SPINNER/BUTTONS ĐƯỢC GIA CỐ CỨNG -->
                         <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
-                          <!-- Spinner chống méo tuyệt đối -->
                           <div v-if="order.isUpdatingStatus" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
                           
                           <template v-else-if="order.isStatusChanged">
@@ -291,8 +288,14 @@
                                             <div>
                                                 <div class="fw-bold text-dark text-wrap" style="max-width: 250px;">{{ item.product_name }}</div>
                                                 <div class="text-muted" style="font-size: 0.7rem;">SKU: {{ item.variant_sku }}</div>
-                                                <div class="text-brand mt-1" style="font-size: 0.7rem;" v-if="item.variant_attributes">
-                                                    <span v-for="(val, key) in item.variant_attributes" :key="key" class="me-2">[{{ key }}: {{ val }}]</span>
+                                                
+                                                <div class="text-brand mt-1" style="font-size: 0.7rem;" v-if="item.combo_id">
+                                                    <span class="badge bg-light text-dark border">
+                                                        <i class="bi bi-stars text-brand me-1"></i> Combo ({{ parseCombo(item.combo_selections).length }} món)
+                                                    </span>
+                                                </div>
+                                                <div class="text-brand mt-1" style="font-size: 0.7rem;" v-else-if="item.variant_attributes">
+                                                    <span v-for="(val, key) in parseAttributes(item.variant_attributes)" :key="key" class="me-2">[{{ key }}: {{ val }}]</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -401,6 +404,18 @@ const formatCurrency = (val) => {
 const formatDate = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); };
 const formatDateTime = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleString('vi-VN'); };
 
+const parseAttributes = (attr) => {
+  if (!attr) return {};
+  if (typeof attr === 'object') return attr;
+  try { return JSON.parse(attr); } catch { return {}; }
+};
+
+const parseCombo = (combo) => {
+  if (!combo) return [];
+  if (typeof combo === 'object') return combo;
+  try { return JSON.parse(combo); } catch { return []; }
+};
+
 const getLevelColor = (level) => {
   if(!level) return 'bg-secondary';
   const l = parseInt(level);
@@ -470,6 +485,19 @@ const checkStatusChange = (order) => { order.isStatusChanged = (order.localStatu
 const cancelStatusChange = (order) => { order.localStatus = order.status; order.isStatusChanged = false; };
 
 const saveOrderStatus = async (order) => {
+  // BẢO VỆ DOANH THU
+  if (order.localStatus === 'delivered' && order.payment_status !== 'paid') {
+      Swal.fire({
+          title: 'Khoan đã! Chưa thu tiền',
+          text: 'Để đảm bảo doanh thu, vui lòng cập nhật trạng thái Thanh toán thành "Đã TT" trước khi xác nhận Giao hàng Hoàn tất.',
+          icon: 'warning',
+          confirmButtonColor: '#009981',
+          confirmButtonText: 'Đã hiểu'
+      });
+      cancelStatusChange(order);
+      return;
+  }
+
   const isRequireNote = order.localStatus === 'cancelled';
   
   const { value: noteText, isDismissed } = await Swal.fire({
@@ -541,6 +569,7 @@ const savePaymentStatus = async (order) => {
   await sendUpdateRequest(order, payload, 'isUpdatingPayment', 'payment_status', order.localPaymentStatus, 'isPaymentStatusChanged');
 };
 
+// ĐÃ NÂNG CẤP: BẮT LỖI 422 VÀ HIỂN THỊ CÂU CHỬI CỦA LARAVEL
 const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newValue, changedFlag) => {
   try {
     const res = await axios.put(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, payload, { 
@@ -558,7 +587,23 @@ const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newVa
     if (targetField === 'status') cancelStatusChange(order); else cancelPaymentStatusChange(order);
     
     if (error.response) {
-      if (error.response.status === 401) {
+      if (error.response.status === 422) {
+          // Bắt đúng lỗi Validation từ Backend trả về
+          const errors = error.response.data.errors;
+          let errorMsg = error.response.data.message || 'Dữ liệu không hợp lệ!';
+          
+          if (errors) {
+              // Lấy thông báo lỗi đầu tiên trong mảng errors
+              errorMsg = Object.values(errors)[0][0]; 
+          }
+          
+          Swal.fire({
+              icon: 'error',
+              title: 'Không được phép!',
+              text: errorMsg,
+              confirmButtonColor: '#009981'
+          });
+      } else if (error.response.status === 401) {
           Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
       } else {
           Swal.fire('Lỗi', `Máy chủ từ chối cập nhật (Lỗi ${error.response.status})`, 'error');

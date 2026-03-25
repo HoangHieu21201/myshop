@@ -195,8 +195,15 @@
                                               <div>
                                                   <div class="fw-bold text-dark text-wrap" style="max-width: 250px;">{{ item.product_name }}</div>
                                                   <div class="text-muted" style="font-size: 0.7rem;">SKU: {{ item.variant_sku }}</div>
-                                                  <div class="text-brand mt-1" style="font-size: 0.7rem;" v-if="item.variant_attributes">
-                                                      <span v-for="(val, key) in item.variant_attributes" :key="key" class="me-2 badge bg-light text-dark border">[{{ key }}: {{ val }}]</span>
+                                                  
+                                                  <!-- ĐÃ BỔ SUNG: COMBO & ATTRIBUTES ĐỒNG BỘ VỚI ORDER INDEX -->
+                                                  <div class="text-brand mt-1" style="font-size: 0.7rem;" v-if="item.combo_id">
+                                                      <span class="badge bg-light text-dark border">
+                                                          <i class="bi bi-stars text-brand me-1"></i> Combo ({{ parseCombo(item.combo_selections).length }} món)
+                                                      </span>
+                                                  </div>
+                                                  <div class="text-brand mt-1" style="font-size: 0.7rem;" v-else-if="item.variant_attributes">
+                                                      <span v-for="(val, key) in parseAttributes(item.variant_attributes)" :key="key" class="me-2 badge bg-light text-dark border">[{{ key }}: {{ val }}]</span>
                                                   </div>
                                               </div>
                                           </div>
@@ -300,6 +307,19 @@ const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bear
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
 const formatDate = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); };
 const formatDateTime = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleString('vi-VN'); };
+
+// ĐÃ BỔ SUNG: PARSE JSON AN TOÀN ĐỂ XỬ LÝ COMBO VÀ THUỘC TÍNH MÀ KHÔNG BỊ CRASH
+const parseAttributes = (attr) => {
+  if (!attr) return {};
+  if (typeof attr === 'object') return attr;
+  try { return JSON.parse(attr); } catch { return {}; }
+};
+
+const parseCombo = (combo) => {
+  if (!combo) return [];
+  if (typeof combo === 'object') return combo;
+  try { return JSON.parse(combo); } catch { return []; }
+};
 
 const formatPaymentStatus = (status) => {
     const map = { 'unpaid': 'Chưa TT', 'paid': 'Đã TT', 'refunded': 'Đã hoàn', 'failed': 'Thất bại' };

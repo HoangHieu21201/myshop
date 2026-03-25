@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\admin\AdminComboController;
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ClientCartController;
-use App\Http\Controllers\Api\client\OrderController;
+use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\Auth\AuthController;
@@ -58,7 +58,7 @@ Route::prefix('client')->group(function () {
     });
 
     // MODULE ĐƠN HÀNG (Orders)
-    Route::controller(OrderController::class)->prefix('orders')->group(function () {
+    Route::controller(ClientOrderController::class)->prefix('orders')->group(function () {
         Route::get('/', 'index');               
         Route::post('/', 'store');              
         Route::get('/{order_code}', 'show');    

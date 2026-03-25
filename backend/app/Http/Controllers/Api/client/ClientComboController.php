@@ -32,21 +32,29 @@ class ClientComboController extends Controller
 
         $combo = Combo::with([
             'items.product' => function($q) {
-                $q->with(['variants' => function($vq) {
-                    $vq->where('stock_quantity', '>', 0)
-                       // Load kèm theo các Thuộc tính (Size, Màu...) của biến thể này
-                       ->with(['attributeValues.attribute']);
-                }]);
+                // FIX BLIND SPOT: Bổ sung Category và Brand để Frontend có thông tin hiển thị sang trọng
+                $q->with([
+                    'category:id,name',
+                    'brand:id,name',
+                    'variants' => function($vq) {
+                        $vq->where('stock_quantity', '>', 0)
+                           ->with(['attributeValues.attribute']);
+                    }
+                ]);
             },
-            'items.variant.attributeValues.attribute' 
+            'items.variant' => function($vq) {
+                // FIX BLIND SPOT: Load kèm Sản phẩm cha để lấy Hình ảnh/Tên gốc nếu biến thể không có
+                $vq->with(['attributeValues.attribute', 'product.category', 'product.brand']);
+            }
         ])
         ->where('slug', $slug)
         ->where('status', 'active')
         ->firstOrFail();
 
-        // THUẬT TOÁN: Gom nhóm Thuộc tính thành Mảng (VD: {'Kích cỡ': '16', 'Màu sắc': 'Đỏ'})
-        // Giúp Frontend hiển thị các ô vuông (chips) dễ dàng hơn thay vì phải gọi Nested Object
+        // THUẬT TOÁN: Gom nhóm Thuộc tính thành Mảng và Bơm thêm Data Giao diện (Luxury Context)
         foreach ($combo->items as $item) {
+            
+            // Trường hợp 1: Khách hàng được quyền chọn biến thể
             if ($item->product && $item->product->variants) {
                 foreach ($item->product->variants as $variant) {
                     $attrMap = [];
@@ -57,14 +65,22 @@ class ClientComboController extends Controller
                             }
                         }
                     }
-                    // Nếu sản phẩm không có thuộc tính nào, lấy tạm SKU làm thuộc tính mặc định
                     if (empty($attrMap)) {
                         $attrMap['Phiên bản'] = $variant->sku;
                     }
                     $variant->formatted_attributes = $attrMap;
+                    
+                    // BỔ SUNG ĐỒNG BỘ: Ép sẵn data hiển thị để Frontend vẽ Product Card dễ dàng
+                    $variant->display_name = $item->product->name;
+                    $variant->display_image = $variant->image_url ?: $item->product->thumbnail_image;
+                    $variant->display_price = $variant->promotional_price ?: $variant->price;
+                    $variant->category_name = $item->product->category->name ?? '';
+                    
                     unset($variant->attributeValues);
                 }
             }
+            
+            // Trường hợp 2: Biến thể đã được Admin chốt cứng (Cố định)
             if ($item->variant) {
                 $attrMap = [];
                 if ($item->variant->attributeValues) {
@@ -78,6 +94,13 @@ class ClientComboController extends Controller
                     $attrMap['Phiên bản'] = $item->variant->sku;
                 }
                 $item->variant->formatted_attributes = $attrMap;
+                
+                // BỔ SUNG ĐỒNG BỘ: Ép sẵn data hiển thị để Frontend vẽ Product Card dễ dàng
+                $item->variant->display_name = $item->variant->product->name ?? 'Sản phẩm cao cấp';
+                $item->variant->display_image = $item->variant->image_url ?: ($item->variant->product->thumbnail_image ?? null);
+                $item->variant->display_price = $item->variant->promotional_price ?: $item->variant->price;
+                $item->variant->category_name = $item->variant->product->category->name ?? '';
+                
                 unset($item->variant->attributeValues);
             }
         }

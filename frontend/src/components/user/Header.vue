@@ -80,10 +80,10 @@
             </transition>
           </div>
 
-          <a href="#" @click.prevent="safeNavigate('stores')"
+          <!-- <a href="#" @click.prevent="safeNavigate('stores')"
             class="icon-link hover-primary transition-color d-none d-md-block">
             <i class="bi bi-geo-alt"></i>
-          </a>
+          </a> -->
 
           <router-link :to="{ name: 'cart' }" class="icon-link position-relative hover-primary transition-color">
             <i class="bi bi-bag"></i>
