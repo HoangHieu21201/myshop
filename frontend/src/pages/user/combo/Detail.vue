@@ -1,6 +1,7 @@
 <template>
   <div class="combo-detail-page bg-light-custom pb-5" v-if="combo">
     
+    <!-- BREADCRUMB -->
     <div class="bg-transparent pt-4 pb-2">
       <div class="container">
         <nav aria-label="breadcrumb">
@@ -75,64 +76,96 @@
                 </div>
             </div>
 
-            <!-- DANH SÁCH MÓN & CHỌN PHÂN LOẠI -->
+            <!-- NÂNG CẤP LUXURY: DANH SÁCH THẺ SẢN PHẨM -->
             <div class="combo-items-editorial mb-5">
-              <h5 class="fw-bold text-dark mb-4 font-serif fs-4">Định Hình Phong Cách</h5>
+              <h5 class="fw-bold text-dark mb-4 font-serif fs-4 d-flex align-items-center">
+                <i class="bi bi-gem text-gold me-2"></i> Định Hình Phong Cách
+              </h5>
               
-              <div class="editorial-item mb-4 pb-4 border-bottom border-light-subtle" v-for="(item, index) in combo.items" :key="item.id">
-                <div class="d-flex gap-4">
-                  <!-- ẢNH ĐẠI DIỆN MÓN (TỰ ĐỘNG ĐỔI THEO BIẾN THỂ KHI CHỌN ĐỦ THUỘC TÍNH) -->
-                  <div class="position-relative flex-shrink-0 cursor-zoom-in" @click="viewFullImage(getDisplayImage(item))">
-                    <img :src="getDisplayImage(item)" class="object-fit-cover bg-white shadow-sm transition-all" style="width: 80px; height: 80px; border-radius: 2px;">
-                    <div class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-sora-primary text-white px-2 py-1 shadow-sm" style="font-family: 'Oswald', sans-serif;">x{{ item.quantity }}</div>
-                  </div>
-                  
-                  <div class="flex-grow-1">
-                    <h6 class="fw-bold mb-1 text-dark font-serif fs-5">{{ item.product?.name }}</h6>
+              <div class="editorial-item mb-4" v-for="(item, index) in combo.items" :key="item.id">
+                <div class="card border border-light-subtle shadow-sm rounded-0 luxury-product-card overflow-hidden">
+                  <div class="row g-0">
                     
-                    <!-- NẾU ADMIN ĐÃ CỐ ĐỊNH PHIÊN BẢN -->
-                    <div v-if="item.product_variant_id" class="text-muted small mt-2 font-oswald tracking-wide text-uppercase">
-                      Phiên bản cố định: 
-                      <span class="text-sora-primary fw-bold" v-if="item.variant?.formatted_attributes">
-                        {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
-                      </span>
-                      <span class="text-sora-primary fw-bold" v-else>{{ item.variant?.sku }}</span>
+                    <!-- Cột Trái: Ảnh Sản Phẩm -->
+                    <div class="col-md-4 col-lg-4 col-xl-3 bg-light border-end border-light-subtle p-3 d-flex flex-column align-items-center justify-content-center position-relative">
+                       <div class="position-absolute top-0 start-0 m-2 z-index-2">
+                           <span class="badge bg-dark text-gold font-oswald px-2 py-1 shadow-sm">Món {{ index + 1 }}</span>
+                       </div>
+                       <div class="position-relative w-100 ratio ratio-1x1 cursor-zoom-in mt-3" @click="viewFullImage(getDisplayImage(item))">
+                          <img :src="getDisplayImage(item)" class="object-fit-contain mix-blend-multiply transition-all img-zoom-hover drop-shadow">
+                       </div>
                     </div>
 
-                    <!-- THIẾT KẾ MA TRẬN CHỌN THUỘC TÍNH TÙY CHỈNH -->
-                    <div v-else class="mt-3">
-                      <template v-if="itemMatrices[item.id]">
-                        <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="mb-3">
-                          <p class="text-dark font-serif fw-bold mb-2 fs-6">
-                            {{ attrName }}: <span class="fw-normal font-oswald text-muted ms-1">{{ userSelections[item.id][attrName] || '' }}</span>
-                          </p>
-                          
-                          <div class="d-flex flex-wrap gap-2">
-                            <label v-for="val in values" :key="val" 
-                                   class="attr-chip m-0 cursor-pointer transition-all"
-                                   :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
-                              
-                              <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
-                              
-                              <div class="chip-inner px-3 py-2 d-flex flex-column align-items-center justify-content-center text-center shadow-sm">
-                                <span class="fw-bold font-oswald tracking-wide">{{ val }}</span>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-                      </template>
+                    <!-- Cột Phải: Nội Dung & Chọn Biến Thể -->
+                    <div class="col-md-8 col-lg-8 col-xl-9 p-4 d-flex flex-column">
+                       <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap flex-xl-nowrap">
+                           <div>
+                              <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ item.product?.category?.name || 'Trang Sức Cao Cấp' }}</small>
+                              <h5 class="fw-bold text-dark font-serif mt-1 mb-0 fs-5 lh-base">{{ item.product?.name }}</h5>
+                           </div>
+                           <div class="text-xl-end">
+                              <!-- Hiển thị giá động theo biến thể đã chọn -->
+                              <template v-if="!item.product_variant_id">
+                                  <div v-if="getSelectedVariant(item.id)" class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(getSelectedVariant(item.id).price) }}</div>
+                                  <div v-else class="text-muted fw-bold font-serif fs-6">Từ {{ formatCurrency(item.product?.base_price) }}</div>
+                              </template>
+                              <template v-else>
+                                  <div class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(item.variant?.price) }}</div>
+                              </template>
+                           </div>
+                       </div>
 
-                      <!-- Báo Lỗi: Chưa chọn đủ -->
-                      <div class="text-danger small mt-2 fst-italic" v-if="validationErrors[item.id]">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng định hình phong cách cho thiết kế này.
-                      </div>
-                      
-                      <!-- Báo Lỗi: Chọn tổ hợp không có thật -->
-                      <div class="text-danger small mt-2 fst-italic fw-bold" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
-                        <i class="bi bi-x-circle-fill me-1"></i> Phiên bản này đã hết hàng hoặc không tồn tại.
-                      </div>
+                       <!-- Khối Chọn Thuộc Tính -->
+                       <div class="flex-grow-1 border-top border-light-subtle pt-3 mt-1">
+                           
+                           <!-- TH1: Cố định (Không cho chọn) -->
+                           <div v-if="item.product_variant_id" class="bg-light p-3 border rounded small">
+                               <p class="text-muted font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.75rem;"><i class="bi bi-pin-angle-fill text-sora-primary me-1"></i>Phiên bản cấu hình sẵn</p>
+                               <div class="d-flex flex-wrap gap-2">
+                                  <span v-if="item.variant?.formatted_attributes" class="fw-bold text-dark">
+                                    {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
+                                  </span>
+                                  <span v-else class="fw-bold text-dark">{{ item.variant?.sku }}</span>
+                               </div>
+                           </div>
+
+                           <!-- TH2: Cho phép chọn thuộc tính -->
+                           <div v-else>
+                               <div v-if="itemMatrices[item.id]" class="row g-3">
+                                   <!-- Render lưới ma trận 2 cột -->
+                                   <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="col-sm-6 col-md-12 col-xl-6">
+                                      <p class="text-dark font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.8rem;">
+                                        {{ attrName }}: <span class="fw-bold text-sora-primary ms-1">{{ userSelections[item.id][attrName] || 'Chưa chọn' }}</span>
+                                      </p>
+                                      <div class="d-flex flex-wrap gap-2">
+                                          <label v-for="val in values" :key="val" 
+                                                 class="attr-chip m-0 cursor-pointer transition-all"
+                                                 :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
+                                            <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
+                                            <div class="chip-inner px-3 py-1 d-flex flex-column align-items-center justify-content-center text-center shadow-sm" style="min-width: 45px;">
+                                              <span class="fw-bold font-oswald tracking-wide" style="font-size: 0.85rem;">{{ val }}</span>
+                                            </div>
+                                          </label>
+                                      </div>
+                                   </div>
+                               </div>
+
+                               <!-- Khối báo lỗi -->
+                               <div class="text-danger small mt-3 fst-italic p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-if="validationErrors[item.id]">
+                                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng hoàn tất tùy chọn thiết kế cho món này.
+                               </div>
+                               <div class="text-danger small mt-3 fst-italic fw-bold p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
+                                 <i class="bi bi-x-circle-fill me-1"></i> Sự kết hợp này hiện đã hết hàng.
+                               </div>
+                           </div>
+                       </div>
+
+                       <!-- Footer Card: Số lượng đi kèm -->
+                       <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top border-light-subtle">
+                           <span class="text-muted small text-uppercase font-oswald tracking-widest">Số lượng áp dụng:</span>
+                           <span class="badge bg-sora-primary text-white font-oswald px-3 py-1 fs-6 shadow-sm">x{{ item.quantity }}</span>
+                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -392,7 +425,6 @@ const fetchDetail = async (slug) => {
         
         itemMatrices.value[item.id] = finalMatrix;
 
-        // ĐÃ THÊM: TỰ ĐỘNG CHỌN NẾU SẢN PHẨM CHỈ CÓ DUY NHẤT 1 BIẾN THỂ
         if (item.product?.variants && item.product.variants.length === 1) {
             const singleVariant = item.product.variants[0];
             if (singleVariant.formatted_attributes) {
@@ -404,7 +436,12 @@ const fetchDetail = async (slug) => {
       }
     });
   } catch (error) {
-    Swal.fire('Lỗi', 'Combo không tồn tại hoặc đã hết hạn!', 'error').then(() => router.push({name: 'client-combos'}));
+    Swal.fire({
+      title: 'Lỗi',
+      text: 'Combo không tồn tại hoặc đã hết hạn!',
+      icon: 'error',
+      confirmButtonColor: '#9f273b'
+    }).then(() => router.push({name: 'client-combos'}));
   }
 };
 
@@ -443,8 +480,17 @@ const preparePayload = () => {
 };
 
 const addToCart = async () => {
+  // FIX BẬC THẦY: Đổi Toast warning thành Popup Modal nổi bật ở giữa màn hình
   if (!validateSelections()) {
-    Swal.fire({ toast:true, position: 'top', icon:'warning', title: 'Vui lòng chọn đầy đủ phiên bản!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu tùy chọn!',
+      text: 'Vui lòng chọn đầy đủ thiết kế (chất liệu, kích thước...) cho tất cả các món trong bộ sưu tập.',
+      confirmButtonColor: '#9f273b',
+      confirmButtonText: 'Chọn ngay',
+      background: '#fffafa',
+      color: '#9f273b'
+    });
     return;
   }
   
@@ -465,27 +511,64 @@ const addToCart = async () => {
           localStorage.setItem('cart_session_id', res.data.session_id);
       }
 
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm Combo vào Túi mua sắm', showConfirmButton: false, timer: 1500 });
+      // Đã đồng bộ màu đỏ SORA cho Toast báo thành công
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Đã thêm Combo vào Túi mua sắm',
+        showConfirmButton: false,
+        timer: 2000,
+        iconColor: '#9f273b',
+        color: '#9f273b',
+        background: '#fffafa'
+      });
       
   } catch (error) {
       console.error(error);
       const msg = error.response?.data?.message || 'Không thể thêm vào giỏ hàng. Vui lòng thử lại!';
-      Swal.fire('Lỗi', msg, 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi giỏ hàng',
+        text: msg,
+        confirmButtonColor: '#9f273b',
+        background: '#fffafa',
+        color: '#9f273b'
+      });
   } finally {
       isAddingToCart.value = false;
   }
 };
 
 const buyNow = () => {
+  // FIX BẬC THẦY: Tương tự hàm addToCart, bật popup cảnh báo thiếu thông tin
   if (!validateSelections()) {
-    Swal.fire({ toast:true, position: 'top', icon:'warning', title: 'Vui lòng chọn đầy đủ phiên bản!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu tùy chọn!',
+      text: 'Vui lòng chọn đầy đủ thiết kế (chất liệu, kích thước...) cho tất cả các món trong bộ sưu tập.',
+      confirmButtonColor: '#9f273b',
+      confirmButtonText: 'Chọn ngay',
+      background: '#fffafa',
+      color: '#9f273b'
+    });
     return;
   }
   
   const payload = preparePayload();
   localStorage.setItem('checkout_combo_direct', JSON.stringify(payload));
   
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Chuyển hướng đến Thanh toán...', showConfirmButton: false, timer: 1000 }).then(() => {
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: 'Chuyển hướng đến Thanh toán...',
+    showConfirmButton: false,
+    timer: 1000,
+    iconColor: '#9f273b',
+    color: '#9f273b',
+    background: '#fffafa'
+  }).then(() => {
      console.log("Đang chuyển tới Checkout với data:", payload);
   });
 };
@@ -519,7 +602,6 @@ onUnmounted(() => {
 .cursor-pointer { cursor: pointer; }
 .cursor-zoom-in { cursor: zoom-in; }
 
-/* FIX CSS LỖI VUE SCOPED: GỠ :ROOT VÀ FIX CỨNG MÃ HEXA */
 .text-sora-primary { color: #9f273b !important; }
 .text-sora-red { color: #cc1e2e !important; }
 .text-gold { color: #e7ce7d !important; }
@@ -538,7 +620,13 @@ onUnmounted(() => {
 .pulsing-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(204, 30, 46, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(204, 30, 46, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(204, 30, 46, 0); } }
 
-/* ================= CUSTOM VARIANT CHIP TÔNG MÀU SORA (9f273b / e7ce7d) ================= */
+/* NÂNG CẤP LUXURY PRODUCT CARD */
+.luxury-product-card { transition: all 0.3s ease; }
+.luxury-product-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important; }
+.drop-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+.mix-blend-multiply { mix-blend-mode: multiply; }
+
+/* CHIP SELECTORS (Thuộc tính bấm chọn) */
 .attr-chip {
     border-radius: 4px;
     overflow: hidden;
@@ -550,14 +638,14 @@ onUnmounted(() => {
     color: #555;
     border-radius: 4px;
     transition: all 0.3s ease-in-out;
-    padding: 8px 16px;
+    padding: 6px 12px;
 }
 .attr-chip:hover .chip-inner {
-    border-color: #e7ce7d; /* Viền Vàng Gold */
+    border-color: #e7ce7d; 
     color: #9f273b;
 }
 .attr-chip.selected .chip-inner {
-    background-color: #9f273b; /* Đỏ Sẫm */
+    background-color: #9f273b; 
     border-color: #9f273b;
     color: #fff !important;
     box-shadow: 0 4px 10px rgba(159, 39, 59, 0.25);
