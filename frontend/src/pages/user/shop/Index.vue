@@ -352,6 +352,7 @@ const buildQueryString = (page) => {
   return params.toString();
 };
 
+// === CALL API SẢN PHẨM (REAL DATA) ===
 const fetchProducts = async (page = 1) => {
     isLoadingProducts.value = true;
     try {
