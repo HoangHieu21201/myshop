@@ -70,7 +70,7 @@ class AdminUpdateProductRequest extends FormRequest
             'parsed_variants.*.sku.distinct' => 'Có mã SKU bị trùng lặp bên trong lưới biến thể đang gửi.',
             'parsed_variants.*.promotional_price.lte' => 'Giá khuyến mãi không được lớn hơn Giá bán.',
             'parsed_variants.*.image_file.required_without' => 'Vui lòng chọn ảnh cho biến thể mới thêm.',
-            'parsed_variants.*.image_file.max' => 'Ảnh của biến thể không được vượt quá 2MB.',
+            'parsed_variants.*.image_file.max' => 'Ảnh của biến thể không được vượt quá 15MB.',
         ];
     }
 }

@@ -35,9 +35,7 @@ use App\Http\Controllers\Api\Auth\AuthController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// ============================================
 // CLIENT API ROUTES
-// ============================================
 Route::prefix('client')->group(function () {
 
     Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
@@ -81,7 +79,6 @@ Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
     
-    // ĐÃ SỬA: Dùng ProductDetailController thay vì ShopController
     Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
 });
 Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
@@ -90,9 +87,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// ============================================
 // ADMIN API ROUTES
-// ============================================
 Route::prefix('admin')->group(function () {
 
     Route::controller(AdminAccountController::class)->group(function () {
