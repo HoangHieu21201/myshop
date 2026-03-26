@@ -106,7 +106,7 @@ const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bear
 const handleUpload = (e) => {
   const f = e.target.files[0];
   if(f) { 
-    if(f.size > 2 * 1024 * 1024) return Swal.fire('Lỗi', 'Ảnh tối đa 2MB', 'error'); 
+    if(f.size > 15 * 1024 * 1024) return Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); 
     
     // Dọn rác bộ nhớ trình duyệt
     if (previewIcon.value) URL.revokeObjectURL(previewIcon.value);

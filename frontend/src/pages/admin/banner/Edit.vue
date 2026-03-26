@@ -132,7 +132,7 @@ const formatForInput = (dateString) => {
 const handleUpload = (e, type) => {
   const f = e.target.files[0];
   if(f) { 
-    if(f.size > 2 * 1024 * 1024) { return Swal.fire('Lỗi', 'Ảnh tối đa 2MB', 'error'); }
+    if(f.size > 15 * 1024 * 1024) { return Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); }
     if(type === 'desk') { fileDesk.value = f; previewDesk.value = URL.createObjectURL(f); }
     else { fileMob.value = f; previewMob.value = URL.createObjectURL(f); }
   }

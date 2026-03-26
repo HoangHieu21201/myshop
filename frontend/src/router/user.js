@@ -42,7 +42,7 @@ const user = [
       {
         path: 'shop/:shop_slug/product/:slug',
         name: 'productDetail',
-        component: () => import('../pages/user/productdetail/Index.vue'), // Đảm bảo đường dẫn import này đúng với dự án của bạn
+        component: () => import('../pages/user/productdetail/Index.vue'),
       },
       {
         path: 'combos',

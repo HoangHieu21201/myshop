@@ -24,7 +24,6 @@
         <div class="combo-row-card card border-0 shadow-sm rounded-4 overflow-hidden mb-5 bg-white" v-for="combo in combos" :key="combo.id">
           
           <div class="row g-0 h-100">
-            <!-- CỘT TRÁI -->
             <div class="col-lg-4 position-relative p-0 border-end border-gold-light d-flex flex-column">
               <div v-if="getTimerData(combo).isEnded" class="ended-overlay d-flex align-items-center justify-content-center flex-column text-center p-4">
                   <i class="bi bi-x-circle fs-1 text-white opacity-75 mb-2"></i>
@@ -45,7 +44,6 @@
                 <h3 class="fw-bold text-dark font-serif mb-2" style="font-size: 2rem;">{{ combo.name }}</h3>
                 <p class="text-muted small mb-4 line-clamp-2">{{ combo.description }}</p>
 
-                <!-- BỘ ĐẾM THỜI GIAN -->
                 <div class="timer-section mb-4 mt-auto">
                     <h6 class="text-dark fw-bold font-oswald mb-3 tracking-wide text-uppercase" :class="getTimerData(combo).type === 'active' ? 'text-sora-red' : ''">
                       <i class="bi bi-clock-history me-1"></i> {{ getTimerData(combo).title }}
@@ -83,7 +81,6 @@
               </div>
             </div>
 
-            <!-- CỘT PHẢI (SLIDER) -->
             <div class="col-lg-8 p-4 p-lg-5 bg-white position-relative">
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold font-serif m-0 text-dark">Bao Gồm {{ combo.items?.length || 0 }} Tác Phẩm</h5>
@@ -164,7 +161,6 @@ const calculateFinal = (combo) => {
   return Math.max(0, total - discount);
 };
 
-// ĐÃ FIX: Ép chuẩn ISO Local (Cắt bỏ Z) để trình duyệt không tự cộng thêm 7 tiếng (Fix lỗi lệch múi giờ)
 const parseDBDate = (dateStr) => {
     if (!dateStr) return null;
     const cleanStr = dateStr.replace(' ', 'T').substring(0, 19);
@@ -241,6 +237,7 @@ const goToDetail = (slug) => {
 };
 
 onMounted(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     fetchCombos();
     timerInterval = setInterval(() => {
         currentTime.value = new Date();

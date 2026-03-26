@@ -54,7 +54,7 @@ class AdminStoreProductRequest extends FormRequest
             'name.required' => 'Tên sản phẩm không được để trống.',
             'slug.unique' => 'Đường dẫn (slug) này đã tồn tại, vui lòng chọn tên khác.',
             'thumbnail_image.required' => 'Vui lòng tải lên ảnh đại diện chính của sản phẩm.',
-            'thumbnail_image.max' => 'Ảnh đại diện chính vượt quá 2MB.',
+            'thumbnail_image.max' => 'Ảnh đại diện chính vượt quá 15MB.',
             'parsed_variants.required' => 'Sản phẩm phải có ít nhất 1 biến thể.',
             
             'parsed_variants.*.sku.required' => 'Mã SKU của biến thể không được để trống.',
@@ -65,7 +65,7 @@ class AdminStoreProductRequest extends FormRequest
             'parsed_variants.*.stock_quantity.min' => 'Tồn kho không được là số âm.',
             'parsed_variants.*.image_file.required' => 'Có biến thể chưa được chọn ảnh (Bắt buộc phải có).',
             'parsed_variants.*.image_file.image' => 'File tải lên cho biến thể không phải là hình ảnh.',
-            'parsed_variants.*.image_file.max' => 'Ảnh của biến thể vượt quá giới hạn 2MB.',
+            'parsed_variants.*.image_file.max' => 'Ảnh của biến thể vượt quá giới hạn 15MB.',
         ];
     }
 }
