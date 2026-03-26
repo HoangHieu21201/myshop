@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
+use App\Models\Product; // BẮT BUỘC IMPORT PRODUCT
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -32,9 +33,8 @@ class ClientComboController extends Controller
 
         $combo = Combo::with([
             'items.product' => function($q) {
-                // FIX BLIND SPOT: Bổ sung Category và Brand để Frontend có thông tin hiển thị sang trọng
                 $q->with([
-                    'category:id,name',
+                    'category:id,name,slug',
                     'brand:id,name',
                     'variants' => function($vq) {
                         $vq->where('stock_quantity', '>', 0)
@@ -43,7 +43,6 @@ class ClientComboController extends Controller
                 ]);
             },
             'items.variant' => function($vq) {
-                // FIX BLIND SPOT: Load kèm Sản phẩm cha để lấy Hình ảnh/Tên gốc nếu biến thể không có
                 $vq->with(['attributeValues.attribute', 'product.category', 'product.brand']);
             }
         ])
@@ -51,10 +50,26 @@ class ClientComboController extends Controller
         ->where('status', 'active')
         ->firstOrFail();
 
-        // THUẬT TOÁN: Gom nhóm Thuộc tính thành Mảng và Bơm thêm Data Giao diện (Luxury Context)
+        // Lấy ID các danh mục có trong Combo
+        $categoryIds = collect($combo->items)->map(function($item) {
+            return $item->product ? $item->product->category_id : null;
+        })->filter()->unique()->toArray();
+
+        // Lấy ID các sản phẩm đã có trong Combo để tránh gợi ý trùng
+        $productIdsInCombo = collect($combo->items)->map(function($item) {
+            return $item->product_id;
+        })->filter()->unique()->toArray();
+
+        // Lấy 4 sản phẩm liên quan cùng danh mục
+        $relatedProducts = Product::with(['category:id,name,slug'])
+            ->whereIn('category_id', $categoryIds)
+            ->whereNotIn('id', $productIdsInCombo)
+            ->where('status', 'published')
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
         foreach ($combo->items as $item) {
-            
-            // Trường hợp 1: Khách hàng được quyền chọn biến thể
             if ($item->product && $item->product->variants) {
                 foreach ($item->product->variants as $variant) {
                     $attrMap = [];
@@ -69,18 +84,9 @@ class ClientComboController extends Controller
                         $attrMap['Phiên bản'] = $variant->sku;
                     }
                     $variant->formatted_attributes = $attrMap;
-                    
-                    // BỔ SUNG ĐỒNG BỘ: Ép sẵn data hiển thị để Frontend vẽ Product Card dễ dàng
-                    $variant->display_name = $item->product->name;
-                    $variant->display_image = $variant->image_url ?: $item->product->thumbnail_image;
-                    $variant->display_price = $variant->promotional_price ?: $variant->price;
-                    $variant->category_name = $item->product->category->name ?? '';
-                    
                     unset($variant->attributeValues);
                 }
             }
-            
-            // Trường hợp 2: Biến thể đã được Admin chốt cứng (Cố định)
             if ($item->variant) {
                 $attrMap = [];
                 if ($item->variant->attributeValues) {
@@ -94,20 +100,15 @@ class ClientComboController extends Controller
                     $attrMap['Phiên bản'] = $item->variant->sku;
                 }
                 $item->variant->formatted_attributes = $attrMap;
-                
-                // BỔ SUNG ĐỒNG BỘ: Ép sẵn data hiển thị để Frontend vẽ Product Card dễ dàng
-                $item->variant->display_name = $item->variant->product->name ?? 'Sản phẩm cao cấp';
-                $item->variant->display_image = $item->variant->image_url ?: ($item->variant->product->thumbnail_image ?? null);
-                $item->variant->display_price = $item->variant->promotional_price ?: $item->variant->price;
-                $item->variant->category_name = $item->variant->product->category->name ?? '';
-                
                 unset($item->variant->attributeValues);
             }
         }
 
+        // TRẢ VỀ THÊM RELATED PRODUCTS
         return response()->json([
             'success' => true, 
-            'data' => $combo
+            'data' => $combo,
+            'related_products' => $relatedProducts
         ]);
     }
 }

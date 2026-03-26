@@ -30,8 +30,8 @@ class AdminUpdateBannerRequest extends FormRequest
     {
         return [
             'title.required'         => 'Tên chiến dịch banner không được để trống.',
-            'image_desktop.max'      => 'Ảnh Desktop không được vượt quá 2MB.',
-            'image_mobile.max'       => 'Ảnh Mobile không được vượt quá 2MB.',
+            'image_desktop.max'      => 'Ảnh Desktop không được vượt quá 15MB.',
+            'image_mobile.max'       => 'Ảnh Mobile không được vượt quá 15MB.',
             'end_date.after_or_equal'=> 'Ngày kết thúc phải diễn ra sau hoặc cùng ngày bắt đầu.',
             'target_url.url'         => 'Đường dẫn đích phải là một URL hợp lệ (VD: https://...).'
         ];
