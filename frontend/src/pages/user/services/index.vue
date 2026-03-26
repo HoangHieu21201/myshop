@@ -210,7 +210,7 @@
             Liên Hệ Tư Vấn
           </router-link>
           <router-link 
-            to="/products" 
+            to="/combos" 
             class="btn btn-outline-main btn-lg text-uppercase fw-medium px-5 py-3 rounded-0" style="letter-spacing: 0.1em;">
             Xem Bộ Sưu Tập
           </router-link>

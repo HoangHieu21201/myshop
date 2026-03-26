@@ -80,10 +80,10 @@
             </transition>
           </div>
 
-          <a href="#" @click.prevent="safeNavigate('stores')"
+          <!-- <a href="#" @click.prevent="safeNavigate('stores')"
             class="icon-link hover-primary transition-color d-none d-md-block">
             <i class="bi bi-geo-alt"></i>
-          </a>
+          </a> -->
 
           <router-link :to="{ name: 'cart' }" class="icon-link position-relative hover-primary transition-color">
             <i class="bi bi-bag"></i>
@@ -101,9 +101,10 @@
           <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5">
             <li><router-link :to="{ name: 'home' }" class="nav-item-link">XU HƯỚNG</router-link></li>
 
-            <!-- MEGA MENU SẢN PHẨM -->
+            <!-- MEGA MENU SẢN PHẨM "shop"-->
+            
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
-              <a href="#" @click.prevent="safeNavigate('Shop')" class="nav-item-link d-flex align-items-center">
+              <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
                 SẢN PHẨM
               </a>
 
@@ -117,7 +118,7 @@
                       </h6>
                       <ul class="list-unstyled m-0">
                         <li v-for="cat in categories" :key="cat.id" class="mb-2" @mouseenter="hoveredCategory = cat">
-                          <a href="#" @click.prevent="safeNavigate('Shop', { query: { category: cat.slug } })"
+                          <a href="#" @click.prevent="safeNavigate('shop', { query: { category: cat.slug } })"
                             class="mega-cat-link d-flex justify-content-between align-items-center fw-semibold text-decoration-none"
                             :class="{ 'text-primary-custom': hoveredCategory?.id === cat.id }">
                             {{ cat.name }} <i class="bi bi-arrow-right-short opacity-50"></i>
@@ -345,7 +346,7 @@ const onSearchInput = (e) => {
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     showSearchResults.value = false;
-    safeNavigate('Shop', { query: { q: searchQuery.value } });
+    safeNavigate('shop', { query: { q: searchQuery.value } });
   }
 };
 
@@ -356,7 +357,7 @@ const goToProduct = (slug) => {
 
 const goToCategory = (slug) => {
   showSearchResults.value = false; isMegaMenuOpen.value = false;
-  safeNavigate('Shop', { query: { category: slug } });
+  safeNavigate('shop', { query: { category: slug } });
 };
 
 const toggleUserMenu = () => { isUserMenuOpen.value = !isUserMenuOpen.value; };

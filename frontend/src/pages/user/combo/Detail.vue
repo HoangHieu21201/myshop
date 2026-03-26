@@ -1,13 +1,13 @@
 <template>
   <div class="combo-detail-page bg-light-custom pb-5" v-if="combo">
     
-    <!-- BREADCRUMB LUXURY -->
+    <!-- BREADCRUMB -->
     <div class="bg-transparent pt-4 pb-2">
       <div class="container">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb mb-0 font-oswald text-uppercase tracking-wide small" style="font-size: 0.75rem;">
             <li class="breadcrumb-item"><router-link to="/" class="text-muted text-decoration-none hover-primary">Trang chủ</router-link></li>
-            <li class="breadcrumb-item"><router-link :to="{ name: 'client-combos' }" class="text-muted text-decoration-none hover-primary">Bộ sưu tập</router-link></li>
+            <li class="breadcrumb-item"><router-link :to="{ name: 'client-combos' }" class="text-muted text-decoration-none hover-primary">Gói Ưu Đãi</router-link></li>
             <li class="breadcrumb-item active fw-bold text-sora-primary" aria-current="page">{{ combo.name }}</li>
           </ol>
         </nav>
@@ -15,30 +15,26 @@
     </div>
 
     <div class="container pt-4">
-      <!-- MAIN COMBO SECTION -->
       <div class="row g-0 g-lg-5 mb-5 pb-5">
         
-        <!-- BÊN TRÁI: ẢNH SẢN PHẨM (EDITORIAL STYLE) -->
+        <!-- BÊN TRÁI: ẢNH ĐẠI DIỆN COMBO -->
         <div class="col-lg-6 mb-4 mb-lg-0">
           <div class="sticky-top" style="top: 100px; z-index: 1;">
             <div class="luxury-image-wrapper position-relative overflow-hidden cursor-zoom-in" @click="viewFullImage(getImage(combo.thumbnail_image))">
               
-              <!-- Badge Giá Giảm Thiết Kế Lại -->
               <div class="position-absolute top-0 start-0 z-index-2 mt-4 ms-4">
                 <div class="luxury-badge bg-sora-primary text-white font-oswald tracking-widest px-3 py-2 text-uppercase shadow-sm">
                   Giảm {{ combo.discount_type === 'percentage' ? combo.discount_value + '%' : formatCurrency(combo.discount_value) }}
                 </div>
               </div>
 
-              <!-- Lớp phủ báo hết hạn -->
               <div v-if="getTimerData(combo).isEnded" class="ended-overlay d-flex align-items-center justify-content-center flex-column text-center p-4">
                   <h3 class="text-white font-oswald tracking-widest m-0 text-uppercase" style="letter-spacing: 4px;">{{ getTimerData(combo).title }}</h3>
                   <div class="mt-3 bg-white" style="width: 40px; height: 1px;"></div>
               </div>
 
-              <img :src="getImage(combo.thumbnail_image)" class="w-100 object-fit-cover img-zoom-hover" style="height: auto; min-height: 600px; max-height: 80vh;" :class="{'opacity-75 grayscale': getTimerData(combo).isEnded}">
+              <img :src="getImage(combo.thumbnail_image)" class="w-100 object-fit-cover img-zoom-hover bg-white" style="height: auto; min-height: 600px; max-height: 80vh;" :class="{'opacity-75 grayscale': getTimerData(combo).isEnded}">
               
-              <!-- Hint phóng to -->
               <div class="position-absolute bottom-0 end-0 m-4 z-index-2 text-muted small fw-light fst-italic bg-white px-3 py-2 rounded-pill shadow-sm" style="opacity: 0.8; font-size: 0.75rem;">
                 <i class="bi bi-arrows-fullscreen me-1"></i> Nhấp để xem chi tiết
               </div>
@@ -46,7 +42,7 @@
           </div>
         </div>
 
-        <!-- BÊN PHẢI: THÔNG TIN TỐI GIẢN & SANG TRỌNG -->
+        <!-- BÊN PHẢI: THÔNG TIN VÀ CHỌN LỰA -->
         <div class="col-lg-6">
           <div class="ps-lg-4 pt-2">
             
@@ -58,7 +54,7 @@
             <h1 class="display-4 fw-bold text-dark mb-4 font-serif" style="line-height: 1.15; letter-spacing: -0.5px;">{{ combo.name }}</h1>
             <p class="text-muted fs-6 mb-5 lh-lg fw-light" style="font-family: 'Arial', sans-serif;">{{ combo.description }}</p>
 
-            <!-- BỘ ĐẾM THỜI GIAN (TYPOGRAPHY MINIMALIST) -->
+            <!-- BỘ ĐẾM THỜI GIAN -->
             <div class="luxury-timer-section mb-5 py-3 border-top border-bottom border-gold-light" v-if="getTimerData(combo).type !== 'forever'">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                   <div class="d-flex align-items-center gap-2">
@@ -80,52 +76,102 @@
                 </div>
             </div>
 
-            <!-- DANH SÁCH MÓN & CHỌN RADIO XỊN XÒ -->
+            <!-- NÂNG CẤP LUXURY: DANH SÁCH THẺ SẢN PHẨM -->
             <div class="combo-items-editorial mb-5">
-              <h5 class="fw-bold text-dark mb-4 font-serif fs-4">Định Hình Phong Cách</h5>
+              <h5 class="fw-bold text-dark mb-4 font-serif fs-4 d-flex align-items-center">
+                <i class="bi bi-gem text-gold me-2"></i> Định Hình Phong Cách
+              </h5>
               
-              <div class="editorial-item mb-4 pb-4 border-bottom border-light-subtle" v-for="(item, index) in combo.items" :key="item.id">
-                <div class="d-flex gap-4">
-                  <!-- Ảnh sản phẩm nhỏ gọn -->
-                  <div class="position-relative flex-shrink-0 cursor-zoom-in" @click="viewFullImage(getImage(item.product?.thumbnail_image))">
-                    <img :src="getImage(item.product?.thumbnail_image)" class="object-fit-cover bg-white shadow-sm" style="width: 80px; height: 80px; border-radius: 2px;">
-                    <div class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-white border border-white px-2 py-1 shadow-sm" style="font-family: 'Oswald', sans-serif;">x{{ item.quantity }}</div>
-                  </div>
-                  
-                  <div class="flex-grow-1">
-                    <h6 class="fw-bold mb-1 text-dark font-serif fs-5">{{ item.product?.name }}</h6>
+              <div class="editorial-item mb-4" v-for="(item, index) in combo.items" :key="item.id">
+                <div class="card border border-light-subtle shadow-sm rounded-0 luxury-product-card overflow-hidden">
+                  <div class="row g-0">
                     
-                    <!-- Admin ép cấu hình -->
-                    <div v-if="item.product_variant_id" class="text-muted small mt-2 font-oswald tracking-wide text-uppercase">
-                      Phiên bản: <span class="text-dark fw-bold">{{ item.variant?.sku }}</span>
+                    <!-- Cột Trái: Ảnh Sản Phẩm -->
+                    <div class="col-md-4 col-lg-4 col-xl-3 bg-light border-end border-light-subtle p-3 d-flex flex-column align-items-center justify-content-center position-relative">
+                       <div class="position-absolute top-0 start-0 m-2 z-index-2">
+                           <span class="badge bg-dark text-gold font-oswald px-2 py-1 shadow-sm">Món {{ index + 1 }}</span>
+                       </div>
+                       <div class="position-relative w-100 ratio ratio-1x1 cursor-zoom-in mt-3" @click="viewFullImage(getDisplayImage(item))">
+                          <img :src="getDisplayImage(item)" class="object-fit-contain mix-blend-multiply transition-all img-zoom-hover drop-shadow">
+                       </div>
                     </div>
 
-                    <!-- Khách chọn: RADIO LUXURY -->
-                    <div v-else class="mt-3">
-                      <p class="small text-muted font-oswald tracking-wide text-uppercase mb-2">Chọn phiên bản:</p>
-                      
-                      <div class="d-flex flex-wrap gap-2">
-                        <label v-for="v in item.product?.variants" :key="v.id" 
-                               class="custom-radio-chip m-0"
-                               :class="{'selected': userSelections[item.id] === v.id, 'error': validationErrors[item.id]}">
-                          <input type="radio" class="d-none" :name="`item_${item.id}`" :value="v.id" v-model="userSelections[item.id]" @change="selectVariant(item.id, v.id)">
-                          
-                          <span class="chip-content d-flex flex-column align-items-center justify-content-center">
-                            <span class="fw-medium font-oswald tracking-wide">{{ v.sku }}</span>
-                            <span class="small price-diff" v-if="v.price > item.product.base_price">+ {{ formatCurrency(v.price - item.product.base_price) }}</span>
-                          </span>
-                        </label>
-                      </div>
-                      <div class="text-danger small mt-2 fst-italic" v-if="validationErrors[item.id]">
-                        Vui lòng lựa chọn phong cách cho tác phẩm này.
-                      </div>
+                    <!-- Cột Phải: Nội Dung & Chọn Biến Thể -->
+                    <div class="col-md-8 col-lg-8 col-xl-9 p-4 d-flex flex-column">
+                       <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap flex-xl-nowrap">
+                           <div>
+                              <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ item.product?.category?.name || 'Trang Sức Cao Cấp' }}</small>
+                              <h5 class="fw-bold text-dark font-serif mt-1 mb-0 fs-5 lh-base">{{ item.product?.name }}</h5>
+                           </div>
+                           <div class="text-xl-end">
+                              <!-- Hiển thị giá động theo biến thể đã chọn -->
+                              <template v-if="!item.product_variant_id">
+                                  <div v-if="getSelectedVariant(item.id)" class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(getSelectedVariant(item.id).price) }}</div>
+                                  <div v-else class="text-muted fw-bold font-serif fs-6">Từ {{ formatCurrency(item.product?.base_price) }}</div>
+                              </template>
+                              <template v-else>
+                                  <div class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(item.variant?.price) }}</div>
+                              </template>
+                           </div>
+                       </div>
+
+                       <!-- Khối Chọn Thuộc Tính -->
+                       <div class="flex-grow-1 border-top border-light-subtle pt-3 mt-1">
+                           
+                           <!-- TH1: Cố định (Không cho chọn) -->
+                           <div v-if="item.product_variant_id" class="bg-light p-3 border rounded small">
+                               <p class="text-muted font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.75rem;"><i class="bi bi-pin-angle-fill text-sora-primary me-1"></i>Phiên bản cấu hình sẵn</p>
+                               <div class="d-flex flex-wrap gap-2">
+                                  <span v-if="item.variant?.formatted_attributes" class="fw-bold text-dark">
+                                    {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
+                                  </span>
+                                  <span v-else class="fw-bold text-dark">{{ item.variant?.sku }}</span>
+                               </div>
+                           </div>
+
+                           <!-- TH2: Cho phép chọn thuộc tính -->
+                           <div v-else>
+                               <div v-if="itemMatrices[item.id]" class="row g-3">
+                                   <!-- Render lưới ma trận 2 cột -->
+                                   <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="col-sm-6 col-md-12 col-xl-6">
+                                      <p class="text-dark font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.8rem;">
+                                        {{ attrName }}: <span class="fw-bold text-sora-primary ms-1">{{ userSelections[item.id][attrName] || 'Chưa chọn' }}</span>
+                                      </p>
+                                      <div class="d-flex flex-wrap gap-2">
+                                          <label v-for="val in values" :key="val" 
+                                                 class="attr-chip m-0 cursor-pointer transition-all"
+                                                 :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
+                                            <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
+                                            <div class="chip-inner px-3 py-1 d-flex flex-column align-items-center justify-content-center text-center shadow-sm" style="min-width: 45px;">
+                                              <span class="fw-bold font-oswald tracking-wide" style="font-size: 0.85rem;">{{ val }}</span>
+                                            </div>
+                                          </label>
+                                      </div>
+                                   </div>
+                               </div>
+
+                               <!-- Khối báo lỗi -->
+                               <div class="text-danger small mt-3 fst-italic p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-if="validationErrors[item.id]">
+                                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng hoàn tất tùy chọn thiết kế cho món này.
+                               </div>
+                               <div class="text-danger small mt-3 fst-italic fw-bold p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
+                                 <i class="bi bi-x-circle-fill me-1"></i> Sự kết hợp này hiện đã hết hàng.
+                               </div>
+                           </div>
+                       </div>
+
+                       <!-- Footer Card: Số lượng đi kèm -->
+                       <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top border-light-subtle">
+                           <span class="text-muted small text-uppercase font-oswald tracking-widest">Số lượng áp dụng:</span>
+                           <span class="badge bg-sora-primary text-white font-oswald px-3 py-1 fs-6 shadow-sm">x{{ item.quantity }}</span>
+                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- TỔNG KẾT GIÁ TRỊ TỐI GIẢN -->
+            <!-- TỔNG KẾT GIÁ TRỊ -->
             <div class="luxury-price-summary mb-5 p-4 bg-white border border-gold-light" style="border-radius: 2px;">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light-subtle">
                   <span class="text-muted font-oswald text-uppercase tracking-wide">Giá Trị Gốc</span>
@@ -143,13 +189,24 @@
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div v-if="!combo.can_buy" class="text-center py-4 bg-light border">
-              <span class="font-oswald tracking-widest text-uppercase text-muted fs-5">HÃY CHÚ Ý THEO DÕI</span>
+            <div v-if="!canBuyCombo" class="text-center py-4 bg-light border">
+              <span class="font-oswald tracking-widest text-uppercase text-muted fs-5">
+                <template v-if="getTimerData(combo).type === 'upcoming'">
+                   Gói ưu đãi chưa mở bán
+                </template>
+                <template v-else-if="getTimerData(combo).type === 'soldout'">
+                   Đã bán hết số lượng
+                </template>
+                <template v-else>
+                   Gói ưu đãi đã khép lại
+                </template>
+              </span>
             </div>
             
             <div v-else class="row g-3">
               <div class="col-sm-6">
                 <button class="btn luxury-btn-outline w-100 py-3 font-oswald tracking-widest text-uppercase" @click="addToCart">
+                  <span v-if="isAddingToCart" class="spinner-border spinner-border-sm me-2"></span>
                   Thêm Vào Giỏ
                 </button>
               </div>
@@ -160,7 +217,7 @@
               </div>
             </div>
 
-            <!-- CAM KẾT (ICONS NHỎ GỌN) -->
+            <!-- CAM KẾT -->
             <div class="d-flex justify-content-between mt-5 pt-4 border-top border-light-subtle opacity-75">
               <div class="text-center">
                 <i class="bi bi-truck fs-4 text-dark mb-1 d-block"></i>
@@ -191,7 +248,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -202,32 +258,71 @@ const route = useRoute();
 const router = useRouter();
 const combo = ref(null);
 
+const itemMatrices = ref({}); 
 const userSelections = ref({}); 
 const validationErrors = ref({}); 
+const isAddingToCart = ref(false);
 
-// Data cho sections phụ
-const otherCombos = ref([]);
-
-// Đồng hồ
 const currentTime = ref(new Date());
 let timerInterval = null;
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
 const getImage = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : 'https://placehold.co/400x300';
 
-// Hàm Phóng to ảnh (Lightbox)
+const getDisplayImage = (item) => {
+    if (item.product_variant_id && item.variant && item.variant.image_url) {
+        return getImage(item.variant.image_url);
+    }
+    if (!item.product_variant_id) {
+        const selectedVar = getSelectedVariant(item.id);
+        if (selectedVar && selectedVar.image_url) {
+            return getImage(selectedVar.image_url);
+        }
+    }
+    return getImage(item.product?.thumbnail_image);
+};
+
 const viewFullImage = (url) => {
   Swal.fire({
-    imageUrl: url,
-    imageAlt: 'Product Image',
-    width: 'auto',
-    padding: 0,
+    imageUrl: url, 
+    imageAlt: 'Product Image', 
+    width: 600, 
+    imageHeight: 600, 
+    padding: 0, 
     background: 'transparent',
-    backdrop: 'rgba(0,0,0,0.85)',
-    showConfirmButton: false,
+    backdrop: 'rgba(0,0,0,0.85)', 
+    showConfirmButton: false, 
     showCloseButton: true,
-    customClass: { image: 'rounded-4 shadow-lg object-fit-contain' }
+    customClass: { 
+        image: 'rounded-3 shadow-lg object-fit-contain bg-white',
+        popup: 'p-0 bg-transparent'
+    }
   });
+};
+
+const getSelectedVariant = (itemId) => {
+    const item = combo.value.items.find(i => i.id === itemId);
+    if (!item || item.product_variant_id) return item?.variant;
+    
+    const selections = userSelections.value[itemId];
+    if (!selections) return null;
+    
+    const requiredAttrs = Object.keys(itemMatrices.value[itemId] || {});
+    if (requiredAttrs.length === 0) return null;
+
+    const hasAllAttrs = requiredAttrs.every(attr => selections[attr]);
+    if (!hasAllAttrs) return null;
+    
+    return item.product.variants.find(v => {
+        return requiredAttrs.every(attr => v.formatted_attributes && v.formatted_attributes[attr] === selections[attr]);
+    });
+};
+
+const isAllAttributesSelected = (itemId) => {
+    const selections = userSelections.value[itemId];
+    if (!selections) return false;
+    const requiredAttrs = Object.keys(itemMatrices.value[itemId] || {});
+    return requiredAttrs.every(attr => selections[attr]);
 };
 
 const originalTotal = computed(() => {
@@ -236,11 +331,9 @@ const originalTotal = computed(() => {
     let price = 0;
     if (item.product_variant_id && item.variant) {
       price = item.variant.price; 
-    } else if (userSelections.value[item.id]) {
-      const selectedVar = item.product?.variants.find(v => v.id === userSelections.value[item.id]);
-      price = selectedVar ? selectedVar.price : item.product.base_price;
     } else {
-      price = item.product ? item.product.base_price : 0;
+      const selectedVar = getSelectedVariant(item.id);
+      price = selectedVar ? selectedVar.price : (item.product ? item.product.base_price : 0);
     }
     return total + (parseFloat(price) * item.quantity);
   }, 0);
@@ -250,9 +343,7 @@ const finalPrice = computed(() => {
   if (!combo.value) return 0;
   let total = originalTotal.value;
   let discount = parseFloat(combo.value.discount_value);
-  if (combo.value.discount_type === 'percentage') {
-    return total - (total * (Math.min(discount, 100) / 100));
-  }
+  if (combo.value.discount_type === 'percentage') return total - (total * (Math.min(discount, 100) / 100));
   return Math.max(0, total - discount);
 });
 
@@ -262,19 +353,6 @@ const savingsPercentage = computed(() => {
   return Math.round((savings / originalTotal.value) * 100);
 });
 
-const calculateFinal = (c) => {
-  let total = c.items.reduce((sum, item) => {
-    let p = item.variant ? item.variant.price : (item.product ? item.product.base_price : 0);
-    return sum + (parseFloat(p) * item.quantity);
-  }, 0);
-  let discount = parseFloat(c.discount_value);
-  if (c.discount_type === 'percentage') return total - (total * (Math.min(discount, 100) / 100));
-  return Math.max(0, total - discount);
-};
-
-// ===============================================================
-// THUẬT TOÁN BỘ ĐẾM THỜI GIAN (REALTIME TIMEZONE-SAFE)
-// ===============================================================
 const parseDBDate = (dateStr) => {
     if (!dateStr) return null;
     return new Date(dateStr.replace(' ', 'T').substring(0, 19)).getTime();
@@ -285,12 +363,9 @@ const calculateTimeParts = (diff) => {
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((diff / 1000 / 60) % 60);
   const seconds = Math.floor((diff / 1000) % 60);
-  
   return {
-    d: days.toString().padStart(2, '0'),
-    h: hours.toString().padStart(2, '0'),
-    m: minutes.toString().padStart(2, '0'),
-    s: seconds.toString().padStart(2, '0')
+    d: days.toString().padStart(2, '0'), h: hours.toString().padStart(2, '0'),
+    m: minutes.toString().padStart(2, '0'), s: seconds.toString().padStart(2, '0')
   };
 };
 
@@ -298,101 +373,204 @@ const getTimerData = (combo) => {
     if (!combo) return { type: 'forever', title: '', isEnded: false };
     const now = currentTime.value.getTime();
     
-    if (combo.usage_limit !== null && combo.usage_limit <= 0) {
-        return { type: 'soldout', title: 'ĐÃ BÁN HẾT SỐ LƯỢNG', isEnded: true };
-    }
+    if (combo.usage_limit !== null && combo.usage_limit <= 0) return { type: 'soldout', title: 'ĐÃ BÁN HẾT SỐ LƯỢNG', isEnded: true };
 
     const startTime = parseDBDate(combo.start_date);
     const endTime = parseDBDate(combo.end_date);
 
     if (endTime && endTime < now) return { type: 'ended', title: 'ƯU ĐÃI ĐÃ KẾT THÚC', isEnded: true };
-    if (startTime && startTime > now) {
-        const diff = startTime - now;
-        return { type: 'upcoming', title: 'MỞ BÁN SAU', isEnded: false, ...calculateTimeParts(diff) };
-    }
-    if (endTime && endTime >= now) {
-        const diff = endTime - now;
-        return { type: 'active', title: 'KẾT THÚC TRONG', isEnded: false, ...calculateTimeParts(diff) };
-    }
+    if (startTime && startTime > now) return { type: 'upcoming', title: 'MỞ BÁN SAU', isEnded: false, ...calculateTimeParts(startTime - now) };
+    if (endTime && endTime >= now) return { type: 'active', title: 'KẾT THÚC TRONG', isEnded: false, ...calculateTimeParts(endTime - now) };
+    
     return { type: 'forever', title: '', isEnded: false };
 };
 
-// ===============================================================
-// XỬ LÝ CHỌN BIẾN THỂ RADIO 
-// ===============================================================
+const canBuyCombo = computed(() => {
+    if (!combo.value) return false;
+    const timer = getTimerData(combo.value);
+    return timer.type === 'active' || timer.type === 'forever';
+});
+
 const selectVariant = (itemId, variantId) => {
     validationErrors.value[itemId] = false; 
 };
 
 const fetchDetail = async (slug) => {
-  combo.value = null; // reset để trigger loading
+  combo.value = null; 
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/client/combos/${slug}`);
     combo.value = res.data.data;
-    
-    // Reset state & validations
-    userSelections.value = {};
-    validationErrors.value = {};
+    userSelections.value = {}; validationErrors.value = {}; itemMatrices.value = {};
 
     combo.value.items.forEach(item => {
-      if (!item.product_variant_id) userSelections.value[item.id] = '';
+      if (!item.product_variant_id) {
+        userSelections.value[item.id] = {}; 
+        
+        const matrix = {};
+        if (item.product?.variants) {
+          item.product.variants.forEach(variant => {
+            if (variant.formatted_attributes) {
+              Object.entries(variant.formatted_attributes).forEach(([attrName, attrValue]) => {
+                if (!matrix[attrName]) matrix[attrName] = new Set();
+                matrix[attrName].add(attrValue);
+              });
+            }
+          });
+        }
+        
+        const finalMatrix = {};
+        Object.keys(matrix).forEach(key => {
+          finalMatrix[key] = Array.from(matrix[key]);
+        });
+        
+        itemMatrices.value[item.id] = finalMatrix;
+
+        if (item.product?.variants && item.product.variants.length === 1) {
+            const singleVariant = item.product.variants[0];
+            if (singleVariant.formatted_attributes) {
+                Object.entries(singleVariant.formatted_attributes).forEach(([attrName, attrValue]) => {
+                    userSelections.value[item.id][attrName] = attrValue;
+                });
+            }
+        }
+      }
     });
-
-    fetchOtherCombos(combo.value.id);
-
   } catch (error) {
-    Swal.fire('Lỗi', 'Combo không tồn tại hoặc đã hết hạn!', 'error').then(() => router.push({name: 'client-combos'}));
+    Swal.fire({
+      title: 'Lỗi',
+      text: 'Combo không tồn tại hoặc đã hết hạn!',
+      icon: 'error',
+      confirmButtonColor: '#9f273b'
+    }).then(() => router.push({name: 'client-combos'}));
   }
-};
-
-const fetchOtherCombos = async (currentId) => {
-    try {
-        const res = await axios.get(`http://127.0.0.1:8000/api/client/combos`);
-        const all = res.data.data.data;
-        otherCombos.value = all.filter(c => c.id !== currentId).slice(0, 3);
-    } catch(e) {}
 };
 
 const validateSelections = () => {
   let isValid = true;
+  validationErrors.value = {};
+  
   combo.value.items.forEach(item => {
-    if (!item.product_variant_id && !userSelections.value[item.id]) {
-      validationErrors.value[item.id] = true;
-      isValid = false;
+    if (!item.product_variant_id) {
+      const selectedVar = getSelectedVariant(item.id);
+      if (!selectedVar) {
+        validationErrors.value[item.id] = true;
+        isValid = false;
+      } else {
+        validationErrors.value[item.id] = false;
+      }
     }
   });
   return isValid;
 };
 
 const preparePayload = () => {
-  const customSelections = Object.keys(userSelections.value).map(itemId => ({
-    combo_item_id: itemId,
-    selected_variant_id: userSelections.value[itemId]
-  }));
-  return { combo_id: combo.value.id, quantity: 1, selections: customSelections };
+  const customSelections = combo.value.items.filter(i => !i.product_variant_id).map(item => {
+    const selectedVar = getSelectedVariant(item.id);
+    return {
+      combo_item_id: parseInt(item.id),
+      selected_variant_id: selectedVar ? selectedVar.id : null 
+    };
+  });
+  
+  return { 
+      combo_id: combo.value.id, 
+      quantity: 1, 
+      combo_selections: customSelections 
+  };
 };
 
-const addToCart = () => {
+const addToCart = async () => {
+  // FIX BẬC THẦY: Đổi Toast warning thành Popup Modal nổi bật ở giữa màn hình
   if (!validateSelections()) {
-    Swal.fire({ toast:true, position: 'top', icon:'warning', title: 'Vui lòng định hình phong cách cho tất cả sản phẩm!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu tùy chọn!',
+      text: 'Vui lòng chọn đầy đủ thiết kế (chất liệu, kích thước...) cho tất cả các món trong bộ sưu tập.',
+      confirmButtonColor: '#9f273b',
+      confirmButtonText: 'Chọn ngay',
+      background: '#fffafa',
+      color: '#9f273b'
+    });
     return;
   }
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm vào Túi mua sắm', showConfirmButton: false, timer: 1500 });
+  
+  isAddingToCart.value = true;
+  const payload = preparePayload();
+  
+  try {
+      const token = localStorage.getItem('auth_token'); 
+      const sessionId = localStorage.getItem('cart_session_id'); 
+      
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (sessionId) headers['X-Cart-Session-Id'] = sessionId;
+
+      const res = await axios.post('http://127.0.0.1:8000/api/client/cart/add-combo', payload, { headers });
+      
+      if (res.data.session_id) {
+          localStorage.setItem('cart_session_id', res.data.session_id);
+      }
+
+      // Đã đồng bộ màu đỏ SORA cho Toast báo thành công
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Đã thêm Combo vào Túi mua sắm',
+        showConfirmButton: false,
+        timer: 2000,
+        iconColor: '#9f273b',
+        color: '#9f273b',
+        background: '#fffafa'
+      });
+      
+  } catch (error) {
+      console.error(error);
+      const msg = error.response?.data?.message || 'Không thể thêm vào giỏ hàng. Vui lòng thử lại!';
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi giỏ hàng',
+        text: msg,
+        confirmButtonColor: '#9f273b',
+        background: '#fffafa',
+        color: '#9f273b'
+      });
+  } finally {
+      isAddingToCart.value = false;
+  }
 };
 
 const buyNow = () => {
+  // FIX BẬC THẦY: Tương tự hàm addToCart, bật popup cảnh báo thiếu thông tin
   if (!validateSelections()) {
-    Swal.fire({ toast:true, position: 'top', icon:'warning', title: 'Vui lòng định hình phong cách cho tất cả sản phẩm!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu tùy chọn!',
+      text: 'Vui lòng chọn đầy đủ thiết kế (chất liệu, kích thước...) cho tất cả các món trong bộ sưu tập.',
+      confirmButtonColor: '#9f273b',
+      confirmButtonText: 'Chọn ngay',
+      background: '#fffafa',
+      color: '#9f273b'
+    });
     return;
   }
+  
   const payload = preparePayload();
   localStorage.setItem('checkout_combo_direct', JSON.stringify(payload));
-  Swal.fire('Thành công', 'Chuyển hướng đến trang Thanh toán Mua Ngay...', 'success');
-};
-
-const goToDetail = (slug) => {
-  router.push({ name: 'client-combo-detail', params: { slug } });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: 'Chuyển hướng đến Thanh toán...',
+    showConfirmButton: false,
+    timer: 1000,
+    iconColor: '#9f273b',
+    color: '#9f273b',
+    background: '#fffafa'
+  }).then(() => {
+     console.log("Đang chuyển tới Checkout với data:", payload);
+  });
 };
 
 watch(() => route.params.slug, (newSlug) => {
@@ -420,24 +598,18 @@ onUnmounted(() => {
 .tracking-widest { letter-spacing: 2px; }
 .z-index-2 { z-index: 2; }
 .transition-color { transition: color 0.3s ease; }
-.transition-transform { transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.duration-500 { transition-duration: 500ms; }
+.transition-all { transition: all 0.3s ease; }
 .cursor-pointer { cursor: pointer; }
 .cursor-zoom-in { cursor: zoom-in; }
 
-/* COLORS */
 .text-sora-primary { color: #9f273b !important; }
 .text-sora-red { color: #cc1e2e !important; }
 .text-gold { color: #e7ce7d !important; }
 .bg-sora-primary { background-color: #9f273b !important; }
-.bg-sora-red { background-color: #cc1e2e !important; color: white;}
-.bg-gold { background-color: #e7ce7d !important; }
 .border-gold-light { border-color: rgba(231, 206, 125, 0.4) !important; }
 
-/* BREADCRUMB */
 .hover-primary:hover { color: #9f273b !important; }
 
-/* IMAGE EFFECTS (EDITORIAL) */
 .luxury-image-wrapper { border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); background: #fff; }
 .img-zoom-hover { transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 .luxury-image-wrapper:hover .img-zoom-hover { transform: scale(1.05); }
@@ -445,71 +617,53 @@ onUnmounted(() => {
 .ended-overlay { position: absolute; inset: 0; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 10; }
 .luxury-badge { letter-spacing: 2px; font-size: 0.85rem; }
 
-/* TIME BOX (MINIMALIST) */
 .pulsing-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(204, 30, 46, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(204, 30, 46, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(204, 30, 46, 0); } }
 
-/* CUSTOM RADIO CHIPS (XỊN XÒ) */
-.custom-radio-chip {
-    cursor: pointer;
-    display: inline-block;
+/* NÂNG CẤP LUXURY PRODUCT CARD */
+.luxury-product-card { transition: all 0.3s ease; }
+.luxury-product-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important; }
+.drop-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+.mix-blend-multiply { mix-blend-mode: multiply; }
+
+/* CHIP SELECTORS (Thuộc tính bấm chọn) */
+.attr-chip {
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 55px;
 }
-.custom-radio-chip .chip-content {
-    border: 1px solid #dcdcdc;
-    padding: 8px 16px;
-    background-color: transparent;
+.attr-chip .chip-inner {
+    border: 1px solid #dee2e6;
+    background-color: #fff;
     color: #555;
-    transition: all 0.3s ease;
-    min-width: 80px;
-    border-radius: 2px;
+    border-radius: 4px;
+    transition: all 0.3s ease-in-out;
+    padding: 6px 12px;
 }
-.custom-radio-chip:hover .chip-content {
-    border-color: #e7ce7d;
+.attr-chip:hover .chip-inner {
+    border-color: #e7ce7d; 
     color: #9f273b;
 }
-.custom-radio-chip.selected .chip-content {
+.attr-chip.selected .chip-inner {
+    background-color: #9f273b; 
     border-color: #9f273b;
-    background-color: #9f273b;
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(159, 39, 59, 0.2);
+    color: #fff !important;
+    box-shadow: 0 4px 10px rgba(159, 39, 59, 0.25);
 }
-.custom-radio-chip.selected .chip-content .price-diff {
-    color: #ffdae0 !important;
+.attr-chip.selected .chip-inner span {
+    color: #fff !important;
 }
-.custom-radio-chip.error .chip-content {
-    border-color: #cc1e2e;
-    color: #cc1e2e;
+.attr-chip.error .chip-inner {
+    border-color: #dc3545;
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
     animation: shake 0.4s;
-    background-color: rgba(204, 30, 46, 0.05);
 }
 
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    50% { transform: translateX(4px); }
-    75% { transform: translateX(-4px); }
-}
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-4px); } }
 
-/* BUTTONS LUXURY */
-.luxury-btn-solid { 
-    background-color: #9f273b; color: white; border: 1px solid #9f273b; 
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-}
-.luxury-btn-solid:hover { 
-    background-color: #7a1c2d; border-color: #7a1c2d; color: white; 
-    box-shadow: 0 8px 20px rgba(159,39,59,0.3); transform: translateY(-2px); 
-}
-.luxury-btn-outline { 
-    border: 1px solid #9f273b; color: #9f273b; background: transparent; 
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-}
-.luxury-btn-outline:hover { 
-    background: #9f273b; color: white; 
-    transform: translateY(-2px); box-shadow: 0 8px 20px rgba(159,39,59,0.2); 
-}
-
-/* HOVER CARDS (Other Combos) */
-.group-hover:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.05) !important; transform: translateY(-5px); transition: all 0.4s ease; }
-.group-hover:hover .transition-transform { transform: scale(1.05); }
-.title-hover:hover { color: #cc1e2e !important; }
+.luxury-btn-solid { background-color: #9f273b; color: white; border: 1px solid #9f273b; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.luxury-btn-solid:hover { background-color: #7a1c2d; border-color: #7a1c2d; color: white; box-shadow: 0 8px 20px rgba(159,39,59,0.3); transform: translateY(-2px); }
+.luxury-btn-outline { border: 1px solid #9f273b; color: #9f273b; background: transparent; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.luxury-btn-outline:hover { background: #9f273b; color: white; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(159,39,59,0.2); }
 </style>

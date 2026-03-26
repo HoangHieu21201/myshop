@@ -1,18 +1,16 @@
 <template>
   <div class="combo-client-page bg-light-custom pb-5">
     
-    <!-- BANNER LUXURY -->
     <div class="sora-banner position-relative d-flex align-items-center justify-content-center overflow-hidden">
       <div class="banner-overlay"></div>
       <div class="position-relative z-index-2 text-center px-3" style="max-width: 800px;">
         <p class="text-gold font-oswald tracking-widest mb-2 text-uppercase small"><i class="bi bi-stars me-2"></i>SORA Exclusive</p>
         <h1 class="display-3 fw-bold font-serif mb-3 text-white text-uppercase" style="letter-spacing: 2px;">Gói Quà Tặng & Ưu Đãi</h1>
-        <p class="text-white opacity-75 fw-light fs-5 mb-0 font-serif">Những sự kết hợp hoàn hảo được tuyển chọn bởi các nghệ nhân SORA, mang đến giá trị đích thực và trải nghiệm mua sắm đẳng cấp.</p>
+        <p class="text-white opacity-75 fw-light fs-5 mb-0 font-serif">Những sự kết hợp hoàn hảo được tuyển chọn bởi các nghệ nhân SORA.</p>
       </div>
     </div>
 
     <div class="container py-5">
-      <!-- BỘ LỌC TINH TẾ -->
       <div class="d-flex justify-content-center mb-5">
         <div class="filter-group shadow-sm bg-white p-1 rounded-pill d-inline-flex border border-gold-light">
           <button class="filter-btn" :class="{'active': activeFilter === 'all'}" @click="filterCombo('all')">Tất Cả</button>
@@ -22,21 +20,17 @@
         </div>
       </div>
 
-      <!-- DANH SÁCH COMBO DẠNG ROW (FULL WIDTH) -->
       <div class="combo-list-container" v-if="!isLoading">
         <div class="combo-row-card card border-0 shadow-sm rounded-4 overflow-hidden mb-5 bg-white" v-for="combo in combos" :key="combo.id">
           
           <div class="row g-0 h-100">
-            
-            <!-- CỘT TRÁI (4 PHẦN): THÔNG TIN & THỜI GIAN -->
+            <!-- CỘT TRÁI -->
             <div class="col-lg-4 position-relative p-0 border-end border-gold-light d-flex flex-column">
-              <!-- Overlay khi hết hạn -->
               <div v-if="getTimerData(combo).isEnded" class="ended-overlay d-flex align-items-center justify-content-center flex-column text-center p-4">
                   <i class="bi bi-x-circle fs-1 text-white opacity-75 mb-2"></i>
                   <h3 class="text-white font-oswald tracking-widest m-0">{{ getTimerData(combo).title }}</h3>
               </div>
 
-              <!-- Ảnh nền mờ phía sau -->
               <div class="combo-bg-img" :style="`background-image: url(${getImage(combo.thumbnail_image)})`"></div>
               <div class="combo-bg-gradient"></div>
               
@@ -51,7 +45,7 @@
                 <h3 class="fw-bold text-dark font-serif mb-2" style="font-size: 2rem;">{{ combo.name }}</h3>
                 <p class="text-muted small mb-4 line-clamp-2">{{ combo.description }}</p>
 
-                <!-- BỘ ĐẾM THỜI GIAN (COUNTDOWN TIMER) -->
+                <!-- BỘ ĐẾM THỜI GIAN -->
                 <div class="timer-section mb-4 mt-auto">
                     <h6 class="text-dark fw-bold font-oswald mb-3 tracking-wide text-uppercase" :class="getTimerData(combo).type === 'active' ? 'text-sora-red' : ''">
                       <i class="bi bi-clock-history me-1"></i> {{ getTimerData(combo).title }}
@@ -89,20 +83,17 @@
               </div>
             </div>
 
-            <!-- CỘT PHẢI (8 PHẦN): DANH SÁCH MÓN TRONG COMBO CÓ THANH CUỘN MƯỢT MÀ -->
+            <!-- CỘT PHẢI (SLIDER) -->
             <div class="col-lg-8 p-4 p-lg-5 bg-white position-relative">
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold font-serif m-0 text-dark">Bao Gồm {{ combo.items?.length || 0 }} Tác Phẩm</h5>
-                <!-- Nút trượt sang trái phải -->
                 <div class="d-flex gap-2" v-if="combo.items && combo.items.length > 2">
                   <button class="btn btn-outline-secondary rounded-circle slider-btn" @click="scrollSlider(combo.id, -1)"><i class="bi bi-chevron-left"></i></button>
                   <button class="btn btn-outline-secondary rounded-circle slider-btn" @click="scrollSlider(combo.id, 1)"><i class="bi bi-chevron-right"></i></button>
                 </div>
               </div>
 
-              <!-- Khung cuộn ngang ẩn thanh scroll -->
               <div class="combo-items-slider d-flex gap-4 overflow-auto hide-scrollbar pb-3" :id="'scroll-container-' + combo.id">
-                
                 <div class="combo-item-card flex-shrink-0" style="width: 220px;" v-for="item in combo.items" :key="item.id">
                   <div class="position-relative overflow-hidden border border-gold-light rounded-3 bg-light mb-3">
                     <img :src="getImage(item.product?.thumbnail_image)" class="w-100 object-fit-cover item-img-hover" style="height: 220px;">
@@ -117,7 +108,6 @@
                   </div>
                   <div class="fw-bold font-oswald text-sora-red">{{ formatCurrency(getItemPrice(item)) }}</div>
                 </div>
-
               </div>
             </div>
 
@@ -125,7 +115,6 @@
         </div>
       </div>
 
-      <!-- Loading / Empty -->
       <div v-else class="text-center py-5 my-5">
         <div class="spinner-border text-gold" style="width: 3rem; height: 3rem;" role="status"></div>
       </div>
@@ -147,7 +136,6 @@ const combos = ref([]);
 const isLoading = ref(true);
 const activeFilter = ref('all');
 
-// Biến lưu thời gian hiện tại để đồng bộ toàn bộ đồng hồ đếm ngược
 const currentTime = ref(new Date());
 let timerInterval = null;
 
@@ -176,13 +164,11 @@ const calculateFinal = (combo) => {
   return Math.max(0, total - discount);
 };
 
-// ===============================================================
-// THUẬT TOÁN BỘ ĐẾM THỜI GIAN (REALTIME TIMEZONE-SAFE)
-// ===============================================================
+// ĐÃ FIX: Ép chuẩn ISO Local (Cắt bỏ Z) để trình duyệt không tự cộng thêm 7 tiếng (Fix lỗi lệch múi giờ)
 const parseDBDate = (dateStr) => {
     if (!dateStr) return null;
-    // Bỏ qua Timezone Z để trình duyệt lấy giờ gốc của Database
-    return new Date(dateStr.replace(' ', 'T').substring(0, 19)).getTime();
+    const cleanStr = dateStr.replace(' ', 'T').substring(0, 19);
+    return new Date(cleanStr).getTime();
 };
 
 const calculateTimeParts = (diff) => {
@@ -202,7 +188,6 @@ const calculateTimeParts = (diff) => {
 const getTimerData = (combo) => {
     const now = currentTime.value.getTime();
     
-    // 1. Kiểm tra hết lượt mua
     if (combo.usage_limit !== null && combo.usage_limit <= 0) {
         return { type: 'soldout', title: 'ĐÃ BÁN HẾT SỐ LƯỢNG', isEnded: true };
     }
@@ -210,34 +195,23 @@ const getTimerData = (combo) => {
     const startTime = parseDBDate(combo.start_date);
     const endTime = parseDBDate(combo.end_date);
 
-    // 2. Kiểm tra đã quá hạn
-    if (endTime && endTime < now) {
-        return { type: 'ended', title: 'ƯU ĐÃI ĐÃ KẾT THÚC', isEnded: true };
-    }
-
-    // 3. Sắp diễn ra
+    if (endTime && endTime < now) return { type: 'ended', title: 'ƯU ĐÃI ĐÃ KẾT THÚC', isEnded: true };
     if (startTime && startTime > now) {
         const diff = startTime - now;
         return { type: 'upcoming', title: 'HÃY NHANH TAY! MỞ BÁN SAU:', isEnded: false, ...calculateTimeParts(diff) };
     }
-
-    // 4. Đang diễn ra (Có thời hạn)
     if (endTime && endTime >= now) {
         const diff = endTime - now;
         return { type: 'active', title: 'NHANH CHÓNG LÊN! KẾT THÚC TRONG:', isEnded: false, ...calculateTimeParts(diff) };
     }
 
-    // 5. Không cài đặt thời gian (Bán mãi mãi)
     return { type: 'forever', title: 'SẢN PHẨM KHÔNG GIỚI HẠN THỜI GIAN', isEnded: false };
 };
 
-// ===============================================================
-// THUẬT TOÁN SCROLL CHO DANH SÁCH MÓN HÀNG
-// ===============================================================
 const scrollSlider = (comboId, direction) => {
     const container = document.getElementById('scroll-container-' + comboId);
     if (container) {
-        const scrollAmount = 300; // Mỗi lần bấm dịch chuyển 300px
+        const scrollAmount = 300; 
         container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
     }
 };
@@ -268,7 +242,6 @@ const goToDetail = (slug) => {
 
 onMounted(() => {
     fetchCombos();
-    // Cập nhật biến currentTime mỗi giây để Component tự render lại giao diện thời gian
     timerInterval = setInterval(() => {
         currentTime.value = new Date();
     }, 1000);
@@ -290,14 +263,12 @@ onUnmounted(() => {
 .z-index-2 { z-index: 2; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* COLORS */
 .text-sora-primary { color: #9f273b !important; }
 .text-sora-red { color: #cc1e2e !important; }
 .text-gold { color: #e7ce7d !important; }
 .bg-sora-primary { background-color: #9f273b !important; }
 .border-gold-light { border-color: rgba(231, 206, 125, 0.4) !important; }
 
-/* BANNER */
 .sora-banner { 
   height: 400px;
   background: url('https://placehold.co/1920x600/9f273b/e7ce7d?text=SORA+BOUTIQUE') center/cover no-repeat; 
@@ -305,7 +276,6 @@ onUnmounted(() => {
 }
 .banner-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(159,39,59,0.95) 0%, rgba(204,30,46,0.6) 100%); z-index: 1; }
 
-/* FILTERS */
 .filter-group { border-radius: 50px; }
 .filter-btn {
   background: transparent; border: none; color: #6c757d; font-family: 'Oswald', sans-serif; font-weight: 500; letter-spacing: 1px;
@@ -314,14 +284,13 @@ onUnmounted(() => {
 .filter-btn:hover { color: #9f273b; }
 .filter-btn.active { background-color: #9f273b; color: white; box-shadow: 0 4px 10px rgba(159,39,59,0.3); }
 
-/* BỐ CỤC ROW (CỘT TRÁI - ẢNH NỀN) */
 .combo-row-card { position: relative; transition: box-shadow 0.3s ease; border: 1px solid rgba(231, 206, 125, 0.2) !important; }
 .combo-row-card:hover { box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; }
 .combo-bg-img {
     position: absolute; inset: 0;
     background-size: cover;
     background-position: center;
-    opacity: 0.08; /* Làm mờ ảnh nền */
+    opacity: 0.08; 
     filter: blur(2px);
     z-index: 0;
 }
@@ -331,15 +300,13 @@ onUnmounted(() => {
     z-index: 1;
 }
 
-/* HIỆU ỨNG HẾT COMBO (ĐÃ KẾT THÚC) */
 .ended-overlay {
     position: absolute; inset: 0;
     background-color: rgba(0,0,0,0.7);
     backdrop-filter: blur(4px);
-    z-index: 10; /* Nằm trên cùng */
+    z-index: 10; 
 }
 
-/* THIẾT KẾ ĐỒNG HỒ ĐẾM NGƯỢC (GIỐNG YÊU CẦU CỦA BẠN) */
 .time-box {
     display: flex;
     flex-direction: column;
@@ -351,24 +318,12 @@ onUnmounted(() => {
     width: 60px;
     height: 65px;
 }
-.time-box .num {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: #333;
-    line-height: 1;
-    margin-bottom: 2px;
-}
-.time-box .label {
-    font-size: 0.7rem;
-    color: #666;
-    text-transform: capitalize;
-}
+.time-box .num { font-size: 1.5rem; font-weight: 500; color: #333; line-height: 1; margin-bottom: 2px; }
+.time-box .label { font-size: 0.7rem; color: #666; text-transform: capitalize; }
 
-/* BUTTONS */
 .btn-sora-primary { background-color: #9f273b; color: white; border: none; transition: 0.3s; }
 .btn-sora-primary:hover { background-color: #7a1c2d; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(159, 39, 59, 0.3); }
 
-/* CỘT PHẢI (SLIDER) */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .slider-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; border-color: #ddd; color: #666; }

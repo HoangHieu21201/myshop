@@ -9,24 +9,15 @@ use Carbon\Carbon;
 
 class ClientComboController extends Controller
 {
-    /**
-     * 1. LẤY DANH SÁCH COMBO CHO TRANG CHỦ / TRANG INDEX
-     * Đã dỡ bỏ các rào cản thời gian/số lượng để hiển thị mượt mà.
-     */
     public function index(Request $request)
     {
-        $query = Combo::with([
-            'items.product', 
-            'items.variant'
-        ])
-        ->where('status', 'active'); // Chỉ cần Active là được lên sóng
+        $query = Combo::with(['items.product', 'items.variant'])
+        ->where('status', 'active');
 
-        // Chỉ filter giới tính nếu có truyền lên và khác 'all'
         if ($request->has('gender') && $request->gender !== 'all' && $request->gender !== '') {
             $query->where('target_gender', $request->gender);
         }
 
-        // Lấy dữ liệu và phân trang (Paginate)
         $combos = $query->orderBy('id', 'desc')->paginate(12);
 
         return response()->json([
@@ -35,37 +26,84 @@ class ClientComboController extends Controller
         ]);
     }
 
-    /**
-     * 2. LẤY CHI TIẾT 1 COMBO KHI KHÁCH CLICK VÀO
-     */
     public function show($slug)
     {
         $now = Carbon::now();
 
         $combo = Combo::with([
             'items.product' => function($q) {
-                $q->with(['variants' => function($vq) {
-                    $vq->where('stock_quantity', '>', 0)
-                       ->select('id', 'product_id', 'sku', 'price', 'promotional_price', 'stock_quantity', 'image_url');
-                }]);
+                // FIX BLIND SPOT: Bổ sung Category và Brand để Frontend có thông tin hiển thị sang trọng
+                $q->with([
+                    'category:id,name',
+                    'brand:id,name',
+                    'variants' => function($vq) {
+                        $vq->where('stock_quantity', '>', 0)
+                           ->with(['attributeValues.attribute']);
+                    }
+                ]);
             },
-            'items.variant' 
+            'items.variant' => function($vq) {
+                // FIX BLIND SPOT: Load kèm Sản phẩm cha để lấy Hình ảnh/Tên gốc nếu biến thể không có
+                $vq->with(['attributeValues.attribute', 'product.category', 'product.brand']);
+            }
         ])
         ->where('slug', $slug)
         ->where('status', 'active')
         ->firstOrFail();
 
-        // ==========================================
-        // XỬ LÝ LOGIC "CAN_BUY" TẠI TRANG CHI TIẾT
-        // ==========================================
-        $isExpired = ($combo->end_date && $now->greaterThan($combo->end_date));
-        $isNotStarted = ($combo->start_date && $now->lessThan($combo->start_date));
-        
-        // Đảm bảo chỉ chặn khi usage_limit thực sự là số và <= 0 (Loại trừ trường hợp null/chuỗi rỗng)
-        $isSoldOut = (is_numeric($combo->usage_limit) && $combo->usage_limit <= 0);
-
-        // Trả cờ can_buy về cho Vue.js xử lý khóa nút Mua Hàng nếu cần
-        $combo->can_buy = !($isExpired || $isNotStarted || $isSoldOut);
+        // THUẬT TOÁN: Gom nhóm Thuộc tính thành Mảng và Bơm thêm Data Giao diện (Luxury Context)
+        foreach ($combo->items as $item) {
+            
+            // Trường hợp 1: Khách hàng được quyền chọn biến thể
+            if ($item->product && $item->product->variants) {
+                foreach ($item->product->variants as $variant) {
+                    $attrMap = [];
+                    if ($variant->attributeValues) {
+                        foreach ($variant->attributeValues as $val) {
+                            if ($val->attribute) {
+                                $attrMap[$val->attribute->name] = $val->value;
+                            }
+                        }
+                    }
+                    if (empty($attrMap)) {
+                        $attrMap['Phiên bản'] = $variant->sku;
+                    }
+                    $variant->formatted_attributes = $attrMap;
+                    
+                    // BỔ SUNG ĐỒNG BỘ: Ép sẵn data hiển thị để Frontend vẽ Product Card dễ dàng
+                    $variant->display_name = $item->product->name;
+                    $variant->display_image = $variant->image_url ?: $item->product->thumbnail_image;
+                    $variant->display_price = $variant->promotional_price ?: $variant->price;
+                    $variant->category_name = $item->product->category->name ?? '';
+                    
+                    unset($variant->attributeValues);
+                }
+            }
+            
+            // Trường hợp 2: Biến thể đã được Admin chốt cứng (Cố định)
+            if ($item->variant) {
+                $attrMap = [];
+                if ($item->variant->attributeValues) {
+                    foreach ($item->variant->attributeValues as $val) {
+                        if ($val->attribute) {
+                            $attrMap[$val->attribute->name] = $val->value;
+                        }
+                    }
+                }
+                if (empty($attrMap)) {
+                    $attrMap['Phiên bản'] = $item->variant->sku;
+                }
+                $item->variant->formatted_attributes = $attrMap;
+                
+                // BỔ SUNG ĐỒNG BỘ: Ép sẵn data hiển thị để Frontend vẽ Product Card dễ dàng
+                $item->variant->display_name = $item->variant->product->name ?? 'Sản phẩm cao cấp';
+                $item->variant->display_image = $item->variant->image_url ?: ($item->variant->product->thumbnail_image ?? null);
+                $item->variant->display_price = $item->variant->promotional_price ?: $item->variant->price;
+                $item->variant->category_name = $item->variant->product->category->name ?? '';
+                
+                unset($item->variant->attributeValues);
+            }
+        }
 
         return response()->json([
             'success' => true, 

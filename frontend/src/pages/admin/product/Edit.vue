@@ -11,13 +11,12 @@
                     </router-link>
                     <div class="d-flex flex-column">
                         <h3 class="fw-bold text-dark mb-0">Cập nhật Sản phẩm</h3>
-                        <p class="text-muted small mb-0 mt-1">Sửa đổi thông tin gốc và cập nhật Kho Biến Thể</p>
+                        <p class="text-muted small mb-0 mt-1">Chỉnh sửa thông tin và các biến thể của sản phẩm</p>
                     </div>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <!-- TABS NAV -->
                 <div class="card-header bg-white pt-4 pb-0 border-bottom-0">
                     <ul class="nav nav-underline custom-scrollbar-x flex-nowrap">
                         <li class="nav-item">
@@ -37,9 +36,8 @@
                 </div>
 
                 <div class="card-body p-4 p-md-5">
-                    <form @submit.prevent="updateProduct" id="productForm">
+                    <form @submit.prevent="submitProduct" id="productForm">
 
-                        <!-- ================= STEP 1: SẢN PHẨM GỐC ================= -->
                         <div v-show="currentStep === 1" class="row g-4">
                             <div class="col-lg-8">
                                 <div class="p-4 bg-light rounded-4 border h-100">
@@ -50,7 +48,8 @@
                                             <label class="form-label fw-bold">Tên sản phẩm <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control form-control-lg" v-model="form.name"
-                                                @input="generateSlug" required>
+                                                @input="generateSlug" required
+                                                placeholder="VD: Nhẫn đính hôn Kim Cương tự nhiên">
                                         </div>
                                         <div class="col-md-12">
                                             <label class="form-label fw-bold">Đường dẫn (Slug)</label>
@@ -58,21 +57,22 @@
                                                 v-model="form.slug" readonly>
                                         </div>
 
-                                        <!-- DANH MỤC -->
                                         <div class="col-md-4">
                                             <label class="form-label fw-bold">Danh mục <span
                                                     class="text-danger">*</span></label>
                                             <select class="form-select border-brand fw-semibold text-brand"
                                                 v-model="form.category_id" required>
                                                 <option value="" disabled>-- Chọn danh mục --</option>
-                                                <template v-if="categories && categories.length > 0">
-                                                    <option v-for="cat in categories" :key="cat?.id" :value="cat?.id">{{
-                                                        cat?.name }}</option>
-                                                </template>
+                                                <option v-if="categories.length === 0" value="" disabled
+                                                    class="text-danger">
+                                                    Trống! Cần tạo Danh mục.
+                                                </option>
+                                                <option v-else v-for="cat in categories" :key="cat.id" :value="cat.id">
+                                                    {{ cat.name }}
+                                                </option>
                                             </select>
                                         </div>
 
-                                        <!-- THƯƠNG HIỆU -->
                                         <div class="col-md-4">
                                             <label class="form-label fw-bold">Thương hiệu</label>
                                             <select class="form-select fw-semibold" v-model="form.brand_id">
@@ -83,14 +83,21 @@
                                             </select>
                                         </div>
 
-                                        <!-- GIÁ GỐC -->
                                         <div class="col-md-4">
-                                            <label class="form-label fw-bold">Giá tham khảo (Base Price) <span
+                                            <label class="form-label fw-bold">Giá tham khảo <span
                                                     class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="number" class="form-control"
                                                     v-model.number="form.base_price" required min="0">
                                                 <span class="input-group-text bg-light">VNĐ</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12 mt-3">
+                                            <div
+                                                class="alert alert-info small border-0 bg-info bg-opacity-10 text-muted m-0">
+                                                <i class="bi bi-info-circle me-1 text-info"></i>
+                                                Sản phẩm đang được cấu hình. Chuyển sang Bước 2 để điều chỉnh số lượng tồn kho.
                                             </div>
                                         </div>
                                     </div>
@@ -109,14 +116,14 @@
                                         <div v-else
                                             class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
                                             <i class="bi bi-camera fs-1 mb-2 opacity-50"></i>
-                                            <span class="small fw-semibold text-danger">Chưa có ảnh</span>
+                                            <span class="small fw-semibold text-danger">Bắt buộc tải ảnh</span>
                                         </div>
                                     </div>
                                     <input type="file" class="d-none" id="thumbUpload" accept="image/*"
                                         @change="handleThumbUpload">
                                     <label for="thumbUpload"
                                         class="btn btn-outline-brand rounded-pill w-100 fw-semibold"><i
-                                            class="bi bi-upload me-1"></i> Thay đổi ảnh chính</label>
+                                            class="bi bi-upload me-1"></i> Đổi ảnh mới</label>
                                 </div>
                             </div>
 
@@ -126,49 +133,53 @@
                                     @click="proceedToStep2" :disabled="!canProceedToStep2 || isProcessingSchema">
                                     <span v-if="isProcessingSchema"
                                         class="spinner-border spinner-border-sm me-2"></span>
-                                    {{ isProcessingSchema ? 'Đang cấu hình lưới...' : 'Chuyển sang Quản lý Biến thể' }}
+                                    {{ isProcessingSchema ? 'Đang cấu hình lưới...' : 'Tiếp tục xử lý Kho' }}
                                     <i class="bi bi-arrow-right ms-1"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- ================= STEP 2: LƯỚI BIẾN THỂ (MATRIX) ================= -->
                         <div v-show="currentStep === 2">
-                            <div class="card border shadow-sm rounded-3 overflow-hidden mb-4">
 
-                                <!-- TOOLBAR QUẢN LÝ THUỘC TÍNH -->
+                            <div class="card border shadow-sm rounded-3 overflow-hidden mb-4">
                                 <div
                                     class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                    <h6 class="fw-bold mb-0 text-brand d-flex align-items-center"><i
-                                            class="bi bi-grid-3x3-gap-fill me-2"></i>
-                                        CẤU HÌNH LƯỚI SẢN PHẨM</h6>
+                                    <h6 class="fw-bold mb-0 text-brand d-flex align-items-center">
+                                        <i class="bi bi-grid-3x3-gap-fill me-2"></i> CẤU HÌNH LƯỚI SẢN PHẨM
+                                    </h6>
+
                                     <div class="attr-toolbar d-flex align-items-center gap-2">
                                         <div class="input-group input-group-sm">
                                             <select class="form-select border-secondary fw-bold text-secondary"
                                                 v-model="selectedAttrToAdd" style="min-width: 150px;">
                                                 <option value="">+ Chọn thuộc tính</option>
-                                                <template v-if="systemAttributes && systemAttributes.length > 0">
-                                                    <option v-for="attr in systemAttributes" :key="attr?.id"
-                                                        :value="attr?.id"
-                                                        :disabled="activeAttributes.includes(attr?.id.toString())">
-                                                        {{ attr?.name }}
+                                                <template v-if="systemAttributes.length > 0">
+                                                    <option v-for="attr in systemAttributes" :key="attr.id"
+                                                        :value="attr.id"
+                                                        :disabled="activeAttributes.includes(attr.id.toString())">
+                                                        {{ attr.name }}
                                                     </option>
                                                 </template>
                                             </select>
                                             <button type="button" class="btn btn-success px-3 fw-bold"
-                                                @click="addAttributeColumn"><i class="bi bi-plus-lg"></i></button>
+                                                title="Thêm cột vào bảng" @click="addAttributeColumn">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
                                         </div>
+
                                         <div class="vr mx-1 text-secondary opacity-25"></div>
+
                                         <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold"
-                                            @click="openModal('createAttrModal')"><i class="bi bi-plus-circle me-1"></i>
-                                            Thuộc tính mới</button>
+                                            @click="openModal('createAttrModal')">
+                                            <i class="bi bi-plus-circle me-1"></i> Thuộc tính mới
+                                        </button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary border-0 fw-bold"
-                                            @click="openModal('manageAttrModal')"><i class="bi bi-gear-fill me-1"></i>
-                                            Quản lý</button>
+                                            @click="openModal('manageAttrModal')">
+                                            <i class="bi bi-gear-fill me-1"></i> Quản lý
+                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- BẢNG BIẾN THỂ -->
                                 <div class="card-body p-0">
                                     <div class="table-responsive" style="min-height: 350px;">
                                         <table class="table table-bordered mb-0 variant-table w-100">
@@ -183,7 +194,7 @@
                                                         class="bg-light text-dark position-relative">
                                                         {{ getAttributeName(attrId) }}
                                                         <i class="bi bi-x-circle-fill text-danger position-absolute top-50 end-0 translate-middle-y me-2 cursor-pointer opacity-50 hover-opacity-100"
-                                                            @click="removeAttributeColumn(attrId)"></i>
+                                                            title="Gỡ cột" @click="removeAttributeColumn(attrId)"></i>
                                                     </th>
 
                                                     <th style="width: 150px;" class="bg-light-brand text-dark">Giá bán
@@ -198,9 +209,7 @@
                                                 <tr v-if="variants.length === 0">
                                                     <td :colspan="6 + activeAttributes.length" class="text-center py-5">
                                                         <div class="text-muted"><i
-                                                                class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>Chưa
-                                                            có
-                                                            dòng biến thể nào. Hãy thêm dòng mới.</div>
+                                                                class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>Chưa có dòng biến thể nào. Hãy thêm dòng mới.</div>
                                                     </td>
                                                 </tr>
 
@@ -216,9 +225,11 @@
                                                         </label>
                                                     </td>
 
-                                                    <td><input type="text"
+                                                    <td>
+                                                        <input type="text"
                                                             class="form-control form-control-sm font-monospace"
-                                                            v-model="v.sku" required></td>
+                                                            v-model="v.sku" placeholder="Tự động" required>
+                                                    </td>
 
                                                     <td v-for="attrId in activeAttributes" :key="attrId">
                                                         <select class="form-select form-select-sm attr-select"
@@ -227,78 +238,82 @@
                                                             @change="handleAttributeChange($event, attrId, index)">
                                                             <option value="">-- Chọn --</option>
                                                             <option v-for="val in getAttributeValues(attrId)"
-                                                                :key="val?.id" :value="val?.id">{{
-                                                                val?.value }}</option>
-                                                            <option value="NEW" class="text-success fw-bold">+ Tạo
-                                                                mới...</option>
+                                                                :key="val.id" :value="val.id">{{ val.value }}</option>
+                                                            <option value="NEW" class="text-success fw-bold">+ Tạo mới...</option>
                                                         </select>
                                                     </td>
 
-                                                    <td><input type="number"
+                                                    <td>
+                                                        <input type="number"
                                                             class="form-control form-control-sm text-end fw-bold text-brand"
                                                             :class="{ 'is-invalid': v.priceError }" v-model="v.price"
-                                                            min="0" required @input="validateRow(index)"></td>
-                                                    <td><input type="number"
+                                                            min="0" required @input="validateRow(index)">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number"
                                                             class="form-control form-control-sm text-end"
                                                             :class="{ 'is-invalid': v.saleError }"
                                                             v-model="v.promotional_price" min="0"
-                                                            @input="validateRow(index)"></td>
-                                                    <td><input type="number"
+                                                            @input="validateRow(index)">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number"
                                                             class="form-control form-control-sm text-center"
-                                                            v-model="v.stock_quantity" min="0" required></td>
-                                                    <td class="text-center"><button type="button"
+                                                            v-model="v.stock_quantity" min="0" required>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button type="button"
                                                             class="btn btn-sm text-secondary border-0 hover-danger"
-                                                            @click="removeVariantRow(index)"><i
-                                                                class="bi bi-x-lg fs-6"></i></button></td>
+                                                            @click="removeVariantRow(index)">
+                                                            <i class="bi bi-x-lg fs-6"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
 
-                                <!-- Chân Bảng -->
                                 <div
                                     class="card-footer bg-white py-3 d-flex justify-content-between align-items-center sticky-bottom shadow-sm">
                                     <button type="button" class="btn btn-light border text-brand fw-bold px-3 btn-sm"
                                         @click="addVariantRow">
                                         <i class="bi bi-plus-circle-dotted me-2"></i>Thêm dòng biến thể
                                     </button>
+
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="form-check form-switch m-0">
                                             <input class="form-check-input" type="checkbox" id="publishSwitch"
                                                 v-model="form.isPublished">
-                                            <label class="form-check-label fw-semibold" for="publishSwitch">Trạng thái
-                                                Đang Bán</label>
+                                            <label class="form-check-label fw-semibold" for="publishSwitch">Trạng thái Xuất bản</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Footer Tabs -->
                             <div class="d-flex justify-content-between pt-2">
                                 <button type="button" class="btn btn-light px-4 border fw-semibold"
-                                    @click="currentStep = 1"><i class="bi bi-arrow-left me-1"></i> Trở lại Bước
-                                    1</button>
+                                    @click="currentStep = 1"><i class="bi bi-arrow-left me-1"></i> Trở lại Bước 1</button>
                                 <button type="submit" class="btn btn-brand text-white px-5 py-2 fw-bold shadow"
                                     :disabled="isSaving || variants.length === 0">
-                                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> CẬP NHẬT
-                                    SẢN PHẨM
+                                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> CẬP NHẬT SẢN PHẨM
                                 </button>
                             </div>
+
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- MÀN HÌNH CHỜ -->
         <div v-else class="d-flex flex-column justify-content-center align-items-center w-100"
             style="min-height: 70vh;">
             <h1 class="logo-shimmer mb-3">ThinkHub</h1>
-            <p class="text-muted small tracking-widest text-uppercase">Đang tải dữ liệu sản phẩm...</p>
+            <p class="text-muted small tracking-widest text-uppercase">Đang tải cấu hình sản phẩm...</p>
         </div>
 
-        <!-- ================== CÁC MODALS QUẢN LÝ THUỘC TÍNH ================== -->
+
+        <!-- MODALS -->
         <div class="modal fade" id="createAttrModal" tabindex="-1">
             <div class="modal-dialog modal-sm modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -388,13 +403,13 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ THÊM AXIOS
+import axios from 'axios';
 
-const route = useRoute();
 const router = useRouter();
-const productId = route.params.id;
+const route = useRoute();
+const productId = route.params.id; // Lấy ID sản phẩm từ Route
 
 const isPageLoading = ref(true);
 const isSaving = ref(false);
@@ -424,18 +439,28 @@ const newValueForm = ref({ value: '' });
 const currentOperatingAttr = ref(null);
 const currentOperatingRowIndex = ref(null);
 const newValueInputRef = ref(null);
+
 const selectedAttrToManage = ref('');
 const manageAttrName = ref('');
 
-// Cấu hình Header cho Axios
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const formatCurrency = (val) => { if (val === null || val === undefined || val === '' || isNaN(val)) return '0 ₫'; return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val); };
 
+const getImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `http://127.0.0.1:8000/storage/${path}`;
+};
+
+// FIX BLIND SPOT: Edit Mode không ép buộc phải có thumbnailFile mới
 const canProceedToStep2 = computed(() => {
-    return form.value.name && form.value.category_id && form.value.base_price >= 0 && thumbnailPreview.value;
+    return form.value.name && form.value.category_id && form.value.base_price >= 0 && (thumbnailFile.value || thumbnailPreview.value);
 });
 
-const proceedIfValid = () => { if (canProceedToStep2.value) proceedToStep2(); };
+const proceedIfValid = () => {
+    if (canProceedToStep2.value) {
+        proceedToStep2();
+    }
+};
 
 const generateSlug = () => {
     let s = form.value.name.toLowerCase();
@@ -465,7 +490,6 @@ const proceedToStep2 = async () => {
 
     if (selectedCat && selectedCat.attributes_schema && selectedCat.attributes_schema.length > 0) {
         let addedAnyColumn = false;
-
         for (const schemaName of selectedCat.attributes_schema) {
             let existingAttr = systemAttributes.value.find(a => a.name.toLowerCase() === schemaName.toLowerCase());
             let attrIdToAdd = null;
@@ -489,9 +513,9 @@ const proceedToStep2 = async () => {
                 addedAnyColumn = true;
             }
         }
-
-        if (addedAnyColumn) {
-            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Đã nạp thuộc tính từ Danh mục', showConfirmButton: false, timer: 3000 });
+        
+        if (addedAnyColumn && variants.value.length === 0) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Hệ thống đã tự động nạp thuộc tính từ Danh mục', showConfirmButton: false, timer: 3000 });
         }
     }
 
@@ -537,14 +561,15 @@ const removeAttributeColumn = (attrId) => {
     Swal.fire({ title: 'Gỡ cột?', text: "Dữ liệu ở cột này của tất cả biến thể sẽ bị xóa. Tiếp tục?", icon: 'warning', showCancelButton: true }).then((result) => {
         if (result.isConfirmed) {
             activeAttributes.value = activeAttributes.value.filter(id => id != attrId);
-            variants.value.forEach(v => { delete v.attributes[attrId]; });
+            variants.value.forEach(v => {
+                delete v.attributes[attrId];
+            });
             validateDuplicates();
         }
     });
 };
 
 const addVariantRow = () => {
-    // ĐÃ TÍCH HỢP FIX LỖI SKU 1062
     const randomCode = Math.floor(1000 + Math.random() * 9000);
     const prefix = form.value.slug ? form.value.slug.substring(0, 4).toUpperCase().replace(/-/g, '') : 'SKU';
     const newSku = `${prefix}${randomCode}-V${variants.value.length + 1}`;
@@ -553,15 +578,9 @@ const addVariantRow = () => {
     activeAttributes.value.forEach(id => rowAttrs[id] = "");
 
     variants.value.push({
-        id: null, // Đánh dấu dòng mới tạo
-        sku: newSku,
-        price: form.value.base_price,
-        promotional_price: 0,
-        stock_quantity: 10,
-        imageFile: null,
-        preview: null,
-        current_image: null,
-        attributes: rowAttrs,
+        id: null, // Track xem đây là tạo mới hay update
+        sku: newSku, price: form.value.base_price, promotional_price: 0, stock_quantity: 10,
+        imageFile: null, preview: null, attributes: rowAttrs,
         hasDuplicateError: false, attrError: false, priceError: false, saleError: false
     });
 };
@@ -596,7 +615,6 @@ const hideModals = () => {
     if (manageAttrModalObj) manageAttrModalObj.hide();
 };
 
-// ================= AXIOS: THAO TÁC API PHỤ =================
 const submitCreateAttribute = async () => {
     if (!newAttrForm.value.name) return;
     try {
@@ -606,7 +624,8 @@ const submitCreateAttribute = async () => {
         );
         res.data.data.values = [];
         systemAttributes.value.push(res.data.data);
-        hideModals(); newAttrForm.value.name = '';
+        hideModals();
+        newAttrForm.value.name = '';
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm thuộc tính', showConfirmButton: false, timer: 2000 });
     } catch (e) {
         if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm thuộc tính', 'error');
@@ -641,7 +660,8 @@ const submitCreateValue = async () => {
         if (currentOperatingRowIndex.value !== null) {
             variants.value[currentOperatingRowIndex.value].attributes[attrObj.id] = res.data.data.id;
         }
-        hideModals(); validateDuplicates();
+        hideModals();
+        validateDuplicates();
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm giá trị', showConfirmButton: false, timer: 2000 });
     } catch (e) {
         if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm giá trị', 'error');
@@ -652,7 +672,9 @@ watch(selectedAttrToManage, (newId) => {
     if (newId) {
         const attr = systemAttributes.value.find(a => a.id === parseInt(newId));
         if (attr) manageAttrName.value = attr.name;
-    } else { manageAttrName.value = ''; }
+    } else {
+        manageAttrName.value = '';
+    }
 });
 
 const updateAttribute = async (id) => {
@@ -679,7 +701,10 @@ const deleteAttribute = async (id) => {
                 systemAttributes.value = systemAttributes.value.filter(a => a.id !== parseInt(id));
                 selectedAttrToManage.value = '';
                 if (manageAttrModalObj) manageAttrModalObj.hide();
-                if (activeAttributes.value.includes(id.toString())) removeAttributeColumn(id.toString());
+
+                if (activeAttributes.value.includes(id.toString())) {
+                    removeAttributeColumn(id.toString());
+                }
                 Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 2000 });
             } catch (e) {
                 if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Không thể xóa', 'error');
@@ -700,7 +725,9 @@ const validateDuplicates = () => {
     let hasDuplicate = false;
 
     variants.value.forEach((v, i) => {
-        v.attrError = false; v.hasDuplicateError = false;
+        v.attrError = false;
+        v.hasDuplicateError = false;
+
         let isFullSelected = true;
         let sigArray = [];
 
@@ -710,18 +737,22 @@ const validateDuplicates = () => {
             sigArray.push(val);
         });
 
-        if (!isFullSelected) { v.attrError = true; }
-        else {
+        if (!isFullSelected) {
+            v.attrError = true;
+        } else {
             const signature = sigArray.join('-');
             if (seen.has(signature)) {
-                v.hasDuplicateError = true; hasDuplicate = true;
+                v.hasDuplicateError = true;
+                hasDuplicate = true;
                 const firstDupIdx = variants.value.findIndex(x => {
                     let sArray = [];
                     activeAttributes.value.forEach(a => sArray.push(x.attributes[a]));
                     return sArray.join('-') === signature;
                 });
                 if (firstDupIdx !== -1) variants.value[firstDupIdx].hasDuplicateError = true;
-            } else { seen.add(signature); }
+            } else {
+                seen.add(signature);
+            }
         }
     });
 
@@ -729,33 +760,44 @@ const validateDuplicates = () => {
     return hasDuplicate;
 };
 
-// ================= AXIOS: CẬP NHẬT SẢN PHẨM (KÈM BẮT LỖI NÂNG CAO) =================
-const updateProduct = async () => {
+const submitProduct = async () => {
     validateDuplicates();
     let hasHardError = false;
-    variants.value.forEach((v, i) => { validateRow(i); if (v.priceError || v.saleError || v.attrError || v.hasDuplicateError) hasHardError = true; });
+
+    variants.value.forEach((v, i) => {
+        validateRow(i);
+        if (v.priceError || v.saleError || v.attrError || v.hasDuplicateError) hasHardError = true;
+    });
 
     if (hasHardError) {
-        Swal.fire('Lỗi Dữ liệu', 'Có dòng biến thể đang bị bôi đỏ. Vui lòng sửa lại!', 'error'); return;
+        Swal.fire('Lỗi Dữ liệu', 'Vui lòng kiểm tra các dòng bị bôi đỏ (Chưa chọn thuộc tính, sai giá, hoặc trùng lặp).', 'error'); return;
     }
 
     isSaving.value = true;
     try {
         const formData = new FormData();
-        formData.append('_method', 'PUT'); // Laravel Update Flag
+        formData.append('_method', 'PUT');
+        
         formData.append('category_id', form.value.category_id);
-        formData.append('brand_id', form.value.brand_id || '');
+        if (form.value.brand_id) {
+            formData.append('brand_id', form.value.brand_id);
+        }
         formData.append('name', form.value.name);
         formData.append('slug', form.value.slug);
         formData.append('base_price', form.value.base_price);
         formData.append('status', form.value.isPublished ? 'published' : 'draft');
-
-        if (thumbnailFile.value) formData.append('thumbnail_image', thumbnailFile.value);
+        
+        if (thumbnailFile.value) {
+            formData.append('thumbnail_image', thumbnailFile.value);
+        }
 
         const variantsPayload = variants.value.map(v => ({
-            id: v.id,
-            sku: v.sku, price: v.price, promotional_price: v.promotional_price || 0,
-            stock_quantity: v.stock_quantity, current_image: v.current_image, attributes: v.attributes
+            id: v.id || null, 
+            sku: v.sku,
+            price: v.price,
+            promotional_price: v.promotional_price || 0,
+            stock_quantity: v.stock_quantity,
+            attributes: v.attributes
         }));
         formData.append('variants_data', JSON.stringify(variantsPayload));
 
@@ -767,11 +809,10 @@ const updateProduct = async () => {
             headers: getHeaders()
         });
 
-        Swal.fire({ icon: 'success', title: 'Hoàn tất Cập nhật', text: res.data.message, timer: 1500, showConfirmButton: false }).then(() => {
+        Swal.fire({ icon: 'success', title: 'Cập nhật thành công', text: 'Sản phẩm đã được lưu', timer: 2000, showConfirmButton: false }).then(() => {
             router.push({ name: 'admin-products' });
         });
     } catch (e) {
-        // ĐÃ NÂNG CẤP: Hiển thị lỗi từ Backend dưới dạng Danh sách HTML đẹp mắt
         if (e.response) {
             let errorHtml = '';
             if (e.response.data.errors) {
@@ -793,16 +834,18 @@ const updateProduct = async () => {
         } else {
             Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
         }
-    } finally { isSaving.value = false; }
+    } finally {
+        isSaving.value = false;
+    }
 };
 
-// ================= AXIOS: KHỞI TẠO DỮ LIỆU EDIT =================
-const fetchInitialData = async () => {
+const fetchData = async () => {
     try {
-        const [catRes, attrRes, brandRes] = await Promise.all([
+        const [catRes, attrRes, brandRes, prodRes] = await Promise.all([
             axios.get('http://127.0.0.1:8000/api/admin/categories?status=active', { headers: getHeaders() }),
             axios.get('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/admin/brands?status=active', { headers: getHeaders() })
+            axios.get('http://127.0.0.1:8000/api/admin/brands?status=active', { headers: getHeaders() }),
+            axios.get(`http://127.0.0.1:8000/api/admin/products/${productId}`, { headers: getHeaders() })
         ]);
 
         const catData = catRes.data;
@@ -814,48 +857,53 @@ const fetchInitialData = async () => {
         const brandData = brandRes.data;
         brands.value = Array.isArray(brandData.data) ? brandData.data : [];
 
-        const p = prodRes.data.data;
-        form.value.name = p.name;
-        form.value.slug = p.slug;
-        form.value.category_id = p.category_id;
-        form.value.brand_id = p.brand_id || '';
-        form.value.base_price = p.base_price;
-        form.value.isPublished = p.status === 'published';
-        if (p.thumbnail_image) thumbnailPreview.value = `http://127.0.0.1:8000/storage/${p.thumbnail_image}`;
+        const pData = prodRes.data.data;
+        form.value.name = pData.name;
+        form.value.slug = pData.slug;
+        form.value.category_id = pData.category_id || '';
+        form.value.brand_id = pData.brand_id || '';
+        form.value.base_price = Math.round(pData.base_price || 0);
+        form.value.isPublished = pData.status === 'published';
+        
+        if (pData.thumbnail_image) {
+            thumbnailPreview.value = getImageUrl(pData.thumbnail_image);
+        }
 
-        if (p.variants && p.variants.length > 0) {
-            let foundAttrIds = new Set();
-            p.variants.forEach(v => {
-                Object.keys(v.attributes).forEach(k => foundAttrIds.add(k.toString()));
-            });
-            activeAttributes.value = Array.from(foundAttrIds);
-
-            variants.value = p.variants.map(v => {
-                let normalizedAttrs = {};
-                activeAttributes.value.forEach(k => normalizedAttrs[k] = "");
-                Object.keys(v.attributes).forEach(k => normalizedAttrs[k.toString()] = v.attributes[k]);
-
+        if (pData.variants && pData.variants.length > 0) {
+            let cols = new Set();
+            variants.value = pData.variants.map(v => {
+                let attrs = {};
+                let parsedAttrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes) : (v.attributes || {});
+                
+                for (let key in parsedAttrs) {
+                    cols.add(key.toString());
+                    attrs[key.toString()] = parsedAttrs[key];
+                }
+                
                 return {
-                    id: v.id, sku: v.sku, price: v.price, promotional_price: v.promotional_price || 0,
+                    id: v.id,
+                    sku: v.sku,
+                    price: Math.round(v.price || 0),
+                    promotional_price: Math.round(v.promotional_price || 0),
                     stock_quantity: v.stock_quantity,
-                    current_image: v.image_url,
-                    preview: v.image_url ? `http://127.0.0.1:8000/storage/${v.image_url}` : null,
-                    imageFile: null, attributes: normalizedAttrs,
+                    preview: getImageUrl(v.image_url || v.image),
+                    imageFile: null,
+                    attributes: attrs,
                     hasDuplicateError: false, attrError: false, priceError: false, saleError: false
                 };
             });
-        } else {
-            addVariantRow();
+            activeAttributes.value = Array.from(cols);
         }
 
     } catch (e) {
-        console.error('Lỗi khi tải dữ liệu Update Product', e);
+        console.error('Lỗi khởi tạo dữ liệu trang Edit Product:', e);
+        Swal.fire('Lỗi', 'Không thể tải thông tin sản phẩm', 'error');
     } finally {
         isPageLoading.value = false;
     }
 };
 
-onMounted(() => fetchInitialData());
+onMounted(() => fetchData());
 </script>
 
 <style scoped>
