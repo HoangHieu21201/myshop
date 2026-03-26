@@ -41,6 +41,9 @@ Route::prefix('client')->group(function () {
     Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
     Route::get('search', [ClientHeaderController::class, 'search']);
     Route::get('/home-data', [ClientHomeController::class, 'index']);
+    
+    // API Lấy Bảng Giá Vàng (Thêm mới)
+    Route::get('/gold-prices', [ClientHomeController::class, 'goldPrices']);
 
     // MODULE GIỎ HÀNG (Cart)
     Route::controller(ClientCartController::class)->prefix('cart')->group(function () {

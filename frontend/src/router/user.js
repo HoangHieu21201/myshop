@@ -9,6 +9,11 @@ const user = [
         component: () => import('../pages/user/index.vue'),
       },
       {
+        path: 'gia-vang',
+        name: 'gold-price',
+        component: () => import('../pages/user/goldPrices/GoldPrice.vue')
+      },
+      {
         path: 'cart',
         name: 'cart',
         component: () => import('../pages/user/cart/index.vue'),
@@ -38,7 +43,6 @@ const user = [
         name: 'shop',
         component: () => import('../pages/user/shop/Index.vue'),
       },
-      // ĐÃ THÊM ROUTE CHO TRANG CHI TIẾT SẢN PHẨM Ở ĐÂY
       {
         path: 'shop/:shop_slug/product/:slug',
         name: 'productDetail',
