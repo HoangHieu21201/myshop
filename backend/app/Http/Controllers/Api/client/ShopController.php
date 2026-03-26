@@ -14,8 +14,8 @@ class ShopController extends Controller
      */
     public function index(Request $request, $shop_slug)
     {
-        // Query cơ bản: eager load category và variants để lấy thông tin ảnh hover
-        $query = Product::with(['category:id,name,slug', 'variants:id,product_id,image_url'])
+        // FIX: Lấy TOÀN BỘ thông tin variants để phục vụ việc chọn Size/Màu, check tồn kho ở Frontend
+        $query = Product::with(['category:id,name,slug', 'variants'])
             ->where('status', 'published'); 
 
         // 1. Lọc theo Danh mục (nếu có chọn) - Lọc bằng slug
