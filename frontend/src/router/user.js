@@ -103,6 +103,11 @@ const user = [
         name: 'compare',
         component: () => import('../pages/user/compare/Index.vue'), 
       },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('../pages/user/profile/index.vue')
+      },
     ],
   },
 ]

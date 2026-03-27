@@ -32,9 +32,10 @@ use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\client\ClientCompareController; // Đã thêm Use Controller
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\client\ClientCheckoutController;
+// use App\Http\Controllers\Api\client\ClientCheckoutController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\client\ClientFavouriteController;
+use App\Http\Controllers\Api\client\ClientProfileController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -80,6 +81,16 @@ Route::prefix('client')->group(function () {
         Route::post('/toggle', [ClientFavouriteController::class, 'toggle']);
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
+    // Hồ Sơ Cá Nhân (Profile)
+        Route::prefix('profile')->group(function () {
+            Route::get('/', [ClientProfileController::class, 'show']);
+            Route::post('/', [ClientProfileController::class, 'update']);
+            
+            // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
+            Route::post('/password', [ClientProfileController::class, 'updatePassword']); 
+        });
+
+
 
 
     // MODULE ĐƠN HÀNG (Orders)
