@@ -78,7 +78,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ THÊM AXIOS
+import axios from 'axios';
 
 const router = useRouter();
 const isSaving = ref(false);
@@ -122,7 +122,6 @@ const submitBrand = async () => {
     if (form.value.description) formData.append('description', form.value.description);
     if (logoFile.value) formData.append('logo', logoFile.value);
 
-    // AXIOS CHUẨN MỰC
     const res = await axios.post('http://127.0.0.1:8000/api/admin/brands', formData, {
       headers: getHeaders()
     });

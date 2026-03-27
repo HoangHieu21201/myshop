@@ -143,7 +143,6 @@ const selectedFile = ref(null);
 
 const form = ref({ fullname: '', email: '', password: '', phone: '', address: '', role_id: '', status: 'active' });
 
-// QUẢN LÝ ĐỊA CHỈ (ESGOO API)
 const provinces = ref([]);
 const districts = ref([]);
 const wards = ref([]);
@@ -152,9 +151,6 @@ const selectedDistrictId = ref('');
 const selectedWardId = ref('');
 const specificAddress = ref('');
 
-// ========================
-// LOGIC API TỈNH THÀNH (ESGOO)
-// ========================
 const fetchProvinces = async () => {
   try {
     const res = await fetch('https://esgoo.net/api-tinhthanh/1/0.htm');
@@ -188,9 +184,6 @@ const onDistrictChange = async () => {
 
 const onWardChange = () => {};
 
-// ========================
-// LOGIC KHÁC
-// ========================
 const fetchRoles = async () => {
   const res = await fetch('http://127.0.0.1:8000/api/admin/roles', { headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` } });
   const data = await res.json();
@@ -208,7 +201,6 @@ const handleAvatarChange = (e) => {
 const saveStaff = async () => {
   isSaving.value = true;
 
-  // Ghép chuỗi địa chỉ trước khi gửi
   let finalAddress = specificAddress.value;
   const cityName = provinces.value.find(p => p.id === selectedCityId.value)?.full_name || '';
   const distName = districts.value.find(d => d.id === selectedDistrictId.value)?.full_name || '';
@@ -244,7 +236,7 @@ const saveStaff = async () => {
 
 onMounted(() => {
   fetchRoles();
-  fetchProvinces(); // Load API Tỉnh Thành
+  fetchProvinces();
 });
 </script>
 

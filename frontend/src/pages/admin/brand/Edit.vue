@@ -82,7 +82,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ THÊM AXIOS
+import axios from 'axios';
 
 const route = useRoute();
 const router = useRouter();
@@ -139,7 +139,7 @@ const updateBrand = async () => {
   isSaving.value = true;
   try {
     const formData = new FormData();
-    formData.append('_method', 'PUT'); // Laravel Update method
+    formData.append('_method', 'PUT');
     formData.append('name', form.value.name);
     formData.append('slug', form.value.slug);
     formData.append('status', form.value.isActive ? 'active' : 'hidden');

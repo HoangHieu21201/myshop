@@ -146,11 +146,10 @@
               <p class="text-end small text-light text-opacity-50 mb-0">Giá đã bao gồm thuế VAT</p>
             </div>
 
-            <button class="btn btn-gold w-100 rounded-pill py-3 fw-bold text-uppercase shadow-lg btn-checkout d-flex align-items-center justify-content-center gap-2">
-              Thanh toán an toàn <i class="bi bi-shield-lock-fill fs-5"></i>
-            </button>
+            <router-link to="/checkout" class="btn btn-gold w-100 rounded-pill py-3 fw-bold text-uppercase shadow-lg btn-checkout d-flex align-items-center justify-content-center gap-2">
+                Thanh toán an toàn <i class="bi bi-shield-lock-fill fs-5"></i>
+            </router-link>
 
-            <!-- Trust badges -->
             <div class="mt-4 pt-4 border-top border-light border-opacity-10 d-flex justify-content-center gap-4 text-gold opacity-75">
               <i class="bi bi-arrow-repeat fs-4" title="Đổi trả 7 ngày"></i>
               <i class="bi bi-shield-check fs-4" title="Bảo hành trọn đời"></i>

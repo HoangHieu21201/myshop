@@ -485,7 +485,6 @@ const checkStatusChange = (order) => { order.isStatusChanged = (order.localStatu
 const cancelStatusChange = (order) => { order.localStatus = order.status; order.isStatusChanged = false; };
 
 const saveOrderStatus = async (order) => {
-  // BẢO VỆ DOANH THU
   if (order.localStatus === 'delivered' && order.payment_status !== 'paid') {
       Swal.fire({
           title: 'Khoan đã! Chưa thu tiền',
@@ -569,7 +568,6 @@ const savePaymentStatus = async (order) => {
   await sendUpdateRequest(order, payload, 'isUpdatingPayment', 'payment_status', order.localPaymentStatus, 'isPaymentStatusChanged');
 };
 
-// ĐÃ NÂNG CẤP: BẮT LỖI 422 VÀ HIỂN THỊ CÂU CHỬI CỦA LARAVEL
 const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newValue, changedFlag) => {
   try {
     const res = await axios.put(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, payload, { 
@@ -588,12 +586,10 @@ const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newVa
     
     if (error.response) {
       if (error.response.status === 422) {
-          // Bắt đúng lỗi Validation từ Backend trả về
           const errors = error.response.data.errors;
           let errorMsg = error.response.data.message || 'Dữ liệu không hợp lệ!';
           
           if (errors) {
-              // Lấy thông báo lỗi đầu tiên trong mảng errors
               errorMsg = Object.values(errors)[0][0]; 
           }
           

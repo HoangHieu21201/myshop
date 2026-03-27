@@ -19,7 +19,7 @@
 
     <!-- Bên phải (ẩn trên mobile) -->
     <div class="ms-3 d-none d-sm-inline opacity-75 fw-semibold text-secondary whitespace-nowrap">
-      Hi Admin 👋
+      Hi Admin
     </div>
     
   </footer>

@@ -149,7 +149,6 @@ const handleRegister = async () => {
     } else {
       let errorMessage = data.message || 'Có lỗi xảy ra khi đăng ký!';
       if (data.errors) {
-        // Gom tất cả các lỗi thành 1 chuỗi để hiển thị
         errorMessage = Object.values(data.errors).flat().join('\n');
       }
 
