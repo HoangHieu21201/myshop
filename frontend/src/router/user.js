@@ -100,6 +100,11 @@ const user = [
         name: 'checkout-failed',
         component: () => import('../pages/user/checkout/Failed.vue'),
       },
+      {
+  path: '/gold-price',
+  name: 'gold-price', 
+  component: () => import('../pages/user/goldPrices/GoldPrice.vue')
+}
     ],
   },
 ]
