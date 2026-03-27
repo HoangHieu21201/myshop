@@ -5,7 +5,7 @@
       <div class="auth-banner">
         <div class="banner-overlay"></div>
         <div class="banner-content">
-          <h1 class="brand-name-large">SORA</h1>
+          <img src="../../../assets/images/logo2.png" alt="SORA Jewelry Logo" class="brand-logo-img" />
           <p class="brand-slogan">Vẻ đẹp vượt thời gian</p>
         </div>
       </div>
@@ -44,7 +44,7 @@
 
         <!-- Social Logins -->
         <div class="social-login">
-          <button @click="handleSocialLogin('Google')" class="btn-social" type="button">
+          <button @click="LoginWithGoogle" class="btn-social" type="button">
             <svg class="social-icon" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -76,10 +76,12 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import axios from 'axios';
-// import { useRouter } from 'vue-router';
 
-// const router = useRouter();
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const LoginWithGoogle = () => {
+  window.location.href = `${API_BASE_URL}/auth/google/redirect`;
+}
 
 const isLoading = ref(false);
 const errorMessage = ref('');
@@ -108,8 +110,6 @@ const handleLogin = async () => {
     localStorage.setItem('userData', JSON.stringify(response.data.user));
     
     setTimeout(() => {
-      // Dùng router.go(0) hoặc ép reload nhẹ bằng cách push rồi tải lại trang
-      // để đảm bảo Header mount lại và lấy user mới nhất
       window.location.href = '/'; 
     }, 1000);
 
@@ -155,7 +155,7 @@ const handleSocialLogin = (platform) => {
 .auth-banner {
   flex: 1;
   position: relative;
-  background: url('https://images.unsplash.com/photo-1599643478514-4a4204142abf?q=80&w=1000&auto=format&fit=crop') center/cover no-repeat;
+  background: url('https://images.unsplash.com/photo-1617117832890-a5f11e037000?q=80&w=1000&auto=format&fit=crop') center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -164,7 +164,7 @@ const handleSocialLogin = (platform) => {
 .banner-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, rgba(159, 39, 59, 0.85) 0%, rgba(50, 10, 20, 0.7) 100%);
+  background: linear-gradient(135deg, rgba(159, 39, 59, 0.9) 0%, rgba(20, 5, 10, 0.8) 100%);
 }
 
 .banner-content {
@@ -173,22 +173,25 @@ const handleSocialLogin = (platform) => {
   text-align: center;
   color: white;
   padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.brand-name-large {
-  font-size: 48px;
-  font-weight: bold;
-  margin: 0 0 15px;
-  letter-spacing: 12px;
-  font-family: 'Playfair Display', 'Times New Roman', serif;
-  text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+.brand-logo-img {
+  max-width: 180px;
+  height: auto;
+  margin-bottom: 25px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
 }
 
 .brand-slogan {
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 2px;
   color: #e7ce7d;
   text-transform: uppercase;
+  margin: 0;
+  font-weight: 500;
 }
 
 .auth-box {
