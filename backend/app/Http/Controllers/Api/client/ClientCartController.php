@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
-use App\Http\Requests\Cart\UserStoreCartItemRequest;
-use App\Http\Requests\Cart\UserUpdateCartItemRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Http\Requests\UserStoreCartItemRequest;
+use App\Http\Requests\UserUpdateCartItemRequest;
 
 class ClientCartController extends Controller
 {

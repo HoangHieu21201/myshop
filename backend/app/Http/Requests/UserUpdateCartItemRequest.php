@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Cart;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\CartItem;
@@ -24,13 +24,18 @@ class UserUpdateCartItemRequest extends FormRequest
         ];
     }
 
+    /**
+     * Sparring Partner: Rào khép kín mọi lỗ hổng khi khách tăng/giảm số lượng
+     */
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $cartItemParam = $this->route('cart_item');
-            $cartItem = $cartItemParam instanceof CartItem
-                ? $cartItemParam
-                : CartItem::find($cartItemParam);
+            
+            // FIX BLIND SPOT: Bắt trọn tên tham số định nghĩa trong routes/api.php
+            // Đảm bảo không bao giờ bị null dù tên Route là gì
+            $idParam = $this->route('cartItem') ?? $this->route('cart_item') ?? $this->route('id') ?? $this->route('cart');
+            
+            $cartItem = CartItem::find($idParam);
 
             if (!$cartItem) {
                 $validator->errors()->add('quantity', 'Không tìm thấy thông tin sản phẩm trong giỏ hàng.');
@@ -39,10 +44,12 @@ class UserUpdateCartItemRequest extends FormRequest
 
             $requestedQuantity = (int) $this->quantity;
 
+            // Rào lỗi 1: Tăng số lượng SẢN PHẨM LẺ
             if ($cartItem->product_variant_id) {
                 $variant = $cartItem->variant;
+                // Nhỡ Admin vừa xóa sản phẩm khi khách đang xem giỏ hàng?
                 if (!$variant) {
-                    $validator->errors()->add('quantity', 'Sản phẩm này đã không còn tồn tại trên hệ thống.');
+                    $validator->errors()->add('quantity', 'Sản phẩm này đã ngừng kinh doanh.');
                     return;
                 }
 
@@ -51,13 +58,24 @@ class UserUpdateCartItemRequest extends FormRequest
                 }
             }
 
+            // Rào lỗi 2: Tăng số lượng COMBO
             if ($cartItem->combo_id && is_array($cartItem->combo_selections)) {
                 $variantIds = array_column($cartItem->combo_selections, 'selected_variant_id');
                 $variantsInCombo = ProductVariant::whereIn('id', $variantIds)->get();
 
-                foreach ($variantsInCombo as $v) {
-                    if ($requestedQuantity > $v->stock_quantity) {
-                        $validator->errors()->add('quantity', "Kho không đủ, một trong các sản phẩm thuộc combo chỉ còn tối đa {$v->stock_quantity} chiếc.");
+                // Build lookup array để tối ưu vòng lặp
+                $variantStockMap = $variantsInCombo->pluck('stock_quantity', 'id')->toArray();
+
+                foreach ($cartItem->combo_selections as $selection) {
+                    $vId = $selection['selected_variant_id'] ?? null;
+                    if (!$vId || !isset($variantStockMap[$vId])) {
+                        $validator->errors()->add('quantity', 'Một phân loại trong Combo đã ngừng kinh doanh.');
+                        break;
+                    }
+
+                    // Tăng số lượng Combo = Tăng số lượng từng món bên trong
+                    if ($requestedQuantity > $variantStockMap[$vId]) {
+                        $validator->errors()->add('quantity', "Kho không đủ, một trong các món thuộc combo chỉ còn {$variantStockMap[$vId]} chiếc.");
                         break;
                     }
                 }

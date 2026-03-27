@@ -35,16 +35,17 @@
         
         <!-- Cột trái: Danh sách sản phẩm -->
         <div class="col-lg-8">
+          <!-- FIX BLIND SPOT: Đổi lưới từ 6-2-2-2 thành 5-2-2-3 để nhường không gian cho số tiền lớn -->
           <div class="row d-none d-md-flex border-bottom pb-3 text-secondary small text-uppercase mb-4 fw-bold" style="letter-spacing: 0.05em;">
-            <div class="col-6">Sản phẩm</div>
+            <div class="col-5">Sản phẩm</div>
             <div class="col-2 text-center">Đơn giá</div>
             <div class="col-2 text-center">Số lượng</div>
-            <div class="col-2 text-end">Tổng cộng</div>
+            <div class="col-3 text-end">Tổng cộng</div>
           </div>
 
           <div v-for="item in cartItems" :key="item.id" class="row align-items-center border-bottom py-4 position-relative cart-item-row">
             
-            <div class="col-12 col-md-6 d-flex align-items-center gap-4">
+            <div class="col-12 col-md-5 d-flex align-items-center gap-4">
               <div class="position-relative bg-light rounded shadow-sm border" style="width: 100px; height: 100px; flex-shrink: 0; overflow: hidden;">
                 <div v-if="item.isUpdating" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 10;">
                   <div class="spinner-border spinner-border-sm" style="color: #9f273b;" role="status"></div>
@@ -75,14 +76,14 @@
                 </div>
                 
                 <div class="d-flex d-md-none justify-content-between align-items-center mt-3">
-                  <span class="fw-bold text-primary-custom">{{ formatPrice(getItemPrice(item)) }}</span>
+                  <span class="fw-bold text-primary-custom text-nowrap">{{ formatPrice(getItemPrice(item)) }}</span>
                   <button @click="removeItem(item.id)" class="btn btn-link text-danger p-0 text-decoration-none fw-bold small"><i class="bi bi-trash-fill"></i> Xóa</button>
                 </div>
               </div>
             </div>
 
             <!-- Đơn giá (Desktop) -->
-            <div class="col-2 d-none d-md-block text-center text-secondary fw-medium">
+            <div class="col-2 d-none d-md-block text-center text-secondary fw-medium text-nowrap">
               {{ formatPrice(getItemPrice(item)) }}
             </div>
 
@@ -104,11 +105,12 @@
             </div>
 
             <!-- Tổng và Xóa (Desktop) -->
-            <div class="col-2 d-none d-md-flex justify-content-end align-items-center gap-3">
-              <span class="fs-5 fw-bold text-primary-custom" style="font-family: 'Playfair Display', serif;">
+            <!-- FIX BLIND SPOT: Đổi col-2 thành col-3, thêm text-nowrap để giá tiền lớn không bị đè lên nút + -->
+            <div class="col-3 d-none d-md-flex justify-content-end align-items-center gap-3">
+              <span class="fs-5 fw-bold text-primary-custom text-nowrap" style="font-family: 'Playfair Display', serif;">
                 {{ formatPrice(item.quantity * getItemPrice(item)) }}
               </span>
-              <button @click="removeItem(item.id)" :disabled="item.isUpdating" class="btn-remove-item" title="Xóa khỏi giỏ">
+              <button @click="removeItem(item.id)" :disabled="item.isUpdating" class="btn-remove-item flex-shrink-0" title="Xóa khỏi giỏ">
                 <i class="bi bi-x-lg fw-bold text-danger"></i>
               </button>
             </div>
@@ -165,29 +167,56 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import Swal from 'sweetalert2'; 
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 
 const router = useRouter();
 const isLoading = ref(true);
 const cartItems = ref([]);
+const backendSummary = ref(null);
 
-// ĐÃ FIX: Hàm cấu hình Header cực chuẩn, kết hợp Token Đăng Nhập và Session Ẩn Danh
+const API_BASE_URL = 'http://127.0.0.1:8000/api/client/cart';
+
+// FIX BLIND SPOT: Đã sửa lại lỗi hiển thị tàng hình của SweetAlert (Scope issue)
+const soraAlert = Swal.mixin({
+  buttonsStyling: true, // Bật lại styling mặc định để nhận các thuộc tính màu nền
+  confirmButtonColor: '#9f273b', // Cấp cứng màu Đỏ SORA vào config của thư viện
+  cancelButtonColor: '#6c757d',  // Cấp cứng màu Xám vào config của thư viện
+  customClass: {
+    confirmButton: 'px-4 py-2 mx-2 rounded-pill shadow-sm fw-bold',
+    cancelButton: 'px-4 py-2 mx-2 rounded-pill fw-bold'
+  }
+});
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  background: '#fffafa', // Nền hồng nhạt
+  color: '#9f273b',      // Chữ đỏ SORA
+  iconColor: '#9f273b',  // Icon đỏ SORA
+  customClass: {
+    timerProgressBar: 'swal2-progress-sora'
+  },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
+
 const getHeaders = () => {
   const headers = { 'Accept': 'application/json' };
-  
-  // 1. Nếu có đăng nhập, gửi Token lên Backend
   const token = localStorage.getItem('auth_token');
   if (token) headers['Authorization'] = `Bearer ${token}`;
   
-  // 2. Đồng bộ Key cart_session_id từ lúc AddToCart
   let sid = localStorage.getItem('cart_session_id');
   if (!sid && !token) { 
     sid = 'session_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('cart_session_id', sid);
   }
-  
   if (sid) headers['X-Cart-Session-Id'] = sid;
-  
   return headers;
 };
 
@@ -221,6 +250,7 @@ const totalItems = computed(() => {
 });
 
 const summary = computed(() => {
+  if (backendSummary.value) return backendSummary.value;
   const subtotal = cartItems.value.reduce((sum, item) => sum + (item.quantity * getItemPrice(item)), 0);
   return { subtotal };
 });
@@ -235,87 +265,136 @@ const handleImageError = (e) => {
   e.target.src = defaultPlaceholder;
 };
 
-// ĐÃ FIX AXIOS: Sử dụng getHeaders()
-const fetchCart = async () => {
-  isLoading.value = true;
+const fetchCart = async (isBackground = false) => {
+  if (!isBackground) isLoading.value = true;
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/client/cart', {
-      headers: getHeaders()
-    });
+    const response = await axios.get(API_BASE_URL, { headers: getHeaders() });
     if (response.data && response.data.success) {
-      cartItems.value = (response.data.data || []).map(item => ({
-        ...item,
-        isUpdating: false
-      }));
+      cartItems.value = (response.data.data || []).map(item => ({ ...item, isUpdating: false }));
+      if (response.data.summary) backendSummary.value = response.data.summary;
     }
   } catch (error) {
     console.error('Lỗi khi tải giỏ hàng:', error);
   } finally {
-    isLoading.value = false;
+    if (!isBackground) isLoading.value = false;
   }
 };
 
 const updateQuantity = async (item, change) => {
   const newQty = item.quantity + change;
   if (newQty < 1) return; 
-  if (!item.combo_id && newQty > (item.variant?.stock_quantity || 0)) return; 
+  if (!item.combo_id && newQty > (item.variant?.stock_quantity || 0)) {
+      soraAlert.fire({
+        icon: 'warning',
+        title: 'Kho không đủ',
+        text: `Sản phẩm này chỉ còn ${item.variant?.stock_quantity} món trong kho.`,
+        confirmButtonText: 'Đã hiểu'
+      });
+      return;
+  }
   
+  const originalQty = item.quantity;
   item.isUpdating = true;
+  
   try {
-    const response = await axios.put(`http://127.0.0.1:8000/api/client/cart/${item.id}`, 
+    const response = await axios.put(`${API_BASE_URL}/${item.id}`, 
       { quantity: newQty }, 
-      { headers: getHeaders() } // ĐÃ FIX AXIOS
+      { headers: getHeaders() }
     );
+    
     if (response.data.success) {
       item.quantity = newQty;
+      await fetchCart(true);
     }
   } catch (error) {
-    alert(error.response?.data?.message || 'Không thể cập nhật số lượng. Có thể đã hết hàng trong kho.');
+    let errorMsg = 'Không thể cập nhật số lượng.';
+    if (error.response?.status === 500) {
+      errorMsg = 'Lỗi kết nối máy chủ, vui lòng thử lại sau.';
+    } else if (error.response?.data?.errors?.quantity) {
+      errorMsg = error.response.data.errors.quantity[0];
+    } else if (error.response?.data?.message) {
+      errorMsg = error.response.data.message;
+    }
+    
+    soraAlert.fire({
+      icon: 'error',
+      title: 'Không thể cập nhật',
+      text: errorMsg,
+      confirmButtonText: 'Đã hiểu'
+    });
+
+    item.quantity = originalQty;
+    await fetchCart(true);
   } finally {
-    item.isUpdating = false;
+    if (item) item.isUpdating = false;
   }
 };
 
 const removeItem = async (itemId) => {
-  if(!confirm('Bạn có chắc muốn xóa mặt hàng này khỏi giỏ?')) return;
-  
-  const index = cartItems.value.findIndex(i => i.id === itemId);
-  if (index === -1) return;
+  soraAlert.fire({
+    title: 'Xóa khỏi giỏ hàng?',
+    text: "Bạn có chắc chắn muốn bỏ mặt hàng này không?",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Đồng ý xóa',
+    cancelButtonText: 'Hủy bỏ',
+    reverseButtons: true 
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const index = cartItems.value.findIndex(i => i.id === itemId);
+      if (index === -1) return;
 
-  cartItems.value[index].isUpdating = true;
-  try {
-    const response = await axios.delete(`http://127.0.0.1:8000/api/client/cart/${itemId}`, {
-      headers: getHeaders() // ĐÃ FIX AXIOS
-    });
-    if (response.data.success) {
-      cartItems.value.splice(index, 1);
+      cartItems.value[index].isUpdating = true;
+      try {
+        const response = await axios.delete(`${API_BASE_URL}/${itemId}`, { headers: getHeaders() });
+        if (response.data.success) {
+          cartItems.value.splice(index, 1);
+          Toast.fire({ icon: 'success', title: 'Đã xóa sản phẩm thành công' });
+          await fetchCart(true); 
+        }
+      } catch (error) {
+        soraAlert.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi xóa. Vui lòng thử lại.',
+          confirmButtonText: 'Đóng'
+        });
+        if(cartItems.value[index]) cartItems.value[index].isUpdating = false;
+      }
     }
-  } catch (error) {
-    alert('Có lỗi xảy ra khi xóa.');
-    cartItems.value[index].isUpdating = false;
-  }
+  });
 };
 
 const clearCart = async () => {
-  if (!confirm('Xóa toàn bộ giỏ hàng?')) return;
-  
-  isLoading.value = true;
-  try {
-    const response = await axios.post('http://127.0.0.1:8000/api/client/cart/clear', {}, {
-      headers: getHeaders() // ĐÃ FIX AXIOS
-    });
-    if (response.data.success) {
-      cartItems.value = [];
+  soraAlert.fire({
+    title: 'Làm trống giỏ hàng?',
+    text: "Toàn bộ sản phẩm sẽ bị xóa khỏi giỏ. Bạn không thể hoàn tác hành động này!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Làm trống ngay',
+    cancelButtonText: 'Giữ lại',
+    reverseButtons: true
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true;
+      try {
+        const response = await axios.post(`${API_BASE_URL}/clear`, {}, { headers: getHeaders() });
+        if (response.data.success) {
+          cartItems.value = [];
+          backendSummary.value = { total_items: 0, subtotal: 0 };
+          Toast.fire({ icon: 'success', title: 'Giỏ hàng đã được làm trống' });
+        }
+      } catch (error) {
+        soraAlert.fire({ icon: 'error', title: 'Thất bại', text: 'Không thể làm trống giỏ hàng lúc này.', confirmButtonText: 'Đóng' });
+      } finally {
+        isLoading.value = false;
+      }
     }
-  } catch (error) {
-    alert('Không thể làm trống giỏ hàng.');
-  } finally {
-    isLoading.value = false;
-  }
+  });
 };
 
 onMounted(() => {
-  fetchCart();
+  fetchCart(); 
 });
 </script>
 
@@ -383,4 +462,9 @@ onMounted(() => {
 .cart-item-row:hover { background-color: #fffafa; }
 
 textarea:focus { border-color: #9f273b; box-shadow: 0 0 0 0.2rem rgba(159, 39, 59, 0.1); }
+
+/* Toast Timer Bar */
+:deep(.swal2-progress-sora) {
+  background-color: #9f273b !important;
+}
 </style>

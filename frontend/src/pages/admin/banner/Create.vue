@@ -128,7 +128,7 @@ const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bear
 const handleUpload = (e, type) => {
   const f = e.target.files[0];
   if(f) { 
-    if(f.size > 2 * 1024 * 1024) { return Swal.fire('Lỗi', 'Ảnh tối đa 2MB', 'error'); }
+    if(f.size > 15 * 1024 * 1024) { return Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); }
     
     if(type === 'desk') { 
       if (previewDesk.value) URL.revokeObjectURL(previewDesk.value);

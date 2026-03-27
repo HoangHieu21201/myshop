@@ -21,7 +21,9 @@ class OrderItem extends Model
         'variant_image',
         'price',
         'quantity',
-        'total_price'
+        'total_price',
+        'combo_id',
+        'combo_selections'
     ];
 
     protected function casts(): array

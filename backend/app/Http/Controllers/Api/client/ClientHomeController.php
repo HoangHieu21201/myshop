@@ -9,12 +9,14 @@ use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ClientHomeController extends Controller
 {
     public function index()
     {
         $data = [
+            // ĐÃ XÓA 2 DÒNG GOLD PRICIES Ở ĐÂY ĐỂ TRANG CHỦ NHẸ HƠN
             'banners' => [],
             'coupons' => [],
             'categories' => [],
@@ -143,6 +145,27 @@ class ClientHomeController extends Controller
                 'message' => 'Cảnh báo Backend: ' . $e->getMessage(),
                 'data' => $data
             ], 200);
+        }
+    }
+
+    public function goldPrices()
+    {
+        try {
+            $goldPrices = Cache::get('sora_gold_prices', []);
+            $lastUpdated = Cache::get('sora_gold_last_updated', '');
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'prices' => $goldPrices,
+                    'last_updated' => $lastUpdated
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tải giá vàng: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -13,9 +13,10 @@
           </button>
           <!-- Liên kết Desktop -->
           <div class="top-links d-none d-lg-flex gap-4">
-            <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a>
-            <a :href="{ contact }" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a>
-            <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a>
+            <router-link :to="{ name: 'about' }" class="top-link">VỀ SORA</router-link>
+            <router-link :to="{ name: 'contact' }" class="top-link">LIÊN HỆ</router-link>
+            <router-link :to="{ name: 'services' }" class="top-link">DỊCH VỤ</router-link>
+            <router-link :to="{ name: 'gold-price' }" class="top-link">BẢNG GIÁ VÀNG</router-link>
           </div>
         </div>
 
@@ -79,10 +80,10 @@
             </transition>
           </div>
 
-          <a href="#" @click.prevent="safeNavigate('stores')"
+          <!-- <a href="#" @click.prevent="safeNavigate('stores')"
             class="icon-link hover-primary transition-color d-none d-md-block">
             <i class="bi bi-geo-alt"></i>
-          </a>
+          </a> -->
 
           <router-link :to="{ name: 'cart' }" class="icon-link position-relative hover-primary transition-color">
             <i class="bi bi-bag"></i>

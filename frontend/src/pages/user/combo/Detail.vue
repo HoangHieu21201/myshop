@@ -14,9 +14,8 @@
     </div>
 
     <div class="container pt-4">
-      <div class="row g-0 g-lg-5 mb-5 pb-5">
+      <div class="row g-0 g-lg-5 mb-5 pb-5 border-bottom border-light-subtle">
         
-        <!-- BÊN TRÁI: ẢNH ĐẠI DIỆN COMBO -->
         <div class="col-lg-6 mb-4 mb-lg-0">
           <div class="sticky-top" style="top: 100px; z-index: 1;">
             <div class="luxury-image-wrapper position-relative overflow-hidden cursor-zoom-in" @click="viewFullImage(getImage(combo.thumbnail_image))">
@@ -41,7 +40,6 @@
           </div>
         </div>
 
-        <!-- BÊN PHẢI: THÔNG TIN VÀ CHỌN LỰA -->
         <div class="col-lg-6">
           <div class="ps-lg-4 pt-2">
             
@@ -53,7 +51,6 @@
             <h1 class="display-4 fw-bold text-dark mb-4 font-serif" style="line-height: 1.15; letter-spacing: -0.5px;">{{ combo.name }}</h1>
             <p class="text-muted fs-6 mb-5 lh-lg fw-light" style="font-family: 'Arial', sans-serif;">{{ combo.description }}</p>
 
-            <!-- BỘ ĐẾM THỜI GIAN -->
             <div class="luxury-timer-section mb-5 py-3 border-top border-bottom border-gold-light" v-if="getTimerData(combo).type !== 'forever'">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                   <div class="d-flex align-items-center gap-2">
@@ -75,70 +72,91 @@
                 </div>
             </div>
 
-            <!-- DANH SÁCH MÓN & CHỌN PHÂN LOẠI -->
             <div class="combo-items-editorial mb-5">
-              <h5 class="fw-bold text-dark mb-4 font-serif fs-4">Định Hình Phong Cách</h5>
+              <h5 class="fw-bold text-dark mb-4 font-serif fs-4 d-flex align-items-center">
+                <i class="bi bi-gem text-gold me-2"></i> Định Hình Phong Cách
+              </h5>
               
-              <div class="editorial-item mb-4 pb-4 border-bottom border-light-subtle" v-for="(item, index) in combo.items" :key="item.id">
-                <div class="d-flex gap-4">
-                  <!-- ẢNH ĐẠI DIỆN MÓN (TỰ ĐỘNG ĐỔI THEO BIẾN THỂ KHI CHỌN ĐỦ THUỘC TÍNH) -->
-                  <div class="position-relative flex-shrink-0 cursor-zoom-in" @click="viewFullImage(getDisplayImage(item))">
-                    <img :src="getDisplayImage(item)" class="object-fit-cover bg-white shadow-sm transition-all" style="width: 80px; height: 80px; border-radius: 2px;">
-                    <div class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-sora-primary text-white px-2 py-1 shadow-sm" style="font-family: 'Oswald', sans-serif;">x{{ item.quantity }}</div>
-                  </div>
-                  
-                  <div class="flex-grow-1">
-                    <h6 class="fw-bold mb-1 text-dark font-serif fs-5">{{ item.product?.name }}</h6>
+              <div class="editorial-item mb-4" v-for="(item, index) in combo.items" :key="item.id">
+                <div class="card border border-light-subtle shadow-sm rounded-0 luxury-product-card overflow-hidden">
+                  <div class="row g-0">
                     
-                    <!-- NẾU ADMIN ĐÃ CỐ ĐỊNH PHIÊN BẢN -->
-                    <div v-if="item.product_variant_id" class="text-muted small mt-2 font-oswald tracking-wide text-uppercase">
-                      Phiên bản cố định: 
-                      <span class="text-sora-primary fw-bold" v-if="item.variant?.formatted_attributes">
-                        {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
-                      </span>
-                      <span class="text-sora-primary fw-bold" v-else>{{ item.variant?.sku }}</span>
+                    <div class="col-md-4 col-lg-4 col-xl-3 bg-light border-end border-light-subtle p-3 d-flex flex-column align-items-center justify-content-center position-relative">
+                       <div class="position-absolute top-0 start-0 m-2 z-index-2">
+                           <span class="badge bg-dark text-gold font-oswald px-2 py-1 shadow-sm">Món {{ index + 1 }}</span>
+                       </div>
+                       <div class="position-relative w-100 ratio ratio-1x1 cursor-zoom-in mt-3" @click="viewFullImage(getDisplayImage(item))">
+                          <img :src="getDisplayImage(item)" class="object-fit-contain mix-blend-multiply transition-all img-zoom-hover drop-shadow">
+                       </div>
                     </div>
 
-                    <!-- THIẾT KẾ MA TRẬN CHỌN THUỘC TÍNH TÙY CHỈNH -->
-                    <div v-else class="mt-3">
-                      <template v-if="itemMatrices[item.id]">
-                        <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="mb-3">
-                          <p class="text-dark font-serif fw-bold mb-2 fs-6">
-                            {{ attrName }}: <span class="fw-normal font-oswald text-muted ms-1">{{ userSelections[item.id][attrName] || '' }}</span>
-                          </p>
-                          
-                          <div class="d-flex flex-wrap gap-2">
-                            <label v-for="val in values" :key="val" 
-                                   class="attr-chip m-0 cursor-pointer transition-all"
-                                   :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
-                              
-                              <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
-                              
-                              <div class="chip-inner px-3 py-2 d-flex flex-column align-items-center justify-content-center text-center shadow-sm">
-                                <span class="fw-bold font-oswald tracking-wide">{{ val }}</span>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-                      </template>
+                    <div class="col-md-8 col-lg-8 col-xl-9 p-4 d-flex flex-column">
+                       <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap flex-xl-nowrap">
+                           <div>
+                              <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ item.product?.category?.name || 'Trang Sức Cao Cấp' }}</small>
+                              <h5 class="fw-bold text-dark font-serif mt-1 mb-0 fs-5 lh-base">{{ item.product?.name }}</h5>
+                           </div>
+                           <div class="text-xl-end">
+                              <template v-if="!item.product_variant_id">
+                                  <div v-if="getSelectedVariant(item.id)" class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(getSelectedVariant(item.id).price) }}</div>
+                                  <div v-else class="text-muted fw-bold font-serif fs-6">Từ {{ formatCurrency(item.product?.base_price) }}</div>
+                              </template>
+                              <template v-else>
+                                  <div class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(item.variant?.price) }}</div>
+                              </template>
+                           </div>
+                       </div>
 
-                      <!-- Báo Lỗi: Chưa chọn đủ -->
-                      <div class="text-danger small mt-2 fst-italic" v-if="validationErrors[item.id]">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng định hình phong cách cho thiết kế này.
-                      </div>
-                      
-                      <!-- Báo Lỗi: Chọn tổ hợp không có thật -->
-                      <div class="text-danger small mt-2 fst-italic fw-bold" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
-                        <i class="bi bi-x-circle-fill me-1"></i> Phiên bản này đã hết hàng hoặc không tồn tại.
-                      </div>
+                       <div class="flex-grow-1 border-top border-light-subtle pt-3 mt-1">
+                           
+                           <div v-if="item.product_variant_id" class="bg-light p-3 border rounded small">
+                               <p class="text-muted font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.75rem;"><i class="bi bi-pin-angle-fill text-sora-primary me-1"></i>Phiên bản cấu hình sẵn</p>
+                               <div class="d-flex flex-wrap gap-2">
+                                  <span v-if="item.variant?.formatted_attributes" class="fw-bold text-dark">
+                                    {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
+                                  </span>
+                                  <span v-else class="fw-bold text-dark">{{ item.variant?.sku }}</span>
+                               </div>
+                           </div>
+
+                           <div v-else>
+                               <div v-if="itemMatrices[item.id]" class="row g-3">
+                                   <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="col-sm-6 col-md-12 col-xl-6">
+                                      <p class="text-dark font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.8rem;">
+                                        {{ attrName }}: <span class="fw-bold text-sora-primary ms-1">{{ userSelections[item.id][attrName] || 'Chưa chọn' }}</span>
+                                      </p>
+                                      <div class="d-flex flex-wrap gap-2">
+                                          <label v-for="val in values" :key="val" 
+                                                 class="attr-chip m-0 cursor-pointer transition-all"
+                                                 :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
+                                            <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
+                                            <div class="chip-inner px-3 py-1 d-flex flex-column align-items-center justify-content-center text-center shadow-sm" style="min-width: 45px;">
+                                              <span class="fw-bold font-oswald tracking-wide" style="font-size: 0.85rem;">{{ val }}</span>
+                                            </div>
+                                          </label>
+                                      </div>
+                                   </div>
+                               </div>
+
+                               <div class="text-danger small mt-3 fst-italic p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-if="validationErrors[item.id]">
+                                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng hoàn tất tùy chọn thiết kế cho món này.
+                               </div>
+                               <div class="text-danger small mt-3 fst-italic fw-bold p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
+                                 <i class="bi bi-x-circle-fill me-1"></i> Sự kết hợp này hiện đã hết hàng.
+                               </div>
+                           </div>
+                       </div>
+
+                       <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top border-light-subtle">
+                           <span class="text-muted small text-uppercase font-oswald tracking-widest">Số lượng áp dụng:</span>
+                           <span class="badge bg-sora-primary text-white font-oswald px-3 py-1 fs-6 shadow-sm">x{{ item.quantity }}</span>
+                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- TỔNG KẾT GIÁ TRỊ -->
             <div class="luxury-price-summary mb-5 p-4 bg-white border border-gold-light" style="border-radius: 2px;">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light-subtle">
                   <span class="text-muted font-oswald text-uppercase tracking-wide">Giá Trị Gốc</span>
@@ -155,7 +173,6 @@
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
             <div v-if="!canBuyCombo" class="text-center py-4 bg-light border">
               <span class="font-oswald tracking-widest text-uppercase text-muted fs-5">
                 <template v-if="getTimerData(combo).type === 'upcoming'">
@@ -184,7 +201,6 @@
               </div>
             </div>
 
-            <!-- CAM KẾT -->
             <div class="d-flex justify-content-between mt-5 pt-4 border-top border-light-subtle opacity-75">
               <div class="text-center">
                 <i class="bi bi-truck fs-4 text-dark mb-1 d-block"></i>
@@ -207,7 +223,129 @@
           </div>
         </div>
       </div>
+      
+      <div class="related-products-section" v-if="relatedProducts.length > 0">
+        <div class="text-center mb-5">
+          <h3 class="font-serif fw-bold text-dark display-6 mb-3">Có Thể Bạn Sẽ Thích</h3>
+          <div class="divider-gold mx-auto"></div>
+        </div>
+
+        <div class="position-relative px-md-4">
+          <swiper
+            :modules="swiperModules"
+            :slides-per-view="1"
+            :space-between="20"
+            :navigation="{ nextEl: '.related-next', prevEl: '.related-prev' }"
+            :breakpoints="{
+              '576': { slidesPerView: 2 },
+              '768': { slidesPerView: 3 },
+              '992': { slidesPerView: 4 }
+            }"
+            class="related-swiper py-2"
+          >
+            <swiper-slide v-for="product in relatedProducts" :key="product.id" class="h-auto pb-4">
+              <div class="luxury-related-card bg-white d-flex flex-column group position-relative overflow-hidden border border-light-subtle h-100">
+                
+                <div class="position-relative bg-light text-center border-bottom border-light-subtle">
+                  <button class="position-absolute top-0 end-0 m-3 border-0 bg-transparent text-dark hover-primary transition-all z-index-2 p-0" style="width: auto; height: auto;">
+                    <i class="bi bi-suit-heart fs-5"></i>
+                  </button>
+                  
+                  <router-link :to="{ name: 'productDetail', params: { shop_slug: product.category?.slug || 'all', slug: product.slug } }" class="d-block w-100 text-decoration-none">
+                    <div class="ratio ratio-1x1 w-100">
+                      <img :src="getImageUrl(product.thumbnail_image)" class="object-fit-cover w-100 h-100 transition-transform duration-700 group-hover-scale" style="object-position: center;" @error="handleImageError">
+                    </div>
+                  </router-link>
+                  
+                  <div class="theme-bar position-absolute bottom-0 start-0 bg-sora-primary z-index-2"></div>
+                </div>
+
+                <div class="position-relative flex-grow-1 bg-white d-flex flex-column">
+                  <div class="p-4 text-center d-flex flex-column flex-grow-1" style="padding-bottom: 64px !important;">
+                    <router-link :to="{ name: 'productDetail', params: { shop_slug: product.category?.slug || 'all', slug: product.slug } }" class="text-decoration-none flex-grow-1 d-flex flex-column justify-content-center">
+                      <h6 class="text-dark font-oswald text-uppercase tracking-widest fw-bold mb-2 text-truncate-2 fs-5 lh-base">{{ product.name }}</h6>
+                      <p class="font-serif fst-italic text-muted fs-6 mb-3">{{ product.category?.name || 'Trang sức SORA' }}</p>
+                    </router-link>
+                    
+                    <div class="mt-auto">
+                      <span class="text-sora-primary fw-bold font-serif fs-5">VND {{ formatCurrencyNoSymbol(product.base_price) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="related-btn-add">
+                    <button @click.prevent="openQuickAdd(product)" class="btn luxury-btn-solid w-100 rounded-0 py-3 font-oswald tracking-widest text-uppercase fw-bold shadow-none fs-6">
+                      Thêm vào giỏ
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </swiper-slide>
+          </swiper>
+
+          <button class="related-prev position-absolute top-50 start-0 translate-middle-y z-index-2 border border-light-subtle rounded-circle bg-white shadow-sm d-none d-md-flex align-items-center justify-content-center text-dark hover-primary transition-all" style="width: 40px; height: 40px; margin-left: -10px;">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button class="related-next position-absolute top-50 end-0 translate-middle-y z-index-2 border border-light-subtle rounded-circle bg-white shadow-sm d-none d-md-flex align-items-center justify-content-center text-dark hover-primary transition-all" style="width: 40px; height: 40px; margin-right: -10px;">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
     </div>
+
+    <div class="modal fade" id="quickAddModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-0 border-0 shadow-lg">
+          <div class="modal-header bg-sora-primary text-white rounded-0 border-0 p-4">
+            <h5 class="modal-title font-serif fw-bold tracking-wider">Tùy chọn Sản phẩm</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4" v-if="quickAddProduct">
+            
+            <div class="d-flex gap-3 mb-4 pb-4 border-bottom border-light-subtle">
+               <img :src="quickAddDisplayImage" @error="handleImageError" class="object-fit-cover border shadow-sm" style="width: 80px; height: 80px; border-radius: 4px;">
+               <div class="d-flex flex-column justify-content-center">
+                  <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ quickAddProduct.category?.name || 'Trang Sức SORA' }}</small>
+                  <h6 class="font-serif fw-bold mb-1 text-dark fs-5">{{ quickAddProduct.name }}</h6>
+                  <span class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(quickAddSelectedPrice) }}</span>
+               </div>
+            </div>
+
+            <div v-for="(values, attrName) in quickAddMatrix" :key="attrName" class="mb-4">
+               <p class="text-dark font-oswald tracking-wide text-uppercase mb-2 small fw-bold">
+                 {{ attrName }}: <span class="fw-normal text-sora-primary ms-1">{{ quickAddSelections[attrName] || '' }}</span>
+               </p>
+               <div class="d-flex flex-wrap gap-2">
+                 <label v-for="val in values" :key="val" class="attr-chip m-0 cursor-pointer transition-all" :class="{'selected': String(quickAddSelections[attrName]) === String(val)}">
+                   <input type="radio" class="d-none" :value="val" v-model="quickAddSelections[attrName]" @change="quickAddError = false">
+                   <div class="chip-inner px-3 py-2 d-flex flex-column align-items-center justify-content-center text-center shadow-sm">
+                     <span class="fw-bold font-oswald tracking-wide small">{{ val }}</span>
+                   </div>
+                 </label>
+               </div>
+            </div>
+            
+            <div class="text-danger small fst-italic mt-2 fw-bold bg-danger bg-opacity-10 p-2 rounded" v-if="quickAddError">
+               <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng chọn đầy đủ phân loại.
+            </div>
+            
+            <div class="text-danger small fst-italic mt-2 fw-bold bg-danger bg-opacity-10 p-2 rounded" v-else-if="quickAddMatrix && Object.keys(quickAddMatrix).length > 0 && !quickAddSelectedVariant && isQuickAddAllSelected">
+               <i class="bi bi-x-circle-fill me-1"></i> Phiên bản này đã hết hàng hoặc không tồn tại.
+            </div>
+
+            <button @click="confirmQuickAdd" class="btn luxury-btn-solid w-100 py-3 mt-4 font-oswald tracking-widest text-uppercase fw-bold shadow-sm fs-6">
+               <i class="bi bi-bag-plus-fill me-2"></i> Xác nhận thêm
+            </button>
+          </div>
+          <div v-else class="p-5 text-center">
+             <div class="spinner-border text-sora-primary" role="status"></div>
+             <p class="mt-3 text-muted font-oswald tracking-widest text-uppercase small">Đang nạp dữ liệu...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
   
   <div v-else class="vh-100 d-flex justify-content-center align-items-center bg-light-custom">
@@ -221,6 +359,13 @@ import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+
+const swiperModules = [Navigation];
+
 const route = useRoute();
 const router = useRouter();
 const combo = ref(null);
@@ -230,19 +375,66 @@ const userSelections = ref({});
 const validationErrors = ref({}); 
 const isAddingToCart = ref(false);
 
+const relatedProducts = ref([]); 
+
+const quickAddProduct = ref(null);
+const quickAddMatrix = ref({});
+const quickAddSelections = ref({});
+const quickAddError = ref(false);
+let quickAddModalInstance = null;
+
 const currentTime = ref(new Date());
 let timerInterval = null;
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
+
+const formatCurrencyNoSymbol = (val) => {
+    return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Math.round(val || 0));
+};
+
+const getSafeStorage = (key) => {
+    try { return localStorage.getItem(key); } catch(e) { return null; }
+};
+const setSafeStorage = (key, val) => {
+    try { localStorage.setItem(key, val); } catch(e) { console.warn('Trình duyệt đã chặn truy cập LocalStorage.'); }
+};
+
 const getImage = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : 'https://placehold.co/400x300';
+const getImageUrl = getImage;
+
+const handleImageError = (e) => {
+  e.target.src = 'https://placehold.co/400x300';
+};
+
+const isValidImage = (url) => {
+    return url && typeof url === 'string' && url.trim() !== '';
+};
+
+const getSelectedVariant = (itemId) => {
+    const item = combo.value.items.find(i => i.id === itemId);
+    if (!item || item.product_variant_id) return item?.variant;
+    
+    const selections = userSelections.value[itemId];
+    if (!selections) return null;
+    
+    const requiredAttrs = Object.keys(itemMatrices.value[itemId] || {});
+    if (requiredAttrs.length === 0) return null;
+
+    const hasAllAttrs = requiredAttrs.every(attr => selections[attr]);
+    if (!hasAllAttrs) return null;
+    
+    return item.product.variants.find(v => {
+        return requiredAttrs.every(attr => v.formatted_attributes && String(v.formatted_attributes[attr]) === String(selections[attr]));
+    });
+};
 
 const getDisplayImage = (item) => {
-    if (item.product_variant_id && item.variant && item.variant.image_url) {
+    if (item.product_variant_id && item.variant && isValidImage(item.variant.image_url)) {
         return getImage(item.variant.image_url);
     }
     if (!item.product_variant_id) {
         const selectedVar = getSelectedVariant(item.id);
-        if (selectedVar && selectedVar.image_url) {
+        if (selectedVar && isValidImage(selectedVar.image_url)) {
             return getImage(selectedVar.image_url);
         }
     }
@@ -267,29 +459,163 @@ const viewFullImage = (url) => {
   });
 };
 
-const getSelectedVariant = (itemId) => {
-    const item = combo.value.items.find(i => i.id === itemId);
-    if (!item || item.product_variant_id) return item?.variant;
-    
-    const selections = userSelections.value[itemId];
-    if (!selections) return null;
-    
-    const requiredAttrs = Object.keys(itemMatrices.value[itemId] || {});
-    if (requiredAttrs.length === 0) return null;
-
-    const hasAllAttrs = requiredAttrs.every(attr => selections[attr]);
-    if (!hasAllAttrs) return null;
-    
-    return item.product.variants.find(v => {
-        return requiredAttrs.every(attr => v.formatted_attributes && v.formatted_attributes[attr] === selections[attr]);
-    });
-};
-
 const isAllAttributesSelected = (itemId) => {
     const selections = userSelections.value[itemId];
     if (!selections) return false;
     const requiredAttrs = Object.keys(itemMatrices.value[itemId] || {});
     return requiredAttrs.every(attr => selections[attr]);
+};
+
+const isQuickAddAllSelected = computed(() => {
+    const requiredAttrs = Object.keys(quickAddMatrix.value);
+    if (requiredAttrs.length === 0) return true;
+    return requiredAttrs.every(attr => quickAddSelections.value[attr]);
+});
+
+const quickAddSelectedVariant = computed(() => {
+    if (!quickAddProduct.value || !quickAddProduct.value.variants) return null;
+    const requiredAttrs = Object.keys(quickAddMatrix.value);
+    if (requiredAttrs.length === 0) return quickAddProduct.value.variants[0];
+    
+    if (!isQuickAddAllSelected.value) return null;
+
+    return quickAddProduct.value.variants.find(v => {
+        return requiredAttrs.every(attr => v.formatted_attributes && String(v.formatted_attributes[attr]) === String(quickAddSelections.value[attr]));
+    });
+});
+
+const quickAddDisplayImage = computed(() => {
+    if (!quickAddProduct.value) return getImageUrl(null);
+    
+    const selectedVar = quickAddSelectedVariant.value;
+    if (selectedVar && isValidImage(selectedVar.image_url)) {
+        return getImageUrl(selectedVar.image_url);
+    }
+    
+    if (isValidImage(quickAddProduct.value.thumbnail_image)) {
+        return getImageUrl(quickAddProduct.value.thumbnail_image);
+    }
+
+    return getImageUrl(quickAddProduct.value.fallback_image);
+});
+
+const quickAddSelectedPrice = computed(() => {
+    if (!quickAddProduct.value) return 0;
+    const selectedVar = quickAddSelectedVariant.value;
+    if (selectedVar) return selectedVar.promotional_price || selectedVar.price;
+    return quickAddProduct.value.promotional_price || quickAddProduct.value.base_price || quickAddProduct.value.fallback_price || 0;
+});
+
+const openQuickAdd = async (product) => {
+    quickAddProduct.value = null;
+    quickAddError.value = false;
+    quickAddSelections.value = {};
+    quickAddMatrix.value = {};
+    
+    if (!quickAddModalInstance) {
+        quickAddModalInstance = new window.bootstrap.Modal(document.getElementById('quickAddModal'));
+    }
+    quickAddModalInstance.show();
+
+    try {
+        const res = await axios.get(`http://127.0.0.1:8000/api/shop/all/products/${product.slug}`);
+        if (res.data && res.data.data) {
+            quickAddProduct.value = {
+                ...res.data.data,
+                fallback_image: product.thumbnail_image,
+                fallback_price: product.base_price 
+            };
+            
+            const matrix = {};
+            if (quickAddProduct.value.variants) {
+                quickAddProduct.value.variants.forEach(variant => {
+                    let attrs = {};
+                    let attrVals = variant.attributeValues || variant.attribute_values;
+                    
+                    if (attrVals) { 
+                        attrVals.forEach(av => {
+                            if (av.attribute) attrs[av.attribute.name] = av.value;
+                        });
+                    } else if (variant.attributes) {
+                        attrs = typeof variant.attributes === 'string' ? JSON.parse(variant.attributes) : variant.attributes;
+                    }
+                    
+                    variant.formatted_attributes = attrs;
+                    
+                    Object.entries(attrs).forEach(([attrName, attrValue]) => {
+                        if (!matrix[attrName]) matrix[attrName] = new Set();
+                        matrix[attrName].add(attrValue);
+                    });
+                });
+            }
+            
+            const finalMatrix = {};
+            Object.keys(matrix).forEach(key => {
+                finalMatrix[key] = Array.from(matrix[key]);
+            });
+            quickAddMatrix.value = finalMatrix;
+            
+            if (quickAddProduct.value.variants && quickAddProduct.value.variants.length === 1) {
+                const singleVariant = quickAddProduct.value.variants[0];
+                if (singleVariant.formatted_attributes) {
+                    Object.entries(singleVariant.formatted_attributes).forEach(([attrName, attrValue]) => {
+                        quickAddSelections.value[attrName] = attrValue;
+                    });
+                }
+            }
+        }
+    } catch (e) {
+        quickAddModalInstance.hide();
+        Swal.fire({
+          icon: 'error', title: 'Lỗi', text: 'Không thể tải thông tin sản phẩm',
+          confirmButtonColor: '#9f273b', background: '#fffafa', color: '#9f273b'
+        });
+    }
+};
+
+const confirmQuickAdd = async () => {
+    if (!isQuickAddAllSelected.value) {
+        quickAddError.value = true;
+        return;
+    }
+    quickAddError.value = false;
+
+    const selectedVar = quickAddSelectedVariant.value;
+    if (!selectedVar) {
+         Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Phiên bản đã hết hàng!', showConfirmButton: false, timer: 2000});
+         return;
+    }
+
+    try {
+        const token = getSafeStorage('auth_token'); 
+        let sessionId = getSafeStorage('cart_session_id'); 
+        if (!sessionId && !token) { 
+            sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+            setSafeStorage('cart_session_id', sessionId);
+        }
+        const headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (sessionId) headers['X-Cart-Session-Id'] = sessionId;
+
+        const res = await axios.post('http://127.0.0.1:8000/api/client/cart', {
+            product_variant_id: selectedVar.id,
+            quantity: 1
+        }, { headers });
+
+        if (res.data.session_id) {
+            setSafeStorage('cart_session_id', res.data.session_id);
+        }
+        
+        quickAddModalInstance.hide();
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success', 
+            title: 'Đã thêm sản phẩm vào giỏ', showConfirmButton: false, timer: 2000,
+            background: '#fffafa', color: '#9f273b', iconColor: '#9f273b'
+        });
+    } catch (error) {
+        const msg = error.response?.data?.message || 'Không thể thêm vào giỏ hàng!';
+        Swal.fire({icon: 'error', title: 'Lỗi', text: msg, confirmButtonColor: '#9f273b', background: '#fffafa', color: '#9f273b'});
+    }
 };
 
 const originalTotal = computed(() => {
@@ -358,8 +684,22 @@ const canBuyCombo = computed(() => {
     return timer.type === 'active' || timer.type === 'forever';
 });
 
-const selectVariant = (itemId, variantId) => {
-    validationErrors.value[itemId] = false; 
+const fetchRelatedProducts = async () => {
+    if (!combo.value || !combo.value.items) return;
+    const categoryIds = [...new Set(combo.value.items.map(item => item.product?.category_id).filter(Boolean))];
+    try {
+        let url = `http://127.0.0.1:8000/api/shop/all/products?per_page=7`;
+        if (categoryIds.length > 0) {
+            url += `&category_id=${categoryIds[0]}`;
+        }
+        const res = await axios.get(url);
+        if (res.data && res.data.success) {
+            let items = res.data.data.data ? res.data.data.data : res.data.data;
+            relatedProducts.value = items.slice(0, 7);
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải sản phẩm gợi ý:", error);
+    }
 };
 
 const fetchDetail = async (slug) => {
@@ -367,6 +707,7 @@ const fetchDetail = async (slug) => {
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/client/combos/${slug}`);
     combo.value = res.data.data;
+    
     userSelections.value = {}; validationErrors.value = {}; itemMatrices.value = {};
 
     combo.value.items.forEach(item => {
@@ -392,7 +733,6 @@ const fetchDetail = async (slug) => {
         
         itemMatrices.value[item.id] = finalMatrix;
 
-        // ĐÃ THÊM: TỰ ĐỘNG CHỌN NẾU SẢN PHẨM CHỈ CÓ DUY NHẤT 1 BIẾN THỂ
         if (item.product?.variants && item.product.variants.length === 1) {
             const singleVariant = item.product.variants[0];
             if (singleVariant.formatted_attributes) {
@@ -403,8 +743,13 @@ const fetchDetail = async (slug) => {
         }
       }
     });
+    
+    fetchRelatedProducts();
+    
   } catch (error) {
-    Swal.fire('Lỗi', 'Combo không tồn tại hoặc đã hết hạn!', 'error').then(() => router.push({name: 'client-combos'}));
+    Swal.fire({
+      toast: true, position: 'top-end', icon: 'error', title: 'Combo không tồn tại hoặc đã hết hạn!', showConfirmButton: false, timer: 3000
+    }).then(() => router.push({name: 'client-combos'}).catch(()=>{}));
   }
 };
 
@@ -444,7 +789,15 @@ const preparePayload = () => {
 
 const addToCart = async () => {
   if (!validateSelections()) {
-    Swal.fire({ toast:true, position: 'top', icon:'warning', title: 'Vui lòng chọn đầy đủ phiên bản!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu tùy chọn!',
+      text: 'Vui lòng định hình thiết kế cho tất cả các món trong bộ sưu tập.',
+      confirmButtonColor: '#9f273b',
+      confirmButtonText: 'Chọn ngay',
+      background: '#fffafa',
+      color: '#9f273b'
+    });
     return;
   }
   
@@ -452,8 +805,13 @@ const addToCart = async () => {
   const payload = preparePayload();
   
   try {
-      const token = localStorage.getItem('auth_token'); 
-      const sessionId = localStorage.getItem('cart_session_id'); 
+      const token = getSafeStorage('auth_token'); 
+      let sessionId = getSafeStorage('cart_session_id'); 
+      
+      if (!sessionId && !token) { 
+        sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+        setSafeStorage('cart_session_id', sessionId);
+      }
       
       const headers = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -462,15 +820,32 @@ const addToCart = async () => {
       const res = await axios.post('http://127.0.0.1:8000/api/client/cart/add-combo', payload, { headers });
       
       if (res.data.session_id) {
-          localStorage.setItem('cart_session_id', res.data.session_id);
+          setSafeStorage('cart_session_id', res.data.session_id);
       }
 
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm Combo vào Túi mua sắm', showConfirmButton: false, timer: 1500 });
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Đã thêm Combo vào Túi mua sắm',
+        showConfirmButton: false,
+        timer: 2000,
+        iconColor: '#9f273b',
+        color: '#9f273b',
+        background: '#fffafa'
+      });
       
   } catch (error) {
       console.error(error);
       const msg = error.response?.data?.message || 'Không thể thêm vào giỏ hàng. Vui lòng thử lại!';
-      Swal.fire('Lỗi', msg, 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi giỏ hàng',
+        text: msg,
+        confirmButtonColor: '#9f273b',
+        background: '#fffafa',
+        color: '#9f273b'
+      });
   } finally {
       isAddingToCart.value = false;
   }
@@ -478,15 +853,33 @@ const addToCart = async () => {
 
 const buyNow = () => {
   if (!validateSelections()) {
-    Swal.fire({ toast:true, position: 'top', icon:'warning', title: 'Vui lòng chọn đầy đủ phiên bản!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu tùy chọn!',
+      text: 'Vui lòng định hình thiết kế cho tất cả các món trong bộ sưu tập.',
+      confirmButtonColor: '#9f273b',
+      confirmButtonText: 'Chọn ngay',
+      background: '#fffafa',
+      color: '#9f273b'
+    });
     return;
   }
   
   const payload = preparePayload();
-  localStorage.setItem('checkout_combo_direct', JSON.stringify(payload));
+  setSafeStorage('checkout_combo_direct', JSON.stringify(payload));
   
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Chuyển hướng đến Thanh toán...', showConfirmButton: false, timer: 1000 }).then(() => {
-     console.log("Đang chuyển tới Checkout với data:", payload);
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: 'Chuyển hướng đến Thanh toán...',
+    showConfirmButton: false,
+    timer: 1000,
+    iconColor: '#9f273b',
+    color: '#9f273b',
+    background: '#fffafa'
+  }).then(() => {
+     router.push('/checkout').catch(()=>{});
   });
 };
 
@@ -502,6 +895,7 @@ onMounted(() => {
 onUnmounted(() => {
     if (timerInterval) clearInterval(timerInterval);
     document.querySelectorAll('.swal2-container').forEach(el => el.remove());
+    if (quickAddModalInstance) quickAddModalInstance.dispose();
 });
 </script>
 
@@ -519,12 +913,12 @@ onUnmounted(() => {
 .cursor-pointer { cursor: pointer; }
 .cursor-zoom-in { cursor: zoom-in; }
 
-/* FIX CSS LỖI VUE SCOPED: GỠ :ROOT VÀ FIX CỨNG MÃ HEXA */
 .text-sora-primary { color: #9f273b !important; }
 .text-sora-red { color: #cc1e2e !important; }
 .text-gold { color: #e7ce7d !important; }
 .bg-sora-primary { background-color: #9f273b !important; }
 .border-gold-light { border-color: rgba(231, 206, 125, 0.4) !important; }
+.divider-gold { width: 50px; height: 2px; background-color: #e7ce7d; }
 
 .hover-primary:hover { color: #9f273b !important; }
 
@@ -538,7 +932,6 @@ onUnmounted(() => {
 .pulsing-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(204, 30, 46, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(204, 30, 46, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(204, 30, 46, 0); } }
 
-/* ================= CUSTOM VARIANT CHIP TÔNG MÀU SORA (9f273b / e7ce7d) ================= */
 .attr-chip {
     border-radius: 4px;
     overflow: hidden;
@@ -550,14 +943,14 @@ onUnmounted(() => {
     color: #555;
     border-radius: 4px;
     transition: all 0.3s ease-in-out;
-    padding: 8px 16px;
+    padding: 6px 12px;
 }
 .attr-chip:hover .chip-inner {
-    border-color: #e7ce7d; /* Viền Vàng Gold */
+    border-color: #e7ce7d; 
     color: #9f273b;
 }
 .attr-chip.selected .chip-inner {
-    background-color: #9f273b; /* Đỏ Sẫm */
+    background-color: #9f273b; 
     border-color: #9f273b;
     color: #fff !important;
     box-shadow: 0 4px 10px rgba(159, 39, 59, 0.25);
@@ -578,4 +971,57 @@ onUnmounted(() => {
 .luxury-btn-solid:hover { background-color: #7a1c2d; border-color: #7a1c2d; color: white; box-shadow: 0 8px 20px rgba(159,39,59,0.3); transform: translateY(-2px); }
 .luxury-btn-outline { border: 1px solid #9f273b; color: #9f273b; background: transparent; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
 .luxury-btn-outline:hover { background: #9f273b; color: white; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(159,39,59,0.2); }
+
+.luxury-related-card {
+    transition: all 0.4s ease;
+}
+.luxury-related-card:hover {
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+    border-color: #d1d5db !important;
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.related-btn-add {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    z-index: 3;
+    background: white;
+}
+.luxury-related-card:hover .related-btn-add {
+    transform: translateY(0);
+}
+
+.luxury-related-card .group-hover-scale {
+    transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.luxury-related-card:hover .group-hover-scale {
+    transform: scale(1.08);
+}
+
+.theme-bar {
+    width: 30%;
+    height: 3px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    left: 0;
+}
+.luxury-related-card:hover .theme-bar {
+    opacity: 1;
+}
+
+.related-prev:hover, .related-next:hover {
+    background-color: #9f273b !important;
+    color: white !important;
+    border-color: #9f273b !important;
+}
 </style>

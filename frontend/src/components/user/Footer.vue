@@ -1,7 +1,7 @@
 <template>
   <footer class="site-footer bg-primary-custom">
     
-    <!-- <div class="pre-footer py-4" style="background-color: var(--secondary);">
+    <div class="pre-footer py-4" style="background-color: var(--secondary);">
       <div class="container">
         <div class="row g-4 text-center">
           <div class="col-6 col-md-3">
@@ -34,7 +34,7 @@
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
 
     <div class="main-footer py-5 border-bottom border-light border-opacity-10">
       <div class="container py-3">

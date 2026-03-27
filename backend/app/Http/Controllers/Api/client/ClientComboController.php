@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
+use App\Models\Product; // BẮT BUỘC IMPORT PRODUCT
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -32,20 +33,42 @@ class ClientComboController extends Controller
 
         $combo = Combo::with([
             'items.product' => function($q) {
-                $q->with(['variants' => function($vq) {
-                    $vq->where('stock_quantity', '>', 0)
-                       // Load kèm theo các Thuộc tính (Size, Màu...) của biến thể này
-                       ->with(['attributeValues.attribute']);
-                }]);
+                $q->with([
+                    'category:id,name,slug',
+                    'brand:id,name',
+                    'variants' => function($vq) {
+                        $vq->where('stock_quantity', '>', 0)
+                           ->with(['attributeValues.attribute']);
+                    }
+                ]);
             },
-            'items.variant.attributeValues.attribute' 
+            'items.variant' => function($vq) {
+                $vq->with(['attributeValues.attribute', 'product.category', 'product.brand']);
+            }
         ])
         ->where('slug', $slug)
         ->where('status', 'active')
         ->firstOrFail();
 
-        // THUẬT TOÁN: Gom nhóm Thuộc tính thành Mảng (VD: {'Kích cỡ': '16', 'Màu sắc': 'Đỏ'})
-        // Giúp Frontend hiển thị các ô vuông (chips) dễ dàng hơn thay vì phải gọi Nested Object
+        // Lấy ID các danh mục có trong Combo
+        $categoryIds = collect($combo->items)->map(function($item) {
+            return $item->product ? $item->product->category_id : null;
+        })->filter()->unique()->toArray();
+
+        // Lấy ID các sản phẩm đã có trong Combo để tránh gợi ý trùng
+        $productIdsInCombo = collect($combo->items)->map(function($item) {
+            return $item->product_id;
+        })->filter()->unique()->toArray();
+
+        // Lấy 4 sản phẩm liên quan cùng danh mục
+        $relatedProducts = Product::with(['category:id,name,slug'])
+            ->whereIn('category_id', $categoryIds)
+            ->whereNotIn('id', $productIdsInCombo)
+            ->where('status', 'published')
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
         foreach ($combo->items as $item) {
             if ($item->product && $item->product->variants) {
                 foreach ($item->product->variants as $variant) {
@@ -57,7 +80,6 @@ class ClientComboController extends Controller
                             }
                         }
                     }
-                    // Nếu sản phẩm không có thuộc tính nào, lấy tạm SKU làm thuộc tính mặc định
                     if (empty($attrMap)) {
                         $attrMap['Phiên bản'] = $variant->sku;
                     }
@@ -82,9 +104,11 @@ class ClientComboController extends Controller
             }
         }
 
+        // TRẢ VỀ THÊM RELATED PRODUCTS
         return response()->json([
             'success' => true, 
-            'data' => $combo
+            'data' => $combo,
+            'related_products' => $relatedProducts
         ]);
     }
 }

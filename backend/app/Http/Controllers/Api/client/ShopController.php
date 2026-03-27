@@ -10,87 +10,76 @@ use Illuminate\Http\Request;
 class ShopController extends Controller
 {
     /**
-     * 1. LẤY DANH SÁCH TẤT CẢ SẢN PHẨM (Có Lọc Nhiều Điều Kiện)
+     * API: Lấy danh sách sản phẩm trang Shop
      */
     public function index(Request $request, $shop_slug)
     {
-        $query = Product::with(['category:id,name,slug', 'brand:id,name,slug'])
-            ->withSum('variants as total_stock', 'stock_quantity')
+        // FIX: Lấy TOÀN BỘ thông tin variants để phục vụ việc chọn Size/Màu, check tồn kho ở Frontend
+        $query = Product::with(['category:id,name,slug', 'variants'])
             ->where('status', 'published'); 
 
-        // 1. Lọc theo Keyword
-        if ($request->has('keyword') && $request->keyword != '') {
-            $query->where('name', 'like', '%' . $request->keyword . '%');
-        }
-
-        // 2. Lọc mảng Category (LOẠI)
+        // 1. Lọc theo Danh mục (nếu có chọn) - Lọc bằng slug
         if ($request->has('categories') && $request->categories != '') {
             $categoriesArr = explode(',', $request->categories);
             $query->whereHas('category', function($q) use ($categoriesArr) {
                 $q->whereIn('slug', $categoriesArr);
             });
         }
-
-        // 3. Lọc mảng Bộ sưu tập (Collections) / Kim loại / Hình dáng đá...
-        // Giả sử bảng products của bạn có cột collection_slug, metal_type (Hoặc phải map qua bảng Attributes)
-        // Dưới đây là ví dụ lọc qua cột trực tiếp (bạn có thể tuỳ biến theo DB thực tế)
         
-        if ($request->has('collections') && $request->collections != '') {
-            $collectionsArr = explode(',', $request->collections);
-            // VD: $query->whereIn('collection_slug', $collectionsArr);
+        // 2. Lọc theo từ khóa tìm kiếm
+        if ($request->has('keyword') && $request->keyword != '') {
+            $query->where('name', 'like', '%' . $request->keyword . '%');
         }
 
-        if ($request->has('metals') && $request->metals != '') {
-            $metalsArr = explode(',', $request->metals);
-            // VD: $query->whereIn('metal_type', $metalsArr);
-        }
-
-        // 4. Lọc Availability (Mới, Online...)
-        if ($request->has('availability') && $request->availability != '') {
-            $availArr = explode(',', $request->availability);
-            if (in_array('new', $availArr)) {
-                // Ví dụ sản phẩm được tạo trong 30 ngày qua
-                $query->where('created_at', '>=', now()->subDays(30)); 
+        // Sắp xếp
+        if ($request->has('sort')) {
+            switch ($request->sort) {
+                case 'price_asc':
+                    $query->orderBy('base_price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('base_price', 'desc');
+                    break;
+                case 'recommended':
+                default:
+                    $query->orderBy('is_featured', 'desc')->orderBy('id', 'desc');
+                    break;
             }
-        }
-
-        // 5. Sắp xếp
-        $sort = $request->input('sort', 'recommended');
-        switch ($sort) {
-            case 'price_asc':
-                // Sắp xếp theo giá khuyến mãi, nếu không có thì lấy giá gốc
-                $query->orderByRaw('COALESCE(promotional_price, base_price) ASC');
-                break;
-            case 'price_desc':
-                $query->orderByRaw('COALESCE(promotional_price, base_price) DESC');
-                break;
-            case 'recommended':
-                $query->orderBy('is_featured', 'desc')->orderBy('id', 'desc');
-                break;
-            default:
-                $query->orderBy('id', 'desc');
-                break;
+        } else {
+            $query->orderBy('id', 'desc');
         }
 
         $products = $query->paginate($request->input('per_page', 12));
         
-        // Thêm cờ is_new cho Frontend dựa trên ngày tạo
+        // TRANSFORM DATA: Xử lý logic ảnh hover cho mỗi sản phẩm
         $products->getCollection()->transform(function ($product) {
             $product->is_new = $product->created_at >= now()->subDays(30);
+            
+            // LOGIC LẤY ẢNH HOVER TỪ DATABASE: 
+            $product->hover_image = null;
+            if ($product->variants && $product->variants->count() > 0) {
+                $hoverCandidate = $product->variants->first(function($v) use ($product) {
+                    return !empty($v->image_url) && $v->image_url !== $product->thumbnail_image;
+                });
+                
+                // Trả về ảnh hover hợp lệ, nếu không có để null (Frontend sẽ tự fallback)
+                $product->hover_image = $hoverCandidate ? $hoverCandidate->image_url : null;
+            }
+            
             return $product;
         });
 
         return response()->json(['success' => true, 'data' => $products]);
     }
 
-    // Các hàm shopInfo, featured, categories, show giữ nguyên như cũ...
-    public function shopInfo($shop_slug) {
-        $shop = ['id' => 1, 'name' => 'SORA', 'slug' => $shop_slug, 'logo' => null, 'status' => 'active'];
-        return response()->json(['success' => true, 'data' => $shop]);
-    }
-
+    /**
+     * API: Lấy danh sách danh mục thực tế để hiển thị
+     */
     public function categories($shop_slug) {
-        $categories = \App\Models\Category::all(); 
+        $categories = Category::where('status', 'active')
+            ->orderBy('sort_order', 'asc')
+            ->get(['id', 'name', 'slug', 'thumbnail']); 
+            
         return response()->json(['success' => true, 'data' => $categories]);
     }
 }
