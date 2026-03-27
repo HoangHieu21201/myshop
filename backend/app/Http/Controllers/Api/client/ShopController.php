@@ -14,9 +14,11 @@ class ShopController extends Controller
      */
     public function index(Request $request, $shop_slug)
     {
-        // FIX: Lấy TOÀN BỘ thông tin variants để phục vụ việc chọn Size/Màu, check tồn kho ở Frontend
-        $query = Product::with(['category:id,name,slug', 'variants'])
-            ->where('status', 'published'); 
+        // FIX: Bổ sung "variants.attributeValues.attribute" để lấy MỌI THUỘC TÍNH (Size, Màu...) cho Modal
+        $query = Product::with([
+            'category:id,name,slug', 
+            'variants.attributeValues.attribute'
+        ])->where('status', 'published'); 
 
         // 1. Lọc theo Danh mục (nếu có chọn) - Lọc bằng slug
         if ($request->has('categories') && $request->categories != '') {
