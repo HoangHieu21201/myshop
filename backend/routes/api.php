@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\client\ClientFavouriteController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -47,24 +48,32 @@ Route::prefix('client')->group(function () {
 
     // MODULE GIỎ HÀNG (Cart)
     Route::controller(ClientCartController::class)->prefix('cart')->group(function () {
-        Route::post('/add-combo', 'addCombo'); 
-        Route::post('/merge', 'mergeCart');     
-        Route::post('/clear', 'clear');         
+        Route::post('/add-combo', 'addCombo');
+        Route::post('/merge', 'mergeCart');
+        Route::post('/clear', 'clear');
 
-        Route::get('/', 'index');               
-        Route::post('/', 'store');              
+        Route::get('/', 'index');
+        Route::post('/', 'store');
 
         // CÁC ROUTE ĐỘNG ĐẶT Ở DƯỚI CÙNG
-        Route::put('/{cartItem}', 'update');    
-        Route::delete('/{cartItem}', 'destroy'); 
+        Route::put('/{cartItem}', 'update');
+        Route::delete('/{cartItem}', 'destroy');
     });
+
+    // Danh sách yêu thích (Favourites)
+Route::prefix('favourites')->group(function () {
+    Route::get('/', [ClientFavouriteController::class, 'index']);
+    Route::post('/toggle', [ClientFavouriteController::class, 'toggle']);
+    Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
+});
+
 
     // MODULE ĐƠN HÀNG (Orders)
     Route::controller(ClientOrderController::class)->prefix('orders')->group(function () {
-        Route::get('/', 'index');               
-        Route::post('/', 'store');              
-        Route::get('/{order_code}', 'show');    
-        Route::put('/{order_code}', 'update');  
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('/{order_code}', 'show');
+        Route::put('/{order_code}', 'update');
     });
 
     Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
@@ -78,10 +87,10 @@ Route::prefix('client')->group(function () {
 
 
 Route::prefix('shop/{shop_slug}')->group(function () {
-    Route::get('/info', [ShopController::class, 'shopInfo']); 
+    Route::get('/info', [ShopController::class, 'shopInfo']);
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
-    
+
     Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
 });
 Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
@@ -107,7 +116,7 @@ Route::prefix('admin')->group(function () {
 
         // Lấy thông tin admin hiện tại
         Route::get('me', [AdminAccountController::class, 'me']);
-    
+
         Route::controller(AdminProfileController::class)->group(function () {
             Route::post('profile', 'updateProfile');
             Route::put('profile/password', 'updatePassword');
@@ -123,7 +132,7 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['check.module:admin_users'])->group(function () {
             Route::apiResource('users', AdminUserController::class);
             Route::post('users/{id}/restore', [AdminUserController::class, 'restore']);
-            
+
             Route::controller(AdminUserAddressController::class)->group(function () {
                 Route::post('users/{id}/addresses', 'store');
                 Route::put('addresses/{id}', 'update');
@@ -136,7 +145,7 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['check.module:admin_roles'])->group(function () {
             Route::apiResource('roles', AdminRoleController::class);
             Route::post('roles/{id}/restore', [AdminRoleController::class, 'restore']);
-            
+
             // Quản lý phân quyền module trong vai trò
             Route::controller(AdminModulePermissionController::class)->group(function () {
                 Route::get('modules', 'index');
@@ -206,7 +215,7 @@ Route::prefix('admin')->group(function () {
             });
         });
 
-         // Quản lý Combo (Mã: admin_combos)
+        // Quản lý Combo (Mã: admin_combos)
         Route::middleware(['check.module:admin_combos'])->group(function () {
             Route::controller(AdminComboController::class)->prefix('combos')->group(function () {
                 Route::get('/', 'index');
