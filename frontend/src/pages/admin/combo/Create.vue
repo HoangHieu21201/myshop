@@ -336,9 +336,6 @@ const handleProductSelect = async (index) => {
   finally { item.isLoadingVariants = false; }
 };
 
-// ==========================================
-// TÍCH HỢP LỊCH FLATPICKR 24H (LUXURY UI)
-// ==========================================
 const loadFlatpickr = () => {
   if (!document.querySelector('#fp-css')) {
     const link = document.createElement('link');
@@ -361,12 +358,11 @@ const loadFlatpickr = () => {
 const initPickers = () => {
   const config = {
     enableTime: true,
-    time_24hr: true, // ÉP KIỂU 24 GIỜ CHUẨN XÁC
+    time_24hr: true,
     dateFormat: "Y-m-d H:i",
-    disableMobile: true, // Chặn giao diện AM/PM xấu xí của điện thoại
+    disableMobile: true,
   };
 
-  // Áp dụng flatpickr vào input. Dù input đang là type="datetime-local", Flatpickr sẽ ghi đè lên thành type="text"
   try {
     window.flatpickr("#start_date", { ...config, onChange: (dates, str) => form.value.start_date = str });
     window.flatpickr("#end_date", { ...config, onChange: (dates, str) => form.value.end_date = str });
@@ -384,17 +380,13 @@ const fetchData = async () => {
     Swal.fire('Lỗi', 'Không thể tải danh sách sản phẩm', 'error');
   } finally {
     isPageLoading.value = false;
-    // Tăng thời gian chờ lên để đảm bảo Vue render DOM xong thì script mới chạy
     setTimeout(() => loadFlatpickr(), 500); 
   }
 };
 
-// ĐÃ CẬP NHẬT LOGIC ÉP CHUẨN ĐỊNH DẠNG DATE LÊN DATABASE
 const formatToDBDate = (str) => {
     if (!str) return '';
-    // Nếu dùng native datetime-local, nó sẽ có chữ T ở giữa (VD: 2026-03-24T18:20)
     let cleanStr = str.split('.')[0].replace('Z', '').replace('T', ' ');
-    // Nếu độ dài là 16 (YYYY-MM-DD HH:mm), bổ sung giây :00 để DB không báo lỗi
     if (cleanStr.length === 16) cleanStr += ':00';
     return cleanStr;
 };
@@ -420,7 +412,6 @@ const submitCombo = async () => {
     
     if (form.value.usage_limit) formData.append('usage_limit', form.value.usage_limit);
     
-    // GỌI HÀM ÉP CHUẨN NGÀY GIỜ BẤT CHẤP VIỆC DÙNG FLATPICKR HAY NATIVE
     if (form.value.start_date) formData.append('start_date', formatToDBDate(form.value.start_date));
     if (form.value.end_date) formData.append('end_date', formatToDBDate(form.value.end_date));
 

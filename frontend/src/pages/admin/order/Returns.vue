@@ -308,7 +308,6 @@ const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currenc
 const formatDate = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); };
 const formatDateTime = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleString('vi-VN'); };
 
-// ĐÃ BỔ SUNG: PARSE JSON AN TOÀN ĐỂ XỬ LÝ COMBO VÀ THUỘC TÍNH MÀ KHÔNG BỊ CRASH
 const parseAttributes = (attr) => {
   if (!attr) return {};
   if (typeof attr === 'object') return attr;

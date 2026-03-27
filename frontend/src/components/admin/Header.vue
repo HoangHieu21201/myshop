@@ -63,7 +63,6 @@ const router = useRouter();
 const isUserMenuActive = ref(false);
 const userMenuContainer = ref(null);
 
-// Kiểm tra trạng thái đăng nhập dựa trên Token
 const isLoggedIn = computed(() => {
   return !!localStorage.getItem('admin_token');
 });
@@ -77,7 +76,6 @@ const getAdminData = () => {
     return {
       name: admin.fullname || 'Quản trị viên',
       roleName: roleId == 1 ? 'Super Admin' : 'Nhân viên',
-      // FIX LỖI ẢNH: Thêm domain và thư mục storage vào trước đường dẫn
       avatar: admin.avatar_url ? `http://127.0.0.1:8000/storage/${admin.avatar_url}` : defaultAvatar
     };
   }

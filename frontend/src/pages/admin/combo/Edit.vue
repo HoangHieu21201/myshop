@@ -351,9 +351,6 @@ const handleProductSelect = async (index, isInit = false) => {
   finally { item.isLoadingVariants = false; }
 };
 
-// ==========================================
-// TÍCH HỢP LỊCH FLATPICKR 24H (LUXURY UI)
-// ==========================================
 const loadFlatpickr = () => {
   if (!document.querySelector('#fp-css')) {
     const link = document.createElement('link');
@@ -376,7 +373,7 @@ const loadFlatpickr = () => {
 const initPickers = () => {
   const config = {
     enableTime: true,
-    time_24hr: true, // ÉP KIỂU 24 GIỜ
+    time_24hr: true,
     dateFormat: "Y-m-d H:i",
     disableMobile: true,
   };
@@ -389,18 +386,11 @@ const initPickers = () => {
   }
 };
 
-// ==========================================
-// ĐỊNH DẠNG DATE CHỐNG LỆCH TIMEZONE KHI LOAD VỀ
-// ==========================================
 const formatFromDBDate = (dateStr) => {
     if (!dateStr) return '';
-    // Lấy 16 ký tự đầu tiên (VD: 2026-03-24T18:20) để bỏ qua múi giờ, tương thích với cả Native và Flatpickr
     return dateStr.substring(0, 16);
 };
 
-// ==========================================
-// ÉP CHUẨN ĐỊNH DẠNG DATE TRƯỚC KHI LƯU LÊN DB
-// ==========================================
 const formatToDBDate = (str) => {
     if (!str) return '';
     let cleanStr = str.split('.')[0].replace('Z', '').replace('T', ' ');
@@ -425,7 +415,6 @@ const fetchInitialData = async () => {
         discount_type: c.discount_type, discount_value: parseFloat(c.discount_value), is_discount_stackable: !!c.is_discount_stackable,
         usage_limit: c.usage_limit || null,
         
-        // SỬ DỤNG HÀM CẮT CHUỖI ĐỂ CHỐNG LỆCH GIỜ KHI LOAD
         start_date: formatFromDBDate(c.start_date),
         end_date: formatFromDBDate(c.end_date),
         
@@ -475,7 +464,6 @@ const submitCombo = async () => {
     
     if (form.value.usage_limit) formData.append('usage_limit', form.value.usage_limit);
     
-    // GỌI HÀM ÉP CHUẨN ĐỊNH DẠNG DATE TRƯỚC KHI GỬI LÊN SERVER
     if (form.value.start_date) formData.append('start_date', formatToDBDate(form.value.start_date));
     if (form.value.end_date) formData.append('end_date', formatToDBDate(form.value.end_date));
 

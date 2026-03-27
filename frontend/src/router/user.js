@@ -69,7 +69,7 @@ const user = [
         component: () => import('../pages/user/favourite/index.vue'),
       },
       {
-        path: 'about',
+        path: ' ',
         name: 'about',
         component: () => import('../pages/user/about/index.vue'),
       },
@@ -83,6 +83,26 @@ const user = [
         name: 'services',
         component: () => import('../pages/user/services/index.vue'),
       },
+      {
+        path: 'checkout',
+        name: 'checkout',
+        component: () => import('../pages/user/checkout/Index.vue'),
+      },
+      {
+        path: '/checkout/success',
+        name: 'checkout-success',
+        component: () => import('../pages/user/checkout/Success.vue'),
+      },
+      {
+        path: '/checkout/failed',
+        name: 'checkout-failed',
+        component: () => import('../pages/user/checkout/Failed.vue'),
+      },
+      {
+        path: 'favourite',
+        name: 'favourite',
+        component: () => import('../pages/user/favourite/index.vue'),
+      }
     ],
   },
 ]

@@ -97,7 +97,8 @@
                                             <div
                                                 class="alert alert-info small border-0 bg-info bg-opacity-10 text-muted m-0">
                                                 <i class="bi bi-info-circle me-1 text-info"></i>
-                                                Sản phẩm đang được cấu hình. Chuyển sang Bước 2 để điều chỉnh số lượng tồn kho.
+                                                Sản phẩm đang được cấu hình. Chuyển sang Bước 2 để điều chỉnh số lượng
+                                                tồn kho.
                                             </div>
                                         </div>
                                     </div>
@@ -187,7 +188,8 @@
                                                 <tr>
                                                     <th style="width: 70px;">Ảnh</th>
                                                     <th style="min-width: 150px;">SKU <span class="fw-light text-muted"
-                                                            style="font-size: 0.75em">(Tự sinh)</span></th>
+                                                            style="font-size: 0.75em">(Tự
+                                                            sinh)</span></th>
 
                                                     <th v-for="attrId in activeAttributes" :key="attrId"
                                                         style="min-width: 130px;"
@@ -209,7 +211,9 @@
                                                 <tr v-if="variants.length === 0">
                                                     <td :colspan="6 + activeAttributes.length" class="text-center py-5">
                                                         <div class="text-muted"><i
-                                                                class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>Chưa có dòng biến thể nào. Hãy thêm dòng mới.</div>
+                                                                class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>Chưa
+                                                            có dòng
+                                                            biến thể nào. Hãy thêm dòng mới.</div>
                                                     </td>
                                                 </tr>
 
@@ -238,8 +242,10 @@
                                                             @change="handleAttributeChange($event, attrId, index)">
                                                             <option value="">-- Chọn --</option>
                                                             <option v-for="val in getAttributeValues(attrId)"
-                                                                :key="val.id" :value="val.id">{{ val.value }}</option>
-                                                            <option value="NEW" class="text-success fw-bold">+ Tạo mới...</option>
+                                                                :key="val.id" :value="val.id">{{ val.value
+                                                                }}</option>
+                                                            <option value="NEW" class="text-success fw-bold">+ Tạo
+                                                                mới...</option>
                                                         </select>
                                                     </td>
 
@@ -285,7 +291,8 @@
                                         <div class="form-check form-switch m-0">
                                             <input class="form-check-input" type="checkbox" id="publishSwitch"
                                                 v-model="form.isPublished">
-                                            <label class="form-check-label fw-semibold" for="publishSwitch">Trạng thái Xuất bản</label>
+                                            <label class="form-check-label fw-semibold" for="publishSwitch">Trạng thái
+                                                Xuất bản</label>
                                         </div>
                                     </div>
                                 </div>
@@ -293,10 +300,12 @@
 
                             <div class="d-flex justify-content-between pt-2">
                                 <button type="button" class="btn btn-light px-4 border fw-semibold"
-                                    @click="currentStep = 1"><i class="bi bi-arrow-left me-1"></i> Trở lại Bước 1</button>
+                                    @click="currentStep = 1"><i class="bi bi-arrow-left me-1"></i> Trở lại Bước
+                                    1</button>
                                 <button type="submit" class="btn btn-brand text-white px-5 py-2 fw-bold shadow"
                                     :disabled="isSaving || variants.length === 0">
-                                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> CẬP NHẬT SẢN PHẨM
+                                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> CẬP NHẬT
+                                    SẢN PHẨM
                                 </button>
                             </div>
 
@@ -409,7 +418,7 @@ import axios from 'axios';
 
 const router = useRouter();
 const route = useRoute();
-const productId = route.params.id; // Lấy ID sản phẩm từ Route
+const productId = route.params.id;
 
 const isPageLoading = ref(true);
 const isSaving = ref(false);
@@ -451,7 +460,6 @@ const getImageUrl = (path) => {
     return `http://127.0.0.1:8000/storage/${path}`;
 };
 
-// FIX BLIND SPOT: Edit Mode không ép buộc phải có thumbnailFile mới
 const canProceedToStep2 = computed(() => {
     return form.value.name && form.value.category_id && form.value.base_price >= 0 && (thumbnailFile.value || thumbnailPreview.value);
 });
@@ -477,7 +485,7 @@ const generateSlug = () => {
 const handleThumbUpload = (e) => {
     const f = e.target.files[0];
     if (f) {
-        if (f.size > 15 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); return; }
+        if (f.size > 2 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh tối đa 2MB', 'error'); return; }
         thumbnailFile.value = f;
         thumbnailPreview.value = URL.createObjectURL(f);
     }
@@ -513,7 +521,7 @@ const proceedToStep2 = async () => {
                 addedAnyColumn = true;
             }
         }
-        
+
         if (addedAnyColumn && variants.value.length === 0) {
             Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Hệ thống đã tự động nạp thuộc tính từ Danh mục', showConfirmButton: false, timer: 3000 });
         }
@@ -578,9 +586,10 @@ const addVariantRow = () => {
     activeAttributes.value.forEach(id => rowAttrs[id] = "");
 
     variants.value.push({
-        id: null, // Track xem đây là tạo mới hay update
+        id: null, 
         sku: newSku, price: form.value.base_price, promotional_price: 0, stock_quantity: 10,
         imageFile: null, preview: null, attributes: rowAttrs,
+        current_image: null,
         hasDuplicateError: false, attrError: false, priceError: false, saleError: false
     });
 };
@@ -777,7 +786,7 @@ const submitProduct = async () => {
     try {
         const formData = new FormData();
         formData.append('_method', 'PUT');
-        
+
         formData.append('category_id', form.value.category_id);
         if (form.value.brand_id) {
             formData.append('brand_id', form.value.brand_id);
@@ -786,18 +795,19 @@ const submitProduct = async () => {
         formData.append('slug', form.value.slug);
         formData.append('base_price', form.value.base_price);
         formData.append('status', form.value.isPublished ? 'published' : 'draft');
-        
+
         if (thumbnailFile.value) {
             formData.append('thumbnail_image', thumbnailFile.value);
         }
 
         const variantsPayload = variants.value.map(v => ({
-            id: v.id || null, 
+            id: v.id || null,
             sku: v.sku,
             price: v.price,
             promotional_price: v.promotional_price || 0,
             stock_quantity: v.stock_quantity,
-            attributes: v.attributes
+            attributes: v.attributes,
+            current_image: v.current_image || null
         }));
         formData.append('variants_data', JSON.stringify(variantsPayload));
 
@@ -864,7 +874,7 @@ const fetchData = async () => {
         form.value.brand_id = pData.brand_id || '';
         form.value.base_price = Math.round(pData.base_price || 0);
         form.value.isPublished = pData.status === 'published';
-        
+
         if (pData.thumbnail_image) {
             thumbnailPreview.value = getImageUrl(pData.thumbnail_image);
         }
@@ -874,18 +884,19 @@ const fetchData = async () => {
             variants.value = pData.variants.map(v => {
                 let attrs = {};
                 let parsedAttrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes) : (v.attributes || {});
-                
+
                 for (let key in parsedAttrs) {
                     cols.add(key.toString());
                     attrs[key.toString()] = parsedAttrs[key];
                 }
-                
+
                 return {
                     id: v.id,
                     sku: v.sku,
                     price: Math.round(v.price || 0),
                     promotional_price: Math.round(v.promotional_price || 0),
                     stock_quantity: v.stock_quantity,
+                    current_image: v.image_url || v.image, 
                     preview: getImageUrl(v.image_url || v.image),
                     imageFile: null,
                     attributes: attrs,

@@ -189,7 +189,6 @@ const form = ref({
     shipping_address: '', city: '', district: '', ward: ''
 });
 
-// STATE API TỈNH THÀNH
 const provinces = ref([]);
 const districts = ref([]);
 const wards = ref([]);
@@ -199,7 +198,6 @@ const selectedWardId = ref('');
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
   if (e.response) {
     if (e.response.status === 401) {

@@ -15,7 +15,6 @@
       </div>
 
       <div class="row g-4">
-        <!-- ================= CỘT TRÁI: AVATAR & TRẠNG THÁI ================= -->
         <div class="col-md-4 col-lg-3">
           <div class="card border-0 shadow-sm rounded-4 text-center p-4 h-100 mb-4">
             <div class="position-relative d-inline-block mx-auto mb-3">
@@ -304,7 +303,6 @@ const showConfirmPassword = ref(false);
 
 const form = ref({ fullName: '', email: '', password: '', password_confirmation: '', phone: '', status: '', gender: '', birthday: '' });
 
-// STATE API TỈNH THÀNH
 const provinces = ref([]);
 const districts = ref([]);
 const wards = ref([]);
@@ -312,7 +310,6 @@ const selectedCityId = ref('');
 const selectedDistrictId = ref('');
 const selectedWardId = ref('');
 
-// QUẢN LÝ SỔ ĐỊA CHỈ
 const userAddresses = ref([]);
 const isSavingAddr = ref(false);
 const addrModalMode = ref('add');
@@ -322,7 +319,6 @@ const addrForm = ref({ id: null, customer_name: '', customer_phone: '', shipping
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
   if (e.response) {
     if (e.response.status === 401) {
@@ -348,7 +344,6 @@ const findLocationByName = (list, name) => {
   return list.find(item => item.full_name === name || item.name === name || name.includes(item.name));
 };
 
-// Gọi API Esgoo qua Axios
 const fetchProvinces = async () => {
   try {
     const res = await axios.get('https://esgoo.net/api-tinhthanh/1/0.htm');
@@ -379,7 +374,6 @@ const onWardChange = () => {
   addrForm.value.ward = wards.value.find(w => w.id === selectedWardId.value)?.full_name || '';
 };
 
-// Tải thông tin người dùng hiện tại
 const fetchUser = async () => {
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/admin/users/${route.params.id}`, { headers: getHeaders() });
@@ -430,7 +424,6 @@ const validatePhone = (e) => {
     form.value.phone = e.target.value.replace(/\D/g, '').slice(0, 11);
 };
 
-// AXIOS: LƯU HỒ SƠ KHÁCH HÀNG
 const updateUser = async () => {
   isSavingUser.value = true;
   errors.value = {};
@@ -472,7 +465,6 @@ const openAddressModal = async (mode, addr = null) => {
     districts.value = []; wards.value = [];
   } else {
     addrForm.value = { ...addr, set_as_default: false };
-    // Khớp ID Tỉnh Thành (AXIOS API)
     if (addr.city && provinces.value.length > 0) {
       const cityObj = findLocationByName(provinces.value, addr.city);
       if (cityObj) {

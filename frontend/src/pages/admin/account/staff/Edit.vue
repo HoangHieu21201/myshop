@@ -186,7 +186,6 @@ const isRemoveAvatar = ref(false);
 
 const form = ref({ fullname: '', email: '', password: '', phone: '', address: '', role_id: '', status: '' });
 
-// QUẢN LÝ ĐỊA CHỈ (ESGOO API)
 const provinces = ref([]);
 const districts = ref([]);
 const wards = ref([]);
@@ -215,9 +214,6 @@ const getLevelColor = (level) => {
   }
 };
 
-// ========================
-// LOGIC API TỈNH THÀNH (ESGOO)
-// ========================
 const findLocationByName = (list, name) => {
   if (!name || !list) return null;
   return list.find(item => item.full_name === name || item.name === name || name.includes(item.name));
@@ -256,7 +252,6 @@ const onDistrictChange = async () => {
 
 const onWardChange = () => {};
 
-// Thuật toán tách chuỗi địa chỉ từ DB để tự động chọn lại Dropdown
 const parseAddressToDropdowns = async (fullAddress) => {
   if (!fullAddress) return;
   const parts = fullAddress.split(', ').map(p => p.trim());
@@ -285,7 +280,7 @@ const parseAddressToDropdowns = async (fullAddress) => {
       }
     }
   } else {
-    specificAddress.value = fullAddress; // Nếu không đúng format thì đưa hết vào ô địa chỉ cụ thể
+    specificAddress.value = fullAddress; 
   }
 };
 
@@ -293,7 +288,7 @@ const fetchRolesAndStaff = async () => {
   try {
     const headers = { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` };
     
-    await fetchProvinces(); // Lấy tỉnh thành trước
+    await fetchProvinces();
 
     const [resRoles, resStaff, resModules] = await Promise.all([
       fetch('http://127.0.0.1:8000/api/admin/roles', { headers }),
@@ -308,7 +303,6 @@ const fetchRolesAndStaff = async () => {
       form.value = { fullname: s.fullname, email: s.email, phone: s.phone, address: s.address || '', role_id: s.role_id, status: s.status, password: '' };
       previewAvatar.value = s.avatar_url ? `http://127.0.0.1:8000/storage/${s.avatar_url}` : defaultAvatar;
       
-      // Parse địa chỉ lên form
       await parseAddressToDropdowns(s.address);
     } else {
       router.push({ name: 'admin-staff-index' });
@@ -347,7 +341,6 @@ const removeAvatar = () => {
 const updateStaff = async () => {
   isSaving.value = true;
 
-  // Ghép chuỗi địa chỉ
   let finalAddress = specificAddress.value;
   const cityName = provinces.value.find(p => p.id === selectedCityId.value)?.full_name || '';
   const distName = districts.value.find(d => d.id === selectedDistrictId.value)?.full_name || '';

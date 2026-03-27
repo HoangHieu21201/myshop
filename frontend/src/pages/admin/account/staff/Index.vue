@@ -273,7 +273,6 @@ const currentUserId = currentAdmin.id;
 const currentPage = ref(1);
 const itemsPerPage = 8; 
 
-// State cho Popup Quick View
 const selectedStaff = ref(null);
 let quickViewModalInstance = null;
 
@@ -284,7 +283,6 @@ onBeforeUnmount(() => {
   document.body.style = '';
 });
 
-// Hàm gỡ bỏ modal an toàn trước khi chuyển trang
 const goToEditStaff = (id) => {
   if (quickViewModalInstance) quickViewModalInstance.hide();
   setTimeout(() => {
@@ -293,15 +291,13 @@ const goToEditStaff = (id) => {
     document.body.style = '';
     router.push({ name: 'admin-staff-edit', params: { id } });
   }, 300);
-};
+}; 
 
-// Cấu hình Axios Header
 const getHeaders = () => ({
   'Accept': 'application/json',
   'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
 });
 
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
   if (e.response) {
     if (e.response.status === 401) {
@@ -324,7 +320,6 @@ const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
 const getAvatarUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultAvatar;
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 
-// Tính năng Phóng to ảnh Avatar bằng SweetAlert2 - ĐÃ FIX KÍCH THƯỚC
 const viewFullImage = (url) => {
   Swal.fire({
     imageUrl: url,
@@ -361,7 +356,6 @@ const getLevelColor = (level) => {
   }
 };
 
-// AXIOS: FETCH DATA
 const fetchData = async () => {
   isLoading.value = true;
   try {
@@ -399,7 +393,6 @@ const openQuickView = (staff) => {
   quickViewModalInstance.show();
 };
 
-// TỐI ƯU TAB ROWS BẰNG MẢNG PHẲNG ĐỂ GRID RESPONSIVE TỰ CHẠY
 const allTabs = computed(() => {
   const tabs = [
     { id: 'all', name: 'Tất cả', count: staffs.value.filter(s => !s.deleted_at).length, icon: 'bi-people-fill' },
@@ -415,7 +408,6 @@ const allTabs = computed(() => {
     });
   });
 
-  // Đẩy tab xóa xuống cuối cùng với cờ isEnd
   tabs.push({ 
     id: 'deleted', 
     name: 'Thùng rác', 
@@ -432,7 +424,6 @@ const switchTab = (tabId) => {
   currentPage.value = 1; 
 };
 
-// ================= INLINE STATUS =================
 const getStatusSelectClass = (status) => {
   const map = { 
     'active': 'text-success border-success bg-success bg-opacity-10', 
@@ -447,7 +438,6 @@ const cancelStatusChange = (staff) => { staff.localStatus = staff.status; staff.
 const saveStaffStatus = async (staff) => {
   staff.isUpdatingStatus = true;
   
-  // Do form Edit yêu cầu nhiều trường, ta lấy data hiện tại của staff ghép vào payload
   const payload = {
       _method: 'PUT',
       fullname: staff.fullname,
@@ -497,7 +487,6 @@ const processedStaff = computed(() => {
     );
   }
 
-  // Sắp xếp: Bản thân -> Root -> Còn lại
   return result.sort((a, b) => {
     if (a.id === currentUserId) return -1;
     if (b.id === currentUserId) return 1;
@@ -514,7 +503,6 @@ const paginatedStaff = computed(() => {
   return processedStaff.value.slice(start, start + itemsPerPage);
 });
 
-// AXIOS: XÓA
 const confirmDelete = (id, name) => {
   Swal.fire({
     title: 'Đưa vào thùng rác?', text: `Nhân viên "${name}" sẽ bị vô hiệu hóa và chuyển vào thùng rác!`, icon: 'warning',
@@ -532,7 +520,6 @@ const confirmDelete = (id, name) => {
   });
 };
 
-// AXIOS: KHÔI PHỤC
 const restoreStaff = (id) => {
   Swal.fire({
     title: 'Khôi phục tài khoản?',

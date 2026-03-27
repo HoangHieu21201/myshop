@@ -61,7 +61,6 @@ const form = ref({
   password_confirmation: ''
 });
 
-// Lấy token và email từ URL (Ví dụ: /admin/reset-password?token=abc&email=test@test.com)
 onMounted(() => {
   token.value = route.query.token || '';
   email.value = route.query.email || '';

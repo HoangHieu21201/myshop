@@ -92,7 +92,6 @@ const handleLogin = async () => {
       localStorage.setItem('admin_token', data.token);
       localStorage.setItem('admin_role', data.admin.role_id);
 
-      // THAY ĐỔI: Lưu thẳng level của User vào localStorage để check quyền cực nhanh
       if (data.admin.role && data.admin.role.level) {
         localStorage.setItem('admin_level', data.admin.role.level);
       }
