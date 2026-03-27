@@ -31,10 +31,14 @@ use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\client\ClientFavouriteController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect']);
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 
 // CLIENT API ROUTES
 Route::prefix('client')->group(function () {
@@ -42,7 +46,7 @@ Route::prefix('client')->group(function () {
     Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
     Route::get('search', [ClientHeaderController::class, 'search']);
     Route::get('/home-data', [ClientHomeController::class, 'index']);
-    
+
     // API Lấy Bảng Giá Vàng (Thêm mới)
     Route::get('/gold-prices', [ClientHomeController::class, 'goldPrices']);
 
@@ -84,7 +88,6 @@ Route::prefix('favourites')->group(function () {
     // Trang chủ
     Route::get('/home-data', [ClientHomeController::class, 'index']);
 });
-
 
 Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/info', [ShopController::class, 'shopInfo']);

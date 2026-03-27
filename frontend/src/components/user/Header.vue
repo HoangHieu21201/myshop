@@ -65,7 +65,6 @@
                   <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i
                       class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
                 </template>
-
                 <!-- NẾU CHƯA ĐĂNG NHẬP -->
                 <template v-else>
                   <div class="p-3 text-center">
@@ -209,7 +208,7 @@
                           <div class="small fw-bold text-truncate" v-html="highlightText(prod.name)"></div>
                           <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price ||
                             prod.base_price)
-                            }}</div>
+                          }}</div>
                         </div>
                       </a>
                     </li>
@@ -235,7 +234,6 @@
 
       </div>
     </div>
-
     <div class="border-bottom opacity-50"></div>
   </header>
 </template>
@@ -387,7 +385,6 @@ const handleLogout = () => {
 
 onMounted(() => {
   fetchHeaderData();
-
   // --- CẬP NHẬT MỚI: Đọc data local & gọi hàm kiểm tra server ---
   const userData = localStorage.getItem('userData');
   if (userData) {
@@ -395,7 +392,6 @@ onMounted(() => {
   }
   fetchUserProfile();
   // -------------------------------------------------------------
-
   document.addEventListener('click', handleClickOutside);
 });
 
@@ -642,4 +638,4 @@ onUnmounted(() => {
   opacity: 0;
   transform: translate(-50%, 10px);
 }
-</style>
+</style>:
