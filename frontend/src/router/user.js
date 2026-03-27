@@ -41,7 +41,7 @@ const user = [
       {
         path: '/auth/google/callback',
         name: 'GoogleCallback',
-        component: () => import('../pages/user/auth/CallBackGoogle.vue'), 
+        component: () => import('../pages/user/auth/CallBackGoogle.vue'),
       },
       {
         path: 'shop',
@@ -98,11 +98,6 @@ const user = [
         name: 'checkout-failed',
         component: () => import('../pages/user/checkout/Failed.vue'),
       },
-      {
-        path: 'favourite',
-        name: 'favourite',
-        component: () => import('../pages/user/favourite/index.vue'),
-      }
     ],
   },
 ]

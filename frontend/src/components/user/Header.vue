@@ -1,4 +1,5 @@
 <template>
+  <!-- header -->
   <header class="site-header bg-white sticky-top">
     <div class="container position-relative">
 
@@ -56,11 +57,6 @@
                   <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i
                       class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
                 </template>
-<<<<<<< Updated upstream
-                <!-- NẾU CHƯA ĐĂNG NHẬP -->
-=======
-
->>>>>>> Stashed changes
                 <template v-else>
                   <div class="p-3 text-center">
                     <p class="small text-muted mb-3">Đăng nhập để theo dõi đơn hàng và ưu đãi</p>
@@ -373,21 +369,11 @@ const handleLogout = () => {
 
 onMounted(() => {
   fetchHeaderData();
-<<<<<<< Updated upstream
-  // --- CẬP NHẬT MỚI: Đọc data local & gọi hàm kiểm tra server ---
-=======
-
->>>>>>> Stashed changes
   const userData = localStorage.getItem('userData');
   if (userData) {
     user.value = JSON.parse(userData);
   }
   fetchUserProfile();
-<<<<<<< Updated upstream
-  // -------------------------------------------------------------
-=======
-
->>>>>>> Stashed changes
   document.addEventListener('click', handleClickOutside);
 });
 
