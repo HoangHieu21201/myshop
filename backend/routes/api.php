@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\client\ClientCartController;
 use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
+use App\Http\Controllers\Api\client\ClientCompareController; // Đã thêm Use Controller
 use App\Http\Controllers\Api\Auth\AuthController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -73,13 +74,16 @@ Route::prefix('client')->group(function () {
     Route::get('/home-data', [ClientHomeController::class, 'index']);
 });
 
-
+// ROUTE SHOP CLIENT
 Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/info', [ShopController::class, 'shopInfo']); 
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
     
     Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
+    
+    // Đã chuyển Route Compare vào đúng Group
+    Route::post('/compare', [ClientCompareController::class, 'getCompareData']);
 });
 Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
 

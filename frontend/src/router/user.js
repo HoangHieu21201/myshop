@@ -8,6 +8,7 @@ const user = [
         name: 'home',
         component: () => import('../pages/user/index.vue'),
       },
+      
       {
         path: 'cart',
         name: 'cart',
@@ -38,11 +39,16 @@ const user = [
         name: 'shop',
         component: () => import('../pages/user/shop/Index.vue'),
       },
-      // ĐÃ THÊM ROUTE CHO TRANG CHI TIẾT SẢN PHẨM Ở ĐÂY
+      // Đã sửa 'product' thành 'productdetail' để khớp với router.push bên file Compare.vue
       {
-        path: 'shop/:shop_slug/product/:slug',
+        path: 'shop/:shop_slug/productdetail/:slug',
         name: 'productDetail',
         component: () => import('../pages/user/productdetail/Index.vue'),
+      },
+      {
+        path: 'shop/:shop_slug/compare',
+        name: 'compare',
+        component: () => import('../pages/user/compare/Index.vue'), 
       },
       {
         path: 'combos',
