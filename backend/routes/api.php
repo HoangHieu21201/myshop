@@ -32,6 +32,8 @@ use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
+use App\Http\Controllers\Api\client\ClientFavouriteController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -61,6 +63,14 @@ Route::prefix('client')->group(function () {
         Route::put('/{cartItem}', 'update');
         Route::delete('/{cartItem}', 'destroy');
     });
+
+    // Danh sách yêu thích (Favourites)
+Route::prefix('favourites')->group(function () {
+    Route::get('/', [ClientFavouriteController::class, 'index']);
+    Route::post('/toggle', [ClientFavouriteController::class, 'toggle']);
+    Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
+});
+
 
     // MODULE ĐƠN HÀNG (Orders)
     Route::controller(ClientOrderController::class)->prefix('orders')->group(function () {
