@@ -152,7 +152,6 @@
               <!-- ================= TAB 2: QUẢN LÝ SỔ ĐỊA CHỈ ================= -->
               <div v-if="activeTab === 'address'">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                  <p class="text-muted mb-0">Quản lý danh sách địa chỉ nhận hàng của khách hàng này.</p>
                   <button type="button" class="btn btn-brand rounded-pill px-4 py-2 fw-bold text-white shadow-sm" @click="openAddressModal('add')">
                     <i class="bi bi-plus-lg me-1"></i> Thêm Địa Chỉ
                   </button>

@@ -57,7 +57,7 @@ class AdminOrderController extends Controller
         $orders = $baseQuery->with(['user:id,fullName,email'])
             ->withCount('items')
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         return response()->json([
             'success' => true,
@@ -78,7 +78,7 @@ class AdminOrderController extends Controller
         return response()->json(['success' => true, 'data' => $order]);
     }
 
-    // 3. CẬP NHẬT TRẠNG THÁI (ĐÃ VÁ LỖ HỔNG COMBO & LOGIC)
+    // 3. CẬP NHẬT TRẠNG THÁI 
     public function updateStatus(AdminUpdateOrderRequest $request, $id)
     {
         DB::beginTransaction();

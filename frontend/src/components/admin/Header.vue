@@ -1,40 +1,45 @@
 <template>
-  <nav class="app-header navbar navbar-expand bg-white shadow-sm px-3 py-2 border-bottom">
+  <!-- Thêm class động để tự động đổi màu nền Header khi bật Dark Mode -->
+  <nav class="app-header navbar navbar-expand shadow-sm px-3 py-2 border-bottom transition-all"
+       :class="isDarkMode ? 'bg-dark border-secondary' : 'bg-white'">
     <div class="container-fluid">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link fs-5 text-secondary" href="#" role="button">
-            <i class="bi bi-list"></i>
-          </a>
-        </li>
-      </ul>
 
       <ul class="navbar-nav ms-auto align-items-center">
+        <!-- NÚT TOGGLE DARK MODE (MỚI THÊM) -->
+        <li class="nav-item me-3" v-if="isLoggedIn">
+          <button @click="toggleTheme" 
+                  class="btn rounded-circle shadow-sm d-flex align-items-center justify-content-center p-0 theme-toggle-btn"
+                  :class="isDarkMode ? 'btn-secondary border-secondary' : 'btn-light border-light'"
+                  style="width: 36px; height: 36px; transition: all 0.3s;"
+                  :title="isDarkMode ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'">
+            <i class="bi" :class="isDarkMode ? 'bi-moon-stars-fill text-light fs-6' : 'bi-sun-fill text-warning fs-5'"></i>
+          </button>
+        </li>
+
         <!-- Trường hợp 1: Đã đăng nhập - Hiển thị Menu User -->
         <li v-if="isLoggedIn" class="nav-item dropdown user-menu-container" ref="userMenuContainer">
-          <a href="#" @click.prevent="toggleUserMenu" class="nav-link d-flex align-items-center dropdown-toggle text-dark text-decoration-none">
+          <a href="#" @click.prevent="toggleUserMenu" class="nav-link d-flex align-items-center dropdown-toggle text-decoration-none"
+             :class="isDarkMode ? 'text-light' : 'text-dark'">
             <img :src="adminUser.avatar" class="user-image rounded-circle shadow-sm me-2" alt="User Image">
             <span class="d-none d-md-inline fw-semibold text-truncate" style="max-width: 150px;">{{ adminUser.name }}</span>
           </a>
           
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" :class="{ 'show': isUserMenuActive }">
+          <ul class="dropdown-menu dropdown-menu-end shadow border mt-2 transition-all" 
+              :class="[{ 'show': isUserMenuActive }, isDarkMode ? 'bg-dark border-secondary' : 'bg-white border-0']">
             <li class="user-header-modern text-white text-center p-3 rounded-top">
               <img :src="adminUser.avatar" class="rounded-circle shadow mb-2" style="width: 60px; height: 60px; object-fit: cover;" alt="User Image">
               <p class="mb-0 fw-bold">{{ adminUser.name }}</p>
-              <small class="text-light">{{ adminUser.roleName }}</small>
+              <small class="text-light opacity-75">{{ adminUser.roleName }}</small>
             </li>
             
             <li class="mt-2">
-              <router-link :to="{ name: 'admin-profile' }" class="dropdown-item py-2">
+              <router-link :to="{ name: 'admin-profile' }" class="dropdown-item py-2" :class="isDarkMode ? 'text-light hover-dark' : ''">
                 <i class="bi bi-person me-2"></i> Hồ sơ cá nhân
               </router-link>
             </li>
+            <li><hr class="dropdown-divider" :class="isDarkMode ? 'border-secondary' : ''"></li>
             <li>
-              <a href="#" class="dropdown-item py-2"><i class="bi bi-gear me-2"></i> Cài đặt</a>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 text-danger fw-bold">
+              <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 fw-bold" :class="isDarkMode ? 'text-danger hover-dark' : 'text-danger'">
                 <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
               </a>
             </li>
@@ -62,6 +67,37 @@ import defaultAvatar from '../../assets/images/defaults/avatar1.png';
 const router = useRouter();
 const isUserMenuActive = ref(false);
 const userMenuContainer = ref(null);
+
+// LOGIC DARK MODE
+const isDarkMode = ref(false);
+
+const initTheme = () => {
+  const savedTheme = localStorage.getItem('admin_theme');
+  // Mặc định lấy theo LocalStorage. Nếu không có thì kiểm tra xem máy tính người dùng có đang dùng Dark Mode không.
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    isDarkMode.value = true;
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+    document.body.classList.add('dark-mode');
+  } else {
+    isDarkMode.value = false;
+    document.documentElement.setAttribute('data-bs-theme', 'light');
+    document.body.classList.remove('dark-mode');
+  }
+};
+
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value;
+  if (isDarkMode.value) {
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+    document.body.classList.add('dark-mode');
+    localStorage.setItem('admin_theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-bs-theme', 'light');
+    document.body.classList.remove('dark-mode');
+    localStorage.setItem('admin_theme', 'light');
+  }
+};
+// KẾT THÚC LOGIC DARK MODE
 
 const isLoggedIn = computed(() => {
   return !!localStorage.getItem('admin_token');
@@ -128,6 +164,7 @@ const closeUserMenu = (event) => {
 };
 
 onMounted(() => {
+  initTheme(); // Nạp giao diện lúc load trang
   document.addEventListener('click', closeUserMenu);
 });
 
@@ -140,6 +177,14 @@ onUnmounted(() => {
 .app-header {
   min-height: 60px;
   z-index: 1000;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  transform: rotate(15deg) scale(1.1);
 }
 
 .user-image {
@@ -180,7 +225,7 @@ onUnmounted(() => {
 }
 
 .user-header-modern {
-  background: linear-gradient(135deg, #009981 0%, #00cba9 100%);
+  background: linear-gradient(135deg, #009981 0%, #007a67 100%);
   margin-top: -8px; 
 }
 
@@ -192,6 +237,12 @@ onUnmounted(() => {
 .dropdown-item:hover {
   background-color: #f8f9fa;
   color: #009981;
+}
+
+/* Tùy chỉnh hover cho dropdown khi ở Dark Mode */
+.hover-dark:hover {
+  background-color: #343a40 !important;
+  color: #00ebc4 !important;
 }
 
 @keyframes slideInUp {
