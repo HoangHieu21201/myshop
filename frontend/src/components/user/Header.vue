@@ -24,7 +24,7 @@
         </div>
 
         <div class="header-icons d-flex justify-content-end align-items-center gap-4" style="flex: 1;">
-          <a href="#" @click.prevent="safeNavigate('wishlist')" class="icon-link hover-primary transition-color">
+          <a href="#" @click.prevent="safeNavigate('favourite')" class="icon-link hover-primary transition-color">
             <i class="bi bi-heart"></i>
           </a>
 
@@ -50,7 +50,7 @@
                   <a href="#" @click.prevent="safeNavigate('orders')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
                       class="bi bi-box-seam me-2 text-muted"></i>Đơn mua</a>
-                  <a href="#" @click.prevent="safeNavigate('wishlist')"
+                  <a href="#" @click.prevent="safeNavigate('favourite')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
                       class="bi bi-heart text-danger me-2"></i>Yêu thích</a>
                   <div class="dropdown-divider my-2"></div>
@@ -70,11 +70,6 @@
               </div>
             </transition>
           </div>
-
-          <!-- <a href="#" @click.prevent="safeNavigate('stores')"
-            class="icon-link hover-primary transition-color d-none d-md-block">
-            <i class="bi bi-geo-alt"></i>
-          </a> -->
 
           <router-link :to="{ name: 'cart' }" class="icon-link position-relative hover-primary transition-color">
             <i class="bi bi-bag"></i>
@@ -221,6 +216,7 @@
 
       </div>
     </div>
+
     <div class="border-bottom opacity-50"></div>
   </header>
 </template>
@@ -620,4 +616,4 @@ onUnmounted(() => {
   opacity: 0;
   transform: translate(-50%, 10px);
 }
-</style>:
+</style>

@@ -98,6 +98,16 @@ const user = [
         name: 'checkout-failed',
         component: () => import('../pages/user/checkout/Failed.vue'),
       },
+       {
+        path: 'shop/:shop_slug/compare',
+        name: 'compare',
+        component: () => import('../pages/user/compare/Index.vue'), 
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('../pages/user/profile/index.vue')
+      },
     ],
   },
 ]
