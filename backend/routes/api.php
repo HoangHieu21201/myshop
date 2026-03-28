@@ -82,13 +82,13 @@ Route::prefix('client')->group(function () {
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
     // Hồ Sơ Cá Nhân (Profile)
-        Route::prefix('profile')->group(function () {
-            Route::get('/', [ClientProfileController::class, 'show']);
-            Route::post('/', [ClientProfileController::class, 'update']);
-            
-            // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
-            Route::post('/password', [ClientProfileController::class, 'updatePassword']); 
-        });
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ClientProfileController::class, 'show']);
+        Route::post('/', [ClientProfileController::class, 'update']);
+
+        // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
+        Route::post('/password', [ClientProfileController::class, 'updatePassword']);
+    });
 
 
 
@@ -103,6 +103,9 @@ Route::prefix('client')->group(function () {
         Route::post('/', 'store');
         Route::get('/{order_code}', 'show');
         Route::put('/{order_code}', 'update');
+        // SỬA LẠI 2 ĐƯỜNG DẪN DƯỚI ĐÂY (chỉ cần /{order_code}/...)
+        Route::post('/{order_code}/review', 'review'); // Đánh giá
+        Route::post('/{order_code}/reorder', 'reorder'); // Mua lại
     });
 
     Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
@@ -130,7 +133,7 @@ Route::prefix('shop/{shop_slug}')->group(function () {
 
 
     Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
-    
+
     // Đã chuyển Route Compare vào đúng Group
     Route::post('/compare', [ClientCompareController::class, 'getCompareData']);
 });

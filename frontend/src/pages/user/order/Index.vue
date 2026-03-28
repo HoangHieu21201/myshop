@@ -1,12 +1,11 @@
 <template>
   <div class="order-history-wrapper pb-5" style="min-height: 100vh; background-color: #f8f9fa; font-family: 'Lato', sans-serif;">
-    <!-- Nâng cấp 1: Header Banner phong cách Luxury Editorial -->
     <div class="bg-white py-5 mb-5 border-bottom shadow-sm">
       <div class="container text-center">
         <nav aria-label="breadcrumb" class="mb-3 d-flex justify-content-center">
           <ol class="breadcrumb mb-0 small text-uppercase fw-bold" style="letter-spacing: 0.15em;">
             <li class="breadcrumb-item">
-              <a href="#" @click.prevent="router.push('/')" class="text-decoration-none text-muted hover-primary">Trang chủ</a>
+              <a href="javascript:void(0)" v-on:click="router.push('/')" class="text-decoration-none text-muted hover-primary">Trang chủ</a>
             </li>
             <li class="breadcrumb-item active text-primary-custom" aria-current="page">Lịch sử đơn hàng</li>
           </ol>
@@ -17,46 +16,36 @@
     </div>
 
     <main class="container">
-      <!-- Trạng thái Loading -->
       <div v-if="isLoading" class="d-flex justify-content-center align-items-center py-5 my-5">
         <div class="spinner-border text-primary-custom" style="width: 3rem; height: 3rem;"></div>
       </div>
 
-      <!-- Nâng cấp 2: Toolbar Lọc & Tìm Kiếm Sang Trọng -->
       <div v-else-if="orders.length > 0 || hasActiveFilters" class="mb-5">
         <div class="bg-white p-3 p-md-4 shadow-sm border border-light-subtle d-flex flex-column gap-4">
-          
-          <!-- Tabs Trạng Thái -->
           <div class="order-tabs d-flex gap-4 overflow-auto pb-2 border-bottom text-nowrap">
             <button v-for="tab in statusTabs" :key="tab.value" 
-                    @click="filterStatus = tab.value"
+                    v-on:click="filterStatus = tab.value"
                     class="tab-btn fw-bold text-uppercase small" 
                     :class="{ 'active': filterStatus === tab.value }">
-              {{ tab.label }}
+              <span v-text="tab.label"></span>
             </button>
           </div>
 
-          <!-- Nhóm Bộ Lọc & Tìm Kiếm -->
           <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
-            
-            <!-- Tìm kiếm -->
             <div class="input-group" style="max-width: 350px;">
               <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
               <input type="text" class="form-control border-start-0 bg-light shadow-none" 
-                     placeholder="Tìm theo mã đơn hàng (VD: ORD-...)" 
-                     v-model="searchQuery">
+                     placeholder="Tìm mã đơn hàng (VD: ORD-...)" v-model="searchQuery">
             </div>
 
-            <!-- Sort & Filter -->
             <div class="d-flex flex-wrap gap-3">
-              <select class="form-select shadow-none bg-light text-secondary fw-medium border-light-subtle" style="width: auto; min-width: 160px;" v-model="filterDate">
+              <select class="form-select shadow-none bg-light text-secondary fw-medium border-light-subtle" style="width: auto;" v-model="filterDate">
                 <option value="all">Thời gian: Tất cả</option>
                 <option value="30days">30 ngày qua</option>
                 <option value="6months">6 tháng qua</option>
                 <option value="this_year">Năm nay</option>
               </select>
-
-              <select class="form-select shadow-none bg-light text-secondary fw-medium border-light-subtle" style="width: auto; min-width: 180px;" v-model="sortBy">
+              <select class="form-select shadow-none bg-light text-secondary fw-medium border-light-subtle" style="width: auto;" v-model="sortBy">
                 <option value="newest">Sắp xếp: Mới nhất</option>
                 <option value="oldest">Sắp xếp: Cũ nhất</option>
                 <option value="price_desc">Giá: Cao đến Thấp</option>
@@ -66,88 +55,79 @@
           </div>
         </div>
 
-        <!-- Cảnh báo khi không tìm thấy kết quả ở bộ lọc -->
         <div v-if="displayOrders.length === 0" class="text-center py-5 my-4 bg-white border border-light-subtle">
           <i class="bi bi-search fs-1 text-muted opacity-50 mb-3 d-block"></i>
-          <p class="fs-5 text-secondary font-serif fst-italic">Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.</p>
-          <button @click="resetFilters" class="btn btn-link text-primary-custom text-decoration-none fw-bold">✕ Xóa bộ lọc</button>
+          <p class="fs-5 text-secondary font-serif fst-italic">Không tìm thấy đơn hàng nào phù hợp.</p>
+          <button v-on:click="resetFilters" class="btn btn-link text-primary-custom text-decoration-none fw-bold">✕ Xóa bộ lọc</button>
         </div>
 
-        <!-- Nâng cấp 3: Card Danh sách đơn hàng tinh tế -->
         <div v-else class="order-list">
           <div class="card border border-light-subtle shadow-sm rounded-0 mb-5 order-card-luxury hover-lift" v-for="order in displayOrders" :key="order.id">
             
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
               <div class="d-flex align-items-center gap-3">
-                <span class="fw-bold text-dark fs-5 font-serif" style="letter-spacing: 1px;">#{{ order.order_code }}</span>
+                <span class="fw-bold text-dark fs-5 font-serif" style="letter-spacing: 1px;">#<span v-text="order.order_code"></span></span>
                 <span class="text-muted small d-none d-sm-inline">|</span>
-                <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i> {{ formatDate(order.created_at) }}</span>
+                <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i> <span v-text="formatDate(order.created_at)"></span></span>
               </div>
               <span :class="['status-badge px-3 py-1 rounded-pill small fw-bold', getStatusClass(order.status)]">
-                <i :class="getStatusIcon(order.status)" class="me-1"></i> {{ translateStatus(order.status) }}
+                <i :class="getStatusIcon(order.status)" class="me-1"></i> <span v-text="translateStatus(order.status)"></span>
               </span>
             </div>
             
             <div class="card-body p-4">
-              
-              <!-- NÂNG CẤP: THANH TIẾN TRÌNH NẰM NGANG (HORIZONTAL STEPPER) -->
               <div v-if="!['cancelled', 'returned'].includes(order.status)" class="order-stepper-horizontal d-none d-md-flex mb-5 mt-2">
                 <div v-for="(step, index) in orderSteps" :key="index" 
                      class="stepper-step" 
                      :class="{ 'completed': isStepCompleted(order.status, step.value), 'active': order.status === step.value }">
-                  <div class="step-icon-wrap">
-                    <div class="step-icon"><i :class="step.icon"></i></div>
-                  </div>
+                  <div class="step-icon-wrap"><div class="step-icon"><i :class="step.icon"></i></div></div>
                   <div class="step-text">
-                    <div class="step-title">{{ step.label }}</div>
-                    <div class="step-date" v-if="getStepDate(order, step.value)">{{ getStepDate(order, step.value) }}</div>
+                    <div class="step-title" v-text="step.label"></div>
                   </div>
                 </div>
               </div>
               <div v-else class="alert bg-light border border-light-subtle rounded-0 mb-5 d-flex align-items-center py-2 px-3">
                 <i class="bi bi-x-circle-fill text-secondary me-2 fs-5"></i>
-                <div class="text-muted small">
-                  <strong>Đơn hàng đã bị hủy.</strong> Quá trình giao dịch đã dừng lại.
-                </div>
+                <div class="text-muted small"><strong>Đơn hàng đã bị hủy.</strong> Quá trình giao dịch đã dừng lại.</div>
               </div>
 
               <hr class="mt-0 mb-4 border-light-subtle">
               
               <div class="row align-items-center">
-                <!-- Danh sách sản phẩm (Bên trái) -->
                 <div class="col-lg-8 border-end-lg pe-lg-4">
-                  <div v-for="(item, index) in order.items.slice(0, 2)" :key="item.id" class="d-flex align-items-center gap-3 mb-3">
+                  <div v-for="item in order.items.slice(0, 2)" :key="item.id" class="d-flex align-items-center gap-3 mb-3">
                     <div class="img-wrapper border p-1" style="width: 70px; height: 70px; background: #fff;">
-                      <img :src="getImageUrl(item.variant_image)" @error="handleImageError" class="w-100 h-100 object-fit-cover">
+                      <img :src="getImageUrl(item.variant_image)" v-on:error="handleImageError" class="w-100 h-100 object-fit-cover">
                     </div>
                     <div class="flex-grow-1">
-                      <h6 class="mb-1 text-truncate text-dark fw-bold" style="max-width: 90%;">{{ item.product_name }}</h6>
-                      
+                      <h6 class="mb-1 text-truncate text-dark fw-bold" style="max-width: 90%;"><span v-text="item.product_name"></span></h6>
                       <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="small text-muted">{{ formatPrice(item.price) }} <span class="mx-1">x</span> {{ item.quantity }}</span>
-                        <span class="fw-medium text-dark">{{ formatPrice(item.price * item.quantity) }}</span>
+                        <span class="small text-muted"><span v-text="formatPrice(item.price)"></span> <span class="mx-1">x</span> <span v-text="item.quantity"></span></span>
+                        <span class="fw-medium text-dark" v-text="formatPrice(item.price * item.quantity)"></span>
                       </div>
                     </div>
                   </div>
-                  
                   <div v-if="order.items.length > 2" class="text-center mt-2">
-                    <span class="badge bg-light text-secondary border px-3 py-2 fw-normal">
-                      +{{ order.items.length - 2 }} sản phẩm khác...
-                    </span>
+                    <span class="badge bg-light text-secondary border px-3 py-2 fw-normal">+<span v-text="order.items.length - 2"></span> sản phẩm khác...</span>
                   </div>
                 </div>
 
-                <!-- Tóm tắt & Action (Bên phải) -->
                 <div class="col-lg-4 text-lg-end mt-4 mt-lg-0 ps-lg-4">
                   <p class="text-muted small mb-1 text-uppercase fw-bold" style="letter-spacing: 1px;">Thành tiền</p>
-                  <h3 class="fw-bold text-primary-custom mb-4 font-serif">{{ formatPrice(order.total_amount) }}</h3>
+                  <h3 class="fw-bold text-primary-custom mb-4 font-serif" v-text="formatPrice(order.total_amount)"></h3>
                   
-                  <div class="d-flex flex-column flex-sm-row flex-lg-column gap-2 justify-content-lg-end">
-                    <button @click="openDetails(order)" class="btn btn-dark rounded-0 py-2 px-4 fw-bold small text-uppercase flex-grow-1">
+                  <div class="d-flex flex-column gap-2">
+                    <button v-on:click="openDetails(order)" class="btn btn-dark rounded-0 py-2 px-4 fw-bold small text-uppercase w-100">
                       Chi tiết đơn hàng
                     </button>
-                    <button v-if="order.status === 'pending'" @click="confirmCancel(order)" class="btn btn-outline-danger rounded-0 py-2 px-4 small fw-bold text-uppercase flex-grow-1">
+                    <button v-if="order.status === 'pending'" v-on:click="confirmCancel(order)" class="btn btn-outline-danger rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
                       Hủy đơn
+                    </button>
+                    <button v-if="order.status === 'delivered'" v-on:click="openReview(order)" class="btn btn-outline-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
+                      Đánh giá
+                    </button>
+                    <button v-on:click="handleReorder(order)" class="btn btn-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100 mt-2">
+                      Mua lại
                     </button>
                   </div>
                 </div>
@@ -155,38 +135,43 @@
             </div>
           </div>
 
-          <!-- Phân trang động từ API -->
           <nav v-if="pagination.last_page > 1" class="mt-5 d-flex justify-content-center">
             <ul class="pagination pagination-custom shadow-sm">
-              <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-                <a class="page-link" href="#" @click.prevent="changePage(1)">«</a>
-              </li>
+              <li class="page-item" :class="{ disabled: pagination.current_page === 1 }"><a class="page-link" href="javascript:void(0)" v-on:click="changePage(1)">«</a></li>
               <li v-for="page in pagination.last_page" :key="page" class="page-item" :class="{ active: pagination.current_page === page }">
-                <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                <a class="page-link" href="javascript:void(0)" v-on:click="changePage(page)"><span v-text="page"></span></a>
               </li>
-              <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
-                <a class="page-link" href="#" @click.prevent="changePage(pagination.last_page)">»</a>
-              </li>
+              <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }"><a class="page-link" href="javascript:void(0)" v-on:click="changePage(pagination.last_page)">»</a></li>
             </ul>
           </nav>
         </div>
       </div>
 
-      <!-- Hiển thị khi User hoàn toàn chưa có đơn hàng nào trong DB -->
       <div v-else class="text-center py-5 bg-white shadow-sm border-top border-4 border-danger-custom">
         <div class="py-5">
           <i class="bi bi-bag-x text-muted opacity-25 d-block mb-3" style="font-size: 5rem;"></i>
           <h3 class="fs-4 text-dark mb-3 font-serif">Bạn chưa có đơn hàng nào</h3>
           <p class="text-secondary mb-4">Những kiệt tác trang sức SORA đang chờ bạn khám phá.</p>
-          <button @click="router.push('/shop')" class="btn btn-primary-custom rounded-0 px-5 py-3 text-uppercase text-white fw-bold tracking-wider">
-            Bắt đầu mua sắm
-          </button>
+          <button v-on:click="router.push('/shop')" class="btn btn-primary-custom rounded-0 px-5 py-3 text-uppercase text-white fw-bold tracking-wider">Bắt đầu mua sắm</button>
         </div>
       </div>
     </main>
 
-    <!-- Component Chi tiết đơn hàng giữ nguyên -->
-    <OrderDetailModal :is-open="isModalOpen" :order="selectedOrder" @close="closeModal" />
+    <OrderDetailModal 
+      :is-open="isModalOpen" 
+      :order="selectedOrder" 
+      v-on:close="closeModal" 
+      v-on:cancel-order="confirmCancel"
+      v-on:open-review="openReview"
+      v-on:reorder="handleReorder"
+    />
+
+    <ReviewModal 
+      :is-open="isReviewModalOpen"
+      :order="selectedOrderForReview"
+      v-on:close="closeReviewModal"
+      v-on:review-success="fetchOrders(pagination.current_page)"
+    />
   </div>
 </template>
 
@@ -197,16 +182,19 @@ import axios from 'axios';
 import Swal from 'sweetalert2'; 
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 import OrderDetailModal from './OrderDetailModal.vue';
+import ReviewModal from './ReviewModal.vue'; 
 
 const router = useRouter();
 const isLoading = ref(true);
-const orders = ref([]); // Data gốc từ API
+const orders = ref([]); 
 const pagination = ref({ current_page: 1, last_page: 1 });
 
 const isModalOpen = ref(false);
 const selectedOrder = ref(null);
 
-// Nâng cấp 4: State cho Bộ lọc thông minh Frontend
+const isReviewModalOpen = ref(false);
+const selectedOrderForReview = ref(null);
+
 const filterStatus = ref('all');
 const filterDate = ref('all');
 const sortBy = ref('newest');
@@ -223,7 +211,6 @@ const statusTabs = [
   { label: 'Đã hủy', value: 'cancelled' }
 ];
 
-// LOGIC THANH TIẾN TRÌNH (STEPPER)
 const orderSteps = [
   { value: 'pending', label: 'Chờ xác nhận', icon: 'bi-receipt' },
   { value: 'confirmed', label: 'Đã xác nhận', icon: 'bi-box-seam' },
@@ -239,32 +226,16 @@ const isStepCompleted = (currentStatus, stepValue) => {
   return currentIdx >= stepIdx;
 };
 
-// Nếu API index có trả về 'histories', hàm này sẽ in ra giờ giấc ngay trên thanh ngang
-const getStepDate = (order, stepValue) => {
-  if (!order.histories || !Array.isArray(order.histories)) return '';
-  const history = order.histories.find(h => h.new_status === stepValue);
-  if (history) {
-    const d = new Date(history.created_at);
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`;
-  }
-  return '';
-};
-
-// Cấu hình SweetAlert
 const soraAlert = Swal.mixin({
   buttonsStyling: true,
   confirmButtonColor: '#9f273b',
   cancelButtonColor: '#6c757d',
-  customClass: {
-    confirmButton: 'px-4 py-2 mx-2 rounded-0 shadow-sm fw-bold',
-    cancelButton: 'px-4 py-2 mx-2 rounded-0 fw-bold'
-  }
+  customClass: { confirmButton: 'px-4 py-2 mx-2 rounded-0 shadow-sm fw-bold', cancelButton: 'px-4 py-2 mx-2 rounded-0 fw-bold' }
 });
 
 const Toast = Swal.mixin({
   toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
-  background: '#fffafa', color: '#9f273b', iconColor: '#9f273b',
-  customClass: { timerProgressBar: 'swal2-progress-sora' }
+  background: '#fffafa', color: '#9f273b', iconColor: '#9f273b'
 });
 
 const getHeaders = () => {
@@ -278,20 +249,13 @@ const getImageUrl = (p) => p ? (p.startsWith('http') ? p : `http://127.0.0.1:800
 const handleImageError = (e) => { e.target.src = defaultPlaceholder; };
 
 const getStatusClass = (s) => ({
-  pending: 'bg-warning-custom text-dark', 
-  confirmed: 'bg-info-custom text-white', 
-  processing: 'bg-primary text-white', 
-  shipping: 'bg-primary text-white', 
-  delivered: 'bg-success text-white', 
-  cancelled: 'bg-light text-secondary border'
+  pending: 'bg-warning-custom text-dark', confirmed: 'bg-info-custom text-white', processing: 'bg-primary text-white', 
+  shipping: 'bg-primary text-white', delivered: 'bg-success text-white', cancelled: 'bg-light text-secondary border'
 }[s] || 'bg-secondary text-white');
 
 const getStatusIcon = (s) => ({
-  pending: 'bi-hourglass-split', 
-  confirmed: 'bi-check2-circle', 
-  shipping: 'bi-truck', 
-  delivered: 'bi-box-seam', 
-  cancelled: 'bi-x-circle'
+  pending: 'bi-hourglass-split', confirmed: 'bi-check2-circle', shipping: 'bi-truck', 
+  delivered: 'bi-box-seam', cancelled: 'bi-x-circle'
 }[s] || 'bi-info-circle');
 
 const translateStatus = (s) => ({
@@ -299,19 +263,10 @@ const translateStatus = (s) => ({
   shipping: 'Đang giao hàng', delivered: 'Hoàn tất', cancelled: 'Đã hủy'
 }[s] || s);
 
-// LOGIC COMPUTED: Lọc và sắp xếp Frontend mượt mà
 const displayOrders = computed(() => {
   let result = [...orders.value];
-
-  if (filterStatus.value !== 'all') {
-    result = result.filter(o => o.status === filterStatus.value);
-  }
-
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase().trim();
-    result = result.filter(o => o.order_code.toLowerCase().includes(q));
-  }
-
+  if (filterStatus.value !== 'all') result = result.filter(o => o.status === filterStatus.value);
+  if (searchQuery.value) result = result.filter(o => o.order_code.toLowerCase().includes(searchQuery.value.toLowerCase().trim()));
   if (filterDate.value !== 'all') {
     const now = new Date();
     result = result.filter(o => {
@@ -322,7 +277,6 @@ const displayOrders = computed(() => {
       return true;
     });
   }
-
   result.sort((a, b) => {
     if (sortBy.value === 'newest') return new Date(b.created_at) - new Date(a.created_at);
     if (sortBy.value === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
@@ -330,32 +284,20 @@ const displayOrders = computed(() => {
     if (sortBy.value === 'price_asc') return a.total_amount - b.total_amount;
     return 0;
   });
-
   return result;
 });
 
-const hasActiveFilters = computed(() => {
-  return filterStatus.value !== 'all' || filterDate.value !== 'all' || sortBy.value !== 'newest' || searchQuery.value !== '';
-});
+const hasActiveFilters = computed(() => filterStatus.value !== 'all' || filterDate.value !== 'all' || sortBy.value !== 'newest' || searchQuery.value !== '');
+const resetFilters = () => { filterStatus.value = 'all'; filterDate.value = 'all'; sortBy.value = 'newest'; searchQuery.value = ''; };
 
-const resetFilters = () => {
-  filterStatus.value = 'all'; filterDate.value = 'all'; sortBy.value = 'newest'; searchQuery.value = '';
-};
-
-// Gọi API
 const fetchOrders = async (page = 1) => {
   isLoading.value = true;
   try {
     const res = await axios.get(`${API_BASE_URL}?page=${page}`, { headers: getHeaders() });
     orders.value = res.data.data || [];
     pagination.value = { current_page: res.data.current_page, last_page: res.data.last_page };
-  } catch (err) {
-    if (err.response?.status === 401) {
-      soraAlert.fire({ icon: 'warning', title: 'Chưa đăng nhập', text: 'Vui lòng đăng nhập để xem đơn hàng' }).then(() => router.push('/login'));
-    } else {
-      Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng' });
-    }
-  } finally { isLoading.value = false; }
+  } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng' }); } 
+  finally { isLoading.value = false; }
 };
 
 const openDetails = async (order) => {
@@ -364,19 +306,65 @@ const openDetails = async (order) => {
     selectedOrder.value = res.data.data;
     isModalOpen.value = true;
     document.body.style.overflow = 'hidden';
-  } catch (err) { 
-    Toast.fire({ icon: 'error', title: 'Không thể lấy chi tiết đơn hàng' }); 
-  }
+  } catch (err) { Toast.fire({ icon: 'error', title: 'Không thể lấy chi tiết đơn hàng' }); }
 };
 
-const closeModal = () => {
-  isModalOpen.value = false;
+const closeModal = () => { isModalOpen.value = false; document.body.style.overflow = 'auto'; };
+
+const openReview = (order) => {
+  selectedOrderForReview.value = order;
+  isReviewModalOpen.value = true;
+  if(isModalOpen.value) closeModal(); 
+  document.body.style.overflow = 'hidden';
+};
+
+const closeReviewModal = () => {
+  isReviewModalOpen.value = false;
+  selectedOrderForReview.value = null;
   document.body.style.overflow = 'auto';
 };
 
-const changePage = (p) => {
-  if (p !== pagination.value.current_page) fetchOrders(p);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+const changePage = (p) => { if (p !== pagination.value.current_page) fetchOrders(p); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+const handleReorder = async (order) => {
+  if(isModalOpen.value) closeModal(); 
+  
+  try {
+    // Hiện loading trước khi gọi API
+    Swal.fire({
+      title: 'Đang xử lý...',
+      text: 'Đang đẩy sản phẩm vào giỏ hàng...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Bắn request tới backend để add vào bảng Carts
+    await axios.post(`${API_BASE_URL}/${order.order_code}/reorder`, {}, { headers: getHeaders() });
+
+    // Tắt loading và hiện thông báo thành công
+    soraAlert.fire({
+      icon: 'success',
+      title: 'Đã thêm vào giỏ',
+      text: 'Các sản phẩm trong đơn hàng này đã được thêm lại vào giỏ hàng của bạn.',
+      confirmButtonText: 'Đến giỏ hàng',
+      showCancelButton: true,
+      cancelButtonText: 'Tiếp tục xem'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.push('/cart');
+      }
+    });
+
+  } catch (err) {
+    // Bắt lỗi nếu API trả về fail
+    soraAlert.fire({
+      icon: 'error',
+      title: 'Lỗi',
+      text: err.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng lúc này.'
+    });
+  }
 };
 
 const confirmCancel = async (order) => {
@@ -384,23 +372,19 @@ const confirmCancel = async (order) => {
     title: 'Hủy đơn hàng',
     text: `Bạn muốn hủy đơn ${order.order_code}? Vui lòng nhập lý do:`,
     input: 'textarea',
-    inputPlaceholder: 'Lý do hủy đơn...',
+    inputPlaceholder: 'Lý do hủy đơn (Vd: Thay đổi địa chỉ, Đổi ý...)',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Xác nhận hủy',
     cancelButtonText: 'Đóng',
     reverseButtons: true,
-    inputValidator: (value) => {
-      if (!value || value.length < 10) return 'Vui lòng nhập chi tiết hơn (ít nhất 10 ký tự)!';
-    }
+    inputValidator: (value) => { if (!value || value.length < 5) return 'Vui lòng nhập lý do (ít nhất 5 ký tự)!'; }
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.put(`${API_BASE_URL}/${order.order_code}`, 
-          { action: 'cancel', cancel_reason: result.value },
-          { headers: getHeaders() }
-        );
+        await axios.put(`${API_BASE_URL}/${order.order_code}`, { action: 'cancel', cancel_reason: result.value }, { headers: getHeaders() });
         soraAlert.fire({ icon: 'success', title: 'Thành công', text: 'Đơn hàng đã được hủy.' });
+        if(isModalOpen.value) closeModal(); 
         fetchOrders(pagination.value.current_page);
       } catch (err) { 
         soraAlert.fire({ icon: 'error', title: 'Lỗi', text: err.response?.data?.message || 'Không thể hủy đơn' }); 
@@ -413,39 +397,34 @@ onMounted(fetchOrders);
 </script>
 
 <style scoped>
-/* COLORS */
 .text-primary-custom { color: #9f273b !important; }
 .bg-primary-custom { background-color: #9f273b !important; }
 .btn-primary-custom { background: #9f273b; border: none; color: white; transition: 0.3s; }
 .btn-primary-custom:hover { background: #cc1e2e; color: white; }
+.btn-outline-primary-custom { color: #9f273b; border: 1px solid #9f273b; background: transparent; transition: 0.3s; }
+.btn-outline-primary-custom:hover { background: #9f273b; color: white; }
 .border-danger-custom { border-color: #9f273b !important; }
 
-/* BADGES */
 .bg-warning-custom { background: #ffecb5; border: 1px solid #ffe69c; }
 .bg-info-custom { background: #17a2b8; }
 
-/* TYPOGRAPHY */
 .font-serif { font-family: 'Playfair Display', serif; }
 .tracking-wider { letter-spacing: 0.1em; }
 .hover-primary:hover { color: #9f273b !important; }
 
-/* TABS (Bộ lọc) */
 .order-tabs::-webkit-scrollbar { height: 4px; }
 .order-tabs::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
 .tab-btn { background: none; border: none; padding: 0 0 10px 0; color: #6c757d; border-bottom: 2px solid transparent; transition: all 0.3s; }
 .tab-btn:hover { color: #343a40; }
 .tab-btn.active { color: #9f273b; border-bottom: 2px solid #9f273b; }
 
-/* CARDS */
 .order-card-luxury { transition: transform 0.2s, box-shadow 0.2s; }
 .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
 
-/* PAGINATION */
 .pagination-custom .page-link { color: #495057; border: none; background: white; margin: 0 5px; border-radius: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
 .pagination-custom .page-link:hover { background: #f8f9fa; color: #9f273b; }
 .pagination-custom .active .page-link { background: #9f273b; color: white; }
 
-/* HORIZONTAL STEPPER */
 .order-stepper-horizontal { position: relative; justify-content: space-between; width: 100%; padding: 0 10px; }
 .order-stepper-horizontal::before { content: ''; position: absolute; top: 18px; left: 40px; right: 40px; height: 2px; background-color: #e9ecef; z-index: 1; }
 .stepper-step { position: relative; z-index: 2; text-align: center; flex: 1; }
@@ -455,8 +434,6 @@ onMounted(fetchOrders);
 .stepper-step.active .step-icon { background-color: #9f273b; color: #fff; border-color: #fff; box-shadow: 0 0 0 4px rgba(159, 39, 59, 0.15); }
 .step-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #adb5bd; letter-spacing: 0.05em; }
 .stepper-step.completed .step-title, .stepper-step.active .step-title { color: #9f273b; }
-.step-date { font-size: 0.7rem; color: #6c757d; margin-top: 2px; }
 
 @media (min-width: 992px) { .border-end-lg { border-right: 1px solid #dee2e6; } }
-:deep(.swal2-progress-sora) { background-color: #9f273b !important; }
 </style>

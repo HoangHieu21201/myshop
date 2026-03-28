@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Order\UserStoreOrderRequest;
-use App\Http\Requests\Order\UserUpdateOrderRequest;
+use App\Http\Requests\UserStoreOrderRequest;
+use App\Http\Requests\UserUpdateOrderRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
@@ -40,9 +40,6 @@ class ClientOrderController extends Controller
         return response()->json($orders);
     }
 
-    /**
-     * Thanh toán (Checkout) - Rào trước đón sau mọi rủi ro
-     */
     public function store(UserStoreOrderRequest $request)
     {
         $user = auth('sanctum')->user();
@@ -297,5 +294,111 @@ class ClientOrderController extends Controller
     public function destroy(string $id) 
     {
         return response()->json(['success' => false, 'message' => 'Xóa đơn hàng vĩnh viễn không được phép'], 403);
+    }
+    /**
+     * Khách hàng đánh giá đơn hàng
+     */
+    public function review(Request $request, string $order_code)
+    {
+        $user = auth('sanctum')->user();
+        $order = Order::where('order_code', $order_code)->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        if ($order->status !== 'delivered') {
+            return response()->json(['success' => false, 'message' => 'Bạn chỉ có thể đánh giá khi đơn hàng đã hoàn tất'], 400);
+        }
+
+        if ($order->user_id && (!$user || $user->id !== $order->user_id)) {
+            return response()->json(['success' => false, 'message' => 'Bạn không có quyền đánh giá đơn hàng này'], 403);
+        }
+
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000'
+        ]);
+
+        // TUỲ THUỘC VÀO DATABASE CỦA BẠN (Ví dụ lưu vào bảng reviews)
+        // Review::create([
+        //     'order_id' => $order->id,
+        //     'user_id' => $user->id ?? null,
+        //     'rating' => $request->rating,
+        //     'comment' => $request->comment,
+        // ]);
+
+        // Hoặc có thể cập nhật trạng thái là "đã đánh giá" nếu có trường đó
+        // $order->update(['is_reviewed' => true]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Cảm ơn bạn đã đánh giá đơn hàng!'
+        ]);
+    }
+    /**
+     * Chức năng Mua lại (Thêm toàn bộ sản phẩm của đơn hàng cũ vào giỏ)
+     */
+    public function reorder(Request $request, string $order_code)
+    {
+        $user = auth('sanctum')->user();
+        
+        // Lấy đơn hàng cùng chi tiết sản phẩm
+        $order = Order::with('items')->where('order_code', $order_code)->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        $sessionId = $request->header('X-Cart-Session-Id');
+
+        // 1. Tìm hoặc tạo Giỏ hàng (Cart) gốc cho User hoặc Session
+        $cart = Cart::where(function($query) use ($user, $sessionId) {
+            if ($user) $query->where('user_id', $user->id);
+            else $query->where('session_id', $sessionId);
+        })->first();
+
+        if (!$cart) {
+            $cart = new Cart();
+            if ($user) $cart->user_id = $user->id;
+            else $cart->session_id = $sessionId;
+            $cart->save();
+        }
+
+        // 2. LƯU CHUẨN XÁC VÀO BẢNG CHI TIẾT GIỎ HÀNG (CartItem)
+        foreach ($order->items as $item) {
+            
+            // Trường hợp 1: Sản phẩm lẻ
+            if ($item->product_variant_id) {
+                $cartItem = \App\Models\CartItem::where('cart_id', $cart->id)
+                    ->where('product_variant_id', $item->product_variant_id)
+                    ->whereNull('combo_id')
+                    ->first();
+
+                if ($cartItem) {
+                    $cartItem->increment('quantity', $item->quantity);
+                } else {
+                    $newCartItem = new \App\Models\CartItem();
+                    $newCartItem->cart_id = $cart->id;
+                    $newCartItem->product_variant_id = $item->product_variant_id;
+                    $newCartItem->quantity = $item->quantity;
+                    $newCartItem->save();
+                }
+            } 
+            // Trường hợp 2: Sản phẩm là Combo
+            elseif ($item->combo_id) {
+                $newCartItem = new \App\Models\CartItem();
+                $newCartItem->cart_id = $cart->id;
+                $newCartItem->combo_id = $item->combo_id;
+                $newCartItem->combo_selections = $item->combo_selections; 
+                $newCartItem->quantity = $item->quantity;
+                $newCartItem->save();
+            }
+        }
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Các sản phẩm đã được thêm lại vào giỏ hàng thành công.'
+        ]);
     }
 }
