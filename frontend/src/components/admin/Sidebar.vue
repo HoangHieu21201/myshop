@@ -1,24 +1,32 @@
 <template>
-  <aside class="main-sidebar sidebar-dark-primary d-flex flex-column shadow-lg"
-    style="background-color: #2c3136; min-height: 100vh; width: 260px; transition: all 0.3s;">
+  <aside class="main-sidebar sidebar-dark-primary d-flex flex-column shadow-lg position-relative"
+    :style="{ width: isCollapsed ? '80px' : '260px', backgroundColor: '#2c3136', minHeight: '100vh', transition: 'width 0.3s ease' }">
+
+    <!-- Nút Thu gọn / Mở rộng ở mép phải -->
+    <button class="btn shadow-sm toggle-sidebar-btn d-none d-md-flex align-items-center justify-content-center"
+      :class="isCollapsed ? 'btn-primary' : 'btn-dark'" @click="toggleSidebar">
+      <i class="bi fw-bold" :class="isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+    </button>
 
     <!-- Brand Logo -->
     <router-link to="/admin"
       class="brand-link text-decoration-none text-white p-3 border-bottom border-secondary d-flex align-items-center"
-      style="border-color: rgba(255,255,255,0.1) !important;">
-      <div class="bg-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm"
-        style="width: 38px; height: 38px;">
+      :class="isCollapsed ? 'justify-content-center' : ''"
+      style="border-color: rgba(255,255,255,0.1) !important; height: 60px; overflow: hidden;">
+      <div class="bg-white rounded-circle d-flex justify-content-center align-items-center shadow-sm flex-shrink-0"
+        :class="isCollapsed ? '' : 'me-3'" style="width: 38px; height: 38px;">
         <i class="bi bi-layers-fill fs-5" style="color: #009981;"></i>
       </div>
-      <span class="brand-text fw-bold fs-5 tracking-wide" style="letter-spacing: 1px;">ThinkHub Admin</span>
+      <span class="brand-text fw-bold fs-5 tracking-wide text-nowrap transition-all" v-show="!isCollapsed"
+        style="letter-spacing: 1px;">ThinkHub</span>
     </router-link>
 
     <!-- Sidebar Menu -->
-    <div class="sidebar p-3 flex-grow-1 overflow-auto custom-scrollbar">
+    <div class="sidebar flex-grow-1 overflow-auto custom-scrollbar" :class="isCollapsed ? 'p-2' : 'p-3'">
 
       <div v-if="isLoading" class="text-center text-white-50 mt-4">
         <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
-        <p class="small">Đang tải phân quyền...</p>
+        <p class="small" v-show="!isCollapsed">Đang tải...</p>
       </div>
 
       <nav class="mt-2" v-else>
@@ -26,9 +34,11 @@
 
           <template v-for="(item, index) in menuItems" :key="index">
 
-            <!-- Menu đơn -->
+            <!-- Menu Đơn -->
             <li class="nav-item position-relative" v-if="!item.children">
-              <span v-if="getModuleLevel(item.moduleCode)"
+
+              <!-- Badge Cấp độ -->
+              <span v-if="getModuleLevel(item.moduleCode) && !isCollapsed"
                 class="position-absolute badge rounded-pill shadow-sm level-badge"
                 :class="hasAccess(item.moduleCode) ? 'bg-success' : 'bg-danger'">
                 Cấp {{ getModuleLevel(item.moduleCode) }}
@@ -36,35 +46,40 @@
 
               <router-link v-if="hasAccess(item.moduleCode)" :to="item.path"
                 :active-class="item.path === '/admin' ? 'ignore-active' : 'router-link-active'"
-                class="nav-link text-white py-2 px-3 rounded shadow-sm-hover transition-all">
-                <i class="nav-icon bi me-3" :class="item.icon"></i>
-                <p class="m-0 d-inline-block align-middle fw-semibold">{{ item.name }}</p>
+                class="nav-link text-white py-2 rounded shadow-sm-hover transition-all d-flex align-items-center"
+                :class="isCollapsed ? 'justify-content-center px-0' : 'px-3'" :title="isCollapsed ? item.name : ''">
+                <i class="nav-icon bi" :class="[item.icon, isCollapsed ? 'fs-5' : 'me-3']"></i>
+                <p class="m-0 fw-semibold text-nowrap" v-show="!isCollapsed">{{ item.name }}</p>
               </router-link>
 
-              <div v-else class="nav-link py-2 px-3 rounded disabled-menu"
+              <div v-else class="nav-link py-2 rounded disabled-menu d-flex align-items-center"
+                :class="isCollapsed ? 'justify-content-center px-0' : 'px-3'"
+                :title="isCollapsed ? item.name + ' (Khóa)' : ''"
                 @click="showAccessDenied(item.name, getModuleLevel(item.moduleCode))">
-                <i class="nav-icon bi me-3" :class="item.icon"></i>
-                <p class="m-0 d-inline-block align-middle fw-semibold">{{ item.name }}</p>
-                <i class="bi bi-lock-fill float-end opacity-50"></i>
+                <i class="nav-icon bi" :class="[item.icon, isCollapsed ? 'fs-5' : 'me-3']"></i>
+                <p class="m-0 fw-semibold text-nowrap" v-show="!isCollapsed">{{ item.name }}</p>
+                <i class="bi bi-lock-fill opacity-50"
+                  :class="isCollapsed ? 'position-absolute top-0 start-100 translate-middle' : 'ms-auto'"></i>
               </div>
             </li>
 
-            <!-- Menu Dropdown -->
-            <li class="nav-item mt-2 bg-dark rounded shadow-sm position-relative"
-              :class="{ 'menu-open': menuState[item.stateKey] }" v-else>
+            <!-- Menu Dropdown (Có menu con) -->
+            <li class="nav-item mt-2 rounded shadow-sm position-relative transition-all"
+              :class="[menuState[item.stateKey] && !isCollapsed ? 'menu-open bg-dark' : '']" v-else>
 
-              <a href="#"
-                class="nav-link text-white py-2 px-3 rounded d-flex justify-content-between align-items-center transition-all"
-                @click.prevent="toggleMenu(item.stateKey)" :class="{ 'active-group': menuState[item.stateKey] }">
-                <div>
-                  <i class="nav-icon bi me-3" :class="item.icon"></i>
-                  <p class="m-0 d-inline-block align-middle fw-semibold">{{ item.name }}</p>
+              <a href="#" class="nav-link text-white py-2 rounded d-flex align-items-center transition-all"
+                :class="[isCollapsed ? 'justify-content-center px-0' : 'justify-content-between px-3', { 'active-group': menuState[item.stateKey] && !isCollapsed }]"
+                :title="isCollapsed ? item.name : ''" @click.prevent="handleDropdownClick(item)">
+                <div class="d-flex align-items-center" :class="{ 'justify-content-center w-100': isCollapsed }">
+                  <i class="nav-icon bi" :class="[item.icon, isCollapsed ? 'fs-5' : 'me-3']"></i>
+                  <p class="m-0 fw-semibold text-nowrap" v-show="!isCollapsed">{{ item.name }}</p>
                 </div>
-                <i class="bi bi-chevron-left transition-icon" :class="{ 'rotate-180': menuState[item.stateKey] }"></i>
+                <i class="bi bi-chevron-left transition-icon" v-show="!isCollapsed"
+                  :class="{ 'rotate-180': menuState[item.stateKey] }"></i>
               </a>
 
               <!-- Danh sách Menu Con -->
-              <ul class="nav nav-treeview flex-column p-2 pt-1 gap-1" v-show="menuState[item.stateKey]"
+              <ul class="nav nav-treeview flex-column p-2 pt-1 gap-1" v-show="menuState[item.stateKey] && !isCollapsed"
                 style="background-color: rgba(0,0,0,0.15); border-radius: 0 0 8px 8px;">
                 <li class="nav-item position-relative" v-for="(subItem, subIndex) in item.children" :key="subIndex">
 
@@ -77,14 +92,14 @@
                   <router-link v-if="hasAccess(subItem.moduleCode)" :to="subItem.path"
                     class="nav-link text-white-50 py-2 px-3 rounded sub-link d-flex align-items-center">
                     <i class="bi bi-circle-fill fs-xs me-3 opacity-50" style="font-size: 6px;"></i>
-                    <p class="m-0 d-inline-block align-middle fw-medium">{{ subItem.name }}</p>
+                    <p class="m-0 fw-medium text-nowrap">{{ subItem.name }}</p>
                   </router-link>
 
                   <div v-else
                     class="nav-link text-white-50 py-2 px-3 rounded sub-link d-flex align-items-center disabled-menu"
                     @click="showAccessDenied(subItem.name, getModuleLevel(subItem.moduleCode))">
                     <i class="bi bi-lock-fill fs-xs me-3 opacity-50" style="font-size: 10px;"></i>
-                    <p class="m-0 d-inline-block align-middle fw-medium">{{ subItem.name }}</p>
+                    <p class="m-0 fw-medium text-nowrap">{{ subItem.name }}</p>
                   </div>
 
                 </li>
@@ -103,9 +118,15 @@ import { ref, reactive, onMounted, inject, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 
+// Khai báo sự kiện để báo cho Layout (cha) biết trạng thái sidebar
+const emit = defineEmits(['toggle-collapse']);
+
 const route = useRoute();
 const isLoading = ref(true);
 const systemModules = ref([]);
+
+// Trạng thái thu gọn/mở rộng Sidebar
+const isCollapsed = ref(false);
 
 const currentUser = inject('currentUser', ref(null));
 
@@ -130,22 +151,10 @@ const userLevel = computed(() => {
 });
 
 const menuItems = ref([
+  { name: 'Tổng quan', path: '/admin', icon: 'bi-grid-1x2-fill', moduleCode: null },
+  { name: 'Phân Quyền', path: '/admin/roles', icon: 'bi-shield-fill-check', moduleCode: 'admin_roles' },
   {
-    name: 'Tổng quan',
-    path: '/admin',
-    icon: 'bi-grid-1x2-fill',
-    moduleCode: null
-  },
-  {
-    name: 'Phân Quyền',
-    path: '/admin/roles',
-    icon: 'bi-shield-fill-check',
-    moduleCode: 'admin_roles'
-  },
-  {
-    name: 'Tài khoản',
-    icon: 'bi-people-fill',
-    stateKey: 'users',
+    name: 'Tài khoản', icon: 'bi-people-fill', stateKey: 'users',
     children: [
       { name: 'Nội bộ', path: '/admin/staff', moduleCode: 'admin_staff' },
       { name: 'Khách hàng', path: '/admin/users', moduleCode: 'admin_users' },
@@ -153,45 +162,53 @@ const menuItems = ref([
     ]
   },
   {
-    name: 'Quản lý Sản phẩm',
-    icon: 'bi-box-seam',
-    stateKey: 'products',
+    name: 'Sản phẩm', icon: 'bi-box-seam', stateKey: 'products',
     children: [
       { name: 'Danh mục', path: '/admin/categories', moduleCode: 'admin_categories' },
       { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
-      { name: 'Sản phẩm & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
+      { name: 'SP & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
       { name: 'Combo sản phẩm', path: '/admin/combos', moduleCode: 'admin_combos' },
     ]
   },
   {
-    name: 'Quản lý Đơn hàng',
-    icon: 'bi-receipt-cutoff',
-    stateKey: 'orders',
+    name: 'Đơn hàng', icon: 'bi-receipt-cutoff', stateKey: 'orders',
     children: [
-      { name: 'Đơn hàng', path: '/admin/orders', moduleCode: 'admin_orders' },
+      { name: 'Danh sách đơn', path: '/admin/orders', moduleCode: 'admin_orders' },
       { name: 'Hoàn trả', path: '/admin/orders/returns', moduleCode: 'admin_orders' }
     ]
   },
   {
-    name: 'Marketing & Ads',
-    icon: 'bi-megaphone-fill',
-    stateKey: 'marketing',
+    name: 'Marketing', icon: 'bi-megaphone-fill', stateKey: 'marketing',
     children: [
-      { name: 'Quản lý Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
+      { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
       { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' },
     ]
   },
 ]);
 
 const menuState = reactive({
-  users: false,
-  products: false,
-  orders: false,
-  marketing: false,
+  users: false, products: false, orders: false, marketing: false,
 });
 
-const toggleMenu = (menuKey) => {
-  menuState[menuKey] = !menuState[menuKey];
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value;
+  emit('toggle-collapse', isCollapsed.value);
+
+  if (isCollapsed.value) {
+    Object.keys(menuState).forEach(key => menuState[key] = false);
+  }
+};
+
+const handleDropdownClick = (item) => {
+  if (isCollapsed.value) {
+    isCollapsed.value = false;
+    emit('toggle-collapse', false);
+    setTimeout(() => {
+      menuState[item.stateKey] = true;
+    }, 250);
+  } else {
+    menuState[item.stateKey] = !menuState[item.stateKey];
+  }
 };
 
 const getHeaders = () => ({
@@ -222,26 +239,20 @@ const hasAccess = (code) => {
   if (!code) return true;
   const requiredLevel = getModuleLevel(code);
   if (!requiredLevel) return false;
-
   return userLevel.value <= requiredLevel;
 };
 
 const showAccessDenied = (menuName, reqLevel) => {
   Swal.fire({
-    toast: true,
-    position: 'top-end',
-    icon: 'error',
+    toast: true, position: 'top-end', icon: 'error',
     title: 'Truy cập bị từ chối!',
     text: `Tính năng "${menuName}" yêu cầu Cấp ${reqLevel}. (Bạn đang ở Cấp ${userLevel.value})`,
-    showConfirmButton: false,
-    timer: 4000,
-    timerProgressBar: true,
+    showConfirmButton: false, timer: 4000, timerProgressBar: true,
   });
 };
 
 onMounted(() => {
   fetchSidebarData();
-
   const currentPath = route.path;
   menuItems.value.forEach(item => {
     if (item.children) {
@@ -257,6 +268,24 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Nút lơ lửng mép phải */
+.toggle-sidebar-btn {
+  position: absolute;
+  top: 15px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  z-index: 1050;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.toggle-sidebar-btn:hover {
+  transform: scale(1.1);
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -276,6 +305,7 @@ onMounted(() => {
 
 .nav-link {
   transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 .shadow-sm-hover:hover {
@@ -353,7 +383,6 @@ onMounted(() => {
   opacity: 1 !important;
 }
 
-/* Icons */
 .transition-icon {
   transition: transform 0.3s ease;
   font-size: 12px;
@@ -362,5 +391,9 @@ onMounted(() => {
 
 .rotate-180 {
   transform: rotate(-90deg);
+}
+
+.transition-all {
+  transition: all 0.3s ease;
 }
 </style>

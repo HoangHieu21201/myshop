@@ -11,7 +11,6 @@
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Danh Sách Mã Giảm Giá</h3>
-          <p class="text-muted mb-0">Quản lý các chương trình khuyến mãi và voucher</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
           <div class="border rounded px-3 py-1 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
