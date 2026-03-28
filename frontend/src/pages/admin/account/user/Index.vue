@@ -11,7 +11,6 @@
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Quản lý Khách Hàng</h3>
-          <p class="text-muted mb-0">Danh sách tài khoản người dùng đăng ký mua hàng</p>
         </div>
         
         <!-- ĐÃ FIX RESPONSIVE: Thêm flex-wrap -->
