@@ -2,13 +2,11 @@
   <aside class="main-sidebar sidebar-dark-primary d-flex flex-column shadow-lg position-relative"
     :style="{ width: isCollapsed ? '80px' : '260px', backgroundColor: '#2c3136', minHeight: '100vh', transition: 'width 0.3s ease' }">
 
-    <!-- Nút Thu gọn / Mở rộng ở mép phải -->
     <button class="btn shadow-sm toggle-sidebar-btn d-none d-md-flex align-items-center justify-content-center"
       :class="isCollapsed ? 'btn-primary' : 'btn-dark'" @click="toggleSidebar">
       <i class="bi fw-bold" :class="isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
     </button>
 
-    <!-- Brand Logo -->
     <router-link to="/admin"
       class="brand-link text-decoration-none text-white p-3 border-bottom border-secondary d-flex align-items-center"
       :class="isCollapsed ? 'justify-content-center' : ''"
@@ -21,7 +19,6 @@
         style="letter-spacing: 1px;">ThinkHub</span>
     </router-link>
 
-    <!-- Sidebar Menu -->
     <div class="sidebar flex-grow-1 overflow-auto custom-scrollbar" :class="isCollapsed ? 'p-2' : 'p-3'">
 
       <div v-if="isLoading" class="text-center text-white-50 mt-4">
@@ -34,10 +31,8 @@
 
           <template v-for="(item, index) in menuItems" :key="index">
 
-            <!-- Menu Đơn -->
             <li class="nav-item position-relative" v-if="!item.children">
 
-              <!-- Badge Cấp độ -->
               <span v-if="getModuleLevel(item.moduleCode) && !isCollapsed"
                 class="position-absolute badge rounded-pill shadow-sm level-badge"
                 :class="hasAccess(item.moduleCode) ? 'bg-success' : 'bg-danger'">
@@ -63,7 +58,6 @@
               </div>
             </li>
 
-            <!-- Menu Dropdown (Có menu con) -->
             <li class="nav-item mt-2 rounded shadow-sm position-relative transition-all"
               :class="[menuState[item.stateKey] && !isCollapsed ? 'menu-open bg-dark' : '']" v-else>
 
@@ -78,7 +72,6 @@
                   :class="{ 'rotate-180': menuState[item.stateKey] }"></i>
               </a>
 
-              <!-- Danh sách Menu Con -->
               <ul class="nav nav-treeview flex-column p-2 pt-1 gap-1" v-show="menuState[item.stateKey] && !isCollapsed"
                 style="background-color: rgba(0,0,0,0.15); border-radius: 0 0 8px 8px;">
                 <li class="nav-item position-relative" v-for="(subItem, subIndex) in item.children" :key="subIndex">
@@ -182,6 +175,8 @@ const menuItems = ref([
     children: [
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
       { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' },
+      // ĐÃ THÊM CHÂN DUNG SORA VÀO ĐÂY THEO YÊU CẦU CỦA BẠN YÊU
+      { name: 'Chân dung SORA', path: '/admin/gallery', moduleCode: 'admin_banners' }, // Dùng tạm quyền của banners hoặc tạo mã mới
     ]
   },
 ]);

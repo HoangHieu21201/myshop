@@ -155,6 +155,26 @@ const admin = [
         meta: { moduleCode: 'admin_banners' },
       },
 
+      // ROUTE QUẢN LÝ CHÂN DUNG SORA (GALLERY)
+      {
+        path: 'gallery',
+        name: 'admin-gallery',
+        component: () => import('../pages/admin/gallery/Index.vue'),
+        meta: { moduleCode: 'admin_gallery' },
+      },
+      {
+        path: 'gallery/create',
+        name: 'admin-gallery-create',
+        component: () => import('../pages/admin/gallery/Create.vue'),
+        meta: { moduleCode: 'admin_gallery' },
+      },
+      {
+        path: 'gallery/:id/edit',
+        name: 'admin-gallery-edit',
+        component: () => import('../pages/admin/gallery/Edit.vue'),
+        meta: { moduleCode: 'admin_gallery' },
+      },
+
       // ROUTE QUẢN LÝ ĐƠN HÀNG (ORDERS)
       {
         path: 'orders',

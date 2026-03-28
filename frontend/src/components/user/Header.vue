@@ -1,5 +1,4 @@
 <template>
-  <!-- header -->
   <header class="site-header bg-white sticky-top">
     <div class="container position-relative">
 
