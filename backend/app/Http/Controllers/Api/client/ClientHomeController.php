@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\CustomerGallery;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
@@ -17,13 +16,13 @@ class ClientHomeController extends Controller
     public function index()
     {
         $data = [
+            // ĐÃ XÓA 2 DÒNG GOLD PRICIES Ở ĐÂY ĐỂ TRANG CHỦ NHẸ HƠN
             'banners' => [],
             'coupons' => [],
             'categories' => [],
             'products' => [],
             'combos' => [],
-            'tiers' => [],
-            'galleries' => []
+            'tiers' => []
         ];
 
         try {
@@ -134,15 +133,6 @@ class ClientHomeController extends Controller
                     ->orderBy('min_spent', 'asc')
                     ->take(3)
                     ->get();
-            }
-
-            // 7. LẤY ẢNH CHÂN DUNG KHÁCH HÀNG (CUSTOMER GALLERY)
-            if (Schema::hasTable('customer_galleries')) {
-                $data['galleries'] = DB::table('customer_galleries')
-                    ->where('is_active', 1)
-                    ->orderBy('sort_order', 'asc')
-                    ->orderBy('created_at', 'desc')
-                    ->get(['image_path']);
             }
 
             return response()->json([
