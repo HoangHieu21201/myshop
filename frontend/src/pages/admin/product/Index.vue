@@ -304,7 +304,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ THÊM AXIOS
+import axios from 'axios';
 
 const route = useRoute();
 const router = useRouter();
@@ -338,7 +338,6 @@ onBeforeUnmount(() => {
   document.body.style = '';
 });
 
-// AXIOS: Bỏ 'Content-Type' vì FormData hoặc Axios tự lo phần này
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
 const formatCurrency = (val) => { if (val === null || val === undefined || val === '' || isNaN(val)) return '---'; return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val); };
@@ -370,9 +369,6 @@ const cancelStatusChange = (product) => {
   product.isStatusChanged = false;
 };
 
-// ==========================================
-// AXIOS: LƯU TRẠNG THÁI SẢN PHẨM
-// ==========================================
 const saveProductStatus = async (product) => {
   product.isUpdatingStatus = true;
   const formData = new FormData();
@@ -428,9 +424,6 @@ const getAttributeValueName = (attrId, valId) => {
     return `Val_${valId}`;
 };
 
-// ==========================================
-// AXIOS: MỞ XEM NHANH CHI TIẾT
-// ==========================================
 const openQuickView = async (id) => {
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/admin/products/${id}`, { headers: getHeaders() });
@@ -442,9 +435,6 @@ const openQuickView = async (id) => {
   } catch(e){}
 };
 
-// ==========================================
-// AXIOS: FETCH TOÀN BỘ SẢN PHẨM & CẤU HÌNH (CÓ SILENT LOAD)
-// ==========================================
 const fetchData = async (silent = false) => {
   if (silent) {
     isSilentLoading.value = true;
@@ -501,7 +491,6 @@ const switchTab = (tabId) => {
     currentPage.value = 1; 
 };
 
-// Lọc 100% tại Frontend nhờ Computed (Trang web phản hồi 0ms)
 const processedProducts = computed(() => {
   let result = products.value;
   if (activeTab.value === 'deleted') { result = result.filter(r => r.deleted_at); } 
@@ -523,9 +512,6 @@ const processedProducts = computed(() => {
 const totalPages = computed(() => Math.ceil(processedProducts.value.length / itemsPerPage) || 1);
 const paginatedProducts = computed(() => { const start = (currentPage.value - 1) * itemsPerPage; return processedProducts.value.slice(start, start + itemsPerPage); });
 
-// ==========================================
-// AXIOS: XÓA SẢN PHẨM
-// ==========================================
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xóa Sản phẩm?', text: `Sản phẩm "${name}" cùng toàn bộ Biến thể sẽ bị xóa!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {
@@ -542,9 +528,6 @@ const confirmDelete = (id, name) => {
   });
 };
 
-// ==========================================
-// AXIOS: KHÔI PHỤC SẢN PHẨM
-// ==========================================
 const restoreProduct = (id) => {
   Swal.fire({ title: 'Khôi phục?', text: "Khôi phục sản phẩm này về danh sách bán?", icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Đồng ý' }).then(async (result) => {
     if (result.isConfirmed) {

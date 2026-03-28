@@ -61,7 +61,6 @@ const form = ref({
   password_confirmation: ''
 });
 
-// Lấy token và email từ URL (Ví dụ: /admin/reset-password?token=abc&email=test@test.com)
 onMounted(() => {
   token.value = route.query.token || '';
   email.value = route.query.email || '';
@@ -112,7 +111,7 @@ const handleResetPassword = async () => {
       });
     }
   } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể kết nối máy chủ!', confirmButtonColor: '#009981' });
+    Swal.fire({ icon: error, title: 'Lỗi', text: 'Không thể kết nối máy chủ!', confirmButtonColor: '#009981' });
   } finally {
     isLoading.value = false;
   }

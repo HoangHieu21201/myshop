@@ -1,51 +1,44 @@
 <template>
+  <!-- header -->
   <header class="site-header bg-white sticky-top">
     <div class="container position-relative">
 
-      <!-- ================= TẦNG 1: TOOLS, LOGO & ICONS ================= -->
       <div class="header-tier-top d-flex justify-content-between align-items-center pt-3 pb-2">
 
-        <!-- LEFT: Các liên kết phụ (Mobile ẩn, hiển thị nút Menu) -->
         <div class="top-links-wrapper d-flex align-items-center" style="flex: 1;">
-          <!-- Nút Menu Mobile -->
           <button class="btn border-0 d-lg-none fs-3 text-dark p-0 me-3" @click="toggleMobileMenu">
             <i class="bi bi-list"></i>
           </button>
-          <!-- Liên kết Desktop -->
           <div class="top-links d-none d-lg-flex gap-4">
-            <a :href="{ about }" @click.prevent="safeNavigate('about')" class="top-link">VỀ SORA</a>
-            <a :href="{ contact }" @click.prevent="safeNavigate('contact')" class="top-link">LIÊN HỆ</a>
-            <a :href="{ services }" @click.prevent="safeNavigate('services')" class="top-link">DỊCH VỤ</a>
+            <router-link :to="{ name: 'about' }" class="top-link">VỀ SORA</router-link>
+            <router-link :to="{ name: 'contact' }" class="top-link">LIÊN HỆ</router-link>
+            <router-link :to="{ name: 'services' }" class="top-link">DỊCH VỤ</router-link>
+            <router-link :to="{ name: 'gold-price' }" class="top-link">BẢNG GIÁ VÀNG</router-link>
           </div>
         </div>
 
-        <!-- CENTER: LOGO (To, Rõ Ràng, Chính Giữa) -->
         <div href="/" class="logo-wrapper d-flex justify-content-center" style="flex: 1;">
           <router-link :to="{ name: 'home' }">
             <img src="../../assets/images/logo1.png" alt="SORA Logo" class="logo-img" @error="handleLogoError">
           </router-link>
         </div>
 
-        <!-- RIGHT: ICONS (Yêu thích, Tài khoản, Cửa hàng, Giỏ hàng) -->
         <div class="header-icons d-flex justify-content-end align-items-center gap-4" style="flex: 1;">
-          <a href="#" @click.prevent="safeNavigate('wishlist')" class="icon-link hover-primary transition-color">
+          <a href="#" @click.prevent="safeNavigate('favourite')" class="icon-link hover-primary transition-color">
             <i class="bi bi-heart"></i>
           </a>
 
-          <!-- USER MENU DROPDOWN -->
           <div class="user-menu-wrapper position-relative" ref="userMenuContainer">
             <button @click="toggleUserMenu"
               class="btn border-0 p-0 bg-transparent icon-link hover-primary transition-color">
               <i class="bi bi-person"></i>
             </button>
 
-            <!-- Bảng tài khoản xổ xuống -->
             <transition name="fade">
               <div v-if="isUserMenuOpen"
                 class="user-dropdown shadow-lg rounded-4 border bg-white position-absolute end-0 mt-3 py-2"
                 style="width: 220px; z-index: 1050;">
 
-                <!-- NẾU ĐÃ ĐĂNG NHẬP -->
                 <template v-if="user">
                   <div class="px-4 py-2 border-bottom mb-2 bg-light">
                     <div class="fw-bold text-truncate">{{ user.fullName || 'Thành viên' }}</div>
@@ -57,15 +50,13 @@
                   <a href="#" @click.prevent="safeNavigate('orders')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
                       class="bi bi-box-seam me-2 text-muted"></i>Đơn mua</a>
-                  <a href="#" @click.prevent="safeNavigate('wishlist')"
+                  <a href="#" @click.prevent="safeNavigate('favourite')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
                       class="bi bi-heart text-danger me-2"></i>Yêu thích</a>
                   <div class="dropdown-divider my-2"></div>
                   <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i
                       class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
                 </template>
-
-                <!-- NẾU CHƯA ĐĂNG NHẬP -->
                 <template v-else>
                   <div class="p-3 text-center">
                     <p class="small text-muted mb-3">Đăng nhập để theo dõi đơn hàng và ưu đãi</p>
@@ -80,11 +71,6 @@
             </transition>
           </div>
 
-          <!-- <a href="#" @click.prevent="safeNavigate('stores')"
-            class="icon-link hover-primary transition-color d-none d-md-block">
-            <i class="bi bi-geo-alt"></i>
-          </a> -->
-
           <router-link :to="{ name: 'cart' }" class="icon-link position-relative hover-primary transition-color">
             <i class="bi bi-bag"></i>
             <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount > 99 ? '99+' : cartItemCount }}</span>
@@ -92,16 +78,13 @@
         </div>
       </div>
 
-      <!-- ================= TẦNG 2: NAVIGATION & SEARCH ================= -->
       <div
         class="header-tier-bottom d-none d-lg-flex justify-content-center align-items-center position-relative pb-2 mt-2">
 
-        <!-- MAIN NAVIGATION CĂN GIỮA -->
         <nav class="main-nav">
           <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5">
             <li><router-link :to="{ name: 'home' }" class="nav-item-link">XU HƯỚNG</router-link></li>
 
-            <!-- MEGA MENU SẢN PHẨM "shop"-->
             
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
               <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
@@ -160,7 +143,6 @@
           </ul>
         </nav>
 
-        <!-- SEARCH BAR -->
         <div class="search-trigger-wrapper position-absolute end-0 d-flex align-items-center">
           <span class="text-muted fw-light opacity-50 me-3" style="font-size: 1.2rem;">|</span>
 
@@ -208,7 +190,7 @@
                           <div class="small fw-bold text-truncate" v-html="highlightText(prod.name)"></div>
                           <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price ||
                             prod.base_price)
-                            }}</div>
+                          }}</div>
                         </div>
                       </a>
                     </li>
@@ -295,13 +277,11 @@ const fetchHeaderData = async () => {
   } catch (error) { console.error('Lỗi tải Menu:', error); }
 };
 
-// --- CẬP NHẬT MỚI: HÀM LẤY USER THẬT TỪ SERVER ĐỂ KIỂM TRA TOKEN ---
 const fetchUserProfile = async () => {
   const token = localStorage.getItem('auth_token');
   if (!token) return;
 
   try {
-    // Gọi API của bạn để check token (giả sử là /api/user)
     const res = await axios.get(`${BACKEND_URL}/api/user`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -314,7 +294,6 @@ const fetchUserProfile = async () => {
     user.value = null;
   }
 };
-// -------------------------------------------------------------------
 
 const performSearch = async (query) => {
   if (!query) {
@@ -377,7 +356,7 @@ const handleLogout = () => {
       localStorage.removeItem('userData');
       localStorage.removeItem('auth_token');
       user.value = null;
-      isUserMenuOpen.value = false; // Đóng menu sau khi đăng xuất
+      isUserMenuOpen.value = false;
       safeNavigate('home');
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đăng xuất', showConfirmButton: false, timer: 1500 });
     }
@@ -386,15 +365,11 @@ const handleLogout = () => {
 
 onMounted(() => {
   fetchHeaderData();
-
-  // --- CẬP NHẬT MỚI: Đọc data local & gọi hàm kiểm tra server ---
   const userData = localStorage.getItem('userData');
   if (userData) {
     user.value = JSON.parse(userData);
   }
   fetchUserProfile();
-  // -------------------------------------------------------------
-
   document.addEventListener('click', handleClickOutside);
 });
 

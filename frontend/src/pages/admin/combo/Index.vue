@@ -376,7 +376,6 @@ const fetchData = async (silent = false) => {
   }
 };
 
-// ================= QUẢN LÝ QUICK VIEW (HIỂN THỊ GIÁ TRỊ) =================
 const openQuickView = async (id) => {
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/admin/combos/${id}`, { headers: getHeaders() });

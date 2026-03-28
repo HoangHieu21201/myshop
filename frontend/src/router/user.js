@@ -9,6 +9,11 @@ const user = [
         component: () => import('../pages/user/index.vue'),
       },
       {
+        path: 'gia-vang',
+        name: 'gold-price',
+        component: () => import('../pages/user/goldPrices/GoldPrice.vue'),
+      },
+      {
         path: 'cart',
         name: 'cart',
         component: () => import('../pages/user/cart/index.vue'),
@@ -34,11 +39,15 @@ const user = [
         component: () => import('../pages/user/auth/Register.vue'),
       },
       {
+        path: '/auth/google/callback',
+        name: 'GoogleCallback',
+        component: () => import('../pages/user/auth/CallBackGoogle.vue'),
+      },
+      {
         path: 'shop',
         name: 'shop',
         component: () => import('../pages/user/shop/Index.vue'),
       },
-      // ĐÃ THÊM ROUTE CHO TRANG CHI TIẾT SẢN PHẨM Ở ĐÂY
       {
         path: 'shop/:shop_slug/product/:slug',
         name: 'productDetail',
@@ -57,22 +66,47 @@ const user = [
       {
         path: 'favourite',
         name: 'favourite',
-        component: () => import('../pages/user/favourite/index.vue')
+        component: () => import('../pages/user/favourite/index.vue'),
       },
       {
-        path: 'about',
+        path: ' ',
         name: 'about',
-        component: () => import('../pages/user/about/index.vue')
+        component: () => import('../pages/user/about/index.vue'),
       },
       {
         path: 'contact',
         name: 'contact',
-        component: () => import('../pages/user/contact/index.vue')
+        component: () => import('../pages/user/contact/index.vue'),
       },
       {
         path: 'services',
         name: 'services',
-        component: () => import('../pages/user/services/index.vue')
+        component: () => import('../pages/user/services/index.vue'),
+      },
+      {
+        path: 'checkout',
+        name: 'checkout',
+        component: () => import('../pages/user/checkout/Index.vue'),
+      },
+      {
+        path: '/checkout/success',
+        name: 'checkout-success',
+        component: () => import('../pages/user/checkout/Success.vue'),
+      },
+      {
+        path: '/checkout/failed',
+        name: 'checkout-failed',
+        component: () => import('../pages/user/checkout/Failed.vue'),
+      },
+       {
+        path: 'shop/:shop_slug/compare',
+        name: 'compare',
+        component: () => import('../pages/user/compare/Index.vue'), 
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('../pages/user/profile/index.vue')
       },
     ],
   },

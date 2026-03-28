@@ -107,18 +107,14 @@ const route = useRoute();
 const isLoading = ref(true);
 const systemModules = ref([]);
 
-// Inject từ App.vue, cung cấp fallback ref(null) nếu Inject thất bại (chưa setup kĩ App.vue)
 const currentUser = inject('currentUser', ref(null));
 
-// Computed thông minh: Xử lý cả 2 trường hợp (F5 và Vừa Login xong)
 const userLevel = computed(() => {
-  // 1. Ưu tiên lấy từ state Provide/Inject (Dành cho trường hợp reload trang F5)
   const user = currentUser?.value || currentUser;
   if (user && user.role && user.role.level) {
     return user.role.level;
   }
 
-  // 2. Cứu cánh SPA: Nếu App.vue chưa kịp chạy lại do vừa chuyển từ trang Login
   try {
     const localAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
     const savedLevel = localStorage.getItem('admin_level') || localAdmin.role?.level;
@@ -227,7 +223,6 @@ const hasAccess = (code) => {
   const requiredLevel = getModuleLevel(code);
   if (!requiredLevel) return false;
 
-  // Level càng thấp thì quyền càng cao (1 là cao nhất)
   return userLevel.value <= requiredLevel;
 };
 

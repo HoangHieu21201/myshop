@@ -301,7 +301,6 @@ const itemsPerPage = 8;
 const selectedUser = ref(null);
 let quickViewModalInstance = null;
 
-// Gỡ bỏ modal an toàn trước khi unmount
 onBeforeUnmount(() => {
   if (quickViewModalInstance) quickViewModalInstance.hide();
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
@@ -309,7 +308,6 @@ onBeforeUnmount(() => {
   document.body.style = '';
 });
 
-// Hàm gỡ bỏ modal an toàn trước khi chuyển trang
 const goToEditUser = (id) => {
   if (quickViewModalInstance) quickViewModalInstance.hide();
   setTimeout(() => {
@@ -320,10 +318,8 @@ const goToEditUser = (id) => {
   }, 300);
 };
 
-// Cấu hình Axios Header
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
   if (e.response) {
     if (e.response.status === 401) {
@@ -367,7 +363,6 @@ const getLevelColor = (level) => {
   }
 };
 
-// Tính năng Phóng to ảnh Avatar bằng SweetAlert2
 const viewFullImage = (url) => {
   Swal.fire({
     imageUrl: url,
@@ -385,7 +380,6 @@ const viewFullImage = (url) => {
   });
 };
 
-// AXIOS: FETCH DATA
 const fetchData = async () => {
   isLoading.value = true;
   try {
@@ -394,7 +388,6 @@ const fetchData = async () => {
       axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
     ]);
     
-    // ĐÃ FIX LỖI CRASH BẰNG MAPPING CHUẨN AXIOS
     const rawUsers = Array.isArray(resUsers.data.data) ? resUsers.data.data : (resUsers.data.data?.data || []);
     users.value = rawUsers.map(u => ({
         ...u, localStatus: u.status, isStatusChanged: false, isUpdatingStatus: false
@@ -422,7 +415,6 @@ const openQuickView = (user) => {
   quickViewModalInstance.show();
 };
 
-// ================= INLINE STATUS =================
 const getStatusSelectClass = (status) => {
   const map = { 
     'active': 'text-success border-success bg-success bg-opacity-10', 
@@ -434,11 +426,9 @@ const getStatusSelectClass = (status) => {
 const checkStatusChange = (user) => { user.isStatusChanged = (user.localStatus !== user.status); };
 const cancelStatusChange = (user) => { user.localStatus = user.status; user.isStatusChanged = false; };
 
-// AXIOS: CẬP NHẬT TRẠNG THÁI NHANH
 const saveUserStatus = async (user) => {
   user.isUpdatingStatus = true;
   
-  // Payload gửi lên API (AdminUserController cần fullName, email, phone, status...)
   const payload = {
       _method: 'PUT',
       fullName: user.fullName,
@@ -479,7 +469,6 @@ const processedUsers = computed(() => {
 const totalPages = computed(() => Math.ceil(processedUsers.value.length / itemsPerPage) || 1);
 const paginatedUsers = computed(() => { const start = (currentPage.value - 1) * itemsPerPage; return processedUsers.value.slice(start, start + itemsPerPage); });
 
-// AXIOS: XÓA
 const confirmDelete = (id, name) => {
   Swal.fire({ 
     title: 'Xóa tài khoản này?', 
@@ -501,7 +490,6 @@ const confirmDelete = (id, name) => {
   });
 };
 
-// AXIOS: KHÔI PHỤC
 const restoreUser = (id) => {
   Swal.fire({ 
     title: 'Khôi phục tài khoản?', 

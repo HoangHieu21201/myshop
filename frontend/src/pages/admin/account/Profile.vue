@@ -204,7 +204,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, inject } from 'vue';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ TÍCH HỢP AXIOS
+import axios from 'axios';
 import defaultAvatar from '../../../assets/images/defaults/avatar1.png';
 
 const activeTab = ref('info');
@@ -213,7 +213,6 @@ const isLoading = ref(false);
 const showNewPassword = ref(false);
 const showConfirmPassword = ref(false);
 
-// Sử dụng Provide/Inject để kết nối với biến toàn cục ở App.vue (Dùng cho Avatar Sidebar)
 const currentUser = inject('currentUser', null);
 
 const adminData = ref({
@@ -225,13 +224,11 @@ const selectedFile = ref(null);
 const previewAvatar = ref(null);
 const isRemoveAvatar = ref(false);
 
-// Cấu hình Axios Header
 const getHeaders = () => ({ 
     'Accept': 'application/json', 
     'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
 });
 
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
   if (e.response) {
     if (e.response.status === 422) {
@@ -253,7 +250,6 @@ const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
 
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 
-// --- LOGIC ĐỊA CHỈ API VIỆT NAM (DÙNG AXIOS) ---
 const provinces = ref([]);
 const addressSelector = ref({ province: '', district: '', ward: '', street: '' });
 
@@ -283,11 +279,9 @@ watch(() => addressSelector.value.district, () => {
     addressSelector.value.ward = '';
 });
 
-// Chống nhập chữ vào số điện thoại
 const validatePhone = (e) => {
     adminData.value.phone = e.target.value.replace(/\D/g, '').slice(0, 11);
 };
-// ---------------------------------
 
 const getRoleName = (id) => {
     return id == 1 ? 'Super Admin' : (id == 2 ? 'Quản lý' : 'Nhân viên');
@@ -327,7 +321,6 @@ const removeAvatar = () => {
     document.getElementById('avatarUpload').value = '';
 };
 
-// AXIOS: CẬP NHẬT HỒ SƠ TỨC THÌ (KHÔNG RELOAD MÀN HÌNH)
 const updateProfile = async () => {
     isLoading.value = true;
 
@@ -348,19 +341,15 @@ const updateProfile = async () => {
         const res = await axios.post('http://127.0.0.1:8000/api/admin/profile', formData, { headers: getHeaders() });
         const updatedData = res.data.data;
         
-        // 1. Cập nhật lại cache trình duyệt
         localStorage.setItem('admin_info', JSON.stringify(updatedData));
         
-        // 2. Cập nhật biến toàn cục (Để Sidebar đổi ảnh & tên tự động theo mà không cần reload)
         if (currentUser) {
             currentUser.value = updatedData;
         }
         
-        // 3. Cập nhật giao diện nội bộ của trang Hồ sơ
         adminData.value.avatar = updatedData.avatar_url ? `http://127.0.0.1:8000/storage/${updatedData.avatar_url}` : defaultAvatar;
         adminData.value.address = updatedData.address;
         
-        // Xóa trạng thái preview sau khi đã lưu thành công
         previewAvatar.value = null;
         selectedFile.value = null;
         isRemoveAvatar.value = false;
@@ -374,9 +363,7 @@ const updateProfile = async () => {
     }
 };
 
-// AXIOS: ĐỔI MẬT KHẨU
 const updatePassword = async () => {
-    // Validate Frontend trước khi gọi API
     if (passwordForm.value.new_password.length < 8) {
         Swal.fire('Lỗi', 'Mật khẩu phải có ít nhất 8 ký tự!', 'warning'); return;
     }
