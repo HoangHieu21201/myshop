@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\admin\AdminOrderController;
 use App\Http\Controllers\Api\admin\AdminBannerController;
 use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
+use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -241,6 +242,15 @@ Route::prefix('admin')->group(function () {
             Route::post('banners/reorder', [AdminBannerController::class, 'reorder']);
         });
 
+        // QUẢN LÝ CHÂN DUNG SORA (CUSTOMER GALLERY)
+        Route::middleware(['check.module:admin_gallery'])->group(function () {
+            Route::get('galleries', [AdminCustomerGalleryController::class, 'index']);
+            Route::post('galleries', [AdminCustomerGalleryController::class, 'store']);
+            Route::get('galleries/{id}', [AdminCustomerGalleryController::class, 'show']);
+            Route::put('galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
+            Route::delete('galleries/{id}', [AdminCustomerGalleryController::class, 'destroy']);
+        });
+
         // Quản lý Đơn hàng (Mã: admin_orders)
         Route::middleware(['check.module:admin_orders'])->group(function () {
             Route::controller(AdminOrderController::class)->group(function () {
@@ -262,7 +272,6 @@ Route::prefix('admin')->group(function () {
             });
         });
 
-        // Quản lý Combo (Mã: admin_combos)
         // Quản lý Combo (Mã: admin_combos)
         Route::middleware(['check.module:admin_combos'])->group(function () {
             Route::controller(AdminComboController::class)->prefix('combos')->group(function () {
