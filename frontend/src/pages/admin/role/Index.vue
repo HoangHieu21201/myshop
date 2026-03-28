@@ -5,7 +5,6 @@
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Quản lý Phân Quyền & Cấp Độ</h3>
-          <p class="text-muted mb-0 mt-1 small">Thiết lập chức vụ và giới hạn truy cập cho từng trang</p>
         </div>
         
         <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3 flex-wrap">

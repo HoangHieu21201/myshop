@@ -10,7 +10,6 @@
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Xử lý Hàng Hoàn / Trả</h3>
-          <p class="text-muted mb-0">Quản lý các đơn hàng bị khách trả lại và yêu cầu hoàn tiền</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
           <button class="btn btn-light border shadow-sm fw-bold text-dark px-4 py-2" @click="fetchData(1, true)">

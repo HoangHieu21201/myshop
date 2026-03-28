@@ -10,7 +10,6 @@
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
           <h3 class="fw-bold text-dark mb-0">Banner Quảng Cáo</h3>
-          <p class="text-muted mb-0">Quản lý banner chiến dịch và hiển thị đa thiết bị</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
           <router-link :to="{ name: 'admin-banners-create' }" class="btn btn-brand px-4 py-2 fw-bold shadow-sm text-white rounded-pill" v-if="!isReorderMode">
