@@ -139,40 +139,61 @@
             <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Xu Hướng</h6>
             <h3 class="font-serif fw-bold text-dark mb-0 display-6">Tuyệt Tác Mới Nhất</h3>
           </div>
-          <router-link to="/products" class="btn btn-outline-primary-luxury rounded-0 px-4 py-2 text-uppercase tracking-widest text-sm fw-bold">
+          <router-link to="/shop" class="btn btn-outline-primary-luxury rounded-0 px-4 py-2 text-uppercase tracking-widest text-sm fw-bold">
             Xem Bộ Sưu Tập
           </router-link>
         </div>
 
         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
           <div class="col" v-for="product in data.products" :key="product.id">
-            <div class="product-card h-100 position-relative group bg-white">
+            <div class="luxury-related-card product-card bg-white d-flex flex-column group position-relative overflow-hidden border border-light-subtle h-100 cursor-pointer" @click="goToProductDetail(product.slug)">
               
-              <div class="position-relative overflow-hidden bg-light product-img-wrapper">
-                <button class="wishlist-btn position-absolute top-0 end-0 m-3 z-index-2 border-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                  <i class="bi bi-suit-heart fs-5 text-muted hover-text-accent transition-colors" style="margin-top: 2px;"></i>
+              <div class="position-relative bg-light text-center border-bottom border-light-subtle sora-img-container" :class="{'has-hover-image': hasHoverImage(product)}">
+                
+                <button @click.stop="toggleWishlist(product)" class="wishlist-btn position-absolute top-0 end-0 m-3 z-index-2 border-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; z-index: 10;">
+                  <i :class="isInWishlist(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart text-muted hover-text-accent'" class="fs-5 transition-colors" style="margin-top: 2px;"></i>
                 </button>
-                
-                <span v-if="product.is_new" class="badge bg-primary-luxury position-absolute top-0 start-0 m-3 px-3 py-2 rounded-0 tracking-widest shadow-sm z-index-2">MỚI</span>
-                
-                <router-link :to="`/product/${product.slug}`" class="d-block ratio ratio-1x1">
-                  <img :src="getImageUrl(product.thumbnail_image)" class="object-fit-cover transition-transform duration-700 hover-scale" alt="Product" @error="handleImageError">
-                </router-link>
-                
-                <div class="quick-view-overlay position-absolute bottom-0 start-0 w-100 p-0 z-index-2 translate-y-100 group-hover-translate-y-0 transition-transform duration-300">
-                  <button class="btn btn-primary-luxury w-100 rounded-0 fw-bold tracking-widest text-uppercase py-3 shadow-none border-0 fs-6">
-                    <i class="bi bi-bag me-2"></i> Thêm Vào Giỏ
-                  </button>
-                </div>
-              </div>
 
-              <div class="text-center pt-4 pb-3 px-2">
-                <router-link :to="`/product/${product.slug}`" class="text-decoration-none">
-                  <h6 class="text-dark font-serif text-truncate mb-2 cursor-pointer hover-text-primary" style="font-size: 1.15rem;">{{ product.name }}</h6>
-                </router-link>
-                <div class="price-wrap mt-2 d-flex justify-content-center align-items-center gap-2">
-                  <span class="text-primary-luxury fw-bold fs-5">{{ formatCurrency(product.base_price) }}</span>
-                  <span v-if="product.promotional_price" class="text-muted text-decoration-line-through small">{{ formatCurrency(product.promotional_price) }}</span>
+                <div class="position-absolute top-0 start-0 m-3 d-flex flex-column gap-2 z-index-2 pointer-events-none text-start">
+                  <span v-if="product.is_new" class="badge bg-white text-dark border border-light-subtle shadow-sm font-oswald tracking-widest px-2 py-1 rounded-0" style="font-size: 0.65rem;">MỚI</span>
+                  <span v-if="product.promotional_price" class="badge text-white shadow-sm font-oswald tracking-widest px-2 py-1 rounded-0" style="background-color: var(--color-accent); font-size: 0.65rem;">SALE</span>
+                </div>
+                
+                <div class="ratio ratio-1x1 w-100">
+                  <img :src="getImageUrl(product.thumbnail_image)" 
+                       :alt="product.name" 
+                       class="sora-main-img object-fit-cover w-100 h-100 transition-transform duration-700 group-hover-scale bg-white" 
+                       style="object-position: center;" 
+                       @error="handleImageError">
+                  <img v-if="hasHoverImage(product)"
+                       :src="getImageUrl(product.hover_image)" 
+                       :alt="product.name + ' hover'" 
+                       class="sora-hover-img position-absolute top-0 start-0 w-100 h-100 object-fit-cover transition-transform duration-700 group-hover-scale" 
+                       style="object-position: center;">
+                </div>
+                <div class="theme-bar position-absolute bottom-0 start-0 z-index-2"></div>
+              </div>
+              
+              <div class="position-relative flex-grow-1 bg-white d-flex flex-column">
+                <div class="p-4 text-center d-flex flex-column flex-grow-1" style="padding-bottom: 64px !important;">
+                  <h6 class="text-dark font-oswald text-uppercase tracking-widest fw-bold mb-2 text-truncate-2 fs-5 lh-base">{{ product.name }}</h6>
+                  <p class="font-serif fst-italic text-muted fs-6 mb-3">{{ product.category?.name || 'Trang sức SORA' }}</p>
+                  
+                  <div class="mt-auto">
+                    <div class="d-flex align-items-center justify-content-center gap-3">
+                      <p v-if="product.promotional_price" class="text-muted text-decoration-line-through mb-0 fw-light font-serif" style="font-size: 0.95rem;">
+                        {{ formatCurrency(product.base_price) }}
+                      </p>
+                      <span class="text-primary-luxury fw-bold font-serif fs-5">{{ formatCurrency(product.promotional_price || product.base_price) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="related-btn-add">
+                  <button class="btn luxury-btn-solid w-100 rounded-0 py-3 font-oswald tracking-widest text-uppercase fw-bold shadow-none fs-6" 
+                          @click.stop="goToProductDetail(product.slug)">
+                    <i class="bi bi-eye me-2"></i> Xem chi tiết
+                  </button>
                 </div>
               </div>
 
@@ -182,39 +203,48 @@
       </section>
 
       <section class="combo-section py-5 overflow-hidden" style="background-color: #fbf9f6;" v-if="data.combos && data.combos.length > 0">
-        <div class="container text-center mb-5">
+        <div class="container text-center mb-4">
           <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Đồng Điệu</h6>
           <h3 class="font-serif fw-bold text-dark display-6 mb-3">Bộ Sưu Tập Giới Hạn</h3>
           <div class="divider-gold mx-auto"></div>
         </div>
 
-        <div class="container pb-5">
+        <div class="container-fluid px-0 pb-5">
           <swiper
             :modules="swiperModules"
-            :slides-per-view="1"
-            :breakpoints="{
-              '576': { slidesPerView: 2, spaceBetween: 20 },
-              '768': { slidesPerView: 3, spaceBetween: 25 },
-              '1024': { slidesPerView: 4, spaceBetween: 30 },
+            effect="coverflow"
+            :grabCursor="true"
+            :centeredSlides="true"
+            slidesPerView="auto"
+            :coverflowEffect="{
+              rotate: 0,
+              stretch: 50,
+              depth: 150,
+              modifier: 1,        
+              slideShadows: false,
             }"
             :loop="true"
             :pagination="{ clickable: true }"
+            :navigation="true"
             :autoplay="{ delay: 3500, disableOnInteraction: false }"
-            class="combo-swiper-multi"
+            class="combo-swiper-coverflow pt-4 pb-5 px-md-5"
           >
-            <swiper-slide v-for="combo in data.combos" :key="combo.id" class="h-auto">
-              <div class="bg-white p-3 text-center border border-secondary border-opacity-10 shadow-sm h-100 position-relative group">
-                <div class="mb-3 overflow-hidden position-relative ratio ratio-1x1 bg-light">
-                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover transition-transform duration-700 hover-scale" @error="handleImageError">
-                  <div class="position-absolute inset-0 bg-dark bg-opacity-25 opacity-0 group-hover-opacity-100 transition-all d-flex align-items-center justify-content-center z-index-2">
-                    <span class="btn btn-sm btn-light rounded-0 text-uppercase tracking-widest fw-bold">Xem Chi Tiết</span>
+            <swiper-slide v-for="combo in data.combos" :key="combo.id" class="combo-slide-3d">
+              <div class="combo-card-inner bg-white text-center shadow h-100 position-relative transition-all">
+                
+                <div class="overflow-hidden position-relative ratio ratio-1x1 bg-light">
+                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover w-100 h-100" @error="handleImageError">
+                  <div class="slide-inactive-overlay position-absolute inset-0 bg-white transition-all"></div>
+                </div>
+
+                <div class="combo-info-box p-3 bg-white border-top">
+                  <h6 class="font-serif fw-bold text-dark text-truncate px-2 mb-1" style="font-size: 1.1rem;">{{ combo.name }}</h6>
+                  <div class="d-flex flex-column align-items-center">
+                    <span class="text-primary-luxury fw-bold fs-6">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
+                    <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
                   </div>
                 </div>
-                <h6 class="font-serif fw-bold text-dark text-truncate px-2 group-hover-text-primary transition-colors" style="font-size: 1.1rem;">{{ combo.name }}</h6>
-                <div class="mt-2 d-flex flex-column align-items-center">
-                  <span class="text-primary-luxury fw-bold fs-6">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
-                  <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
-                </div>
+                
                 <router-link :to="'/combo/' + combo.slug" class="stretched-link"></router-link>
               </div>
             </swiper-slide>
@@ -276,16 +306,22 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Pagination, Navigation, Autoplay } from 'swiper/modules';
+import { Pagination, Navigation, Autoplay, EffectCoverflow } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
+import 'swiper/css/effect-coverflow'; 
 
-const swiperModules = [Pagination, Navigation, Autoplay];
+const swiperModules = [Pagination, Navigation, Autoplay, EffectCoverflow];
 const isLoading = ref(true);
+const router = useRouter();
+
+// Trạng thái lưu trữ Wishlist (Danh sách ID sản phẩm đã thích)
+const wishlistIds = ref([]);
 
 const data = reactive({
   banners: [],
@@ -303,11 +339,47 @@ const handleImageError = (e) => {
   e.target.src = 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=600&auto=format&fit=crop'; 
 };
 
-const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
 const formatShortCurrency = (value) => {
   if (value >= 1000000) return (value / 1000000) + 'Tr';
   if (value >= 1000) return (value / 1000) + 'K';
   return value;
+};
+const hasHoverImage = (product) => product.hover_image && product.hover_image !== product.thumbnail_image;
+
+const goToProductDetail = (slug) => {
+  if (slug) router.push(`/shop/sora/product/${slug}`);
+};
+
+// ==========================================
+// LOGIC THẢ TIM (YÊU THÍCH) SẢN PHẨM
+// ==========================================
+const loadWishlist = () => {
+  const stored = localStorage.getItem('sora_wishlist');
+  if (stored) {
+    wishlistIds.value = JSON.parse(stored);
+  }
+};
+
+const isInWishlist = (productId) => {
+  return wishlistIds.value.includes(productId);
+};
+
+const toggleWishlist = (product) => {
+  const index = wishlistIds.value.indexOf(product.id);
+  
+  if (index === -1) {
+    // Chưa có thì thêm vào
+    wishlistIds.value.push(product.id);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm vào danh sách yêu thích!', showConfirmButton: false, timer: 2000 });
+  } else {
+    // Đã có thì bỏ ra (Unlike)
+    wishlistIds.value.splice(index, 1);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Đã bỏ khỏi danh sách yêu thích', showConfirmButton: false, timer: 2000 });
+  }
+  
+  // Cập nhật lại vào bộ nhớ trình duyệt
+  localStorage.setItem('sora_wishlist', JSON.stringify(wishlistIds.value));
 };
 
 const fetchHomepageData = async () => {
@@ -344,6 +416,7 @@ const saveCoupon = (code) => {
 
 onMounted(() => {
   fetchHomepageData();
+  loadWishlist(); // Tải danh sách tim đã thả khi vừa mở web
 });
 </script>
 
@@ -352,63 +425,57 @@ onMounted(() => {
   --color-primary: #9f273b; 
   --color-gold: #e7ce7d;    
   --color-accent: #cc1e2e;  
+  --sora-primary: #9f273b;
+  --sora-secondary: #e7ce7d;
+  --sora-accent: #cc1e2e;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
 
 .font-luxury { font-family: 'Montserrat', sans-serif; }
 .font-serif { font-family: 'Playfair Display', serif; }
+.font-oswald { font-family: 'Oswald', sans-serif; }
+
 .tracking-widest { letter-spacing: 0.15em; }
+.text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .z-index-1 { z-index: 1; }
 .z-index-2 { z-index: 2; }
 .z-index-max { z-index: 9999; }
 .inset-0 { inset: 0; }
+.cursor-pointer { cursor: pointer; }
 
 .text-gold { color: #e7ce7d !important; }
 .text-primary-luxury { color: #9f273b !important; }
+.text-sora-primary { color: #9f273b !important; }
 .bg-primary-luxury { background-color: #9f273b !important; }
 .bg-accent-red { background-color: #cc1e2e !important; color: white; }
 .border-gold { border-color: #e7ce7d !important; }
 .divider-gold { width: 40px; height: 2px; background-color: #e7ce7d; }
 
-.btn-primary-luxury {
-  background-color: #9f273b; color: #fff; border: 1px solid #9f273b; transition: all 0.3s;
-}
-.btn-primary-luxury:hover {
-  background-color: #111; border-color: #111; color: #fff;
-}
-.btn-outline-primary-luxury {
-  background-color: transparent; color: #9f273b; border: 1px solid #9f273b; transition: all 0.3s;
-}
-.btn-outline-primary-luxury:hover {
-  background-color: #9f273b; color: #fff;
-}
-.btn-outline-gold {
-  background-color: transparent; color: #e7ce7d; border: 1px solid #e7ce7d; transition: all 0.3s;
-}
-.btn-outline-gold:hover {
-  background-color: #e7ce7d; color: #111; border-color: #e7ce7d;
-}
-.btn-gold {
-  background-color: #e7ce7d; color: #111; border: 1px solid #e7ce7d; transition: all 0.3s;
-}
-.btn-gold:hover {
-  background-color: #d1b764; border-color: #d1b764; color: #000; transform: translateY(-2px);
-}
-.hover-gold-btn:hover {
-  background-color: #e7ce7d !important; border-color: #e7ce7d !important; color: #111 !important;
-}
+/* Buttons General */
+.btn-primary-luxury { background-color: #9f273b; color: #fff; border: 1px solid #9f273b; transition: all 0.3s; }
+.btn-primary-luxury:hover { background-color: #111; border-color: #111; color: #fff; }
+.btn-outline-primary-luxury { background-color: transparent; color: #9f273b; border: 1px solid #9f273b; transition: all 0.3s; }
+.btn-outline-primary-luxury:hover { background-color: #9f273b; color: #fff; }
+.btn-outline-gold { background-color: transparent; color: #e7ce7d; border: 1px solid #e7ce7d; transition: all 0.3s; }
+.btn-outline-gold:hover { background-color: #e7ce7d; color: #111; border-color: #e7ce7d; }
+.btn-gold { background-color: #e7ce7d; color: #111; border: 1px solid #e7ce7d; transition: all 0.3s; }
+.btn-gold:hover { background-color: #d1b764; border-color: #d1b764; color: #000; transform: translateY(-2px); }
+.hover-gold-btn:hover { background-color: #e7ce7d !important; border-color: #e7ce7d !important; color: #111 !important; }
 
+/* Hero Section */
 .hero-carousel { height: 85vh; min-height: 600px; background: #111; }
 .hero-img { height: 85vh; min-height: 600px; opacity: 0.6; }
 .carousel-overlay { position: absolute; inset: 0; background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%); }
 .shadow-text { text-shadow: 2px 2px 8px rgba(0,0,0,0.7); }
 
+/* Coupons */
 .coupon-scroll-container { overflow-x: auto; scrollbar-width: none; }
 .coupon-scroll-container::-webkit-scrollbar { display: none; }
 .coupon-card { width: 320px; }
 .border-end-dashed { border-right: 1px dashed rgba(255,255,255,0.3); }
 
+/* Global Utilities */
 .group:hover .group-hover-scale { transform: scale(1.05); }
 .group:hover .group-hover-text-primary { color: #9f273b !important; }
 .group:hover .group-hover-text-accent { color: #cc1e2e !important; }
@@ -422,53 +489,57 @@ onMounted(() => {
 .opacity-0 { opacity: 0; }
 .group:hover .group-hover-opacity-100 { opacity: 1 !important; }
 .transition-all { transition: all 0.4s ease; }
-
-.product-card { 
-  border: 1px solid transparent; 
-  transition: all 0.4s ease; 
-}
-.product-card:hover { 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06); 
-  border-color: rgba(159, 39, 59, 0.15); 
-}
-.product-img-wrapper { border-bottom: 1px solid #f1f1f1; }
-
-.wishlist-btn { opacity: 0.8; transition: all 0.3s ease; }
-.group:hover .wishlist-btn { opacity: 1; transform: scale(1.05); }
-.wishlist-btn:hover i { color: var(--color-accent) !important; }
-
-.hover-scale { transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); }
-.group:hover .hover-scale { transform: scale(1.1); }
 .hover-text-primary:hover { color: #9f273b !important; }
 
-.translate-y-100 { transform: translateY(100%); opacity: 0; }
-.group:hover .group-hover-translate-y-0 { transform: translateY(0); opacity: 1; }
-.quick-view-overlay { background: transparent; }
+/* ========================================== */
+/* PRODUCT CARD ĐỒNG BỘ TỪ SHOP.VUE           */
+/* ========================================== */
+.luxury-related-card { transition: all 0.4s ease; border-color: #eaeaea !important; }
+.luxury-related-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.06); border-color: #d1d5db !important; }
 
-/* --- COMBO SLIDER (MULTI-ITEM) --- */
-.combo-swiper-multi {
-  padding-bottom: 50px; 
+.sora-main-img, .sora-hover-img { transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.6s ease; }
+.sora-main-img { z-index: 1; }
+.sora-hover-img { z-index: 2; opacity: 0; }
+.group:hover .sora-img-container.has-hover-image .sora-main-img { opacity: 0; }
+.group:hover .sora-img-container.has-hover-image .sora-hover-img { opacity: 1; }
+.group:hover .sora-main-img, .group:hover .sora-hover-img { transform: scale(1.08); }
+
+.theme-bar { width: 30%; height: 3px; background-color: var(--sora-primary); opacity: 0; transition: opacity 0.3s ease; left: 0; }
+.luxury-related-card:hover .theme-bar { opacity: 1; }
+
+.related-btn-add {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  transform: translateY(101%); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  z-index: 10; background: rgb(112, 21, 21);
 }
-.stretched-link::after {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  content: "";
-}
-:deep(.swiper-pagination-bullet) {
-  width: 8px;
-  height: 8px;
-  background-color: var(--color-gold);
-  opacity: 0.5;
-  transition: all 0.3s ease;
-}
-:deep(.swiper-pagination-bullet-active) {
-  background-color: var(--color-primary) !important;
-  width: 20px;
-  border-radius: 5px;
-  opacity: 1;
-}
+.group:hover .related-btn-add, .luxury-related-card:hover .related-btn-add { transform: translateY(0); }
+
+.luxury-btn-solid { background-color: var(--sora-primary); color: white; border: 1px solid var(--sora-primary); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.luxury-btn-solid:hover:not(:disabled) { background-color: #7a1c2d; border-color: #7a1c2d; color: white; box-shadow: 0 8px 20px rgba(159,39,59,0.3); transform: translateY(-2px); }
+
+/* Heart Icon Fixes */
+.wishlist-btn { transition: all 0.3s ease; }
+.wishlist-btn:hover { transform: scale(1.1); }
+.text-danger { color: var(--color-accent) !important; }
+
+/* ========================================== */
+/* SWIPER 3D COVERFLOW CUSTOM STYLES          */
+/* ========================================== */
+.combo-swiper-coverflow { padding-bottom: 60px; }
+.combo-slide-3d { width: 260px; }
+@media (min-width: 768px) { .combo-slide-3d { width: 320px; } }
+.stretched-link::after { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; content: ""; }
+
+.combo-slide-3d:not(.swiper-slide-active) .slide-inactive-overlay { opacity: 0.15; }
+.combo-slide-3d:not(.swiper-slide-active) .combo-info-box { opacity: 0; visibility: hidden; }
+
+.combo-slide-3d.swiper-slide-active .slide-inactive-overlay { opacity: 0; }
+.combo-slide-3d.swiper-slide-active .combo-info-box { opacity: 1; visibility: visible; transition: opacity 0.5s ease 0.2s; }
+.combo-slide-3d.swiper-slide-active .combo-card-inner { border: 1px solid var(--color-primary) !important; box-shadow: 0 15px 30px rgba(159, 39, 59, 0.15) !important; }
+
+:deep(.swiper-pagination-bullet) { width: 6px; height: 6px; background-color: var(--color-gold); opacity: 0.5; transition: all 0.3s ease; }
+:deep(.swiper-pagination-bullet-active) { background-color: var(--color-primary) !important; width: 18px; border-radius: 5px; opacity: 1; }
+:deep(.swiper-button-next), :deep(.swiper-button-prev) { color: var(--color-primary); background-color: rgba(255, 255, 255, 0.95); width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: all 0.3s ease; }
+:deep(.swiper-button-next:hover), :deep(.swiper-button-prev:hover) { background-color: var(--color-primary); color: #fff; transform: scale(1.1); }
+:deep(.swiper-button-next::after), :deep(.swiper-button-prev::after) { font-size: 1rem; font-weight: bold; }
 </style>
