@@ -15,6 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail; // Nạp thư viện Mail
+use App\Mail\OrderPlacedMail;        // Nạp Class Mail vừa tạo
+use Illuminate\Support\Facades\Log;  // Nạp thư viện ghi log lỗi
 
 class ClientCheckoutController extends Controller
 {
@@ -29,8 +32,6 @@ class ClientCheckoutController extends Controller
         $user = auth('sanctum')->user();
         if ($user) {
             $addresses = UserAddress::where('user_id', $user->id)->get();
-            
-            // FIX: Bóc tách rõ ràng các trường dữ liệu để Frontend chắc chắn nhận được Email
             $userData = [
                 'id'    => $user->id,
                 'name'  => $user->fullName ?? $user->name ?? '',
@@ -53,7 +54,7 @@ class ClientCheckoutController extends Controller
             'cart_items' => $cartItems,
             'addresses'  => $addresses,
             'coupons'    => $coupons,
-            'user'       => $userData // Trả về object đã bóc tách rõ ràng
+            'user'       => $userData
         ]);
     }
 
@@ -212,6 +213,10 @@ class ClientCheckoutController extends Controller
                 if ($request->payment_method === 'cod') {
                     $cart->items()->delete();
                     $cart->delete();
+                    
+                    // BÓP CÒ GỬI MAIL CHO ĐƠN COD
+                    $this->sendOrderConfirmationEmail($order);
+
                     return response()->json([
                         'success' => true,
                         'data' => $order,
@@ -233,23 +238,16 @@ class ClientCheckoutController extends Controller
         }
     }
 
-    /**
-     * TẠO LINK MOMO (SỬ DỤNG .ENV AN TOÀN)
-     */
     private function generateMomoUrl($order)
     {
-        // Lấy từ .env và loại bỏ khoảng trắng (nếu có) bằng hàm trim()
-        $endpoint    = trim(env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'));
-        $partnerCode = trim(env('MOMO_PARTNER_CODE'));
-        $accessKey   = trim(env('MOMO_ACCESS_KEY'));
-        $secretKey   = trim(env('MOMO_SECRET_KEY'));
-
-        // Kiểm tra xem đã có key chưa
-        if (empty($partnerCode) || empty($accessKey) || empty($secretKey)) {
-            throw new \Exception("Bạn chưa cấu hình Key MoMo trong file .env!");
-        }
+        $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+        
+        $partnerCode = 'MOMOBKUN20180529';
+        $accessKey   = 'klm05TvNBzhg7h7j';
+        $secretKey   = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
 
         $orderInfo = "Thanh toan don hang SORA " . $order->order_code;
+        
         $amount = (string) round($order->total_amount);
         $orderId = $order->order_code . "_" . time(); 
         
@@ -260,7 +258,6 @@ class ClientCheckoutController extends Controller
         $requestId = time() . "";
         $requestType = "payWithATM"; 
 
-        // Băm chữ ký
         $rawHash = "accessKey=" . $accessKey . "&amount=" . $amount . "&extraData=" . $extraData . "&ipnUrl=" . $ipnUrl . "&orderId=" . $orderId . "&orderInfo=" . $orderInfo . "&partnerCode=" . $partnerCode . "&redirectUrl=" . $redirectUrl . "&requestId=" . $requestId . "&requestType=" . $requestType;
 
         $signature = hash_hmac("sha256", $rawHash, $secretKey);
@@ -300,11 +297,37 @@ class ClientCheckoutController extends Controller
         
         if ($request->resultCode == 0) {
             Order::where('order_code', $orderCode)->update(['payment_status' => 'paid']);
+            
+            // Lấy lại order đầy đủ item để gửi mail
+            $order = Order::with('items')->where('order_code', $orderCode)->first();
+            if ($order) {
+                // BÓP CÒ GỬI MAIL CHO ĐƠN MOMO THÀNH CÔNG
+                $this->sendOrderConfirmationEmail($order);
+            }
+
             return redirect($frontendUrl . '/checkout/success?order=' . $orderCode);
         }
         
         $this->cancelOrderAndRestoreStock($orderCode);
         return redirect($frontendUrl . '/checkout/failed?order=' . $orderCode);
+    }
+
+    /**
+     * HÀM GỬI MAIL AN TOÀN (NẾU LỖI CŨNG KHÔNG LÀM CHẾT WEBSITE)
+     */
+    private function sendOrderConfirmationEmail($order)
+    {
+        try {
+            // Đảm bảo đã load đủ thông tin items (Sản phẩm) để in ra bảng
+            $order->load('items');
+            
+            // Thực hiện gửi
+            Mail::to($order->customer_email)->send(new OrderPlacedMail($order));
+            
+        } catch (\Exception $e) {
+            // Ghi log nếu mail gửi xịt (do sai pass, rớt mạng...) để không báo lỗi 500 cho khách
+            Log::error('Lỗi gửi mail xác nhận đơn hàng ' . $order->order_code . ': ' . $e->getMessage());
+        }
     }
 
     private function cancelOrderAndRestoreStock($orderCode)
