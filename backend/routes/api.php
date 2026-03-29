@@ -31,12 +31,13 @@ use App\Http\Controllers\Api\client\ClientCartController;
 use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
-use App\Http\Controllers\Api\client\ClientCompareController; // Đã thêm Use Controller
+use App\Http\Controllers\Api\client\ClientCompareController;
 use App\Http\Controllers\Api\Auth\AuthController;
 // use App\Http\Controllers\Api\client\ClientCheckoutController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\client\ClientFavouriteController;
 use App\Http\Controllers\Api\client\ClientProfileController;
+use App\Http\Controllers\Api\Client\ChatbotController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -54,6 +55,9 @@ Route::prefix('client')->group(function () {
 
     // API Lấy Bảng Giá Vàng (Thêm mới)
     Route::get('/gold-prices', [ClientHomeController::class, 'goldPrices']);
+
+    // API CHATBOT AI (GEMINI)
+    Route::post('/chatbot', [ChatbotController::class, 'chat']);
 
     // MODULE GIỎ HÀNG (Cart)
     Route::controller(ClientCartController::class)->prefix('cart')->group(function () {

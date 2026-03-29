@@ -49,6 +49,11 @@ const user = [
         component: () => import('../pages/user/shop/Index.vue'),
       },
       {
+        path: 'category/:id',
+        name: 'category-detail',
+        component: () => import('../pages/user/shop/Index.vue'), 
+      },
+      {
         path: 'shop/:shop_slug/product/:slug',
         name: 'productDetail',
         component: () => import('../pages/user/productdetail/Index.vue'),
@@ -69,7 +74,7 @@ const user = [
         component: () => import('../pages/user/favourite/index.vue'),
       },
       {
-        path: ' ',
+        path: 'about',
         name: 'about',
         component: () => import('../pages/user/about/index.vue'),
       },
@@ -98,7 +103,7 @@ const user = [
         name: 'checkout-failed',
         component: () => import('../pages/user/checkout/Failed.vue'),
       },
-       {
+      {
         path: 'shop/:shop_slug/compare',
         name: 'compare',
         component: () => import('../pages/user/compare/Index.vue'), 
