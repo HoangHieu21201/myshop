@@ -62,9 +62,11 @@
         </div>
 
         <div v-else class="order-list">
-          <div class="card border border-light-subtle shadow-sm rounded-0 mb-5 order-card-luxury hover-lift" v-for="order in displayOrders" :key="order.id">
-            
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div class="card border border-light-subtle shadow-sm rounded-0 mb-5 order-card-luxury hover-lift"
+            v-for="order in displayOrders" :key="order.id">
+
+            <div
+              class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
               <div class="d-flex align-items-center gap-3">
                 <span class="fw-bold text-dark fs-5 font-serif" style="letter-spacing: 1px;">#<span v-text="order.order_code"></span></span>
                 <span class="text-muted small d-none d-sm-inline">|</span>
@@ -74,7 +76,7 @@
                 <i :class="getStatusIcon(order.status)" class="me-1"></i> <span v-text="translateStatus(order.status)"></span>
               </span>
             </div>
-            
+
             <div class="card-body p-4">
               <div v-if="!['cancelled', 'returned'].includes(order.status)" class="order-stepper-horizontal d-none d-md-flex mb-5 mt-2">
                 <div v-for="(step, index) in orderSteps" :key="index" 
@@ -86,13 +88,14 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="alert bg-light border border-light-subtle rounded-0 mb-5 d-flex align-items-center py-2 px-3">
+              <div v-else
+                class="alert bg-light border border-light-subtle rounded-0 mb-5 d-flex align-items-center py-2 px-3">
                 <i class="bi bi-x-circle-fill text-secondary me-2 fs-5"></i>
                 <div class="text-muted small"><strong>Đơn hàng đã bị hủy.</strong> Quá trình giao dịch đã dừng lại.</div>
               </div>
 
               <hr class="mt-0 mb-4 border-light-subtle">
-              
+
               <div class="row align-items-center">
                 <div class="col-lg-8 border-end-lg pe-lg-4">
                   <div v-for="item in order.items.slice(0, 2)" :key="item.id" class="d-flex align-items-center gap-3 mb-3">
@@ -179,7 +182,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 import OrderDetailModal from './OrderDetailModal.vue';
 import ReviewModal from './ReviewModal.vue'; 
@@ -386,8 +389,8 @@ const confirmCancel = async (order) => {
         soraAlert.fire({ icon: 'success', title: 'Thành công', text: 'Đơn hàng đã được hủy.' });
         if(isModalOpen.value) closeModal(); 
         fetchOrders(pagination.value.current_page);
-      } catch (err) { 
-        soraAlert.fire({ icon: 'error', title: 'Lỗi', text: err.response?.data?.message || 'Không thể hủy đơn' }); 
+      } catch (err) {
+        soraAlert.fire({ icon: 'error', title: 'Lỗi', text: err.response?.data?.message || 'Không thể hủy đơn' });
       }
     }
   });

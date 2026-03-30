@@ -42,7 +42,7 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
-    
+
     public function brand()
     {
         return $this->belongsTo(Brand::class, 'brand_id');
@@ -53,7 +53,11 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class, 'product_id');
     }
 
-    // Scope lọc sản phẩm đủ điều kiện cấu hình
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function scopeAvailableForConfig($query)
     {
         return $query->where('status', 'published')
@@ -62,9 +66,9 @@ class Product extends Model
             })
             ->where(function ($q) {
                 $q->whereNull('brand_id')
-                  ->orWhereHas('brand', function ($subQ) {
-                      $subQ->where('status', 'active');
-                  });
+                    ->orWhereHas('brand', function ($subQ) {
+                        $subQ->where('status', 'active');
+                    });
             });
     }
 }

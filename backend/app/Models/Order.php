@@ -41,21 +41,23 @@ class Order extends Model
         ];
     }
 
-    // Quan hệ 1 Hóa đơn có nhiều Chi tiết (Món hàng)
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');
     }
 
-    // Quan hệ 1 Hóa đơn có nhiều Lịch sử cập nhật
     public function histories()
     {
         return $this->hasMany(OrderStatusHistory::class, 'order_id')->orderBy('created_at', 'desc');
     }
 
-    // Khách hàng sở hữu đơn này (Nếu có đăng nhập)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

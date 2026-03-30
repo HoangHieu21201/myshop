@@ -48,33 +48,33 @@ class User extends Authenticatable
         ];
     }
 
-    // 1 User có nhiều địa chỉ
     public function addresses()
     {
         return $this->hasMany(UserAddress::class, 'user_id', 'id');
     }
 
-    // Lấy địa chỉ mặc định của User
     public function defaultAddress()
     {
         return $this->hasOne(UserAddress::class, 'user_id', 'id')->where('is_default', 1);
     }
 
-    // 1. Lấy Hạng hiện tại của User
     public function tier()
     {
         return $this->belongsTo(MembershipTier::class, 'tier_id');
     }
 
-    // 2. Lịch sử sử dụng đặc quyền (Vệ sinh, đánh bóng...)
     public function serviceUsages()
     {
         return $this->hasMany(TierServiceUsage::class, 'user_id');
     }
 
-    // 3. Lịch sử thăng/giáng hạng
     public function tierHistories()
     {
         return $this->hasMany(TierHistory::class, 'user_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }
