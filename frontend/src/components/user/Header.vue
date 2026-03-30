@@ -46,16 +46,20 @@
                   </div>
                   <a href="#" @click.prevent="safeNavigate('profile')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
-                      class="bi bi-person-circle me-2 text-muted"></i>Tài khoản của tôi</a>
-                  <a href="#" @click.prevent="safeNavigate('orders')"
+                      class="bi bi-person-circle me-2 text-muted"></i>Tài khoản của tôi
+                  </a>
+                  <a href="#" @click.prevent="safeNavigate('order')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
-                      class="bi bi-box-seam me-2 text-muted"></i>Đơn mua</a>
+                      class="bi bi-box-seam me-2 text-muted"></i>Đơn mua
+                  </a>
                   <a href="#" @click.prevent="safeNavigate('favourite')"
                     class="dropdown-item py-2 px-4 fw-medium text-decoration-none"><i
-                      class="bi bi-heart text-danger me-2"></i>Yêu thích</a>
+                      class="bi bi-heart text-danger me-2"></i>Yêu thích
+                  </a>
                   <div class="dropdown-divider my-2"></div>
                   <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 px-4 fw-bold text-danger"><i
-                      class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
+                      class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                  </a>
                 </template>
                 <template v-else>
                   <div class="p-3 text-center">
@@ -85,7 +89,7 @@
           <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5">
             <li><router-link :to="{ name: 'home' }" class="nav-item-link">XU HƯỚNG</router-link></li>
 
-            
+
             <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
               <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
                 SẢN PHẨM
@@ -190,7 +194,7 @@
                           <div class="small fw-bold text-truncate" v-html="highlightText(prod.name)"></div>
                           <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price ||
                             prod.base_price)
-                          }}</div>
+                            }}</div>
                         </div>
                       </a>
                     </li>

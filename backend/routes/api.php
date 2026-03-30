@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\admin\AdminOrderController;
 use App\Http\Controllers\Api\admin\AdminBannerController;
 use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
+use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -30,12 +31,13 @@ use App\Http\Controllers\Api\client\ClientCartController;
 use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
-use App\Http\Controllers\Api\client\ClientCompareController; // Đã thêm Use Controller
+use App\Http\Controllers\Api\client\ClientCompareController;
 use App\Http\Controllers\Api\Auth\AuthController;
 // use App\Http\Controllers\Api\client\ClientCheckoutController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\client\ClientFavouriteController;
 use App\Http\Controllers\Api\client\ClientProfileController;
+use App\Http\Controllers\Api\Client\ChatbotController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -53,6 +55,9 @@ Route::prefix('client')->group(function () {
 
     // API Lấy Bảng Giá Vàng (Thêm mới)
     Route::get('/gold-prices', [ClientHomeController::class, 'goldPrices']);
+
+    // API CHATBOT AI (GEMINI)
+    Route::post('/chatbot', [ChatbotController::class, 'chat']);
 
     // MODULE GIỎ HÀNG (Cart)
     Route::controller(ClientCartController::class)->prefix('cart')->group(function () {
@@ -82,13 +87,13 @@ Route::prefix('client')->group(function () {
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
     // Hồ Sơ Cá Nhân (Profile)
-        Route::prefix('profile')->group(function () {
-            Route::get('/', [ClientProfileController::class, 'show']);
-            Route::post('/', [ClientProfileController::class, 'update']);
-            
-            // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
-            Route::post('/password', [ClientProfileController::class, 'updatePassword']); 
-        });
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ClientProfileController::class, 'show']);
+        Route::post('/', [ClientProfileController::class, 'update']);
+
+        // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
+        Route::post('/password', [ClientProfileController::class, 'updatePassword']);
+    });
 
 
 
@@ -103,6 +108,9 @@ Route::prefix('client')->group(function () {
         Route::post('/', 'store');
         Route::get('/{order_code}', 'show');
         Route::put('/{order_code}', 'update');
+        // SỬA LẠI 2 ĐƯỜNG DẪN DƯỚI ĐÂY (chỉ cần /{order_code}/...)
+        Route::post('/{order_code}/review', 'review'); // Đánh giá
+        Route::post('/{order_code}/reorder', 'reorder'); // Mua lại
     });
 
     Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
@@ -130,7 +138,7 @@ Route::prefix('shop/{shop_slug}')->group(function () {
 
 
     Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
-    
+
     // Đã chuyển Route Compare vào đúng Group
     Route::post('/compare', [ClientCompareController::class, 'getCompareData']);
 });
@@ -238,6 +246,15 @@ Route::prefix('admin')->group(function () {
             Route::post('banners/reorder', [AdminBannerController::class, 'reorder']);
         });
 
+        // QUẢN LÝ CHÂN DUNG SORA (CUSTOMER GALLERY)
+        Route::middleware(['check.module:admin_gallery'])->group(function () {
+            Route::get('galleries', [AdminCustomerGalleryController::class, 'index']);
+            Route::post('galleries', [AdminCustomerGalleryController::class, 'store']);
+            Route::get('galleries/{id}', [AdminCustomerGalleryController::class, 'show']);
+            Route::put('galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
+            Route::delete('galleries/{id}', [AdminCustomerGalleryController::class, 'destroy']);
+        });
+
         // Quản lý Đơn hàng (Mã: admin_orders)
         Route::middleware(['check.module:admin_orders'])->group(function () {
             Route::controller(AdminOrderController::class)->group(function () {
@@ -259,7 +276,6 @@ Route::prefix('admin')->group(function () {
             });
         });
 
-        // Quản lý Combo (Mã: admin_combos)
         // Quản lý Combo (Mã: admin_combos)
         Route::middleware(['check.module:admin_combos'])->group(function () {
             Route::controller(AdminComboController::class)->prefix('combos')->group(function () {

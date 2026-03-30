@@ -36,33 +36,6 @@
         </div>
       </section>
 
-      <section class="usps-section bg-primary-luxury text-white py-4 border-bottom border-gold border-2">
-        <div class="container">
-          <div class="row text-center g-4">
-            <div class="col-6 col-md-3">
-              <i class="bi bi-truck fs-3 mb-2 text-gold"></i>
-              <h6 class="font-serif fw-bold mb-1">Giao Hàng Miễn Phí</h6>
-              <small class="opacity-75" style="font-size: 0.75rem;">Toàn quốc cho đơn từ 2Tr</small>
-            </div>
-            <div class="col-6 col-md-3">
-              <i class="bi bi-shield-check fs-3 mb-2 text-gold"></i>
-              <h6 class="font-serif fw-bold mb-1">Bảo Hành Trọn Đời</h6>
-              <small class="opacity-75" style="font-size: 0.75rem;">Đánh bóng, siêu âm miễn phí</small>
-            </div>
-            <div class="col-6 col-md-3">
-              <i class="bi bi-gem fs-3 mb-2 text-gold"></i>
-              <h6 class="font-serif fw-bold mb-1">Giấy Kiểm Định</h6>
-              <small class="opacity-75" style="font-size: 0.75rem;">Chứng nhận kim cương quốc tế</small>
-            </div>
-            <div class="col-6 col-md-3">
-              <i class="bi bi-arrow-return-left fs-3 mb-2 text-gold"></i>
-              <h6 class="font-serif fw-bold mb-1">Thu Đổi Dễ Dàng</h6>
-              <small class="opacity-75" style="font-size: 0.75rem;">Chính sách minh bạch 100%</small>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="coupons-section py-5" style="background-color: #f9f9f9;" v-if="data.coupons.length > 0">
         <div class="container py-4">
           <div class="text-center mb-5">
@@ -203,49 +176,103 @@
       </section>
 
       <section class="combo-section py-5 overflow-hidden" style="background-color: #fbf9f6;" v-if="data.combos && data.combos.length > 0">
-        <div class="container text-center mb-4">
+        <div class="container text-center mb-5">
           <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Đồng Điệu</h6>
           <h3 class="font-serif fw-bold text-dark display-6 mb-3">Bộ Sưu Tập Giới Hạn</h3>
           <div class="divider-gold mx-auto"></div>
         </div>
 
-        <div class="container-fluid px-0 pb-5">
+        <div class="container-fluid px-0 pb-4 position-relative">
           <swiper
+            :key="data.combos.length"
             :modules="swiperModules"
-            effect="coverflow"
             :grabCursor="true"
             :centeredSlides="true"
             slidesPerView="auto"
-            :coverflowEffect="{
-              rotate: 0,
-              stretch: 50,
-              depth: 150,
-              modifier: 1,        
-              slideShadows: false,
-            }"
+            :spaceBetween="40"
             :loop="true"
-            :pagination="{ clickable: true }"
-            :navigation="true"
-            :autoplay="{ delay: 3500, disableOnInteraction: false }"
-            class="combo-swiper-coverflow pt-4 pb-5 px-md-5"
+            :speed="800"
+            :autoplay="{ delay: 5000, disableOnInteraction: false }"
+            @swiper="onComboSwiperInit"
+            class="combo-swiper-luxury"
           >
-            <swiper-slide v-for="combo in data.combos" :key="combo.id" class="combo-slide-3d">
-              <div class="combo-card-inner bg-white text-center shadow h-100 position-relative transition-all">
+            <swiper-slide v-for="combo in data.combos" :key="combo.id" class="combo-slide-luxury">
+              <div class="luxury-horizontal-card bg-white shadow-sm d-flex flex-column flex-md-row overflow-hidden">
                 
-                <div class="overflow-hidden position-relative ratio ratio-1x1 bg-light">
-                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover w-100 h-100" @error="handleImageError">
-                  <div class="slide-inactive-overlay position-absolute inset-0 bg-white transition-all"></div>
-                </div>
+                <router-link :to="'/combos/' + combo.slug" class="combo-img-container d-block position-relative bg-light">
+                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover w-100 h-100" alt="Combo SORA" @error="handleImageError">
+                </router-link>
 
-                <div class="combo-info-box p-3 bg-white border-top">
-                  <h6 class="font-serif fw-bold text-dark text-truncate px-2 mb-1" style="font-size: 1.1rem;">{{ combo.name }}</h6>
-                  <div class="d-flex flex-column align-items-center">
-                    <span class="text-primary-luxury fw-bold fs-6">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
-                    <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
+                <div class="combo-content-container d-flex flex-column justify-content-center text-start bg-white p-4 p-md-5">
+                  <span class="text-gold tracking-widest text-uppercase mb-2 fw-bold font-oswald" style="font-size: 0.75rem;">Sora Collection</span>
+                  
+                  <router-link :to="'/combos/' + combo.slug" class="text-decoration-none">
+                    <h3 class="font-serif fw-bold text-dark mb-3 hover-text-primary transition-colors">{{ combo.name }}</h3>
+                  </router-link>
+                  
+                  <div class="divider-gold ms-0 mb-3" style="width: 40px; height: 2px;"></div>
+                  
+                  <p class="text-muted fw-light mb-4 text-truncate-3" style="font-size: 0.95rem; line-height: 1.6;">
+                    {{ combo.description || 'Sự kết hợp hoàn mỹ giữa nghệ thuật chế tác kim hoàn đỉnh cao và vẻ đẹp vượt thời gian. Một điểm nhấn sang trọng, quý phái dành riêng cho sự tỏa sáng của bạn.' }}
+                  </p>
+
+                  <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="text-primary-luxury fw-bold fs-4">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
+                    <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through small fw-light">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
                   </div>
+                  
+                  <router-link :to="'/combos/' + combo.slug" class="btn btn-outline-primary-luxury rounded-0 py-2 px-4 text-uppercase tracking-widest fw-bold align-self-start font-oswald shadow-none" style="font-size: 0.85rem;">
+                    Khám Phá Ngay
+                  </router-link>
                 </div>
-                
-                <router-link :to="'/combo/' + combo.slug" class="stretched-link"></router-link>
+              </div>
+            </swiper-slide>
+          </swiper>
+
+          <div class="d-flex justify-content-center align-items-center gap-4 mt-5">
+            <button @click="prevCombo" class="btn custom-combo-prev d-flex justify-content-center align-items-center shadow-sm bg-white hover-bg-primary transition-colors border-0" style="width: 50px; height: 50px; border-radius: 50%;">
+              <i class="bi bi-chevron-left fs-5 text-dark"></i>
+            </button>
+            <button @click="nextCombo" class="btn custom-combo-next d-flex justify-content-center align-items-center shadow-sm bg-white hover-bg-primary transition-colors border-0" style="width: 50px; height: 50px; border-radius: 50%;">
+              <i class="bi bi-chevron-right fs-5 text-dark"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery-section py-5 mt-3 mb-4">
+        <div class="container text-center mb-5">
+          <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Khoảnh khắc SORA</h6>
+          <h2 class="font-serif fw-bold text-dark display-5 mb-3">Chân Dung SORA</h2>
+          <p class="text-muted fw-light mx-auto" style="max-width: 600px; font-size: 1rem; line-height: 1.6;">
+            Khoảnh khắc rạng ngời của những vị khách quý. SORA tự hào là mảnh ghép hoàn hảo tôn vinh vẻ đẹp độc bản của bạn.
+          </p>
+        </div>
+
+        <div class="container-fluid px-0 overflow-hidden">
+          <swiper
+            :modules="swiperModules"
+            :slidesPerView="2"
+            :spaceBetween="0"
+            :loop="true"
+            :autoplay="{ delay: 0, disableOnInteraction: false }"
+            :speed="3000"
+            :allowTouchMove="false"
+            :breakpoints="{
+              '576': { slidesPerView: 3 },
+              '768': { slidesPerView: 4 },
+              '1024': { slidesPerView: 5 },
+              '1400': { slidesPerView: 6 }
+            }"
+            class="gallery-swiper-continuous"
+          >
+            <swiper-slide v-for="(img, index) in (data.galleries && data.galleries.length ? data.galleries : dummyGalleries)" :key="index" class="gallery-slide-item">
+              <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
+                 <img :src="img.image_path ? getImageUrl(img.image_path) : img" class="w-100 object-fit-cover" alt="Sora Customer" @error="handleImageError">
+                 
+                 <div class="gallery-overlay position-absolute inset-0 d-flex justify-content-center align-items-center opacity-0 transition-all duration-500 z-index-2">
+                    <i class="bi bi-instagram text-white fs-1"></i>
+                 </div>
               </div>
             </swiper-slide>
           </swiper>
@@ -310,17 +337,33 @@ import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Pagination, Navigation, Autoplay, EffectCoverflow } from 'swiper/modules';
+import { Pagination, Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
-import 'swiper/css/effect-coverflow'; 
 
-const swiperModules = [Pagination, Navigation, Autoplay, EffectCoverflow];
+const swiperModules = [Pagination, Navigation, Autoplay];
 const isLoading = ref(true);
 const router = useRouter();
 
-// Trạng thái lưu trữ Wishlist (Danh sách ID sản phẩm đã thích)
+// ==========================================
+// ĐIỀU KHIỂN SWIPER COMBO CHUẨN XÁC
+// ==========================================
+const comboSwiperRef = ref(null);
+
+const onComboSwiperInit = (swiper) => {
+  comboSwiperRef.value = swiper;
+};
+
+// Hàm bấm qua lại an toàn
+const nextCombo = () => {
+  if (comboSwiperRef.value) comboSwiperRef.value.slideNext();
+};
+
+const prevCombo = () => {
+  if (comboSwiperRef.value) comboSwiperRef.value.slidePrev();
+};
+
 const wishlistIds = ref([]);
 
 const data = reactive({
@@ -329,13 +372,35 @@ const data = reactive({
   categories: [],
   products: [],
   combos: [],
-  tiers: []
+  tiers: [],
+  galleries: [] 
 });
 
-const API_BASE = 'http://127.0.0.1:8000/api'; 
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : '/default-luxury.jpg';
+const dummyGalleries = [
+  'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1543269664-56d93c1b41a6?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&q=80&w=600'
+];
 
+// Định tuyến API linh hoạt
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'; 
+
+// Hàm getImageUrl được nâng cấp: Tự nhận biết link ngoài và link nội bộ
+const getImageUrl = (path) => {
+  if (!path) return '/default-luxury.jpg';
+  if (path.startsWith('http')) return path;
+  
+  const baseUrl = API_BASE.replace('/api', '');
+  return `${baseUrl}/storage/${path}`;
+};
+
+// Chống lỗi vòng lặp vô hạn khi sập link ảnh
 const handleImageError = (e) => { 
+  e.target.onerror = null; 
   e.target.src = 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=600&auto=format&fit=crop'; 
 };
 
@@ -351,34 +416,22 @@ const goToProductDetail = (slug) => {
   if (slug) router.push(`/shop/sora/product/${slug}`);
 };
 
-// ==========================================
-// LOGIC THẢ TIM (YÊU THÍCH) SẢN PHẨM
-// ==========================================
 const loadWishlist = () => {
   const stored = localStorage.getItem('sora_wishlist');
-  if (stored) {
-    wishlistIds.value = JSON.parse(stored);
-  }
+  if (stored) wishlistIds.value = JSON.parse(stored);
 };
 
-const isInWishlist = (productId) => {
-  return wishlistIds.value.includes(productId);
-};
+const isInWishlist = (productId) => wishlistIds.value.includes(productId);
 
 const toggleWishlist = (product) => {
   const index = wishlistIds.value.indexOf(product.id);
-  
   if (index === -1) {
-    // Chưa có thì thêm vào
     wishlistIds.value.push(product.id);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm vào danh sách yêu thích!', showConfirmButton: false, timer: 2000 });
   } else {
-    // Đã có thì bỏ ra (Unlike)
     wishlistIds.value.splice(index, 1);
     Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Đã bỏ khỏi danh sách yêu thích', showConfirmButton: false, timer: 2000 });
   }
-  
-  // Cập nhật lại vào bộ nhớ trình duyệt
   localStorage.setItem('sora_wishlist', JSON.stringify(wishlistIds.value));
 };
 
@@ -397,6 +450,7 @@ const fetchHomepageData = async () => {
       data.products = result.data.products || [];
       data.combos = result.data.combos || [];
       data.tiers = result.data.tiers || [];
+      if(result.data.galleries) data.galleries = result.data.galleries;
     }
   } catch (error) {
     console.error("Lỗi tải trang chủ:", error);
@@ -416,7 +470,7 @@ const saveCoupon = (code) => {
 
 onMounted(() => {
   fetchHomepageData();
-  loadWishlist(); // Tải danh sách tim đã thả khi vừa mở web
+  loadWishlist(); 
 });
 </script>
 
@@ -438,6 +492,7 @@ onMounted(() => {
 
 .tracking-widest { letter-spacing: 0.15em; }
 .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.text-truncate-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .z-index-1 { z-index: 1; }
 .z-index-2 { z-index: 2; }
 .z-index-max { z-index: 9999; }
@@ -492,7 +547,7 @@ onMounted(() => {
 .hover-text-primary:hover { color: #9f273b !important; }
 
 /* ========================================== */
-/* PRODUCT CARD ĐỒNG BỘ TỪ SHOP.VUE           */
+/* PRODUCT CARD                               */
 /* ========================================== */
 .luxury-related-card { transition: all 0.4s ease; border-color: #eaeaea !important; }
 .luxury-related-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.06); border-color: #d1d5db !important; }
@@ -517,29 +572,43 @@ onMounted(() => {
 .luxury-btn-solid { background-color: var(--sora-primary); color: white; border: 1px solid var(--sora-primary); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
 .luxury-btn-solid:hover:not(:disabled) { background-color: #7a1c2d; border-color: #7a1c2d; color: white; box-shadow: 0 8px 20px rgba(159,39,59,0.3); transform: translateY(-2px); }
 
-/* Heart Icon Fixes */
 .wishlist-btn { transition: all 0.3s ease; }
 .wishlist-btn:hover { transform: scale(1.1); }
 .text-danger { color: var(--color-accent) !important; }
 
 /* ========================================== */
-/* SWIPER 3D COVERFLOW CUSTOM STYLES          */
+/* BỘ SƯU TẬP GIỚI HẠN                        */
 /* ========================================== */
-.combo-swiper-coverflow { padding-bottom: 60px; }
-.combo-slide-3d { width: 260px; }
-@media (min-width: 768px) { .combo-slide-3d { width: 320px; } }
-.stretched-link::after { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; content: ""; }
+.combo-swiper-luxury { padding: 20px 0 60px 0; }
+.combo-slide-luxury { width: 90%; max-width: 900px; transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); opacity: 0.5; transform: scale(0.85); }
+.combo-slide-luxury.swiper-slide-active { opacity: 1; transform: scale(1); }
+.luxury-horizontal-card { height: auto; min-height: 400px; border-radius: 8px; border: 1px solid #f1f1f1; }
+.combo-slide-luxury.swiper-slide-active .luxury-horizontal-card { box-shadow: 0 20px 40px rgba(0,0,0,0.06) !important; }
+.combo-img-container { flex: 0 0 100%; height: 250px; }
+.combo-content-container { flex: 1; }
+@media (min-width: 768px) { .luxury-horizontal-card { height: 420px; } .combo-img-container { flex: 0 0 45%; height: 100%; } }
+.custom-combo-prev, .custom-combo-next { color: #333; z-index: 10; transition: all 0.3s ease; cursor: pointer; outline: none; }
+.hover-bg-primary:hover { background-color: var(--color-primary) !important; color: white !important; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(159, 39, 59, 0.3) !important; }
+.hover-bg-primary:hover i { color: white !important; }
 
-.combo-slide-3d:not(.swiper-slide-active) .slide-inactive-overlay { opacity: 0.15; }
-.combo-slide-3d:not(.swiper-slide-active) .combo-info-box { opacity: 0; visibility: hidden; }
+/* ========================================== */
+/* CHÂN DUNG SORA (CUSTOMER GALLERY CSS MỚI)  */
+/* ========================================== */
+.gallery-swiper-continuous :deep(.swiper-wrapper) {
+  transition-timing-function: linear !important; 
+  align-items: center; 
+}
+.gallery-slide-item { padding: 0; }
+.gallery-img-wrapper { width: 100%; overflow: hidden; }
+.gallery-slide-item:nth-child(odd) .gallery-img-wrapper { height: 320px; }
+.gallery-slide-item:nth-child(even) .gallery-img-wrapper { height: 450px; }
+.gallery-img-wrapper img { height: 100%; transition: transform 0.8s ease; }
+.gallery-img-wrapper:hover img { transform: scale(1.08); }
+.gallery-overlay { background: rgba(159, 39, 59, 0.6); }
+.gallery-img-wrapper:hover .gallery-overlay { opacity: 1 !important; }
 
-.combo-slide-3d.swiper-slide-active .slide-inactive-overlay { opacity: 0; }
-.combo-slide-3d.swiper-slide-active .combo-info-box { opacity: 1; visibility: visible; transition: opacity 0.5s ease 0.2s; }
-.combo-slide-3d.swiper-slide-active .combo-card-inner { border: 1px solid var(--color-primary) !important; box-shadow: 0 15px 30px rgba(159, 39, 59, 0.15) !important; }
-
-:deep(.swiper-pagination-bullet) { width: 6px; height: 6px; background-color: var(--color-gold); opacity: 0.5; transition: all 0.3s ease; }
-:deep(.swiper-pagination-bullet-active) { background-color: var(--color-primary) !important; width: 18px; border-radius: 5px; opacity: 1; }
-:deep(.swiper-button-next), :deep(.swiper-button-prev) { color: var(--color-primary); background-color: rgba(255, 255, 255, 0.95); width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: all 0.3s ease; }
-:deep(.swiper-button-next:hover), :deep(.swiper-button-prev:hover) { background-color: var(--color-primary); color: #fff; transform: scale(1.1); }
-:deep(.swiper-button-next::after), :deep(.swiper-button-prev::after) { font-size: 1rem; font-weight: bold; }
+@media (max-width: 768px) {
+  .gallery-slide-item:nth-child(odd) .gallery-img-wrapper { height: 220px; }
+  .gallery-slide-item:nth-child(even) .gallery-img-wrapper { height: 300px; }
+}
 </style>

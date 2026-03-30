@@ -398,11 +398,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.text-primary-custom { color: #9f273b !important; }
-.text-sora-primary { color: #9f273b !important; }
-.text-gold { color: #e7ce7d !important; }
-.bg-gold { background-color: #e7ce7d !important; }
-.border-danger-custom { border-color: #9f273b !important; }
 
 .cart-wrapper { background-color: #fcfcfc; }
 

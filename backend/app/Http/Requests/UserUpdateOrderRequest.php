@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Order;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -11,7 +11,7 @@ class UserUpdateOrderRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+     public function rules(): array
     {
         return [
             'action'        => 'required|string|in:cancel',
@@ -28,4 +28,5 @@ class UserUpdateOrderRequest extends FormRequest
             'cancel_reason.min'         => 'Lý do hủy đơn cần chi tiết hơn (ít nhất 10 ký tự).',
         ];
     }
+    
 }
