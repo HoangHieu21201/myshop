@@ -242,6 +242,14 @@ const admin = [
         component: () => import('../pages/admin/combo/Edit.vue'),
         meta: { moduleCode: 'admin_combos' },
       },
+        // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
+      {
+        path: 'reviews',
+        name: 'admin-reviews',
+        component: () => import('../pages/admin/review/Index.vue'),
+        meta: { moduleCode: 'admin_reviews' },
+      },
+
     ],
   },
 ]

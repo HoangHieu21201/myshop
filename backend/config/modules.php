@@ -61,5 +61,10 @@ return [
         'module_code' => 'admin_combos',
         'default_level' => 2
     ],
+    [
+        'module_name' => 'Quản lý Đánh giá',
+        'module_code' => 'admin_reviews',
+        'default_level' => 2
+    ],
 
 ];

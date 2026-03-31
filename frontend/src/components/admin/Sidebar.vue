@@ -175,10 +175,11 @@ const menuItems = ref([
     children: [
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
       { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' },
-      // ĐÃ THÊM CHÂN DUNG SORA VÀO ĐÂY THEO YÊU CẦU CỦA BẠN YÊU
-      { name: 'Chân dung SORA', path: '/admin/gallery', moduleCode: 'admin_banners' }, // Dùng tạm quyền của banners hoặc tạo mã mới
+      { name: 'Chân dung SORA', path: '/admin/gallery', moduleCode: 'admin_banners' },
     ]
   },
+  // review
+  { name: 'Đánh giá', path: '/admin/reviews', icon: 'bi-star-fill', moduleCode: 'admin_reviews' }
 ]);
 
 const menuState = reactive({
