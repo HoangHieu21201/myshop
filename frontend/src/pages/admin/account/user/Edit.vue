@@ -92,7 +92,7 @@
                     <label class="form-label fw-bold text-dark">Email đăng nhập <span class="text-danger">*</span></label>
                     <div class="input-group input-group-lg shadow-sm">
                       <span class="input-group-text bg-light text-muted border-secondary-subtle"><i class="bi bi-envelope"></i></span>
-                      <input type="email" class="form-control bg-white border-secondary-subtle" v-model="form.email" :class="{'is-invalid': errors.email}" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+                      <input type="email" class="form-control bg-white border-secondary-subtle " v-model="form.email" :class="{'is-invalid': errors.email}" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" disabled>
                       <div class="invalid-feedback d-block" v-if="errors.email">{{ errors.email?.[0] }}</div>
                     </div>
                   </div>
