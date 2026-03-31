@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\admin\AdminBannerController;
 use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
+use App\Http\Controllers\Api\admin\AdminReviewController;
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -288,5 +289,8 @@ Route::prefix('admin')->group(function () {
                 Route::post('/{combo}/restore', 'restore');
             });
         });
+
+        // Quản lý Đánh giá (Mã: admin_reviews)
+        Route::apiResource('reviews', AdminReviewController::class);
     });
 });

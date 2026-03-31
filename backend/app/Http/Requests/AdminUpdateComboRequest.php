@@ -30,7 +30,7 @@ class AdminUpdateComboRequest extends FormRequest
             'name'                  => 'required|string|max:255',
             'slug'                  => 'required|string|unique:combos,slug,' . $comboId . '|max:255',
             'description'           => 'nullable|string',
-            'thumbnail_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // Khác với create: nullable
+            'thumbnail_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'target_gender'         => 'required|in:male,female,unisex,couple',
             'target_age_group'      => 'nullable|string|max:100',
             'theme'                 => 'nullable|string|max:255',

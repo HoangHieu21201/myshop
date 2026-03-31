@@ -14,8 +14,6 @@ class AdminUpdateUserRequest extends FormRequest
 
     public function rules(): array
     {
-        // Vá điểm mù ID: Vì AdminUserController dùng route truyền `$id`, ta phải bắt chính xác ID này.
-        // Hỗ trợ cả trường hợp dùng route binding `$user` hoặc tự update qua Auth.
         $userId = $this->route('id') ?? $this->route('user');
         if (is_object($userId)) {
             $userId = $userId->id;
