@@ -68,7 +68,7 @@
               </template>
             </div>
 
-            <!-- COMPONENT MỚI: COUNTDOWN TIMER (Giống hình 1 - Đã bỏ điều kiện ẩn để luôn hiển thị) -->
+            <!-- COMPONENT MỚI: COUNTDOWN TIMER -->
             <div class="flash-sale-countdown mb-4">
               <div class="countdown-text">Nhanh lên! Chương trình khuyến mãi kết thúc sau:</div>
               <div class="countdown-timer">
@@ -117,7 +117,7 @@
               </div>
             </div>
 
-            <!-- COMPONENT MỚI: STOCK PROGRESS BAR (Tồn kho hiển thị thanh chạy) -->
+            <!-- COMPONENT MỚI: STOCK PROGRESS BAR -->
             <div class="stock-progress-wrapper mb-4">
               <template v-if="isAllAttributesSelected && currentVariant">
                 <!-- TH 1: Tồn kho bé hơn 10 -->
@@ -349,33 +349,96 @@
     <transition name="fade">
       <div v-if="showComparePopup" class="compare-modal-overlay" @click.self="closeComparePopup">
         <div class="compare-modal">
+          
+          <!-- BỔ SUNG Ô TÌM KIẾM TRONG HEADER POPUP -->
           <div class="compare-modal-header">
-            <h3>Gợi ý thêm sản phẩm so sánh ({{ compareList.length }}/4)</h3>
-            <button class="close-btn" @click="closeComparePopup">✕</button>
-          </div>
-          <div class="compare-modal-body">
-            <p class="compare-modal-subtitle">Chọn thêm các sản phẩm mới nhất dưới đây để so sánh dễ dàng hơn:</p>
-
-            <div v-if="isLoadingCompareSuggestions" class="rec-loading">
-              <div class="spinner small-spinner"></div>
+            <h3>Chọn sản phẩm để so sánh ({{ compareList.length }}/4)</h3>
+            <div class="header-search-wrap">
+              <input 
+                type="text" 
+                v-model="searchQuery" 
+                @input="handleSearchInput" 
+                placeholder="Tìm tên sản phẩm..." 
+                class="modal-search-input"
+              >
+              <button class="close-btn" @click="closeComparePopup">✕</button>
             </div>
+          </div>
 
-            <div v-else class="compare-suggestions-grid">
-              <div v-for="item in compareSuggestions" :key="item.id" class="suggestion-card">
-                <img :src="getImageUrl(item.thumbnail_image)" :alt="item.name" class="suggestion-img">
-                <div class="suggestion-info">
-                  <h4 class="suggestion-name" :title="item.name">{{ item.name }}</h4>
-                  <p class="suggestion-price">{{ formatMoney(item.promotional_price || item.base_price) }}</p>
+          <!-- TABS: Gợi ý & Yêu thích -->
+          <div class="compare-modal-tabs">
+            <button :class="{'active': comparePopupTab === 'suggestions'}" @click="comparePopupTab = 'suggestions'">
+              Gợi ý thêm
+            </button>
+            <button :class="{'active': comparePopupTab === 'favourites'}" @click="fetchFavouritesForCompare">
+              Sản phẩm đã yêu thích
+            </button>
+          </div>
+
+          <div class="compare-modal-body">
+            
+            <!-- TAB 1: GỢI Ý -->
+            <div v-if="comparePopupTab === 'suggestions'">
+              <p class="compare-modal-subtitle">Các sản phẩm mới nhất cùng danh mục:</p>
+              
+              <div v-if="isLoadingCompareSuggestions" class="rec-loading">
+                <div class="spinner small-spinner"></div>
+              </div>
+
+              <div v-else-if="filteredSuggestions.length === 0" class="empty-msg">
+                <p>Không tìm thấy sản phẩm nào khớp với tìm kiếm của bạn.</p>
+              </div>
+
+              <div v-else class="compare-suggestions-grid">
+                <div v-for="item in filteredSuggestions" :key="item.id" class="suggestion-card">
+                  <img :src="getImageUrl(item.thumbnail_image)" :alt="item.name" class="suggestion-img">
+                  <div class="suggestion-info">
+                    <h4 class="suggestion-name" :title="item.name">{{ item.name }}</h4>
+                    <p class="suggestion-price">{{ formatMoney(item.promotional_price || item.base_price) }}</p>
+                  </div>
+                  <button 
+                    class="btn-add-suggestion"
+                    :class="{ 'is-added': isInCompare(item.id) }"
+                    @click="toggleCompare({ id: item.id, name: item.name, image: getImageUrl(item.thumbnail_image) })"
+                  >
+                    {{ isInCompare(item.id) ? 'Đã thêm ✓' : '+ So sánh' }}
+                  </button>
                 </div>
-                <button 
-                  class="btn-add-suggestion"
-                  :class="{ 'is-added': isInCompare(item.id) }"
-                  @click="toggleCompare({ id: item.id, name: item.name, image: getImageUrl(item.thumbnail_image) })"
-                >
-                  {{ isInCompare(item.id) ? 'Đã thêm ✓' : '+ So sánh' }}
-                </button>
               </div>
             </div>
+
+            <!-- TAB 2: YÊU THÍCH -->
+            <div v-if="comparePopupTab === 'favourites'">
+              <p class="compare-modal-subtitle">Chọn từ danh sách yêu thích của bạn:</p>
+              
+              <div v-if="!isLoggedIn" class="not-logged-in-msg">
+                <p>Vui lòng đăng nhập để xem danh sách yêu thích.</p>
+              </div>
+              <div v-else-if="isLoadingFavourites" class="rec-loading">
+                <div class="spinner small-spinner"></div>
+              </div>
+              <div v-else-if="filteredFavourites.length === 0" class="empty-msg">
+                <p v-if="searchQuery">Không có sản phẩm yêu thích nào khớp với "{{ searchQuery }}".</p>
+                <p v-else>Bạn chưa có sản phẩm yêu thích nào.</p>
+              </div>
+              <div v-else class="compare-suggestions-grid">
+                <div v-for="item in filteredFavourites" :key="item.id" class="suggestion-card">
+                  <img :src="getImageUrl(item.thumbnail_image)" :alt="item.name" class="suggestion-img">
+                  <div class="suggestion-info">
+                    <h4 class="suggestion-name" :title="item.name">{{ item.name }}</h4>
+                    <p class="suggestion-price">{{ formatMoney(item.promotional_price || item.base_price) }}</p>
+                  </div>
+                  <button 
+                    class="btn-add-suggestion"
+                    :class="{ 'is-added': isInCompare(item.id) }"
+                    @click="toggleCompare({ id: item.id, name: item.name, image: getImageUrl(item.thumbnail_image) })"
+                  >
+                    {{ isInCompare(item.id) ? 'Đã thêm ✓' : '+ So sánh' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
           <div class="compare-modal-footer">
             <button class="btn-outline" @click="closeComparePopup">Tiếp tục xem</button>
@@ -417,25 +480,14 @@ const isColorAttribute = (name) => {
 };
 
 const getColorCode = (name) => {
-  // Map các màu tiếng Việt/Tiếng Anh phổ biến sang mã HEX
   const colorMap = {
-    'vàng': '#F1C40F',
-    'vàng hồng': '#E0BFB8',
-    'bạc': '#C0C0C0',
-    'trắng': '#F8F9FA',
-    'đen': '#212529',
-    'đỏ': '#E74C3C',
-    'xanh dương': '#3498DB',
-    'xanh lá': '#2ECC71',
-    'hồng': '#FFC0CB',
-    'tím': '#4A2F4A',
-    'cam': '#D2691E',
-    'purple': '#4A2F4A',
-    'navy': '#323E6E',
-    'brown': '#B86536'
+    'vàng': '#F1C40F', 'vàng hồng': '#E0BFB8', 'bạc': '#C0C0C0', 'trắng': '#F8F9FA',
+    'đen': '#212529', 'đỏ': '#E74C3C', 'xanh dương': '#3498DB', 'xanh lá': '#2ECC71',
+    'hồng': '#FFC0CB', 'tím': '#4A2F4A', 'cam': '#D2691E', 'purple': '#4A2F4A',
+    'navy': '#323E6E', 'brown': '#B86536'
   };
   const normalized = name.toLowerCase().trim();
-  return colorMap[normalized] || name; // Nếu ko có trong map, thử dùng chuỗi đó làm màu CSS (VD: 'red', '#ff0000')
+  return colorMap[normalized] || name; 
 };
 
 const getOptionName = (attrName, optionId) => {
@@ -459,11 +511,20 @@ const recSliderRef = ref(null);
 // --- STATE CHO DÒNG HÀNG NỔI BẬT ---
 const shopBrands = ref([]); 
 
-// --- STATE CHO PHẦN SO SÁNH ---
+// --- STATE CHO PHẦN SO SÁNH (CÓ TÍCH HỢP TABS VÀ TÌM KIẾM) ---
 const compareList = ref([]);
 const showComparePopup = ref(false);
 const compareSuggestions = ref([]);
 const isLoadingCompareSuggestions = ref(false);
+
+const comparePopupTab = ref('suggestions');
+const favouriteProducts = ref([]);
+const isLoadingFavourites = ref(false);
+const isLoggedIn = computed(() => !!localStorage.getItem('auth_token'));
+
+// State tìm kiếm mới
+const searchQuery = ref('');
+let searchTimeout = null;
 
 // Cấu hình SweetAlert Sang trọng (Cho Modal)
 const soraAlert = Swal.mixin({
@@ -489,10 +550,9 @@ const Toast = Swal.mixin({
 });
 
 // -------------------------------------------------------------
-// LOGIC FLASH SALE COUNTDOWN (GIỐNG HÌNH 1)
+// LOGIC FLASH SALE COUNTDOWN 
 // -------------------------------------------------------------
 const startCountdown = () => {
-  // Giả lập thời gian sale kết thúc sau 5 giờ 59 phút 47 giây kể từ lúc mở trang (Hoặc truyền từ DB)
   const targetTime = new Date().getTime() + (5 * 60 * 60 * 1000 + 59 * 60 * 1000 + 47 * 1000);
 
   const updateTime = () => {
@@ -518,7 +578,7 @@ const startCountdown = () => {
     };
   };
 
-  updateTime(); // Gọi ngay lần đầu
+  updateTime();
   timerInterval = setInterval(updateTime, 1000);
 };
 
@@ -526,7 +586,6 @@ onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval);
 });
 
-// Kiểm tra xem sản phẩm có đang giảm giá không để hiện Flash Sale Timer (Chưa sử dụng nếu bỏ v-if trên thẻ div)
 const isDiscounted = computed(() => {
   if (isAllAttributesSelected.value && currentVariant.value) {
     return !!currentVariant.value.promotional_price;
@@ -542,17 +601,14 @@ const getStock = (variant) => {
   return variant.stock_quantity ?? variant.stock ?? 0;
 };
 
-// Computed property để lấy số lượng đang chọn tiện hơn
 const currentStock = computed(() => {
   if (!isAllAttributesSelected.value || !currentVariant.value) return null;
   return getStock(currentVariant.value);
 });
 
-// Computed để tính Width của Progress bar (Dựa trên mốc 15 sản phẩm)
 const stockProgressWidth = computed(() => {
   const stock = currentStock.value;
   if (!stock) return 0;
-  // Giả sử mốc cảnh báo tối đa là 15, chia tỉ lệ %
   const percent = (stock / 15) * 100;
   return percent > 100 ? 100 : percent;
 });
@@ -574,7 +630,66 @@ watch(compareList, (newVal) => {
   localStorage.setItem(`compare_list_${shopSlug}`, JSON.stringify(newVal));
 }, { deep: true });
 
-// --- CÁC HÀM LOGIC POPUP VÀ SO SÁNH SẢN PHẨM ---
+
+// -------------------------------------------------------------
+// LOGIC POPUP SO SÁNH VÀ TÌM KIẾM (ĐƯỢC NÂNG CẤP)
+// -------------------------------------------------------------
+
+// Computed cho tính năng lọc tìm kiếm (Frontend)
+const filteredSuggestions = computed(() => {
+  if (!searchQuery.value) return compareSuggestions.value;
+  const lowerQ = searchQuery.value.toLowerCase();
+  return compareSuggestions.value.filter(p => p.name.toLowerCase().includes(lowerQ));
+});
+
+const filteredFavourites = computed(() => {
+  if (!searchQuery.value) return favouriteProducts.value;
+  const lowerQ = searchQuery.value.toLowerCase();
+  return favouriteProducts.value.filter(p => p.name.toLowerCase().includes(lowerQ));
+});
+
+// Hàm gọi API lấy danh sách gợi ý so sánh có hỗ trợ search (Backend)
+const fetchCompareSuggestions = async (query = '') => {
+  isLoadingCompareSuggestions.value = true;
+  try {
+    let url = new URL(`${API_BASE_URL}/api/shop/${shopSlug}/products`);
+    // Lấy 20 sản phẩm nếu có tìm kiếm để tăng độ chính xác, ngược lại lấy 10
+    url.searchParams.append('per_page', query ? '20' : '10');
+    url.searchParams.append('sort', 'new'); 
+    
+    if (product.value?.id) {
+      url.searchParams.append('exclude_id', product.value.id);
+    }
+    
+    // Đẩy parameter search xuống backend (Nếu backend support `search=`)
+    if (query) {
+      url.searchParams.append('search', query);
+    }
+
+    const response = await fetch(url.toString());
+    const result = await response.json();
+    
+    if (result.success && result.data?.data) {
+      compareSuggestions.value = result.data.data;
+    }
+  } catch (error) {
+    console.error("Lỗi tải sản phẩm gợi ý:", error);
+  } finally {
+    isLoadingCompareSuggestions.value = false;
+  }
+};
+
+// Hàm xử lý khi người dùng gõ vào ô tìm kiếm (Debounce tránh call API liên tục)
+const handleSearchInput = () => {
+  if (comparePopupTab.value === 'suggestions') {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      fetchCompareSuggestions(searchQuery.value);
+    }, 500); // 500ms debounce
+  }
+  // Đối với tab 'favourites', frontend (filteredFavourites) tự động xử lý ngay lập tức
+};
+
 const isInCompare = (id) => {
   return compareList.value.some(item => item.id === id);
 };
@@ -604,39 +719,28 @@ const clearCompare = () => {
   compareList.value = [];
 };
 
+// QUAN TRỌNG: Sửa lại hàm Tới trang so sánh để truyền query param spGoc
 const goToComparePage = () => {
   if (compareList.value.length < 2) {
     Toast.fire({ icon: 'info', title: 'Vui lòng chọn ít nhất 2 sản phẩm' });
     return;
   }
   showComparePopup.value = false;
-  router.push({ path: `/shop/${shopSlug}/compare` });
+  
+  // Xác định sản phẩm gốc: Ưu tiên sản phẩm hiện tại của trang, nếu không có thì lấy SP đầu tiên
+  const baseProductId = product.value ? product.value.id : compareList.value[0].id;
+  
+  // Truyền param spGoc qua URL
+  router.push({ path: `/shop/${shopSlug}/compare`, query: { spGoc: baseProductId } });
 };
 
 const openComparePopup = async () => {
   showComparePopup.value = true;
-  if (compareSuggestions.value.length === 0) {
-    isLoadingCompareSuggestions.value = true;
-    try {
-      let url = new URL(`${API_BASE_URL}/api/shop/${shopSlug}/products`);
-      url.searchParams.append('per_page', '10');
-      url.searchParams.append('sort', 'new'); 
-      
-      if (product.value?.id) {
-        url.searchParams.append('exclude_id', product.value.id);
-      }
+  comparePopupTab.value = 'suggestions';
+  searchQuery.value = ''; // Xóa tìm kiếm mỗi khi mở popup mới
 
-      const response = await fetch(url.toString());
-      const result = await response.json();
-      
-      if (result.success && result.data?.data) {
-        compareSuggestions.value = result.data.data;
-      }
-    } catch (error) {
-      console.error("Lỗi tải sản phẩm gợi ý:", error);
-    } finally {
-      isLoadingCompareSuggestions.value = false;
-    }
+  if (compareSuggestions.value.length === 0) {
+    await fetchCompareSuggestions();
   }
 };
 
@@ -644,7 +748,31 @@ const closeComparePopup = () => {
   showComparePopup.value = false;
 };
 
-// Kiểm tra xem user đã chọn đủ thuộc tính chưa
+const fetchFavouritesForCompare = async () => {
+  comparePopupTab.value = 'favourites';
+  
+  if(!isLoggedIn.value || favouriteProducts.value.length > 0) return;
+
+  isLoadingFavourites.value = true;
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    const result = await response.json();
+    if (result.status && result.data) {
+      favouriteProducts.value = result.data.map(item => item.product).filter(p => p !== null);
+    }
+  } catch (error) {
+    console.error("Lỗi lấy danh sách yêu thích:", error);
+  } finally {
+    isLoadingFavourites.value = false;
+  }
+};
+
+// -------------------------------------------------------------
+// LOGIC SẢN PHẨM CỐT LÕI
+// -------------------------------------------------------------
 const isAllAttributesSelected = computed(() => {
   if (!product.value || !product.value.attributes) return false;
   const requiredAttrs = Object.keys(product.value.attributes);
@@ -653,7 +781,6 @@ const isAllAttributesSelected = computed(() => {
   return requiredAttrs.every(attr => selectedAttributes.value[attr] !== undefined);
 });
 
-// Xác định biến thể đang được chọn
 const currentVariant = computed(() => {
   if (!product.value || !product.value.variants) return null;
   return product.value.variants.find((variant) => {
@@ -666,7 +793,6 @@ const currentVariant = computed(() => {
   });
 });
 
-// Hàm tải dữ liệu sản phẩm
 const fetchProductData = async () => {
   const productSlug = route.params.slug || route.params.product_slug; 
   if (!productSlug) {
@@ -692,7 +818,6 @@ const fetchProductData = async () => {
       saveToRecentlyViewed(product.value);
       fetchRecommendations('related_category');
       
-      // Khởi động bộ đếm Flash Sale sau khi tải xong SP
       startCountdown();
 
     } else {
@@ -726,18 +851,16 @@ onMounted(() => {
 watch(() => route.params.slug, (newSlug, oldSlug) => {
   if (newSlug && newSlug !== oldSlug) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if(timerInterval) clearInterval(timerInterval); // Reset timer khi đổi SP
+    if(timerInterval) clearInterval(timerInterval); 
     fetchProductData();
   }
 });
 
 // --- LOGIC UI/UX THÊM VÀO GIỎ & KIỂM TRA TỒN KHO ---
 const selectAttribute = (attrName, optionId) => {
-  // Logic HỦY CHỌN: Nếu bấm vào ô đã được chọn thì hủy chọn
   if (selectedAttributes.value[attrName] === optionId) {
     delete selectedAttributes.value[attrName];
   } else {
-    // Ngược lại thì chọn mới
     selectedAttributes.value[attrName] = optionId;
   }
   
@@ -1472,11 +1595,17 @@ input[type=number] {
   .btn-go-compare { flex: 1; margin-left: 15px; }
 }
 
-/* POPUP GỢI Ý SO SÁNH */
+/* POPUP GỢI Ý SO SÁNH NÂNG CẤP */
 .compare-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
 .compare-modal { background: #fff; border-radius: 12px; width: 90%; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-.compare-modal-header { padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-.compare-modal-header h3 { font-size: 18px; margin: 0; color: #222; font-weight: 600; }
+
+/* Bố cục header mới cho thanh tìm kiếm */
+.compare-modal-header { padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+.compare-modal-header h3 { font-size: 18px; margin: 0; color: #222; font-weight: 600; white-space: nowrap;}
+.header-search-wrap { display: flex; align-items: center; gap: 15px; flex: 1; justify-content: flex-end; }
+.modal-search-input { padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 13px; width: 100%; max-width: 250px; transition: border-color 0.3s, box-shadow 0.3s; }
+.modal-search-input:focus { border-color: rgb(159,39,59); box-shadow: 0 0 5px rgba(159,39,59,0.2); }
+
 .close-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: #888; transition: color 0.2s;}
 .close-btn:hover { color: rgb(159,39,59); }
 .compare-modal-body { padding: 20px 25px; overflow-y: auto; flex: 1; }
@@ -1495,8 +1624,46 @@ input[type=number] {
 .btn-outline { background: transparent; border: 1px solid #ccc; padding: 10px 20px; border-radius: 6px; cursor: pointer; color: #555; font-weight: 600; transition: background 0.2s; }
 .btn-outline:hover { background: #eee; }
 .btn-primary { background: rgb(159,39,59); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; color: #fff; font-weight: 600; transition: opacity 0.2s; }
-.btn-primary:hover { opacity: 0.9; }
 .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.compare-modal-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+}
+.compare-modal-tabs button {
+    flex: 1;
+    padding: 12px 15px;
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+.compare-modal-tabs button.active {
+    color: rgb(159,39,59);
+    border-bottom-color: rgb(159,39,59);
+    background: #fff;
+}
+.compare-modal-tabs button:hover:not(.active) {
+    background: #f0f0f0;
+}
+.not-logged-in-msg, .empty-msg {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Phản hồi trên điện thoại cho Header Search */
+@media (max-width: 600px) {
+  .compare-modal-header { flex-direction: column; align-items: flex-start; }
+  .header-search-wrap { width: 100%; justify-content: space-between; }
+  .modal-search-input { max-width: none; flex: 1; margin-right: 15px;}
+}
 </style>
