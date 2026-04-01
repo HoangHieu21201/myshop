@@ -290,7 +290,7 @@
             <div class="col-md-4" v-for="i in 3" :key="i">
               <div class="blog-card group cursor-pointer bg-white p-3 shadow-sm border border-light">
                 <div class="ratio ratio-4x3 overflow-hidden mb-3">
-                  <img :src="`https://images.unsplash.com/photo-1573408301145-b98c46544ea6?q=80&w=600&auto=format&fit=crop&sig=${i}`" loading="lazy" class="object-fit-cover transition-transform duration-700 group-hover-scale" alt="Blog">
+                  <img src="https://eropi.com/media/wysiwyg/bo-trang-suc-3/bo-trang-suc-bac-ruby-circle_3_.JPG" loading="lazy" class="object-fit-cover transition-transform duration-700 group-hover-scale" alt="Blog">
                 </div>
                 <small class="text-gold tracking-widest text-uppercase fw-bold">Tư Vấn</small>
                 <h5 class="font-serif fw-bold text-primary-luxury mt-2 group-hover-text-accent transition-colors">

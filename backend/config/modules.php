@@ -71,5 +71,9 @@ return [
         'module_code' => 'admin_inventory',
         'default_level' => 2
     ],
-
+    [
+        'module_name' => 'Dashboard',
+        'module_code' => 'dashboard',
+        'default_level' => 2
+    ],
 ];

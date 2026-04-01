@@ -299,7 +299,7 @@ const fetchOrders = async (page = 1) => {
     const res = await axios.get(`${API_BASE_URL}?page=${page}`, { headers: getHeaders() });
     orders.value = res.data.data || [];
     pagination.value = { current_page: res.data.current_page, last_page: res.data.last_page };
-  } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng' }); } 
+  } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng', err }); } 
   finally { isLoading.value = false; }
 };
 
@@ -309,7 +309,7 @@ const openDetails = async (order) => {
     selectedOrder.value = res.data.data;
     isModalOpen.value = true;
     document.body.style.overflow = 'hidden';
-  } catch (err) { Toast.fire({ icon: 'error', title: 'Không thể lấy chi tiết đơn hàng' }); }
+  } catch (err) { Toast.fire({ icon: 'error', title: 'Không thể lấy chi tiết đơn hàng', err }); }
 };
 
 const closeModal = () => { isModalOpen.value = false; document.body.style.overflow = 'auto'; };
