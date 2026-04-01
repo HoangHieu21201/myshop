@@ -249,6 +249,13 @@ const admin = [
         component: () => import('../pages/admin/review/Index.vue'),
         meta: { moduleCode: 'admin_reviews' },
       },
+      // ROUTE QUẢN LÝ KHO HÀNG (INVENTORY)
+      {
+        path: 'inventory',
+        name: 'admin-inventory',
+        component: () => import('../pages/admin/inventory/Index.vue'),
+        meta: { moduleCode: 'admin_inventory' },
+      }
 
     ],
   },

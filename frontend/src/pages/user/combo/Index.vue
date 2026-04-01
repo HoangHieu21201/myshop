@@ -21,7 +21,7 @@
       </div>
 
       <div class="combo-list-container" v-if="!isLoading">
-        <div class="combo-row-card card border-0 shadow-sm rounded-4 overflow-hidden mb-5 bg-white" v-for="combo in combos" :key="combo.id">
+        <div class="combo-row-card card border-0 shadow-sm rounded-4 overflow-hidden mb-5 bg-white" v-for="combo in displayCombos" :key="combo.id">
           
           <div class="row g-0 h-100">
             <div class="col-lg-4 position-relative p-0 border-end border-gold-light d-flex flex-column">
@@ -115,7 +115,7 @@
       <div v-else class="text-center py-5 my-5">
         <div class="spinner-border text-gold" style="width: 3rem; height: 3rem;" role="status"></div>
       </div>
-      <div v-if="!isLoading && combos.length === 0" class="text-center py-5 my-5">
+      <div v-if="!isLoading && displayCombos.length === 0" class="text-center py-5 my-5">
         <i class="bi bi-box2-heart fs-1 d-block mb-3 text-gold opacity-50"></i>
         <h5 class="font-serif text-muted">Chưa có gói ưu đãi nào trong danh mục này.</h5>
       </div>
@@ -124,7 +124,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
@@ -220,7 +220,6 @@ const fetchCombos = async (gender = null) => {
     const res = await axios.get(url);
     combos.value = res.data.data.data; 
   } catch (error) {
-    console.error(error);
   } finally {
     isLoading.value = false;
   }
@@ -235,6 +234,28 @@ const goToDetail = (slug) => {
   router.push({ name: 'client-combo-detail', params: { slug } });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+const displayCombos = computed(() => {
+    const now = currentTime.value.getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    let result = combos.value.filter(combo => {
+        if (!combo.end_date) return true;
+        const endTime = parseDBDate(combo.end_date);
+        return now - endTime <= oneDayMs;
+    });
+
+    result.sort((a, b) => {
+        const aEnded = a.end_date && parseDBDate(a.end_date) < now;
+        const bEnded = b.end_date && parseDBDate(b.end_date) < now;
+
+        if (aEnded && !bEnded) return 1; 
+        if (!aEnded && bEnded) return -1; 
+        return 0;
+    });
+
+    return result;
+});
 
 onMounted(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

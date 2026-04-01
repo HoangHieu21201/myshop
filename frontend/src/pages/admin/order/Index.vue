@@ -7,12 +7,14 @@
     </div>
 
     <div class="container-fluid py-4" v-else>
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
+      
+      <!-- Header -->
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
           <h3 class="fw-bold text-dark mb-0">Quản lý Đơn Hàng</h3>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
-          <div class="border rounded px-3 py-1 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <div class="border rounded px-3 py-2 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
             <i class="bi bi-shield-check text-success me-1"></i>
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
@@ -22,7 +24,6 @@
         </div>
       </div>
 
-      <!-- TABS PHÂN LOẠI -->
       <div class="mb-3">
         <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
           <li class="nav-item">
@@ -70,48 +71,64 @@
         </ul>
       </div>
 
-      <!-- BỘ LỌC ĐƠN HÀNG -->
-      <div class="d-flex flex-wrap gap-3 mb-4 align-items-center">
-        <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
-          <span class="text-muted small fw-semibold me-2"><i class="bi bi-credit-card-fill text-brand"></i> Thanh toán:</span>
-          <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4 cursor-pointer" style="width: auto; box-shadow: none;" v-model="filters.payment_status" @change="fetchData(1, true)">
-            <option value="all">Tất cả</option>
-            <option value="unpaid">Chưa thanh toán</option>
-            <option value="paid">Đã thanh toán</option>
-          </select>
+      <!-- ĐÃ SỬA: Đổi align-items-md-end thành align-items-start để các label luôn thẳng hàng với nhau từ trên xuống -->
+      <div class="d-flex flex-column flex-md-row flex-wrap gap-3 gap-md-4 mb-4 align-items-start">
+        
+        <!-- Lọc Thanh toán -->
+        <div class="filter-wrapper">
+          <label class="form-label small text-muted fw-bold mb-2"><i class="bi bi-credit-card-fill text-brand me-1"></i>Trạng thái Thanh toán</label>
+          <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+            <select class="form-select form-select-sm border-0 bg-transparent fw-bold p-0 pe-4 cursor-pointer" style="min-width: 140px; box-shadow: none;" v-model="filters.payment_status" @change="fetchData(1, true)">
+              <option value="all">Tất cả trạng thái</option>
+              <option value="unpaid">Chưa thanh toán</option>
+              <option value="paid">Đã thanh toán</option>
+            </select>
+          </div>
         </div>
 
-        <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border shadow-sm">
-          <span class="text-muted small fw-semibold me-2"><i class="bi bi-calendar-range text-brand"></i> Lọc Ngày:</span>
-          <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-1" style="box-shadow: none; width: 130px;" v-model="filters.start_date" @change="fetchData(1, true)">
-          <span class="mx-1 text-muted">-</span>
-          <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-1" style="box-shadow: none; width: 130px;" v-model="filters.end_date" @change="fetchData(1, true)">
+        <!-- Lọc Khoảng thời gian -->
+        <div class="filter-wrapper">
+          <label class="form-label small text-muted fw-bold mb-2"><i class="bi bi-calendar-range text-brand me-1"></i>Lọc theo Khoảng thời gian</label>
+          <div class="d-flex flex-wrap gap-2">
+            <!-- Ô Từ Ngày -->
+            <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+              <span class="text-muted small fw-semibold me-2">Từ:</span>
+              <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0" style="box-shadow: none; width: 115px;" v-model="filters.start_date" @change="fetchData(1, true)">
+            </div>
+            <!-- Ô Đến Ngày -->
+            <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+              <span class="text-muted small fw-semibold me-2">Đến:</span>
+              <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0" style="box-shadow: none; width: 115px;" v-model="filters.end_date" @change="fetchData(1, true)">
+            </div>
+          </div>
         </div>
+
       </div>
 
       <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
             <i class="bi bi-receipt me-2"></i>Danh sách Đơn hàng
             <div v-if="isSilentLoading" class="spinner-border spinner-border-sm text-brand ms-2" role="status"></div>
           </h6>
-          <div class="search-box position-relative" style="width: 300px; max-width: 100%;">
-            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0" v-model="searchQuery" @keyup.enter="fetchData(1, true)" placeholder="Tìm Mã đơn...">
+          
+          <div class="search-box position-relative w-100" style="max-width: 350px;">
+            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" @keyup.enter="fetchData(1, true)" placeholder="Tìm Mã đơn, Tên KH, SĐT...">
             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" @click="fetchData(1, true)"></i>
           </div>
         </div>
         
         <div class="card-body p-0 mt-2">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1200px;">
+            <table class="table table-hover align-middle mb-0" style="width: 100%; min-width: 750px;">
               <thead class="bg-light">
                 <tr>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 18%;">Mã Đơn / Ngày</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 22%;">Khách hàng</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-end" style="width: 12%;">Tổng tiền</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Thanh toán (Sửa nhanh)</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái (Sửa nhanh)</th>
-                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 8%;">Chi tiết</th>
+                  <th class="py-3 px-3 text-secondary border-0" style="width: 15%;">Mã Đơn / Ngày</th>
+                  <th class="py-3 px-3 text-secondary border-0" style="width: 20%;">Khách hàng</th>
+                  <th class="py-3 px-3 text-secondary border-0 text-end" style="width: 14%;">Tổng tiền</th>
+                  <th class="py-3 px-3 text-secondary border-0 text-center" style="width: 21%;">Thanh toán <span class="d-none d-xl-inline">(Sửa nhanh)</span></th>
+                  <th class="py-3 px-3 text-secondary border-0 text-center" style="width: 21%;">Trạng thái <span class="d-none d-xl-inline">(Sửa nhanh)</span></th>
+                  <th class="py-3 px-3 text-secondary text-center border-0" style="width: 9%;">Chi tiết</th>
                 </tr>
               </thead>
               <tbody :class="{'pe-none': isSilentLoading}">
@@ -124,91 +141,89 @@
                 <template v-else>
                   <tr v-for="order in displayedOrders" :key="order.id" :class="{'bg-light opacity-75': order.status === 'cancelled' || order.status === 'returned'}">
                     
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-3 text-nowrap">
                       <div class="fw-bold text-brand fs-6 mb-1 font-monospace cursor-pointer" @click="openQuickView(order.id)">{{ order.order_code }}</div>
                       <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ formatDate(order.created_at) }}</div>
                     </td>
                     
-                    <td class="px-4 overflow-hidden">
+                    <td class="px-3 overflow-hidden">
                       <div class="fw-bold text-dark text-truncate mb-1"><i class="bi bi-person-fill me-1 text-secondary"></i> {{ order.customer_name }}</div>
                       <div class="small text-muted text-truncate"><i class="bi bi-telephone-fill me-1"></i> {{ order.customer_phone }}</div>
                     </td>
                     
-                    <td class="px-4 text-end">
+                    <td class="px-3 text-end text-nowrap">
                       <div class="fw-bold text-success">{{ formatCurrency(order.total_amount) }}</div>
                       <div class="small text-muted mt-1">{{ order.items_count || 0 }} Món</div>
                     </td>
 
-                    <!-- CỘT SỬA NHANH THANH TOÁN -->
-                    <td class="px-3 text-center">
+                    <td class="px-3">
                       <div class="d-flex flex-column align-items-center">
-                        <div class="d-flex align-items-center justify-content-center gap-1 w-100 flex-nowrap">
-                          <!-- BẢO VỆ GIAO DIỆN: Khóa cứng dropdown nếu đơn Đã Giao, Hủy hoặc Hoàn trả -->
+                        <div class="d-flex align-items-center position-relative" style="width: max-content;">
                           <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
-                                  style="width: 120px; font-size: 0.75rem; border-color: #ced4da !important; flex-shrink: 0;"
+                                  style="width: 115px; font-size: 0.75rem; border-color: #ced4da !important;"
                                   :class="getPaymentSelectClass(order.localPaymentStatus || order.payment_status)"
                                   v-model="order.localPaymentStatus"
                                   @change="checkPaymentStatusChange(order)"
                                   :disabled="order.isUpdatingPayment || ['delivered', 'cancelled', 'returned'].includes(order.status) || order.payment_status === 'refunded'">
-                            <option value="unpaid" :hidden="!canPaymentTransitionTo(order.payment_status, 'unpaid')">Chưa TT</option>
-                            <option value="paid" :hidden="!canPaymentTransitionTo(order.payment_status, 'paid')">Đã TT</option>
-                            <option value="refunded" :hidden="!canPaymentTransitionTo(order.payment_status, 'refunded')">Đã hoàn tiền</option>
-                            <option value="failed" :hidden="!canPaymentTransitionTo(order.payment_status, 'failed')">Thất bại</option>
+                            <option value="unpaid" v-if="canPaymentTransitionTo(order.payment_status, 'unpaid')">Chưa TT</option>
+                            <option value="paid" v-if="canPaymentTransitionTo(order.payment_status, 'paid')">Đã TT</option>
+                            <option value="refunded" v-if="canPaymentTransitionTo(order.payment_status, 'refunded')">Đã hoàn tiền</option>
+                            <option value="failed" v-if="canPaymentTransitionTo(order.payment_status, 'failed')">Thất bại</option>
                           </select>
                           
-                          <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
-                            <div v-if="order.isUpdatingPayment" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
+                          <div class="position-absolute start-100 ms-1 d-flex align-items-center" style="width: 50px;">
+                            <div v-if="order.isUpdatingPayment" class="spinner-border text-brand" style="width: 1.1rem; height: 1.1rem; border-width: 0.15em;" role="status"></div>
                             
                             <template v-else-if="order.isPaymentStatusChanged">
-                              <button @click="savePaymentStatus(order)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0; flex-shrink: 0 !important;" title="Lưu thanh toán">
-                                <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
+                              <button @click="savePaymentStatus(order)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; padding: 0;" title="Lưu">
+                                <i class="bi bi-check-lg fw-bold" style="font-size: 0.65rem;"></i>
                               </button>
-                              <button @click="cancelPaymentStatusChange(order)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0; flex-shrink: 0 !important;" title="Hủy">
-                                <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
+                              <button @click="cancelPaymentStatusChange(order)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 22px; height: 22px; padding: 0;" title="Hủy">
+                                <i class="bi bi-x-lg fw-bold" style="font-size: 0.65rem;"></i>
                               </button>
                             </template>
                           </div>
                         </div>
-                        <div class="small fw-semibold text-muted text-uppercase mt-1" style="font-size: 0.65rem;">
-                            Phương thức: {{ order.payment_method }}
+                        <div class="small fw-semibold text-muted text-uppercase mt-2 text-nowrap" style="font-size: 0.65rem;">
+                            <i class="bi bi-wallet2 me-1"></i> {{ order.payment_method }}
                         </div>
                       </div>
                     </td>
 
-                    <!-- CỘT SỬA NHANH TRẠNG THÁI ĐƠN -->
-                    <td class="px-3 text-center">
-                      <div class="d-flex align-items-center justify-content-center gap-1 w-100 flex-nowrap">
-                        <!-- BẢO VỆ GIAO DIỆN: Khóa cứng dropdown nếu đơn Đã Giao, Hủy hoặc Hoàn trả -->
-                        <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
-                                style="width: 120px; font-size: 0.75rem; border-color: #ced4da !important; flex-shrink: 0;"
-                                :class="getOrderStatusClass(order.localStatus || order.status)"
-                                v-model="order.localStatus"
-                                @change="checkStatusChange(order)"
-                                :disabled="order.isUpdatingStatus || ['delivered', 'cancelled', 'returned'].includes(order.status)">
-                          <option value="pending" :hidden="!canTransitionTo(order.status, 'pending')">Chờ duyệt</option>
-                          <option value="confirmed" :hidden="!canTransitionTo(order.status, 'confirmed')">Đã xác nhận</option>
-                          <option value="processing" :hidden="!canTransitionTo(order.status, 'processing')">Đang chuẩn bị</option>
-                          <option value="shipping" :hidden="!canTransitionTo(order.status, 'shipping')">Đang giao</option>
-                          <option value="delivered" :hidden="!canTransitionTo(order.status, 'delivered')">Đã giao</option>
-                          <option value="cancelled" :hidden="!canTransitionTo(order.status, 'cancelled')">Hủy đơn</option>
-                        </select>
-                        
-                        <div class="d-flex align-items-center justify-content-start" style="min-width: 55px; height: 28px; flex-shrink: 0 !important;">
-                          <div v-if="order.isUpdatingStatus" class="spinner-border text-brand ms-1" style="width: 1.25rem; height: 1.25rem; border-width: 0.15em; flex-shrink: 0 !important;" role="status"></div>
+                    <td class="px-3">
+                      <div class="d-flex flex-column align-items-center">
+                        <div class="d-flex align-items-center position-relative" style="width: max-content;">
+                          <select class="form-select form-select-sm border shadow-sm fw-bold cursor-pointer text-dark bg-white" 
+                                  style="width: 115px; font-size: 0.75rem; border-color: #ced4da !important;"
+                                  :class="getOrderStatusClass(order.localStatus || order.status)"
+                                  v-model="order.localStatus"
+                                  @change="checkStatusChange(order)"
+                                  :disabled="order.isUpdatingStatus || ['delivered', 'cancelled', 'returned'].includes(order.status)">
+                            <option value="pending" v-if="canTransitionTo(order.status, 'pending')">Chờ duyệt</option>
+                            <option value="confirmed" v-if="canTransitionTo(order.status, 'confirmed')">Đã xác nhận</option>
+                            <option value="processing" v-if="canTransitionTo(order.status, 'processing')">Đang chuẩn bị</option>
+                            <option value="shipping" v-if="canTransitionTo(order.status, 'shipping')">Đang giao</option>
+                            <option value="delivered" v-if="canTransitionTo(order.status, 'delivered')">Đã giao</option>
+                            <option value="cancelled" v-if="canTransitionTo(order.status, 'cancelled')">Hủy đơn</option>
+                          </select>
                           
-                          <template v-else-if="order.isStatusChanged">
-                            <button @click="saveOrderStatus(order)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0; flex-shrink: 0 !important;" title="Lưu trạng thái">
-                              <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
-                            </button>
-                            <button @click="cancelStatusChange(order)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0; flex-shrink: 0 !important;" title="Hủy">
-                              <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
-                            </button>
-                          </template>
+                          <div class="position-absolute start-100 ms-1 d-flex align-items-center" style="width: 50px;">
+                            <div v-if="order.isUpdatingStatus" class="spinner-border text-brand" style="width: 1.1rem; height: 1.1rem; border-width: 0.15em;" role="status"></div>
+                            
+                            <template v-else-if="order.isStatusChanged">
+                              <button @click="saveOrderStatus(order)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; padding: 0;" title="Lưu">
+                                <i class="bi bi-check-lg fw-bold" style="font-size: 0.65rem;"></i>
+                              </button>
+                              <button @click="cancelStatusChange(order)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 22px; height: 22px; padding: 0;" title="Hủy">
+                                <i class="bi bi-x-lg fw-bold" style="font-size: 0.65rem;"></i>
+                              </button>
+                            </template>
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td class="px-4 text-center">
+                    <td class="px-3 text-center">
                       <button class="btn btn-sm btn-light text-brand shadow-sm border" @click="openQuickView(order.id)" title="Xem chi tiết đơn"><i class="bi bi-eye-fill"></i></button>
                     </td>
                   </tr>
@@ -231,7 +246,6 @@
       </div>
     </div>
 
-    <!-- MODAL QUICK VIEW -->
     <div class="modal fade" id="quickViewOrderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -374,7 +388,6 @@ const filters = ref({
 const currentPageLevel = ref(null);
 
 const pagination = ref({ currentPage: 1, lastPage: 1, total: 0 });
-
 const selectedOrder = ref(null);
 let quickViewModalInstance = null;
 let isUnmounted = false;
@@ -577,7 +590,7 @@ const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newVa
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật hệ thống thành công', showConfirmButton: false, timer: 1500 });
     
     tabCache.value = {}; 
-    fetchCounts(); 
+    fetchData(pagination.value.currentPage, true);
     
   } catch (error) { 
     if (targetField === 'status') cancelStatusChange(order); else cancelPaymentStatusChange(order);
@@ -586,17 +599,8 @@ const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newVa
       if (error.response.status === 422) {
           const errors = error.response.data.errors;
           let errorMsg = error.response.data.message || 'Dữ liệu không hợp lệ!';
-          
-          if (errors) {
-              errorMsg = Object.values(errors)[0][0]; 
-          }
-          
-          Swal.fire({
-              icon: 'error',
-              title: 'Không được phép!',
-              text: errorMsg,
-              confirmButtonColor: '#009981'
-          });
+          if (errors) { errorMsg = Object.values(errors)[0][0]; }
+          Swal.fire({ icon: 'error', title: 'Không được phép!', text: errorMsg, confirmButtonColor: '#009981' });
       } else if (error.response.status === 401) {
           Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
       } else {
@@ -621,27 +625,9 @@ const openQuickView = async (id) => {
   } catch(e){}
 };
 
-const fetchCounts = async () => {
-    try {
-        const statuses = ['all', 'pending', 'confirmed', 'processing', 'shipping', 'delivered', 'cancelled', 'returned'];
-        const requests = statuses.map(status => {
-            let url = `http://127.0.0.1:8000/api/admin/orders?page=1`;
-            if (status !== 'all') url += `&status=${status}`;
-            return axios.get(url, { headers: getHeaders() }).then(res => res.data);
-        });
-
-        const results = await Promise.all(requests);
-        statuses.forEach((status, index) => {
-            if (results[index] && results[index].data) {
-                statusCounts.value[status] = results[index].data.total;
-            }
-        });
-        statusCounts.value.all = statusCounts.value.all - (statusCounts.value.returned || 0);
-    } catch (e) { console.error(e); }
-};
-
+// LẤY DỮ LIỆU ĐƠN HÀNG (Kèm tìm kiếm & Cập nhật biến counts)
 const fetchData = async (page = 1, silent = false) => {
-  const cacheKey = `${activeTab.value}_${page}_${filters.value.payment_status}_${filters.value.start_date}_${filters.value.end_date}`;
+  const cacheKey = `${activeTab.value}_${page}_${filters.value.payment_status}_${filters.value.start_date}_${filters.value.end_date}_${searchQuery.value}`;
 
   if (tabCache.value[cacheKey]) {
       orders.value = tabCache.value[cacheKey].data;
@@ -657,6 +643,9 @@ const fetchData = async (page = 1, silent = false) => {
   if (filters.value.payment_status !== 'all') queryParams.append('payment_status', filters.value.payment_status);
   if (filters.value.start_date) queryParams.append('start_date', filters.value.start_date);
   if (filters.value.end_date) queryParams.append('end_date', filters.value.end_date);
+  
+  // NỐI TỪ KHÓA TÌM KIẾM ĐỂ GỬI LÊN BACKEND
+  if (searchQuery.value) queryParams.append('search', searchQuery.value);
 
   try {
     const [resOrders, resModules] = await Promise.all([
@@ -673,6 +662,11 @@ const fetchData = async (page = 1, silent = false) => {
     const result = resOrders.data;
     const dataPayload = result.data.data ? result.data.data : result.data; 
     
+    // CẬP NHẬT COUNTS TỪ BACKEND ĐỂ KHÔNG CẦN CHẠY 8 REQUEST NỮA
+    if (result.counts) {
+      statusCounts.value = result.counts;
+    }
+
     const mappedOrders = dataPayload.map(o => ({
       ...o, 
       localStatus: o.status, 
@@ -715,6 +709,7 @@ const printOrder = () => {
 };
 
 const displayedOrders = computed(() => {
+    // Không dùng JS để lọc nữa vì Backend đã phân trang và tìm kiếm
     if (activeTab.value === 'all') {
         return orders.value.filter(o => o.status !== 'returned');
     }
@@ -723,7 +718,6 @@ const displayedOrders = computed(() => {
 
 onMounted(() => { 
     fetchData(1); 
-    fetchCounts();
 });
 </script>
 

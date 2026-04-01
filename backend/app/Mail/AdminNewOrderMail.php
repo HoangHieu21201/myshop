@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
 
-class OrderPlacedMail extends Mailable implements ShouldQueue
+class AdminNewOrderMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -23,11 +23,12 @@ class OrderPlacedMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Xây dựng nội dung Email
+     * Xây dựng nội dung Email cho Admin
      */
     public function build()
     {
-        return $this->subject('Xác nhận đơn hàng #' . $this->order->order_code . ' từ SORA Jewelry')
-            ->view('emails.order_placed'); // Trỏ tới file giao diện Blade bên dưới
+        // Thêm tiền tố [SORA SYSTEM] để Admin dễ nhận biết
+        return $this->subject('[SORA SYSTEM] Đơn hàng mới: #' . $this->order->order_code)
+                    ->view('emails.admin_new_order'); 
     }
 }

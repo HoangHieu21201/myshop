@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 use App\Http\Controllers\Api\admin\AdminReviewController;
+use App\Http\Controllers\Api\admin\AdminInventoryController;
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -263,6 +264,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('orders/{id}', 'show');
                 Route::put('orders/{id}/status', 'updateStatus');
                 Route::delete('orders/{id}', 'destroy');
+                Route::post('orders/{id}/refund-process', 'processRefundAction');
             });
         });
 
@@ -292,5 +294,12 @@ Route::prefix('admin')->group(function () {
 
         // Quản lý Đánh giá (Mã: admin_reviews)
         Route::apiResource('reviews', AdminReviewController::class);
+
+        // Quản lý Tồn kho (Mã: admin_inventory)
+        Route::controller(AdminInventoryController::class)->prefix('inventory')->group(function () {
+            Route::get('/variants', 'getVariants');
+            Route::put('/variants/{id}/stock', 'updateVariantStock');
+            Route::put('/combos/{id}/limit', 'updateComboLimit');
+        });
     });
 });
