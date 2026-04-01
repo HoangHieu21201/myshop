@@ -89,14 +89,19 @@ Route::prefix('client')->group(function () {
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
     // Hồ Sơ Cá Nhân (Profile)
-    Route::prefix('profile')->group(function () {
-        Route::get('/', [ClientProfileController::class, 'show']);
-        Route::post('/', [ClientProfileController::class, 'update']);
-
-        // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
-        Route::post('/password', [ClientProfileController::class, 'updatePassword']);
-    });
-
+        Route::prefix('profile')->group(function () {
+            // Thông tin cá nhân & Mật khẩu
+            Route::get('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'show']);
+            Route::post('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'update']);
+            Route::post('/password', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updatePassword']);
+            
+            // Sổ Địa Chỉ (Address Book)
+            Route::get('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'getAddresses']);
+            Route::post('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'storeAddress']);
+            Route::put('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updateAddress']);
+            Route::delete('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'deleteAddress']);
+            Route::put('/addresses/{id}/default', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'setDefaultAddress']);
+        });
 
 
 
