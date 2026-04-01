@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 use App\Http\Controllers\Api\admin\AdminReviewController;
+use App\Http\Controllers\Api\admin\AdminInventoryController;
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -88,14 +89,19 @@ Route::prefix('client')->group(function () {
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
     // Hồ Sơ Cá Nhân (Profile)
-    Route::prefix('profile')->group(function () {
-        Route::get('/', [ClientProfileController::class, 'show']);
-        Route::post('/', [ClientProfileController::class, 'update']);
-
-        // ĐÃ SỬA THÀNH POST ĐỂ TRÁNH SERVER CHẶN METHOD PUT GÂY LỖI 500
-        Route::post('/password', [ClientProfileController::class, 'updatePassword']);
-    });
-
+        Route::prefix('profile')->group(function () {
+            // Thông tin cá nhân & Mật khẩu
+            Route::get('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'show']);
+            Route::post('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'update']);
+            Route::post('/password', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updatePassword']);
+            
+            // Sổ Địa Chỉ (Address Book)
+            Route::get('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'getAddresses']);
+            Route::post('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'storeAddress']);
+            Route::put('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updateAddress']);
+            Route::delete('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'deleteAddress']);
+            Route::put('/addresses/{id}/default', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'setDefaultAddress']);
+        });
 
 
 
@@ -263,6 +269,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('orders/{id}', 'show');
                 Route::put('orders/{id}/status', 'updateStatus');
                 Route::delete('orders/{id}', 'destroy');
+                Route::post('orders/{id}/refund-process', 'processRefundAction');
             });
         });
 
@@ -292,5 +299,12 @@ Route::prefix('admin')->group(function () {
 
         // Quản lý Đánh giá (Mã: admin_reviews)
         Route::apiResource('reviews', AdminReviewController::class);
+
+        // Quản lý Tồn kho (Mã: admin_inventory)
+        Route::controller(AdminInventoryController::class)->prefix('inventory')->group(function () {
+            Route::get('/variants', 'getVariants');
+            Route::put('/variants/{id}/stock', 'updateVariantStock');
+            Route::put('/combos/{id}/limit', 'updateComboLimit');
+        });
     });
 });

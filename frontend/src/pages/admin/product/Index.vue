@@ -102,7 +102,7 @@
                   <th class="py-3 px-4 text-secondary border-0" style="width: 28%;">Sản phẩm (Bản gốc)</th>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 17%;">Phân loại</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Số Biến thể</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái (Sửa nhanh)</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái</th>
                   <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;">Thao tác</th>
                 </tr>
               </thead>

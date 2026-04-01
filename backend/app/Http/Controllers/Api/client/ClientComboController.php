@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
-use App\Models\Product; // BẮT BUỘC IMPORT PRODUCT
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -12,14 +12,22 @@ class ClientComboController extends Controller
 {
     public function index(Request $request)
     {
+        $yesterday = Carbon::now()->subDay();
+
         $query = Combo::with(['items.product', 'items.variant'])
-        ->where('status', 'active');
+            ->where('status', 'active')
+            ->where(function($q) use ($yesterday) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', $yesterday);
+            });
 
         if ($request->has('gender') && $request->gender !== 'all' && $request->gender !== '') {
             $query->where('target_gender', $request->gender);
         }
 
-        $combos = $query->orderBy('id', 'desc')->paginate(12);
+        $combos = $query->orderByRaw('CASE WHEN end_date IS NOT NULL AND end_date < NOW() THEN 1 ELSE 0 END ASC')
+            ->orderBy('id', 'desc')
+            ->paginate(12);
 
         return response()->json([
             'success' => true, 
@@ -50,17 +58,14 @@ class ClientComboController extends Controller
         ->where('status', 'active')
         ->firstOrFail();
 
-        // Lấy ID các danh mục có trong Combo
         $categoryIds = collect($combo->items)->map(function($item) {
             return $item->product ? $item->product->category_id : null;
         })->filter()->unique()->toArray();
 
-        // Lấy ID các sản phẩm đã có trong Combo để tránh gợi ý trùng
         $productIdsInCombo = collect($combo->items)->map(function($item) {
             return $item->product_id;
         })->filter()->unique()->toArray();
 
-        // Lấy 4 sản phẩm liên quan cùng danh mục
         $relatedProducts = Product::with(['category:id,name,slug'])
             ->whereIn('category_id', $categoryIds)
             ->whereNotIn('id', $productIdsInCombo)
@@ -104,7 +109,6 @@ class ClientComboController extends Controller
             }
         }
 
-        // TRẢ VỀ THÊM RELATED PRODUCTS
         return response()->json([
             'success' => true, 
             'data' => $combo,
