@@ -66,5 +66,10 @@ return [
         'module_code' => 'admin_reviews',
         'default_level' => 2
     ],
+    [
+        'module_name' => 'Quản lý Kho hàng',
+        'module_code' => 'admin_inventory',
+        'default_level' => 2
+    ],
 
 ];

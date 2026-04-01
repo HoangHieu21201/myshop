@@ -161,6 +161,7 @@ const menuItems = ref([
       { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
       { name: 'SP & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
       { name: 'Combo sản phẩm', path: '/admin/combos', moduleCode: 'admin_combos' },
+      { name: 'Kho hàng', path: '/admin/inventory', moduleCode: 'admin_inventory' }
     ]
   },
   {
@@ -176,10 +177,9 @@ const menuItems = ref([
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
       { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' },
       { name: 'Chân dung SORA', path: '/admin/gallery', moduleCode: 'admin_banners' },
+      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' }
     ]
   },
-  // review
-  { name: 'Đánh giá', path: '/admin/reviews', icon: 'bi-star-fill', moduleCode: 'admin_reviews' }
 ]);
 
 const menuState = reactive({
