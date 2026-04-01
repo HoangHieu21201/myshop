@@ -7,18 +7,18 @@
     </div>
 
     <div class="container-fluid py-4" v-else>
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
           <h3 class="fw-bold text-dark mb-0">Xử lý Hàng Hoàn / Trả</h3>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
-          <button class="btn btn-light border shadow-sm fw-bold text-dark px-4 py-2" @click="fetchData(1, true)">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-light border shadow-sm fw-bold text-dark px-4 py-2" style="border-radius: 8px;" @click="fetchData(1, true)">
             <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
           </button>
         </div>
       </div>
 
-      <!-- TABS PHÂN LOẠI (THAY CHO DROPDOWN CŨ) -->
+      <!-- TABS TRẠNG THÁI -->
       <div class="mb-3">
         <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
           <li class="nav-item">
@@ -28,9 +28,15 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'paid' }" @click.prevent="switchTab('paid')">
-              <i class="bi bi-hourglass-split me-2 text-warning"></i> Chờ hoàn tiền
-              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'paid'}">{{ statusCounts['paid'] || 0 }}</span>
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'pending' }" @click.prevent="switchTab('pending')">
+              <i class="bi bi-inbox-fill me-2 text-warning"></i> Chờ xử lý
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'pending'}">{{ statusCounts['pending'] || 0 }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'proposing' }" @click.prevent="switchTab('proposing')">
+              <i class="bi bi-envelope-paper-fill me-2 text-info"></i> Thương lượng
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'proposing'}">{{ statusCounts['proposing'] || 0 }}</span>
             </a>
           </li>
           <li class="nav-item">
@@ -39,83 +45,105 @@
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'refunded'}">{{ statusCounts['refunded'] || 0 }}</span>
             </a>
           </li>
+          <li class="nav-item ms-auto">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-danger" href="#" :class="{ 'active-tab': activeTab === 'rejected' }" @click.prevent="switchTab('rejected')">
+              <i class="bi bi-x-circle-fill me-2"></i> Đã từ chối
+              <span class="badge ms-2 rounded-pill bg-danger text-white">{{ statusCounts['rejected'] || 0 }}</span>
+            </a>
+          </li>
         </ul>
       </div>
 
-      <!-- BỘ LỌC HOÀN TRẢ -->
-      <div class="d-flex flex-wrap gap-3 mb-4 align-items-center">
-        <!-- Lọc Ngày tháng -->
-        <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border shadow-sm">
-          <span class="text-muted small fw-semibold me-2"><i class="bi bi-calendar-range text-brand"></i> Lọc Ngày:</span>
-          <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-1" style="box-shadow: none; width: 130px;" v-model="filters.start_date" @change="fetchData(1, true)">
-          <span class="mx-1 text-muted">-</span>
-          <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-1" style="box-shadow: none; width: 130px;" v-model="filters.end_date" @change="fetchData(1, true)">
+      <!-- BỘ LỌC THỜI GIAN -->
+      <div class="d-flex flex-column flex-md-row flex-wrap gap-3 gap-md-4 mb-4 align-items-start">
+        <div class="filter-wrapper">
+          <label class="form-label small text-muted fw-bold mb-2"><i class="bi bi-calendar-range text-brand me-1"></i>Lọc theo Khoảng thời gian</label>
+          <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+              <span class="text-muted small fw-semibold me-2">Từ:</span>
+              <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0" style="box-shadow: none; width: 115px;" v-model="filters.start_date" @change="fetchData(1, true)">
+            </div>
+            <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+              <span class="text-muted small fw-semibold me-2">Đến:</span>
+              <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0" style="box-shadow: none; width: 115px;" v-model="filters.end_date" @change="fetchData(1, true)">
+            </div>
+          </div>
         </div>
       </div>
 
+      <!-- BẢNG DỮ LIỆU -->
       <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
-            <i class="bi bi-exclamation-triangle text-danger me-2"></i>Danh sách Đơn bị hoàn
+            <i class="bi bi-arrow-return-left text-danger me-2"></i>Danh sách Đơn hoàn trả
             <div v-if="isSilentLoading" class="spinner-border spinner-border-sm text-brand ms-2" role="status"></div>
           </h6>
-          <div class="search-box position-relative" style="width: 300px; max-width: 100%;">
-            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0" v-model="searchQuery" @keyup.enter="fetchData(1, true)" placeholder="Tìm Mã đơn, Tên KH, SĐT...">
+          
+          <div class="search-box position-relative w-100" style="max-width: 350px;">
+            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" @keyup.enter="fetchData(1, true)" placeholder="Tìm Mã đơn, Tên KH, SĐT...">
             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" @click="fetchData(1, true)"></i>
           </div>
         </div>
         
         <div class="card-body p-0 mt-2">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1000px;">
+            <table class="table table-hover align-middle mb-0" style="width: 100%; min-width: 850px;">
               <thead class="bg-light">
                 <tr>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 20%;">Mã Đơn / Cập nhật</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Khách hàng</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-end" style="width: 15%;">Số tiền cần hoàn</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái TT</th>
-                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;">Thao tác (Cấp quyền)</th>
+                  <th class="py-3 px-2 px-md-3 text-secondary border-0" style="width: 18%;">Mã Đơn / Cập nhật</th>
+                  <th class="py-3 px-2 px-md-3 text-secondary border-0" style="width: 22%;">Khách hàng</th>
+                  <th class="py-3 px-2 px-md-3 text-secondary border-0 text-end" style="width: 15%;">Giá trị hoàn</th>
+                  <th class="py-3 px-2 px-md-3 text-secondary border-0 text-center" style="width: 18%;">Trạng thái Yêu cầu</th>
+                  <th class="py-3 px-2 px-md-3 text-secondary text-center border-0" style="width: 27%;">Thao tác</th>
                 </tr>
               </thead>
               <tbody :class="{'opacity-50 pe-none': isSilentLoading}" style="transition: opacity 0.2s;">
                 <tr v-if="orders.length === 0 && !isSilentLoading">
                   <td colspan="5" class="text-center py-5 text-muted">
-                    <i class="bi bi-shield-check fs-1 d-block mb-2 text-success opacity-50"></i>Tuyệt vời! Không tìm thấy yêu cầu hoàn tiền nào.
+                    <i class="bi bi-shield-check fs-1 d-block mb-2 text-success opacity-50"></i>Tuyệt vời! Không tìm thấy yêu cầu hoàn trả nào.
                   </td>
                 </tr>
                 <tr v-else v-for="order in displayedOrders" :key="order.id" class="bg-light">
                   
-                  <td class="px-4 py-3">
+                  <td class="px-2 px-md-3 py-3 text-nowrap">
                     <div class="fw-bold text-danger fs-6 mb-1 font-monospace cursor-pointer" @click="openQuickView(order.id)">{{ order.order_code }}</div>
                     <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ formatDateTime(order.updated_at) }}</div>
                   </td>
                   
-                  <td class="px-4 overflow-hidden">
+                  <td class="px-2 px-md-3 overflow-hidden">
                     <div class="fw-bold text-dark text-truncate mb-1"><i class="bi bi-person-fill me-1 text-secondary"></i> {{ order.customer_name }}</div>
                     <div class="small text-muted text-truncate"><i class="bi bi-telephone-fill me-1"></i> {{ order.customer_phone }}</div>
                   </td>
                   
-                  <td class="px-4 text-end">
-                    <div class="fw-bold text-danger fs-5">{{ formatCurrency(order.total_amount) }}</div>
-                    <div class="small text-muted mt-1">{{ order.payment_method }}</div>
+                  <td class="px-2 px-md-3 text-end text-nowrap">
+                    <div v-if="order.refund_amount !== null && order.refund_amount < order.total_amount" class="text-muted text-decoration-line-through small">{{ formatCurrency(order.total_amount) }}</div>
+                    <div class="fw-bold text-danger fs-5">{{ formatCurrency(order.refund_amount !== null ? order.refund_amount : order.total_amount) }}</div>
                   </td>
 
-                  <td class="px-4 text-center">
-                    <div class="badge px-3 py-2 w-100 text-uppercase" :class="order.payment_status === 'refunded' ? 'bg-success text-white' : 'bg-warning text-dark border border-warning'">
-                        <i class="bi" :class="order.payment_status === 'refunded' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'"></i>
-                        {{ order.payment_status === 'refunded' ? 'Đã hoàn tiền' : 'CHỜ HOÀN TIỀN' }}
+                  <td class="px-2 px-md-3 text-center">
+                    <div class="badge px-3 py-2 w-100 text-uppercase border" :class="getReturnStatusUi(order).class">
+                        <i class="bi me-1" :class="getReturnStatusUi(order).icon"></i>
+                        {{ getReturnStatusUi(order).text }}
                     </div>
                   </td>
 
-                  <td class="px-4 text-center">
+                  <td class="px-2 px-md-3 text-center">
                     <div class="d-flex gap-2 justify-content-center">
                       <button class="btn btn-sm btn-light text-brand shadow-sm border" @click="openQuickView(order.id)" title="Xem chi tiết đơn hoàn">
                           <i class="bi bi-eye-fill"></i>
                       </button>
-                      <button v-if="order.payment_status !== 'refunded'" class="btn btn-sm btn-danger shadow-sm fw-bold flex-grow-1" @click="processRefund(order)">
-                          <i class="bi bi-arrow-return-left me-1"></i> Đã Hoàn
+                      
+                      <button v-if="['pending', 'proposing', 'rejected'].includes(getReturnStatusUi(order).statusCode)" 
+                              class="btn btn-sm shadow-sm fw-bold flex-grow-1"
+                              :class="getReturnStatusUi(order).statusCode === 'rejected' ? 'btn-outline-danger' : (getReturnStatusUi(order).statusCode === 'pending' ? 'btn-primary' : 'btn-info text-white')" 
+                              @click="processRefund(order)">
+                          <i class="bi" :class="getReturnStatusUi(order).statusCode === 'rejected' ? 'bi-arrow-counterclockwise' : (getReturnStatusUi(order).statusCode === 'pending' ? 'bi-shield-exclamation' : 'bi-envelope-paper')"></i> 
+                          {{ getReturnStatusUi(order).statusCode === 'rejected' ? 'Thương lượng lại' : 'Xử lý / Cập nhật' }}
                       </button>
-                      <div v-else class="text-success small fw-bold flex-grow-1 d-flex align-items-center justify-content-center border rounded bg-success bg-opacity-10"><i class="bi bi-check-all fs-5 me-1"></i> Xong</div>
+                      
+                      <div v-else-if="getReturnStatusUi(order).statusCode === 'refunded'" class="text-success small fw-bold flex-grow-1 d-flex align-items-center justify-content-center border rounded bg-success bg-opacity-10">
+                          <i class="bi bi-check-all fs-5 me-1"></i> Hoàn tất
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -125,7 +153,7 @@
         </div>
       </div>
 
-      <!-- SERVER-SIDE PAGINATION -->
+      <!-- PHÂN TRANG -->
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="pagination.lastPage > 1 && !isTableLoading">
         <span class="text-muted small">Hiển thị trang {{ pagination.currentPage }} / {{ pagination.lastPage }} (Tổng: {{ pagination.total }} đơn)</span>
         <nav>
@@ -137,7 +165,7 @@
         </nav>
       </div>
       
-      <!-- MODAL QUICK VIEW: CHI TIẾT ĐƠN HÀNG HOÀN TRẢ -->
+      <!-- MODAL CHI TIẾT -->
       <div class="modal fade" id="quickViewOrderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered modal-xl">
           <div class="modal-content rounded-4 border-0 shadow">
@@ -148,7 +176,6 @@
             
             <div class="modal-body p-4 bg-white" v-if="selectedOrder">
               <div class="row g-4">
-                  <!-- THÔNG TIN CHUNG & KHÁCH HÀNG -->
                   <div class="col-lg-4 border-end">
                       <h6 class="fw-bold text-muted text-uppercase mb-3"><i class="bi bi-person-badge me-2"></i>Người yêu cầu</h6>
                       <div class="mb-2"><span class="text-muted">Họ tên:</span> <strong class="text-dark float-end">{{ selectedOrder.customer_name }}</strong></div>
@@ -162,20 +189,15 @@
                           <div class="p-2 bg-warning bg-opacity-10 text-dark fw-medium border border-warning rounded small fst-italic">{{ selectedOrder.order_note || 'Không có ghi chú' }}</div>
                       </div>
 
-                      <h6 class="fw-bold text-muted text-uppercase mb-3 border-top pt-4"><i class="bi bi-credit-card me-2"></i>Hoàn Trả Thanh Toán</h6>
+                      <h6 class="fw-bold text-muted text-uppercase mb-3 border-top pt-4"><i class="bi bi-credit-card me-2"></i>Phương thức ban đầu</h6>
                       <div class="mb-2 d-flex justify-content-between align-items-center">
-                          <span class="text-muted">Phương thức:</span> 
+                          <span class="text-muted">Thanh toán:</span> 
                           <span class="badge bg-secondary text-uppercase">{{ selectedOrder.payment_method }}</span>
-                      </div>
-                      <div class="mb-2 d-flex justify-content-between align-items-center">
-                          <span class="text-muted">Trạng thái TT:</span> 
-                          <span class="badge" :class="getPaymentBadge(selectedOrder.payment_status)">{{ formatPaymentStatus(selectedOrder.payment_status) }}</span>
                       </div>
                   </div>
 
-                  <!-- DANH SÁCH SẢN PHẨM MUA (SNAPSHOT) -->
                   <div class="col-lg-8">
-                      <h6 class="fw-bold text-danger text-uppercase mb-3"><i class="bi bi-box-seam me-2"></i>Các mặt hàng cần hoàn tiền</h6>
+                      <h6 class="fw-bold text-danger text-uppercase mb-3"><i class="bi bi-box-seam me-2"></i>Các mặt hàng cần hoàn trả</h6>
                       <div class="table-responsive border rounded mb-4 border-danger border-opacity-25" style="max-height: 250px; overflow-y: auto;">
                           <table class="table table-hover align-middle mb-0 small">
                               <thead class="bg-light sticky-top">
@@ -195,7 +217,6 @@
                                                   <div class="fw-bold text-dark text-wrap" style="max-width: 250px;">{{ item.product_name }}</div>
                                                   <div class="text-muted" style="font-size: 0.7rem;">SKU: {{ item.variant_sku }}</div>
                                                   
-                                                  <!-- ĐÃ BỔ SUNG: COMBO & ATTRIBUTES ĐỒNG BỘ VỚI ORDER INDEX -->
                                                   <div class="text-brand mt-1" style="font-size: 0.7rem;" v-if="item.combo_id">
                                                       <span class="badge bg-light text-dark border">
                                                           <i class="bi bi-stars text-brand me-1"></i> Combo ({{ parseCombo(item.combo_selections).length }} món)
@@ -215,19 +236,27 @@
                           </table>
                       </div>
 
-                      <!-- TỔNG KẾT TIỀN -->
                       <div class="row justify-content-end">
-                          <div class="col-md-6">
+                          <div class="col-md-7">
                               <div class="bg-danger bg-opacity-10 p-3 rounded border border-danger border-opacity-25">
                                   <div class="d-flex justify-content-between mb-2 small"><span class="text-muted">Tạm tính hàng:</span> <strong class="text-dark">{{ formatCurrency(selectedOrder.sub_total) }}</strong></div>
                                   <div class="d-flex justify-content-between mb-2 small"><span class="text-muted">Phí giao hàng:</span> <strong class="text-dark">{{ formatCurrency(selectedOrder.shipping_fee) }}</strong></div>
                                   <div class="d-flex justify-content-between mb-2 small text-success"><span class="text-muted">Giảm giá <span v-if="selectedOrder.coupon_code">({{ selectedOrder.coupon_code }})</span>:</span> <strong>- {{ formatCurrency(selectedOrder.discount_amount) }}</strong></div>
-                                  <div class="d-flex justify-content-between mt-3 pt-2 border-top border-danger border-opacity-25"><span class="fw-bold text-dark">SỐ TIỀN CẦN HOÀN:</span> <strong class="fs-5 text-danger">{{ formatCurrency(selectedOrder.total_amount) }}</strong></div>
+                                  <div class="d-flex justify-content-between mt-3 pt-2 border-top border-danger border-opacity-25"><span class="fw-bold text-dark">SỐ TIỀN GỐC CỦA ĐƠN:</span> <strong class="fs-5 text-danger">{{ formatCurrency(selectedOrder.total_amount) }}</strong></div>
+                                  
+                                  <div class="mt-3 pt-3 border-top border-danger border-opacity-25" v-if="selectedOrder.refund_amount !== null">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-primary text-uppercase tracking-wide" style="font-size: 0.8rem;">SỐ TIỀN HOÀN THỰC TẾ:</span> 
+                                        <strong class="fs-4 text-primary font-serif">{{ formatCurrency(selectedOrder.refund_amount) }}</strong>
+                                    </div>
+                                    <div class="small text-muted fst-italic mt-2 bg-white p-2 rounded border border-light-subtle">
+                                        <i class="bi bi-chat-left-dots-fill text-secondary me-1"></i> Ghi chú: {{ selectedOrder.refund_note || 'Không có' }}
+                                    </div>
+                                  </div>
                               </div>
                           </div>
                       </div>
 
-                      <!-- LỊCH SỬ TRẠNG THÁI -->
                       <div class="mt-4">
                           <h6 class="fw-bold text-muted text-uppercase mb-3"><i class="bi bi-clock-history me-2"></i>Lịch sử cập nhật</h6>
                           <ul class="list-group list-group-flush border rounded custom-scrollbar-y" style="max-height: 200px; overflow-y: auto;">
@@ -235,7 +264,7 @@
                                   <div class="ms-2 me-auto">
                                       <div class="fw-bold text-dark small">
                                           <span class="text-muted fw-normal me-1">{{ formatDateTime(history.created_at) }}</span>
-                                          Chuyển sang <span class="badge ms-1" :class="getOrderStatusClass(history.new_status)">{{ formatOrderStatus(history.new_status) }}</span>
+                                          Cập nhật tiến trình
                                       </div>
                                       <div class="text-muted mt-1" style="font-size: 0.75rem;">
                                           <i class="bi bi-person-fill me-1"></i>Bởi: <strong>{{ history.changer?.fullName || 'Hệ thống/Khách' }}</strong>
@@ -289,7 +318,7 @@ let quickViewModalInstance = null;
 let isUnmounted = false;
 
 const statusCounts = ref({
-    all: 0, paid: 0, refunded: 0
+    all: 0, pending: 0, proposing: 0, refunded: 0, rejected: 0
 });
 
 const tabCache = ref({});
@@ -319,60 +348,232 @@ const parseCombo = (combo) => {
   try { return JSON.parse(combo); } catch { return []; }
 };
 
-const formatPaymentStatus = (status) => {
-    const map = { 'unpaid': 'Chưa TT', 'paid': 'Đã TT', 'refunded': 'Đã hoàn', 'failed': 'Thất bại' };
-    return map[status] || status;
+// Phân tích trạng thái UI
+const getReturnStatusUi = (order) => {
+    if (order.payment_status === 'refunded') {
+        return { text: 'Đã Hoàn Tiền', class: 'bg-success text-white border-success', icon: 'bi-check-circle-fill', statusCode: 'refunded' };
+    }
+    if (order.refund_amount !== null && parseFloat(order.refund_amount) === 0) {
+        return { text: 'Đã Từ Chối', class: 'bg-danger text-white border-danger', icon: 'bi-x-circle-fill', statusCode: 'rejected' };
+    }
+    if (order.refund_amount !== null && parseFloat(order.refund_amount) > 0) {
+        return { text: 'Thương Lượng', class: 'bg-info text-white border-info', icon: 'bi-envelope-paper-fill', statusCode: 'proposing' };
+    }
+    return { text: 'Chờ Xử Lý', class: 'bg-warning text-dark border-warning', icon: 'bi-inbox-fill', statusCode: 'pending' };
 };
 
-const getPaymentBadge = (status) => {
-    const map = { 'unpaid': 'bg-warning text-dark border-warning', 'paid': 'bg-success text-white border-success', 'refunded': 'bg-info text-dark border-info', 'failed': 'bg-danger text-white border-danger' };
-    return map[status] || 'bg-secondary';
-};
-
-const formatOrderStatus = (status) => {
-    const map = { 'pending': 'Chờ duyệt', 'confirmed': 'Đã xác nhận', 'processing': 'Đang chuẩn bị', 'shipping': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy', 'returned': 'Hoàn trả' };
-    return map[status] || status;
-};
-
-const getOrderStatusClass = (status) => {
-  const map = { 
-    'pending': 'text-warning border-warning bg-warning bg-opacity-10', 
-    'confirmed': 'text-info border-info bg-info bg-opacity-10', 
-    'processing': 'text-primary border-primary bg-primary bg-opacity-10', 
-    'shipping': 'text-primary border-primary bg-primary bg-opacity-10', 
-    'delivered': 'text-success border-success bg-success bg-opacity-10',
-    'cancelled': 'text-danger border-danger bg-danger bg-opacity-10',
-    'returned': 'text-secondary border-secondary bg-secondary bg-opacity-10'
-  }; 
-  return map[status] || 'bg-light text-secondary'; 
-};
-
+// Khởi tạo Modal Xử lý Hoàn tiền
 const processRefund = async (order) => {
-  const { value: noteText, isDismissed } = await Swal.fire({
-    title: 'Xác nhận Đã Hoàn Tiền',
-    html: `Bạn xác nhận đã chuyển khoản trả lại số tiền <b>${formatCurrency(order.total_amount)}</b> cho khách hàng <b>${order.customer_name}</b>?`,
-    input: 'text',
-    inputPlaceholder: 'Mã giao dịch ngân hàng / Ghi chú...',
+  const currentStatus = getReturnStatusUi(order).statusCode;
+  
+  // Đặt giá trị mặc định cho form xử lý
+  const defaultRefundValue = (order.refund_amount !== null && order.refund_amount > 0) 
+      ? Math.round(order.refund_amount) 
+      : Math.round(order.total_amount);
+      
+  const defaultNoteValue = order.refund_note || '';
+
+  const { value: formValues, isDismissed } = await Swal.fire({
+    title: 'Thẩm Định & Xử Lý Hoàn Tiền',
+    html: `
+      <div class="row text-start mt-2">
+        <div class="col-lg-5 border-end-lg pe-lg-3 mb-4 mb-lg-0">
+          <div class="bg-light p-3 rounded border mb-3">
+              <div class="text-muted small fw-bold text-uppercase mb-1">Khách hàng</div>
+              <div class="fw-bold text-dark fs-6">${order.customer_name}</div>
+              <div class="text-muted small text-truncate">${order.customer_email || 'Không có Email'}</div>
+          </div>
+          <div class="bg-danger bg-opacity-10 border border-danger-subtle p-3 rounded text-center mb-3">
+              <div class="text-danger small fw-bold text-uppercase mb-1">Giá trị đơn gốc</div>
+              <div class="fw-bold text-danger fs-4 font-serif">${formatCurrency(order.total_amount)}</div>
+          </div>
+          <div class="alert alert-warning small border-warning py-2 mb-0">
+              <i class="bi bi-info-circle-fill me-1"></i> <strong>Lưu ý:</strong> Mọi khoản khấu trừ sẽ được thông báo tự động cho khách qua Email.
+          </div>
+        </div>
+        
+        <div class="col-lg-7 ps-lg-4">
+          <div class="mb-4">
+              <label class="form-label fw-bold small text-muted text-uppercase tracking-wide"><i class="bi bi-calculator text-brand me-1"></i> 1. Mức bồi hoàn</label>
+              
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                  <input type="radio" class="btn-check" name="refund_type" id="rt_full" value="full" checked>
+                  <label class="btn btn-outline-secondary btn-sm fw-bold px-3" for="rt_full">Hoàn 100%</label>
+
+                  <input type="radio" class="btn-check" name="refund_type" id="rt_percent" value="percent">
+                  <label class="btn btn-outline-secondary btn-sm fw-bold px-3" for="rt_percent">Trừ % Phí</label>
+
+                  <input type="radio" class="btn-check" name="refund_type" id="rt_fixed" value="fixed">
+                  <label class="btn btn-outline-secondary btn-sm fw-bold px-3" for="rt_fixed">Trừ Tiền Mặt</label>
+              </div>
+
+              <div id="deduction_input_wrap" style="display: none;" class="mb-3">
+                  <div class="input-group shadow-sm">
+                      <span class="input-group-text bg-light fw-bold" id="deduction_label">%</span>
+                      <input type="number" id="deduction_value" class="form-control border-start-0 ps-0 fw-bold text-brand" placeholder="Nhập mức khấu trừ..." min="0">
+                  </div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded border border-light-subtle">
+                  <span class="fw-bold text-dark font-oswald text-uppercase small">Khách thực nhận:</span>
+                  <span id="final_refund_display" class="fw-bold text-success fs-3 font-serif">${formatCurrency(defaultRefundValue)}</span>
+              </div>
+              <input type="hidden" id="swal-refund-amount" value="${defaultRefundValue}">
+          </div>
+
+          <div class="mb-4">
+              <label class="form-label fw-bold small text-muted text-uppercase tracking-wide"><i class="bi bi-check2-square text-brand me-1"></i> 2. Hướng xử lý</label>
+              
+              <div class="list-group shadow-sm">
+                  <label class="list-group-item list-group-item-action d-flex align-items-center cursor-pointer p-3">
+                    <input class="form-check-input me-3 mt-0 fs-5" type="radio" name="refund_action" value="propose" ${['pending', 'proposing'].includes(currentStatus) ? 'checked' : ''}>
+                    <div>
+                        <div class="fw-bold text-dark"><i class="bi bi-envelope-paper text-primary me-2"></i>Gửi Email Thỏa Thuận Giá</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Báo cho khách số tiền sẽ hoàn để chờ phản hồi.</div>
+                    </div>
+                  </label>
+                  <label class="list-group-item list-group-item-action d-flex align-items-center cursor-pointer p-3">
+                    <input class="form-check-input me-3 mt-0 fs-5" type="radio" name="refund_action" value="refunded" ${currentStatus === 'refunded' ? 'checked' : ''}>
+                    <div>
+                        <div class="fw-bold text-dark"><i class="bi bi-check-circle text-success me-2"></i>Đã Chuyển Khoản Trả Khách</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Xác nhận Kế toán đã chuyển khoản thành công.</div>
+                    </div>
+                  </label>
+                  <label class="list-group-item list-group-item-action d-flex align-items-center cursor-pointer p-3 bg-danger bg-opacity-10 border-danger border-opacity-25">
+                    <input class="form-check-input me-3 mt-0 fs-5" type="radio" name="refund_action" value="reject" ${currentStatus === 'rejected' ? 'checked' : ''}>
+                    <div>
+                        <div class="fw-bold text-danger"><i class="bi bi-x-circle text-danger me-2"></i>Từ chối hoàn tiền</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Gửi Email từ chối & đóng băng quy trình hoàn trả.</div>
+                    </div>
+                  </label>
+              </div>
+          </div>
+
+          <div>
+              <label class="form-label fw-bold small text-muted text-uppercase tracking-wide"><i class="bi bi-pencil-square text-brand me-1"></i> 3. Lời nhắn / Ghi chú <span class="text-danger">*</span></label>
+              <textarea id="swal-refund-note" class="form-control shadow-sm" rows="3" placeholder="Ví dụ: SORA xin phép khấu trừ 10% phí đánh bóng lại sản phẩm...">${defaultNoteValue}</textarea>
+              <div class="form-text small" style="font-size: 0.7rem;">Nội dung này sẽ được đính kèm vào Email gửi đi.</div>
+          </div>
+        </div>
+      </div>
+    `,
+    width: '900px',
     showCancelButton: true,
-    confirmButtonColor: '#dc3545',
-    cancelButtonText: 'Đóng',
-    confirmButtonText: 'Đã hoàn tiền',
+    confirmButtonText: 'Xác Nhận & Lưu',
+    cancelButtonText: 'Đóng lại',
+    confirmButtonColor: '#009981',
+    customClass: {
+      confirmButton: 'px-5 py-2 mx-2 rounded shadow-sm fw-bold',
+      cancelButton: 'px-5 py-2 mx-2 rounded fw-bold btn-light border'
+    },
+    didOpen: () => {
+      const typeRadios = document.querySelectorAll('input[name="refund_type"]');
+      const wrap = document.getElementById('deduction_input_wrap');
+      const label = document.getElementById('deduction_label');
+      const input = document.getElementById('deduction_value');
+      const display = document.getElementById('final_refund_display');
+      const hiddenAmt = document.getElementById('swal-refund-amount');
+      const note = document.getElementById('swal-refund-note');
+      const actionRadios = document.querySelectorAll('input[name="refund_action"]');
+      
+      const origAmt = parseFloat(order.total_amount);
+      const fmt = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
+
+      if (order.refund_amount !== null && order.refund_amount < origAmt && order.refund_amount > 0) {
+          document.getElementById('rt_fixed').checked = true;
+          wrap.style.display = 'block';
+          label.innerText = 'VNĐ';
+          input.value = origAmt - order.refund_amount;
+      } else {
+          document.getElementById('rt_full').checked = true;
+          wrap.style.display = 'none';
+          input.value = '';
+      }
+
+      const calc = () => {
+        const type = document.querySelector('input[name="refund_type"]:checked').value;
+        let finalAmt = origAmt;
+        const val = parseFloat(input.value) || 0;
+
+        if (type === 'percent') {
+          finalAmt = Math.max(0, origAmt - (origAmt * val / 100));
+          if (val > 0 && (note.value === '' || note.value.includes('khấu trừ'))) {
+             note.value = `SORA xin phép khấu trừ ${val}% phí dịch vụ/hao mòn đối với sản phẩm hoàn trả. Số tiền thực nhận: ${fmt(finalAmt)}.`;
+          }
+        } else if (type === 'fixed') {
+          finalAmt = Math.max(0, origAmt - val);
+          if (val > 0 && (note.value === '' || note.value.includes('khấu trừ'))) {
+             note.value = `SORA xin phép khấu trừ ${fmt(val)} phí dịch vụ/hao mòn đối với sản phẩm hoàn trả. Số tiền thực nhận: ${fmt(finalAmt)}.`;
+          }
+        }
+        
+        display.innerText = fmt(finalAmt);
+        hiddenAmt.value = finalAmt;
+      };
+
+      typeRadios.forEach(r => r.addEventListener('change', (e) => {
+         if(e.target.value === 'full') {
+             wrap.style.display = 'none';
+             input.value = '';
+         } else {
+             wrap.style.display = 'block';
+             label.innerText = e.target.value === 'percent' ? '%' : 'VNĐ';
+         }
+         calc();
+      }));
+
+      input.addEventListener('input', calc);
+
+      actionRadios.forEach(r => r.addEventListener('change', (e) => {
+         if (e.target.value === 'reject') {
+             display.innerText = fmt(0);
+             hiddenAmt.value = 0;
+             if (note.value === '' || note.value.includes('khấu trừ')) {
+                 note.value = 'SORA rất tiếc không thể chấp nhận yêu cầu hoàn tiền do sản phẩm không đáp ứng đủ điều kiện đổi trả ban đầu.';
+             }
+         } else {
+             calc();
+         }
+      }));
+    },
+    preConfirm: () => {
+      const amount = document.getElementById('swal-refund-amount').value;
+      const note = document.getElementById('swal-refund-note').value;
+      const action = document.querySelector('input[name="refund_action"]:checked').value;
+      
+      if (!amount || amount < 0) {
+        Swal.showValidationMessage('Vui lòng kiểm tra lại số tiền hoàn!');
+        return false;
+      }
+      if (!note && action !== 'refunded') {
+        Swal.showValidationMessage('Vui lòng nhập Nội dung Email để giải thích cho khách hàng!');
+        return false;
+      }
+      return { amount, note, action };
+    }
   });
 
-  if (isDismissed) return;
+  if (isDismissed || !formValues) return;
 
   const payload = {
-      status: 'returned', 
-      payment_status: 'refunded', 
-      note: noteText ? `Kế toán xác nhận Hoàn tiền: ${noteText}` : 'Kế toán xác nhận Hoàn tiền'
+      action: formValues.action,
+      refund_amount: formValues.amount,
+      refund_note: formValues.note
   };
 
+  Swal.fire({
+      title: 'Đang xử lý...',
+      text: 'Hệ thống đang đồng bộ dữ liệu và cấu hình Email...',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+  });
+
   try {
-    const res = await axios.put(`http://127.0.0.1:8000/api/admin/orders/${order.id}/status`, payload, { 
+    const res = await axios.post(`http://127.0.0.1:8000/api/admin/orders/${order.id}/refund-process`, payload, { 
       headers: getHeaders() 
     });
     
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Hoàn tiền thành công', showConfirmButton: false, timer: 1500 });
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xử lý hoàn tất!', showConfirmButton: false, timer: 1500 });
     tabCache.value = {}; 
     fetchData(pagination.value.currentPage, true); 
     fetchCounts(); 
@@ -380,6 +581,9 @@ const processRefund = async (order) => {
   } catch (error) { 
     if (error.response && error.response.status === 401) {
         Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+    } else if (error.response && error.response.status === 422) {
+        let errStr = Object.values(error.response.data.errors)[0][0];
+        Swal.fire('Dữ liệu không hợp lệ', errStr, 'error');
     } else {
         Swal.fire('Lỗi', 'Không thể cập nhật hệ thống', 'error');
     }
@@ -399,10 +603,10 @@ const openQuickView = async (id) => {
 
 const fetchCounts = async () => {
     try {
-        const tabs = ['all', 'paid', 'refunded'];
+        const tabs = ['all', 'pending', 'proposing', 'refunded', 'rejected'];
         const requests = tabs.map(tab => {
-            let url = `http://127.0.0.1:8000/api/admin/orders?page=1&status=returned`;
-            if (tab !== 'all') url += `&payment_status=${tab}`;
+            let url = `http://127.0.0.1:8000/api/admin/orders?page=1`;
+            if (tab !== 'all') url += `&return_tab=${tab}`;
             return axios.get(url, { headers: getHeaders() }).then(res => res.data);
         });
 
@@ -415,6 +619,7 @@ const fetchCounts = async () => {
     } catch (e) {}
 };
 
+// Lấy dữ liệu danh sách
 const fetchData = async (page = 1, silent = false) => {
   const cacheKey = `${activeTab.value}_${page}_${filters.value.start_date}_${filters.value.end_date}`;
 
@@ -427,10 +632,11 @@ const fetchData = async (page = 1, silent = false) => {
       else if (!isFirstLoad.value) isTableLoading.value = true;
   }
   
-  let queryParams = new URLSearchParams({ page, status: 'returned' });
-  if (activeTab.value !== 'all') queryParams.append('payment_status', activeTab.value);
+  let queryParams = new URLSearchParams({ page, is_return_page: '1' });
+  if (activeTab.value !== 'all') queryParams.append('return_tab', activeTab.value);
   if (filters.value.start_date) queryParams.append('start_date', filters.value.start_date);
   if (filters.value.end_date) queryParams.append('end_date', filters.value.end_date);
+  if (searchQuery.value) queryParams.append('search', searchQuery.value);
 
   try {
     const [resOrders, resModules] = await Promise.all([
@@ -447,6 +653,11 @@ const fetchData = async (page = 1, silent = false) => {
     const result = resOrders.data;
     const dataPayload = result.data.data ? result.data.data : result.data; 
     
+    // Cập nhật số lượng Tabs
+    if (result.counts) {
+      statusCounts.value = result.counts;
+    }
+
     const newPagination = result.data.last_page ? {
         currentPage: result.data.current_page,
         lastPage: result.data.last_page,
@@ -473,8 +684,13 @@ const switchTab = (tabId) => {
     fetchData(1, true); 
 };
 
+// Computed: Lọc từ khóa tìm kiếm
 const displayedOrders = computed(() => {
     let result = orders.value;
+    if (activeTab.value === 'all') {
+        result = result.filter(o => o.status === 'returned' || o.payment_status === 'refunded');
+    }
+    
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
         result = result.filter(o => 
@@ -506,4 +722,10 @@ onMounted(() => {
 .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+
+@media (min-width: 992px) {
+  :deep(.border-end-lg) {
+    border-right: 1px solid #dee2e6;
+  }
+}
 </style>
