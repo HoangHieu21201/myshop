@@ -9,7 +9,7 @@
             <li class="breadcrumb-item"><router-link :to="{ name: 'client-combos' }" class="text-muted text-decoration-none hover-primary">Bộ sưu tập</router-link></li>
             <li class="breadcrumb-item active fw-bold text-sora-primary" aria-current="page">{{ combo.name }}</li>
           </ol>
-        </nav>
+        </nav>s
       </div>
     </div>
 
