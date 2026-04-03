@@ -126,7 +126,7 @@
                     <button v-if="order.status === 'pending'" v-on:click="confirmCancel(order)" class="btn btn-outline-danger rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
                       Hủy đơn
                     </button>
-                    <button v-if="order.status === 'delivered'" v-on:click="openReview(order)" class="btn btn-outline-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
+                    <button v-if="order.status === 'delivered' && (!order.reviews || order.reviews.length === 0)" v-on:click="openReview(order)" class="btn btn-outline-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
                       Đánh giá
                     </button>
                     <button v-on:click="handleReorder(order)" class="btn btn-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100 mt-2">
@@ -299,7 +299,7 @@ const fetchOrders = async (page = 1) => {
     const res = await axios.get(`${API_BASE_URL}?page=${page}`, { headers: getHeaders() });
     orders.value = res.data.data || [];
     pagination.value = { current_page: res.data.current_page, last_page: res.data.last_page };
-  } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng' }); } 
+  } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng', err }); } 
   finally { isLoading.value = false; }
 };
 
@@ -309,7 +309,7 @@ const openDetails = async (order) => {
     selectedOrder.value = res.data.data;
     isModalOpen.value = true;
     document.body.style.overflow = 'hidden';
-  } catch (err) { Toast.fire({ icon: 'error', title: 'Không thể lấy chi tiết đơn hàng' }); }
+  } catch (err) { Toast.fire({ icon: 'error', title: 'Không thể lấy chi tiết đơn hàng', err }); }
 };
 
 const closeModal = () => { isModalOpen.value = false; document.body.style.overflow = 'auto'; };

@@ -722,7 +722,9 @@ const updateLocalAuthData = (newData) => {
       if (newData.avatar_url) authState.user.avatar_url = newData.avatar_url;
       localStorage.setItem('auth', JSON.stringify(authState));
     }
-  } catch(e) {}
+  } catch(err) {
+    return err;
+  }
 };
 
 // Đăng xuất
