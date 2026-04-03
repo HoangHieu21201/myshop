@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 use App\Http\Controllers\Api\admin\AdminReviewController;
 use App\Http\Controllers\Api\admin\AdminInventoryController;
+use App\Http\Controllers\Api\admin\AdminDashboardController;
+
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -228,6 +230,12 @@ Route::prefix('admin')->group(function () {
             Route::post('categories/{id}/restore', [AdminCategoryController::class, 'restore']);
             Route::post('categories/reorder', [AdminCategoryController::class, 'reorder']);
             Route::apiResource('categories', AdminCategoryController::class);
+        });
+
+        // Dashboard
+        Route::middleware(['check.module:dashboard'])->group(function () {
+            Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+            Route::get('/dashboard/chart', [AdminDashboardController::class, 'chart']);
         });
 
         // Quản lý Sản phẩm (Mã: admin_products)
