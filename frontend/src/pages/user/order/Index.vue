@@ -126,7 +126,7 @@
                     <button v-if="order.status === 'pending'" v-on:click="confirmCancel(order)" class="btn btn-outline-danger rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
                       Hủy đơn
                     </button>
-                    <button v-if="order.status === 'delivered'" v-on:click="openReview(order)" class="btn btn-outline-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
+                    <button v-if="order.status === 'delivered' && (!order.reviews || order.reviews.length === 0)" v-on:click="openReview(order)" class="btn btn-outline-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
                       Đánh giá
                     </button>
                     <button v-on:click="handleReorder(order)" class="btn btn-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100 mt-2">
