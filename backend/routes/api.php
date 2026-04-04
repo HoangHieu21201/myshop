@@ -26,12 +26,9 @@ use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 use App\Http\Controllers\Api\admin\AdminReviewController;
 use App\Http\Controllers\Api\admin\AdminInventoryController;
-<<<<<<< Updated upstream
 use App\Http\Controllers\Api\admin\AdminDashboardController;
-
-=======
 use App\Http\Controllers\Api\admin\AdminContactController;
->>>>>>> Stashed changes
+
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
