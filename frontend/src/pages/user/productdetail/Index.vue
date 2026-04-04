@@ -34,8 +34,9 @@
             
             <!-- ẢNH CHÍNH & NÚT YÊU THÍCH NỔI -->
             <div class="main-image-wrapper position-relative">
-              <button class="main-wishlist-btn" :class="{ 'active': isFavourited(product.id) }" @click.stop="toggleFavourite(product)" :title="isFavourited(product.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'">
-                  <i :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
+              <button class="main-wishlist-btn" :class="{ 'active': isFavourited(product.id) }" @click.stop="toggleFavourite(product)" :title="isFavourited(product.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" :disabled="isTogglingFav === product.id">
+                  <span v-if="isTogglingFav === product.id" class="spinner-border spinner-border-sm text-danger" style="width: 1rem; height: 1rem;"></span>
+                  <i v-else :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
               </button>
               <img :src="mainImage" :alt="product.name" class="main-img">
             </div>
@@ -184,8 +185,10 @@
                 @click="toggleFavourite(product)"
                 :class="{ 'active': isFavourited(product.id) }"
                 :title="isFavourited(product.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'"
+                :disabled="isTogglingFav === product.id"
               >
-                <i :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
+                <span v-if="isTogglingFav === product.id" class="spinner-border spinner-border-sm text-danger" style="width: 1.2rem; height: 1.2rem;"></span>
+                <i v-else :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
               </button>
             </div>
 
@@ -287,12 +290,13 @@
             <!-- Vùng hình ảnh -->
             <div class="sora-card-image">
                 <div class="sora-card-badges">
-                    <span v-if="item.is_new" class="sora-badge">MỚI</span>
+                    <!-- <span v-if="item.is_new" class="sora-badge">MỚI</span> -->
                 </div>
 
                 <!-- ĐÃ FIX: Trái tim yêu thích thẻ slider đồng bộ với trang chủ -->
-                <button class="sora-wishlist-btn" :class="{ 'active': isFavourited(item.id) }" @click.stop="toggleFavourite(item)" :title="isFavourited(item.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'">
-                    <i :class="isFavourited(item.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
+                <button class="sora-wishlist-btn" :class="{ 'active': isFavourited(item.id) }" @click.stop="toggleFavourite(item)" :title="isFavourited(item.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" :disabled="isTogglingFav === item.id">
+                    <span v-if="isTogglingFav === item.id" class="spinner-border spinner-border-sm text-danger" style="width: 1rem; height: 1rem;"></span>
+                    <i v-else :class="isFavourited(item.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
                 </button>
 
                 <!-- Ảnh -->
@@ -492,7 +496,29 @@ const isLoadingCompareSuggestions = ref(false);
 const comparePopupTab = ref('suggestions');
 const favouriteProducts = ref([]);
 const isLoadingFavourites = ref(false);
-const isLoggedIn = computed(() => !!localStorage.getItem('auth_token'));
+
+// Hàm getToken dùng chung cho toàn page
+const getToken = () => {
+  const commonKeys = ['access_token', 'token', 'auth_token', 'userToken', 'user_token'];
+  for (const k of commonKeys) {
+    const val = localStorage.getItem(k) || sessionStorage.getItem(k);
+    if (val && val.length > 15) return val; 
+  }
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key));
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.access_token) return parsed.access_token;
+        if (parsed.token) return parsed.token;
+        if (parsed.user && parsed.user.token) return parsed.user.token;
+      }
+    } catch(e) {}
+  }
+  return '';
+};
+
+const isLoggedIn = computed(() => !!getToken());
 
 const searchQuery = ref('');
 let searchTimeout = null;
@@ -516,38 +542,83 @@ const Toast = Swal.mixin({
 });
 
 // ==========================================
-// LOGIC WISHLIST (YÊU THÍCH)
+// LOGIC WISHLIST (YÊU THÍCH) - ĐỒNG BỘ API MỚI
 // ==========================================
 const favourites = ref([]);
+const isTogglingFav = ref(null);
 
-const loadFavourites = () => {
+const fetchFavorites = async () => {
+  const token = getToken();
+  if (!token) return;
   try {
-    const stored = localStorage.getItem('sora_favourites');
-    if (stored) favourites.value = JSON.parse(stored);
+    const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    const data = await response.json();
+    if (data.status) {
+      favourites.value = data.data.map(fav => fav.product_id);
+    }
   } catch (e) {
-    console.error('Không thể tải danh sách yêu thích');
+    console.error('Không thể tải danh sách yêu thích', e);
   }
 };
 
 const isFavourited = (productId) => {
   if (!productId) return false;
-  return favourites.value.some(id => String(id) === String(productId));
+  return favourites.value.includes(productId);
 };
 
-const toggleFavourite = (prod) => {
+const toggleFavourite = async (prod) => {
   if (!prod || !prod.id) return;
-  const idStr = String(prod.id);
+  const token = getToken();
   
-  const index = favourites.value.findIndex(id => String(id) === idStr);
-  
-  if (index > -1) {
-    favourites.value.splice(index, 1);
-    Toast.fire({ icon: 'info', title: 'Đã bỏ yêu thích', timer: 1500 });
-  } else {
-    favourites.value.push(prod.id);
-    Toast.fire({ icon: 'success', title: 'Đã thêm vào yêu thích', timer: 1500 });
+  if (!token) {
+    soraAlert.fire({
+      icon: 'warning',
+      title: 'Bạn chưa đăng nhập!',
+      text: 'Vui lòng đăng nhập để lưu trữ bộ sưu tập yêu thích của mình.',
+      confirmButtonText: 'Đăng Nhập Ngay',
+      showCancelButton: true,
+      cancelButtonText: 'Đóng'
+    }).then((result) => {
+      if (result.isConfirmed) router.push('/login');
+    });
+    return;
   }
-  localStorage.setItem('sora_favourites', JSON.stringify(favourites.value));
+
+  isTogglingFav.value = prod.id; 
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/client/favourites/toggle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ product_id: prod.id })
+    });
+    
+    const data = await response.json();
+
+    if (data.status) {
+      if (data.action === 'added') {
+        favourites.value.push(prod.id);
+        Toast.fire({ icon: 'success', title: 'Đã thêm vào yêu thích' });
+      } else if (data.action === 'removed') {
+        favourites.value = favourites.value.filter(id => id !== prod.id);
+        Toast.fire({ icon: 'info', title: 'Đã bỏ yêu thích' });
+      }
+    } else {
+      if (response.status === 401) {
+          Toast.fire({ icon: 'error', title: 'Phiên đăng nhập hết hạn. Vui lòng tải lại.' });
+      }
+    }
+  } catch (error) {
+    Toast.fire({ icon: 'error', title: 'Có lỗi xảy ra, thử lại sau' });
+  } finally {
+    isTogglingFav.value = null; 
+  }
 };
 // ==========================================
 
@@ -679,7 +750,7 @@ const fetchFavouritesForCompare = async () => {
   if(!isLoggedIn.value || favouriteProducts.value.length > 0) return;
   isLoadingFavourites.value = true;
   try {
-    const token = localStorage.getItem('auth_token');
+    const token = getToken();
     const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
     });
@@ -738,7 +809,7 @@ const fetchBrands = async () => {
 
 onMounted(() => {
   loadCompareList(); 
-  loadFavourites();
+  fetchFavorites(); 
   fetchProductData();
   fetchBrands();
 });
@@ -777,7 +848,7 @@ const validateQuantity = () => {
 
 const getHeaders = () => {
   const headers = { 'Accept': 'application/json' };
-  const token = localStorage.getItem('auth_token');
+  const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
   let sid = localStorage.getItem('cart_session_id');
   if (!sid && !token) { 

@@ -133,9 +133,10 @@
                           <span v-if="product.promotional_price" class="sora-badge sale-badge">SALE</span>
                       </div>
 
-                      <!-- Trái tim yêu thích ĐÃ FIX -->
-                      <button class="sora-wishlist-btn" :class="{ 'active': isFavourited(product.id) }" @click.stop="toggleFavourite(product)">
-                          <i :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
+                      <!-- TRÁI TIM YÊU THÍCH (ĐÃ FIX ĐỒNG BỘ API) -->
+                      <button class="sora-wishlist-btn" :class="{ 'active': isFavourited(product.id) }" @click.stop="toggleFavourite(product)" :disabled="isTogglingFav === product.id">
+                          <span v-if="isTogglingFav === product.id" class="spinner-border spinner-border-sm text-danger" style="width: 1rem; height: 1rem;"></span>
+                          <i v-else :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
                       </button>
 
                       <!-- Ảnh -->
@@ -172,11 +173,11 @@
           </div>
 
           <!-- Không có sản phẩm -->
-          <div v-if="allProducts.length === 0 && !isLoadingProducts" class="text-center py-5 my-5 bg-light sora-border-light border">
+          <div v-if="allProducts.length === 0 && !isLoadingProducts" class="text-center py-5 my-5 bg-light sora-border-light border" style="border-radius: 12px;">
             <i class="bi bi-gem fs-1 mb-3" style="color: var(--sora-secondary);"></i>
             <p class="text-dark playfair-font fs-4 mb-2">Không tìm thấy kiệt tác nào</p>
             <p class="text-muted mb-4 fw-light">Vui lòng thử thay đổi bộ lọc hoặc tìm kiếm khác.</p>
-            <button @click="resetFilters" class="btn text-uppercase ls-widest px-5 py-3 transition-colors sora-btn-primary" style="font-size: 0.8rem;">Xóa Bộ Lọc</button>
+            <button @click="resetFilters" class="btn text-uppercase ls-widest px-5 py-3 transition-colors sora-btn-primary" style="font-size: 0.8rem; border-radius: 8px;">Xóa Bộ Lọc</button>
           </div>
 
           <!-- PAGINATION -->
@@ -198,9 +199,44 @@
       </div>
     </div>
     
+    <!-- CHÂN DUNG SORA (MARQUEE SECTION MỚI TỐI ƯU) -->
+    <section class="portrait-section py-5 mt-4 overflow-hidden border-top sora-border-light">
+      <div class="text-center mb-5 px-3">
+        <p class="text-uppercase text-gold mb-2" style="font-size: 0.75rem; letter-spacing: 0.2em; color: var(--sora-secondary); font-weight: 600;">SORA In Real Life</p>
+        <h2 class="playfair-font text-dark fw-normal mb-3" style="font-size: 2.5rem; letter-spacing: 0.02em;">Chân Dung SORA</h2>
+        <div class="divider-gold mb-4"></div>
+        <p class="text-muted fw-light mx-auto" style="max-width: 600px; font-size: 0.95rem; line-height: 1.6;">
+          Khoảnh khắc rạng ngời của những vị khách quý. SORA tự hào là mảnh ghép hoàn hảo tôn vinh vẻ đẹp độc bản của bạn.
+        </p>
+      </div>
+
+      <!-- Vùng chứa có hiệu ứng fade (mask) hai bên trái phải -->
+      <div class="sora-marquee-wrapper">
+        <div class="sora-marquee-container">
+          <!-- Lớp track chứa các hình ảnh, có animation cuộn -->
+          <div class="sora-marquee-track">
+            <!-- Render 2 lần mảng portraitImages để tạo cảm giác lặp vô tận không bị hụt -->
+            <template v-for="loop in 2" :key="loop">
+              <div class="sora-marquee-item" v-for="(img, idx) in portraitImages" :key="`img-${loop}-${idx}`">
+                <img :src="img" alt="SORA Portrait" class="w-100 h-100 object-fit-cover">
+                
+                <!-- Hiệu ứng hover cho hình ảnh cao cấp hơn -->
+                <div class="overlay-hover position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center opacity-0 transition-all duration-400">
+                  <div class="overlay-content text-center">
+                    <i class="bi bi-instagram text-white d-block mb-3" style="font-size: 2.2rem;"></i>
+                    <span class="text-white font-oswald text-uppercase fw-medium" style="letter-spacing: 2px; font-size: 0.85rem;">Chi Tiết</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- MODAL QUICK ADD -->
     <div v-if="quickAddModal.isOpen" class="modal-overlay position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" @click.self="closeQuickAdd" style="z-index: 9999 !important; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px);">
-      <div class="bg-white rounded shadow-lg d-flex flex-column position-relative" style="width: 90%; max-width: 480px; max-height: 90vh; overflow: hidden; animation: slideUp 0.3s ease-out;">
+      <div class="bg-white rounded shadow-lg d-flex flex-column position-relative" style="width: 90%; max-width: 480px; max-height: 90vh; overflow: hidden; animation: slideUp 0.3s ease-out; border-radius: 12px !important;">
         <div class="d-flex justify-content-between align-items-center px-4 py-3" style="background-color: #9f273b;">
           <h5 class="mb-0 text-white fw-bold font-serif fs-5" style="letter-spacing: 0.5px;">Tùy chọn Sản phẩm</h5>
           <button @click="closeQuickAdd" class="btn text-white p-0 m-0 border-0" style="opacity: 0.8;">
@@ -256,7 +292,7 @@
             @click="confirmAddToCart" 
             :disabled="quickAddModal.isAdding || !isAllAttributesSelected || !currentVariant || currentVariant.stock_quantity <= 0"
             class="btn w-100 py-3 text-uppercase fw-bold text-white d-flex justify-content-center align-items-center gap-2"
-            style="background-color: #9f273b; border-radius: 4px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; border: none; font-size: 0.95rem;"
+            style="background-color: #9f273b; border-radius: 8px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; border: none; font-size: 0.95rem;"
           >
             <span v-if="quickAddModal.isAdding" class="spinner-border spinner-border-sm" role="status"></span>
             <template v-else><i class="bi bi-cart-plus me-1"></i> XÁC NHẬN THÊM</template>
@@ -290,11 +326,19 @@ const categories = ref([]);
 const allProducts = ref([]);
 const pagination = ref({ current_page: 1, last_page: 1, total: 0 });
 
-// FIX Z-INDEX cho SweetAlert2 Popup & Toast
+const portraitImages = ref([
+  'https://placehold.co/400x500/e7ce7d/ffffff?text=Chân+Dung+1',
+  'https://placehold.co/400x500/9f273b/ffffff?text=Chân+Dung+2',
+  'https://placehold.co/400x500/fcfcfc/000000?text=Chân+Dung+3',
+  'https://placehold.co/400x500/2c2c2c/ffffff?text=Chân+Dung+4',
+  'https://placehold.co/400x500/e7ce7d/ffffff?text=Chân+Dung+5',
+  'https://placehold.co/400x500/9f273b/ffffff?text=Chân+Dung+6',
+]);
+
 const soraAlert = Swal.mixin({
   buttonsStyling: true,
   confirmButtonColor: '#9f273b',
-  customClass: { confirmButton: 'px-4 py-2 mx-2 rounded-0 shadow-sm fw-bold font-oswald tracking-widest text-uppercase' },
+  customClass: { confirmButton: 'px-4 py-2 mx-2 rounded shadow-sm fw-bold font-oswald tracking-widest text-uppercase' },
   didOpen: (modal) => {
     const container = modal.parentElement;
     if (container) container.style.zIndex = '10005';
@@ -314,16 +358,47 @@ const Toast = Swal.mixin({
 });
 
 // ==========================================
-// LOGIC WISHLIST (YÊU THÍCH) - BẰNG LOCALSTORAGE
+// LOGIC WISHLIST (YÊU THÍCH) - ĐỒNG BỘ API
 // ==========================================
 const favourites = ref([]);
+const isTogglingFav = ref(null);
 
-const loadFavourites = () => {
+// Lấy Token chung từ localStorage/sessionStorage
+const getToken = () => {
+  const commonKeys = ['access_token', 'token', 'auth_token', 'userToken', 'user_token'];
+  for (const k of commonKeys) {
+    const val = localStorage.getItem(k) || sessionStorage.getItem(k);
+    if (val && val.length > 15) return val; 
+  }
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key));
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.access_token) return parsed.access_token;
+        if (parsed.token) return parsed.token;
+        if (parsed.user && parsed.user.token) return parsed.user.token;
+      }
+    } catch(e) {}
+  }
+  return '';
+};
+
+// Gọi API lấy danh sách ID sản phẩm đã thích khi vào trang
+const fetchFavorites = async () => {
+  const token = getToken();
+  if (!token) return; // Nếu chưa đăng nhập thì không cần gọi
   try {
-    const stored = localStorage.getItem('sora_favourites');
-    if (stored) favourites.value = JSON.parse(stored);
+    const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    const data = await response.json();
+    if (data.status) {
+      // Chỉ lưu trữ ID của product để tiện kiểm tra bằng mảng
+      favourites.value = data.data.map(fav => fav.product_id);
+    }
   } catch (e) {
-    console.error('Không thể tải danh sách yêu thích');
+    console.error('Không thể tải danh sách yêu thích', e);
   }
 };
 
@@ -331,18 +406,57 @@ const isFavourited = (productId) => {
   return favourites.value.includes(productId);
 };
 
-const toggleFavourite = (product) => {
-  const index = favourites.value.indexOf(product.id);
-  if (index > -1) {
-    favourites.value.splice(index, 1);
-    Toast.fire({ icon: 'info', title: 'Đã bỏ yêu thích', timer: 1500 });
-  } else {
-    favourites.value.push(product.id);
-    Toast.fire({ icon: 'success', title: 'Đã thêm vào yêu thích', timer: 1500, color: '#9f273b', iconColor: '#9f273b' });
+const toggleFavourite = async (product) => {
+  const token = getToken();
+  if (!token) {
+    soraAlert.fire({
+      icon: 'warning',
+      title: 'Bạn chưa đăng nhập!',
+      text: 'Vui lòng đăng nhập để lưu trữ bộ sưu tập yêu thích của mình.',
+      confirmButtonText: 'Đăng Nhập Ngay',
+      showCancelButton: true,
+      cancelButtonText: 'Đóng'
+    }).then((result) => {
+      if (result.isConfirmed) router.push('/login');
+    });
+    return;
   }
-  localStorage.setItem('sora_favourites', JSON.stringify(favourites.value));
-};
 
+  isTogglingFav.value = product.id; // Bật trạng thái loading cho trái tim đang click
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/client/favourites/toggle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ product_id: product.id })
+    });
+    
+    const data = await response.json();
+
+    if (data.status) {
+      if (data.action === 'added') {
+        favourites.value.push(product.id);
+        Toast.fire({ icon: 'success', title: 'Đã thêm vào yêu thích', color: '#9f273b', iconColor: '#9f273b' });
+      } else if (data.action === 'removed') {
+        favourites.value = favourites.value.filter(id => id !== product.id);
+        Toast.fire({ icon: 'info', title: 'Đã bỏ yêu thích' });
+      }
+    } else {
+      // Trường hợp token hết hạn
+      if (response.status === 401) {
+          Toast.fire({ icon: 'error', title: 'Phiên đăng nhập hết hạn. Vui lòng tải lại.' });
+      }
+    }
+  } catch (error) {
+    Toast.fire({ icon: 'error', title: 'Có lỗi xảy ra, thử lại sau' });
+  } finally {
+    isTogglingFav.value = null; // Tắt trạng thái loading
+  }
+};
 // ==========================================
 
 const filters = reactive({ sort: 'recommended', categories: '', collections: '', metals: '' });
@@ -480,7 +594,7 @@ const confirmAddToCart = async () => {
   
   quickAddModal.isAdding = true;
   try {
-    const token = localStorage.getItem('auth_token');
+    const token = getToken();
     let sessionId = localStorage.getItem('cart_session_id') || 'session_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('cart_session_id', sessionId);
     const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Cart-Session-Id': sessionId };
@@ -544,8 +658,8 @@ const changePage = (page) => { if(page >= 1 && page <= pagination.value.last_pag
 const goToProductDetail = (slug) => { if (slug) router.push({ name: 'productDetail', params: { shop_slug: shopSlug.value, slug: slug } }); };
 
 onMounted(() => { 
-  loadFavourites(); // Tải danh sách yêu thích
-  Promise.all([fetchCategories(), fetchProducts(1)]).then(() => isPageLoading.value = false); 
+  // Gọi đồng thời 3 hàm: Tải Danh mục, Tải Sản phẩm, Tải Tủ đồ Yêu thích (Nếu đã login)
+  Promise.all([fetchCategories(), fetchProducts(1), fetchFavorites()]).then(() => isPageLoading.value = false); 
 });
 </script>
 
@@ -631,33 +745,36 @@ onMounted(() => {
 .sora-luxury-card {
     background: #ffffff;
     border: 1px solid #f0f0f0;
+    border-radius: 12px;
     position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: all 0.4s ease;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     cursor: pointer;
     height: 100%;
 }
 
 .sora-luxury-card:hover {
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
     border-color: #e5e5e5;
+    transform: translateY(-5px);
 }
 
-/* Image Wrapper */
 .sora-card-image {
     position: relative;
-    aspect-ratio: 1/1; 
+    width: 100%;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
-    background-color: #fcfcfc;
+    background-color: #f9f9f9;
 }
 
 .sora-card-image img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Đổi thành contain để đảm bảo không cắt góc viền */
-    transition: opacity 0.6s ease; /* Bỏ transform scale tránh phóng to cắt góc */
+    object-fit: cover;
+    object-position: center;
+    transition: opacity 0.6s ease;
 }
 
 .sora-main-img { z-index: 1; }
@@ -665,9 +782,7 @@ onMounted(() => {
 
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-main-img { opacity: 0; }
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-hover-img { opacity: 1; }
-/* Đã xóa lệnh scale phóng to hình ảnh khi hover */
 
-/* Badges */
 .sora-card-badges {
     position: absolute;
     top: 15px;
@@ -685,11 +800,11 @@ onMounted(() => {
     font-weight: 700;
     letter-spacing: 2px;
     padding: 4px 10px;
+    border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 .sale-badge { background-color: #9f273b !important; color: white !important; }
 
-/* Heart Icon (Wishlist) */
 .sora-wishlist-btn {
     position: absolute;
     top: 15px;
@@ -708,12 +823,11 @@ onMounted(() => {
     transition: all 0.3s ease;
     color: #6c757d;
 }
-.sora-wishlist-btn:hover { transform: scale(1.1); color: #cc1e2e; }
+.sora-wishlist-btn:hover:not(:disabled) { transform: scale(1.1); color: #cc1e2e; }
 .sora-wishlist-btn.active { color: #dc3545; }
 .sora-wishlist-btn.active i { color: #dc3545 !important; }
 .sora-wishlist-btn i { font-size: 1.15rem; margin-top: 2px; }
 
-/* Info Area */
 .sora-card-info {
     padding: 20px 15px 70px 15px; 
     text-align: center;
@@ -760,7 +874,6 @@ onMounted(() => {
     font-weight: 400;
 }
 
-/* Hover Action Button */
 .sora-card-action {
     position: absolute;
     bottom: 0;
@@ -771,9 +884,7 @@ onMounted(() => {
     z-index: 10;
 }
 
-.sora-luxury-card:hover .sora-card-action {
-    transform: translateY(0);
-}
+.sora-luxury-card:hover .sora-card-action { transform: translateY(0); }
 
 .sora-action-btn {
     width: 100%;
@@ -805,11 +916,108 @@ onMounted(() => {
   box-shadow: inset 0 0 0 1px #9f273b; 
 }
 
+/* =========================================
+   SORA MARQUEE (CHÂN DUNG SORA MỚI)
+   ========================================= */
+.portrait-section {
+  background: linear-gradient(to bottom, #ffffff, #faf9f7);
+}
+
+.sora-marquee-wrapper {
+  width: 100%;
+  padding: 20px 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.sora-marquee-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 20px 0;
+}
+
+.sora-marquee-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  animation: sora-marquee 40s linear infinite; 
+}
+
+.sora-marquee-container:hover .sora-marquee-track {
+  animation-play-state: paused;
+}
+
+.sora-marquee-item {
+  position: relative;
+  width: 280px; 
+  height: 380px;
+  margin-right: 24px;
+  flex-shrink: 0;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 16px; 
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  transition: all 0.4s ease;
+}
+
+.sora-marquee-item:nth-child(even) {
+  margin-top: 40px;
+}
+
+.sora-marquee-item img {
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sora-marquee-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+  z-index: 10;
+}
+
+.sora-marquee-item:hover img {
+  transform: scale(1.1);
+}
+
+.overlay-hover {
+  background: rgba(159, 39, 59, 0.7); 
+  backdrop-filter: blur(3px); 
+}
+
+.overlay-content {
+  transform: translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.sora-marquee-item:hover .overlay-hover {
+  opacity: 1 !important;
+}
+
+.sora-marquee-item:hover .overlay-content {
+  transform: translateY(0);
+}
+
+@keyframes sora-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } 
+}
+
 @keyframes slideUp {
   from { transform: translateY(30px) scale(0.98); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-@media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .product-grid { grid-template-columns: repeat(1, 1fr); gap: 2rem; } }
+@media (max-width: 1200px) { 
+  .product-grid { grid-template-columns: repeat(2, 1fr); } 
+}
+@media (max-width: 768px) { 
+  .product-grid { grid-template-columns: repeat(1, 1fr); gap: 2rem; } 
+  .sora-marquee-wrapper {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  }
+  .sora-marquee-item { width: 220px; height: 300px; margin-right: 16px; }
+  .sora-marquee-item:nth-child(even) { margin-top: 20px; }
+  .sora-marquee-track { animation-duration: 25s; } 
+}
 </style>
