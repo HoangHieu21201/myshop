@@ -2,8 +2,18 @@
   <div class="favorite-page bg-light-custom font-sans pb-5 min-vh-100 position-relative">
     
     <!-- Tiêu đề trang -->
-    <section class="py-5 bg-white text-center shadow-sm mb-5 position-relative">
-      <div class="container py-3">
+    <section class="pt-4 pb-5 bg-white text-center shadow-sm mb-5 position-relative">
+      <!-- NÚT QUAY VỀ CỬA HÀNG -->
+      <div class="container text-start mb-2">
+         <router-link to="/shop" class="text-decoration-none text-secondary back-link d-inline-flex align-items-center transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+            </svg>
+            <span class="font-serif fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Quay lại Cửa hàng</span>
+         </router-link>
+      </div>
+
+      <div class="container py-2">
         <span class="text-accent text-uppercase fw-bold mb-2 d-block tracking-wide" style="font-size: 0.8rem; letter-spacing: 0.2em;">Tủ Đồ Cá Nhân</span>
         <h1 class="display-6 font-serif text-main mb-3">Sản Phẩm Yêu Thích</h1>
         <div class="divider bg-accent mx-auto"></div>
@@ -16,7 +26,10 @@
       <div v-if="!isLoggedIn" class="text-center py-5 bg-white shadow-sm p-5 border border-light mb-5">
         <h4 class="text-danger-custom mb-3">Bạn chưa đăng nhập!</h4>
         <p class="text-secondary mb-4">Vui lòng đăng nhập để xem tủ đồ cá nhân và thêm các sản phẩm yêu thích.</p>
-        <router-link to="/login" class="btn btn-main px-5 py-2 text-uppercase">Đăng nhập ngay</router-link>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <router-link to="/shop/sora" class="btn btn-outline-secondary px-5 py-2 text-uppercase tracking-wide" style="font-size: 0.9rem;">Về Cửa Hàng</router-link>
+          <router-link to="/login" class="btn btn-main px-5 py-2 text-uppercase tracking-wide" style="font-size: 0.9rem;">Đăng nhập ngay</router-link>
+        </div>
       </div>
 
       <!-- PHẦN 1: DANH SÁCH SẢN PHẨM YÊU THÍCH -->
@@ -40,7 +53,10 @@
             </svg>
           </div>
           <h4 class="h4 font-serif text-dark mb-3">Danh sách yêu thích trống</h4>
-          <p class="text-secondary fw-light mb-0">Hãy thả tim các sản phẩm bên dưới để thêm vào bộ sưu tập của bạn.</p>
+          <p class="text-secondary fw-light mb-4">Hãy thả tim các sản phẩm bên dưới để thêm vào bộ sưu tập của bạn.</p>
+          <router-link to="/shop" class="btn btn-main px-5 py-2 text-uppercase tracking-wide d-inline-flex align-items-center" style="font-size: 0.9rem;">
+            <i class="bi bi-shop me-2"></i> Khám Phá Cửa Hàng
+          </router-link>
         </div>
 
         <!-- Lưới sản phẩm -->
@@ -75,8 +91,15 @@
 
       <!-- PHẦN 2: DANH SÁCH KHÁM PHÁ (TEST DATA) -->
       <div class="pt-4 border-top">
-        <h3 class="font-serif text-dark mb-1">Gợi Ý Khám Phá</h3>
-        <p class="text-secondary fw-light mb-4">Các sản phẩm thực tế từ Database để bạn test thả tim.</p>
+        <div class="d-flex justify-content-between align-items-end mb-4">
+          <div>
+            <h3 class="font-serif text-dark mb-1">Gợi Ý Khám Phá</h3>
+            <p class="text-secondary fw-light mb-0">Các sản phẩm thực tế từ Database để bạn test thả tim.</p>
+          </div>
+          <router-link to="/shop/sora" class="text-decoration-none text-main fw-medium font-serif hover-underline d-none d-md-block">
+            Xem tất cả sản phẩm <i class="bi bi-arrow-right ms-1"></i>
+          </router-link>
+        </div>
 
         <div class="row g-4">
           <div v-for="product in allProducts" :key="'prod-'+product.id" class="col-6 col-md-4 col-lg-3">
@@ -123,17 +146,14 @@
         
         <!-- Icon dựa trên trạng thái (Thêm / Xóa) -->
         <div class="me-3 d-flex align-items-center justify-content-center">
-          <!-- Icon Thêm (Màu xanh / Trái tim đầy) -->
           <svg v-if="toast.type === 'added'" xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#198754" viewBox="0 0 24 24">
              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
-          <!-- Icon Xóa (Màu đỏ / Thùng rác) -->
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="#dc3545" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
         </div>
 
-        <!-- Nội dung thông báo -->
         <div class="flex-grow-1">
           <h6 class="mb-1 font-serif fw-bold" :class="toast.type === 'added' ? 'text-success' : 'text-danger'">
             {{ toast.type === 'added' ? 'Thành Công!' : 'Đã Gỡ Bỏ!' }}
@@ -141,7 +161,6 @@
           <p class="mb-0 text-secondary small fw-light">{{ toast.message }}</p>
         </div>
         
-        <!-- Nút tắt (X) -->
         <button type="button" class="btn-close ms-2" @click="toast = null" style="font-size: 0.8rem;"></button>
       </div>
     </transition>
@@ -163,21 +182,14 @@ const isLoggedIn = ref(false);
 // State quản lý Toast Thông Báo
 const toast = ref(null);
 
-// HÀM HIỂN THỊ TOAST THÔNG MINH
 const showToast = (message, actionType) => {
-  toast.value = { message: message, type: actionType }; // actionType: 'added' hoặc 'removed'
-  
-  // Tự động tắt sau 3 giây
-  setTimeout(() => {
-    toast.value = null;
-  }, 3000);
+  toast.value = { message: message, type: actionType };
+  setTimeout(() => { toast.value = null; }, 3000);
 };
 
-// Cấu hình URL
 const favApiUrl = 'http://localhost:8000/api/client/favourites'; 
 const shopApiUrl = 'http://localhost:8000/api/shop/sora/products';
 
-// Quét Token
 const getToken = () => {
   const commonKeys = ['access_token', 'token', 'auth_token', 'userToken', 'user_token'];
   for (const k of commonKeys) {
@@ -198,20 +210,17 @@ const getToken = () => {
   return '';
 };
 
-// Xử lý ảnh
 const getImageUrl = (path) => {
   if (!path) return 'https://images.unsplash.com/photo-1599643478524-fb66f4568dbb?q=80&w=600&auto=format&fit=crop';
   if (path.startsWith('http')) return path;
   return `http://localhost:8000/storage/${path}`;
 };
 
-// --- HÀM 1: LẤY DANH SÁCH YÊU THÍCH ---
 const fetchFavorites = async () => {
   if (!isLoggedIn.value) {
     isLoading.value = false;
     return;
   }
-  
   try {
     const response = await axios.get(favApiUrl, {
       headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
@@ -228,7 +237,6 @@ const fetchFavorites = async () => {
   }
 };
 
-// --- HÀM 2: LẤY SẢN PHẨM KHÁM PHÁ ---
 const fetchAllProducts = async () => {
   try {
     const response = await axios.get(shopApiUrl, {
@@ -246,7 +254,6 @@ const checkIsFavourited = (productId) => {
   return favorites.value.some(fav => fav.product_id === productId);
 };
 
-// --- HÀM 4: THAO TÁC THẢ TIM VÀ KÍCH HOẠT THÔNG BÁO ---
 const toggleFavorite = async (productId) => {
   const currentToken = getToken();
   if (!currentToken) {
@@ -264,10 +271,7 @@ const toggleFavorite = async (productId) => {
     });
 
     if (response.data.status) {
-      // 🌟 KÍCH HOẠT TOAST THÔNG BÁO (response.data.action trả về 'added' hoặc 'removed')
       showToast(response.data.message, response.data.action);
-      
-      // Load lại danh sách tủ đồ ngay sau đó
       await fetchFavorites(); 
     }
   } catch (error) {
@@ -315,6 +319,11 @@ onMounted(() => {
 .object-fit-cover { object-fit: cover !important; }
 .tracking-wide { letter-spacing: 0.1em; }
 
+/* Nút Quay Lại */
+.back-link { transition: all 0.3s ease; }
+.back-link:hover { color: #9f273b !important; transform: translateX(-5px); }
+.hover-underline:hover { text-decoration: underline !important; }
+
 /* Product Card & Hover Effects */
 .product-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -332,34 +341,24 @@ onMounted(() => {
 .product-card:hover .img-zoom-wrapper img { transform: scale(1.08); }
 
 /* Tiêu đề sản phẩm */
-.product-title {
-  font-size: 1.05rem; line-height: 1.4; height: 1.4rem;
-}
+.product-title { font-size: 1.05rem; line-height: 1.4; height: 1.4rem; }
 .product-title-link { transition: color 0.3s ease; }
 .product-title-link:hover .product-title { color: #9f273b !important; }
 
 /* Nút thả tim */
-.btn-toggle-fav {
-  width: 32px; height: 32px; opacity: 0.9; transition: all 0.2s ease;
-}
-.btn-toggle-fav:hover {
-  opacity: 1; background-color: #f8eaec !important; transform: scale(1.1);
-}
+.btn-toggle-fav { width: 32px; height: 32px; opacity: 0.9; transition: all 0.2s ease; }
+.btn-toggle-fav:hover { opacity: 1; background-color: #f8eaec !important; transform: scale(1.1); }
 .hover-danger { transition: stroke 0.2s ease; }
 .btn-toggle-fav:hover .hover-danger { stroke: #cc1e2e !important; }
 
 /* Nút main */
-.btn-main { background-color: #9f273b; color: white; border: 1px solid #9f273b; }
+.btn-main { background-color: #9f273b; color: white; border: 1px solid #9f273b; transition: all 0.3s ease; }
 .btn-main:hover { background-color: #cc1e2e; color: white; }
+.btn-outline-secondary:hover { background-color: #e9ecef; color: #2c2c2c; }
 
-/* HIỆU ỨNG CHUYỂN ĐỘNG CHO TOAST (TRƯỢT TỪ PHẢI SANG) */
+/* HIỆU ỨNG CHUYỂN ĐỘNG CHO TOAST */
 .toast-slide-enter-active,
-.toast-slide-leave-active {
-  transition: all 0.4s ease;
-}
+.toast-slide-leave-active { transition: all 0.4s ease; }
 .toast-slide-enter-from,
-.toast-slide-leave-to {
-  opacity: 0;
-  transform: translateX(100px);
-}
+.toast-slide-leave-to { opacity: 0; transform: translateX(100px); }
 </style>

@@ -14,20 +14,14 @@ class OrderPlacedMail extends Mailable implements ShouldQueue
 
     public $order;
 
-    /**
-     * Truyền dữ liệu đơn hàng vào Mail
-     */
     public function __construct(Order $order)
     {
         $this->order = $order;
     }
 
-    /**
-     * Xây dựng nội dung Email
-     */
     public function build()
     {
         return $this->subject('Xác nhận đơn hàng #' . $this->order->order_code . ' từ SORA Jewelry')
-            ->view('emails.order_placed'); // Trỏ tới file giao diện Blade bên dưới
+            ->view('emails.order_placed');
     }
 }
