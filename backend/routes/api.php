@@ -136,6 +136,8 @@ Route::prefix('client')->group(function () {
     });
     // Trang chủ
     Route::get('/home-data', [ClientHomeController::class, 'index']);
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
+         ->name('client.orders.invoice');
 });
 
 // ROUTE SHOP CLIENT

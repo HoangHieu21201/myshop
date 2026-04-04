@@ -16,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+//Pdf
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClientOrderController extends Controller
 {
@@ -450,5 +452,33 @@ class ClientOrderController extends Controller
             'success' => true, 
             'message' => 'Các sản phẩm đã được thêm lại vào giỏ hàng thành công.'
         ]);
+    }
+        /**
+     * Xuất hóa đơn PDF (khách hàng tự xuất)
+     */
+    public function invoice(string $order_code)
+    {
+        $user = auth('sanctum')->user();
+        
+        $order = Order::with(['items'])
+                    ->where('order_code', $order_code)
+                    ->firstOrFail();
+
+        // Bảo mật: chỉ chủ đơn hàng mới được xuất
+        if ($order->user_id && (!$user || $order->user_id !== $user->id)) {
+            abort(403, 'Bạn không có quyền xuất hóa đơn này.');
+        }
+
+        $pdf = Pdf::loadView('invoices.order', compact('order'));
+        $pdf->setPaper('A4');
+
+        // Cấu hình để hỗ trợ CSS và hình ảnh tốt hơn
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'defaultFont'          => 'DejaVu Sans',
+        ]);
+
+        return $pdf->download("hoa-don-{$order->order_code}.pdf");
     }
 }
