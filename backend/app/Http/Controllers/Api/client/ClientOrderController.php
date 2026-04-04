@@ -16,7 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;   // ← Thêm dòng này
+//Pdf
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClientOrderController extends Controller
 {

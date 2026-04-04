@@ -319,11 +319,7 @@ const fetchOrders = async (page = 1) => {
     const res = await axios.get(`${API_BASE_URL}?page=${page}`, { headers: getHeaders() });
     orders.value = res.data.data || [];
     pagination.value = { current_page: res.data.current_page, last_page: res.data.last_page };
-<<<<<<< Updated upstream
   } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng', err }); } 
-=======
-  } catch (err) { Toast.fire({ icon: 'error', title: 'Lỗi tải danh sách đơn hàng' }); }
->>>>>>> Stashed changes
   finally { isLoading.value = false; }
 };
 
