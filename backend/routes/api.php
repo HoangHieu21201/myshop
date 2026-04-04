@@ -26,6 +26,12 @@ use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 use App\Http\Controllers\Api\admin\AdminReviewController;
 use App\Http\Controllers\Api\admin\AdminInventoryController;
+<<<<<<< Updated upstream
+use App\Http\Controllers\Api\admin\AdminDashboardController;
+
+=======
+use App\Http\Controllers\Api\admin\AdminContactController;
+>>>>>>> Stashed changes
 
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
@@ -134,6 +140,8 @@ Route::prefix('client')->group(function () {
     });
     // Trang chủ
     Route::get('/home-data', [ClientHomeController::class, 'index']);
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
+         ->name('client.orders.invoice');
 });
 
 // ROUTE SHOP CLIENT
@@ -230,6 +238,12 @@ Route::prefix('admin')->group(function () {
             Route::apiResource('categories', AdminCategoryController::class);
         });
 
+        // Dashboard
+        Route::middleware(['check.module:dashboard'])->group(function () {
+            Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+            Route::get('/dashboard/chart', [AdminDashboardController::class, 'chart']);
+        });
+
         // Quản lý Sản phẩm (Mã: admin_products)
         Route::middleware(['check.module:admin_products'])->group(function () {
             Route::apiResource('products', AdminProductController::class);
@@ -306,5 +320,15 @@ Route::prefix('admin')->group(function () {
             Route::put('/variants/{id}/stock', 'updateVariantStock');
             Route::put('/combos/{id}/limit', 'updateComboLimit');
         });
+        // ==================================================
+        // ĐỒNG BỘ: QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
+        // ==================================================
+        Route::middleware(['check.module:admin_contacts'])->group(function () {
+            Route::controller(AdminContactController::class)->prefix('contacts')->group(function () {
+                Route::get('/', 'index');
+                Route::put('/{id}/status', 'updateStatus');
+                Route::delete('/{id}', 'destroy');
+            });
+        });      
     });
 });

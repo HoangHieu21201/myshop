@@ -11,9 +11,13 @@ use App\Models\OrderStatusHistory;
 use App\Models\Cart;
 use App\Models\ProductVariant;
 use App\Models\Coupon;
+use App\Models\Review; // BẮT BUỘC: Đảm bảo bạn đã thêm dòng này
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+//Pdf
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClientOrderController extends Controller
 {
@@ -32,7 +36,8 @@ class ClientOrderController extends Controller
             ], 401);
         }
 
-        $orders = Order::with('items')
+        // Đã thêm 'reviews' vào để load kèm trạng thái đánh giá
+        $orders = Order::with(['items', 'reviews'])
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -222,7 +227,8 @@ class ClientOrderController extends Controller
     {
         $user = auth('sanctum')->user();
         
-        $order = Order::with(['items', 'histories'])->where('order_code', $order_code)->first();
+        // Đã thêm 'reviews' vào để load kèm trạng thái đánh giá
+        $order = Order::with(['items', 'histories', 'reviews'])->where('order_code', $order_code)->first();
 
         if (!$order) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
@@ -295,47 +301,93 @@ class ClientOrderController extends Controller
     {
         return response()->json(['success' => false, 'message' => 'Xóa đơn hàng vĩnh viễn không được phép'], 403);
     }
+    
     /**
-     * Khách hàng đánh giá đơn hàng
+     * Khách hàng đánh giá đơn hàng (Từng sản phẩm)
      */
     public function review(Request $request, string $order_code)
     {
-        $user = auth('sanctum')->user();
-        $order = Order::where('order_code', $order_code)->first();
+        // Bao bọc toàn bộ code bằng try-catch để bắt mọi lỗi PHP/SQL
+        try {
+            $user = auth('sanctum')->user();
+            $order = Order::where('order_code', $order_code)->first();
 
-        if (!$order) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+            if (!$order) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+            }
+
+            if ($order->status !== 'delivered') {
+                return response()->json(['success' => false, 'message' => 'Bạn chỉ có thể đánh giá khi đơn hàng đã giao thành công'], 400);
+            }
+
+            if ($order->user_id && (!$user || $user->id !== $order->user_id)) {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền đánh giá đơn hàng này'], 403);
+            }
+
+            // Kiểm tra xem đơn hàng đã đánh giá chưa
+            $existingReview = Review::where('order_id', $order->id)->first();
+            if ($existingReview) {
+                return response()->json(['success' => false, 'message' => 'Đơn hàng này đã được đánh giá.'], 400);
+            }
+
+            // Validate dữ liệu từ FormData
+            $request->validate([
+                'reviews' => 'required|array',
+                'reviews.*.product_id' => 'nullable|integer|exists:products,id',
+                'reviews.*.combo_id'   => 'nullable|integer|exists:combos,id',
+                'reviews.*.rating'     => 'required|integer|min:1|max:5',
+                'reviews.*.comment'    => 'nullable|string|max:1000',
+                'reviews.*.images.*'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            ]);
+
+            DB::beginTransaction();
+
+            foreach ($request->reviews as $itemData) {
+                $imagePaths = [];
+                if (isset($itemData['images']) && is_array($itemData['images'])) {
+                    foreach ($itemData['images'] as $image) {
+                        $path = $image->store('reviews', 'public');
+                        $imagePaths[] = $path;
+                    }
+                }
+
+                Review::create([
+                    'order_id'   => $order->id,
+                    'user_id'    => $user->id ?? null,
+                    'product_id' => $itemData['product_id'] ?? null,
+                    'combo_id'   => $itemData['combo_id'] ?? null,
+                    'rating'     => $itemData['rating'],
+                    'comment'    => $itemData['comment'] ?? null,
+                    'images'     => empty($imagePaths) ? null : $imagePaths,
+                    'status'     => 'approved', // Sửa từ 'published' thành 'approved' khớp với DB ENUM
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Cảm ơn bạn đã đánh giá sản phẩm!'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Dữ liệu không hợp lệ, hãy kiểm tra lại hình ảnh.', 
+                'errors' => $e->errors()
+            ], 422);
+            
+        } catch (\Throwable $e) { // Dùng Throwable sẽ tóm được cả lỗi thiếu file (Class Not Found) hoặc lỗi Database Constraints
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            return response()->json([
+                'success' => false, 
+                'message' => 'Lỗi Backend: ' . $e->getMessage() . ' (Dòng ' . $e->getLine() . ')'
+            ], 500);
         }
-
-        if ($order->status !== 'delivered') {
-            return response()->json(['success' => false, 'message' => 'Bạn chỉ có thể đánh giá khi đơn hàng đã hoàn tất'], 400);
-        }
-
-        if ($order->user_id && (!$user || $user->id !== $order->user_id)) {
-            return response()->json(['success' => false, 'message' => 'Bạn không có quyền đánh giá đơn hàng này'], 403);
-        }
-
-        $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:1000'
-        ]);
-
-        // TUỲ THUỘC VÀO DATABASE CỦA BẠN (Ví dụ lưu vào bảng reviews)
-        // Review::create([
-        //     'order_id' => $order->id,
-        //     'user_id' => $user->id ?? null,
-        //     'rating' => $request->rating,
-        //     'comment' => $request->comment,
-        // ]);
-
-        // Hoặc có thể cập nhật trạng thái là "đã đánh giá" nếu có trường đó
-        // $order->update(['is_reviewed' => true]);
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Cảm ơn bạn đã đánh giá đơn hàng!'
-        ]);
     }
+
     /**
      * Chức năng Mua lại (Thêm toàn bộ sản phẩm của đơn hàng cũ vào giỏ)
      */
@@ -400,5 +452,33 @@ class ClientOrderController extends Controller
             'success' => true, 
             'message' => 'Các sản phẩm đã được thêm lại vào giỏ hàng thành công.'
         ]);
+    }
+        /**
+     * Xuất hóa đơn PDF (khách hàng tự xuất)
+     */
+    public function invoice(string $order_code)
+    {
+        $user = auth('sanctum')->user();
+        
+        $order = Order::with(['items'])
+                    ->where('order_code', $order_code)
+                    ->firstOrFail();
+
+        // Bảo mật: chỉ chủ đơn hàng mới được xuất
+        if ($order->user_id && (!$user || $order->user_id !== $user->id)) {
+            abort(403, 'Bạn không có quyền xuất hóa đơn này.');
+        }
+
+        $pdf = Pdf::loadView('invoices.order', compact('order'));
+        $pdf->setPaper('A4');
+
+        // Cấu hình để hỗ trợ CSS và hình ảnh tốt hơn
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'defaultFont'          => 'DejaVu Sans',
+        ]);
+
+        return $pdf->download("hoa-don-{$order->order_code}.pdf");
     }
 }
