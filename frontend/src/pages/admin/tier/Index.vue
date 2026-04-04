@@ -142,7 +142,7 @@ const confirmDelete = (id) => {
           Swal.fire('Lỗi', data.message, 'error');
         }
       } catch (error) {
-        Swal.fire('Lỗi', 'Mất kết nối đến server', 'error');
+        Swal.fire('Lỗi', 'Mất kết nối đến server', error);
       }
     }
   });

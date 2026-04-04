@@ -176,11 +176,10 @@ const backendSummary = ref(null);
 
 const API_BASE_URL = 'http://127.0.0.1:8000/api/client/cart';
 
-// FIX BLIND SPOT: Đã sửa lại lỗi hiển thị tàng hình của SweetAlert (Scope issue)
 const soraAlert = Swal.mixin({
-  buttonsStyling: true, // Bật lại styling mặc định để nhận các thuộc tính màu nền
-  confirmButtonColor: '#9f273b', // Cấp cứng màu Đỏ SORA vào config của thư viện
-  cancelButtonColor: '#6c757d',  // Cấp cứng màu Xám vào config của thư viện
+  buttonsStyling: true,
+  confirmButtonColor: '#9f273b',
+  cancelButtonColor: '#6c757d',
   customClass: {
     confirmButton: 'px-4 py-2 mx-2 rounded-pill shadow-sm fw-bold',
     cancelButton: 'px-4 py-2 mx-2 rounded-pill fw-bold'
@@ -193,15 +192,13 @@ const Toast = Swal.mixin({
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
-  background: '#fffafa', // Nền hồng nhạt
-  color: '#9f273b',      // Chữ đỏ SORA
-  iconColor: '#9f273b',  // Icon đỏ SORA
-  customClass: {
-    timerProgressBar: 'swal2-progress-sora'
-  },
+  background: '#fffafa',
+  color: '#9f273b',
+  iconColor: '#9f273b',
+  customClass: { timerProgressBar: 'swal2-progress-sora' },
   didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
   }
 });
 
@@ -219,22 +216,51 @@ const getHeaders = () => {
   return headers;
 };
 
+// ==================== THÊM MỚI: TỰ ĐỘNG MERGE ====================
+const checkAndMergeCart = async () => {
+  const token = localStorage.getItem('auth_token');
+  const sessionId = localStorage.getItem('cart_session_id');
+  
+  // Chỉ merge khi ĐÃ LOGIN mà vẫn còn session cart (tức là có giỏ guest)
+  if (!token || !sessionId) return;
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/merge`, {}, { 
+      headers: getHeaders() 
+    });
+
+    if (response.data.success) {
+      if (response.data.clear_session) {
+        localStorage.removeItem('cart_session_id');
+      }
+      Toast.fire({
+        icon: 'success',
+        title: 'Giỏ hàng đã được đồng bộ vào tài khoản của bạn'
+      });
+    }
+  } catch (error) {
+    console.error('Merge cart error:', error);
+    // Không báo lỗi cho user để tránh làm gián đoạn trải nghiệm
+  }
+};
+// ============================================================
+
 const getItemName = (item) => {
-    if (item.combo_id && item.combo) return item.combo.name;
-    if (item.product_variant_id && item.variant) return item.variant.product?.name || 'Sản phẩm Trang sức SORA';
-    return 'Sản phẩm không xác định';
+  if (item.combo_id && item.combo) return item.combo.name;
+  if (item.product_variant_id && item.variant) return item.variant.product?.name || 'Sản phẩm Trang sức SORA';
+  return 'Sản phẩm không xác định';
 };
 
 const getItemImage = (item) => {
-    if (item.combo_id && item.combo) return item.combo.thumbnail_image;
-    if (item.product_variant_id && item.variant) return item.variant.image_url || item.variant.product?.thumbnail_image;
-    return null;
+  if (item.combo_id && item.combo) return item.combo.thumbnail_image;
+  if (item.product_variant_id && item.variant) return item.variant.image_url || item.variant.product?.thumbnail_image;
+  return null;
 };
 
 const getItemPrice = (item) => {
-    if (item.price !== undefined) return parseFloat(item.price);
-    if (item.variant) return parseFloat(item.variant.promotional_price || item.variant.price || 0);
-    return 0; 
+  if (item.price !== undefined) return parseFloat(item.price);
+  if (item.variant) return parseFloat(item.variant.promotional_price || item.variant.price || 0);
+  return 0; 
 };
 
 const formatPrice = (value) => {
@@ -392,8 +418,9 @@ const clearCart = async () => {
   });
 };
 
-onMounted(() => {
-  fetchCart(); 
+onMounted(async () => {
+  await checkAndMergeCart();   // ← Merge trước (nếu có)
+  await fetchCart();           // ← Sau đó load giỏ hàng
 });
 </script>
 

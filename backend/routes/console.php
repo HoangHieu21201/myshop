@@ -9,3 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('sora:crawl-gold')->everyFiveMinutes();
+
+Schedule::command('sora:birthday-mail')->dailyAt('08:00');
