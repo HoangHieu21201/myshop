@@ -188,26 +188,30 @@
       <div
         class="modal-footer-luxury p-3 px-md-4 border-top bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div class="d-flex gap-2">
-            <template v-if="order?.status === 'delivered' && (!order?.reviews || order?.reviews.length === 0)">
-              <button v-on:click="$emit('open-review', order)"
-                class="btn btn-outline-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-                <i class="bi bi-star-fill me-1"></i> Đánh giá
-              </button>
-            </template>
-
-            <!-- NÚT MUA LẠI: Đã xóa v-if để hiển thị ở mọi trạng thái -->
-            <button v-on:click="$emit('reorder', order)"
-              class="btn btn-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-              <i class="bi bi-cart-plus me-1"></i> Mua lại
+          <template v-if="order?.status === 'delivered' && (!order?.reviews || order?.reviews.length === 0)">
+            <button v-on:click="$emit('open-review', order)"
+              class="btn btn-outline-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+              <i class="bi bi-star-fill me-1"></i> Đánh giá
             </button>
+          </template>
 
-            <!-- NÚT HỦY XUẤT HIỆN Ở ĐÂY NẾU TRẠNG THÁI LÀ PENDING -->
-            <template v-if="order?.status === 'pending'">
-              <button v-on:click="$emit('cancel-order', order)"
-                class="btn btn-outline-danger rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-                <i class="bi bi-x-circle me-1"></i> Hủy Đơn Hàng
-              </button>
-            </template>
+          <!-- NÚT MUA LẠI: Đã xóa v-if để hiển thị ở mọi trạng thái -->
+          <button v-on:click="$emit('reorder', order)"
+            class="btn btn-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+            <i class="bi bi-cart-plus me-1"></i> Mua lại
+          </button>
+
+          <!-- NÚT HỦY XUẤT HIỆN Ở ĐÂY NẾU TRẠNG THÁI LÀ PENDING -->
+          <template v-if="order?.status === 'pending'">
+            <button v-on:click="$emit('cancel-order', order)"
+              class="btn btn-outline-danger rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+              <i class="bi bi-x-circle me-1"></i> Hủy Đơn Hàng
+            </button>
+          </template>
+          <button v-on:click="exportInvoice"
+            class="btn btn-outline-success rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Xuất Hóa Đơn PDF
+          </button>
         </div>
         <button v-on:click="$emit('close')"
           class="btn btn-dark rounded-0 px-4 px-md-5 fw-bold text-uppercase small flex-shrink-0">
@@ -221,6 +225,8 @@
 
 <script setup>
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
+import axios from 'axios';           // ← THÊM
+import Swal from 'sweetalert2';      // ← THÊM
 
 const props = defineProps({
   isOpen: Boolean,
@@ -304,7 +310,50 @@ const getPaymentStatusIcon = (status) => {
   if (status === 'refunded') return 'bi-arrow-counterclockwise';
   return 'bi-hourglass-split';
 };
+// === HÀM XUẤT HÓA ĐƠN ĐÃ SỬA ===
+const exportInvoice = async () => {
+  if (!props.order?.order_code) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Lỗi',
+      text: 'Không tìm thấy mã đơn hàng',
+    });
+    return;
+  }
 
+  const token = localStorage.getItem('auth_token');
+
+  try {
+    const res = await axios.get(
+      `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/invoice`,
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          Accept: 'application/pdf',
+        },
+        responseType: 'blob',
+      }
+    );
+
+    // Tạo link tải file
+    const blobUrl = window.URL.createObjectURL(res.data);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `hoa-don-${props.order.order_code}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Lỗi',
+      text: err.response?.data?.message || 'Không thể tải hóa đơn. Vui lòng thử lại.',
+    });
+  }
+};
 </script>
 
 <style scoped>
