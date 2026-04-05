@@ -350,6 +350,14 @@ const parseCombo = (combo) => {
 
 // Phân tích trạng thái UI
 const getReturnStatusUi = (order) => {
+    if (order.status === 'return_requested') {
+        return { 
+            text: 'Chờ Xử Lý', 
+            class: 'bg-warning text-dark border-warning', 
+            icon: 'bi-inbox-fill', 
+            statusCode: 'pending' 
+        };
+    }
     if (order.payment_status === 'refunded') {
         return { text: 'Đã Hoàn Tiền', class: 'bg-success text-white border-success', icon: 'bi-check-circle-fill', statusCode: 'refunded' };
     }
@@ -687,10 +695,18 @@ const switchTab = (tabId) => {
 // Computed: Lọc từ khóa tìm kiếm
 const displayedOrders = computed(() => {
     let result = orders.value;
+
     if (activeTab.value === 'all') {
-        result = result.filter(o => o.status === 'returned' || o.payment_status === 'refunded');
+        result = result.filter(o => 
+            o.status === 'return_requested' ||   // ← THÊM DÒNG NÀY
+            o.status === 'returned' || 
+            o.payment_status === 'refunded'
+        );
+    } 
+    else if (activeTab.value === 'pending') {
+        result = result.filter(o => o.status === 'return_requested');
     }
-    
+
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
         result = result.filter(o => 

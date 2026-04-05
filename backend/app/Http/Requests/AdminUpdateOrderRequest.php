@@ -15,7 +15,7 @@ class AdminUpdateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status'         => 'required|string|in:pending,confirmed,processing,shipping,delivered,cancelled,returned',
+            'status' => 'required|string|in:pending,confirmed,processing,shipping,delivered,cancelled,returned,return_requested',
             'payment_status' => 'required|string|in:unpaid,paid,refunded',
             'note'           => 'nullable|string|max:1000',
         ];

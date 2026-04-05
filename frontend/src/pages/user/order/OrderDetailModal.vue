@@ -194,7 +194,13 @@
               <i class="bi bi-star-fill me-1"></i> Đánh giá
             </button>
           </template>
-
+          <!-- NÚT YÊU CẦU HOÀN HÀNG -->
+          <template v-if="order?.status === 'delivered'">
+            <button v-on:click="confirmReturn"
+              class="btn btn-outline-warning rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+              <i class="bi bi-arrow-return-left me-1"></i> Yêu cầu hoàn hàng
+            </button>
+          </template>
           <!-- NÚT MUA LẠI: Đã xóa v-if để hiển thị ở mọi trạng thái -->
           <button v-on:click="$emit('reorder', order)"
             class="btn btn-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
@@ -225,17 +231,17 @@
 
 <script setup>
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
-import axios from 'axios';           // ← THÊM
-import Swal from 'sweetalert2';      // ← THÊM
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
   isOpen: Boolean,
   order: Object
 });
 
-// Emit thêm sự kiện 'reorder' ra component cha để xử lý tập trung
 const emit = defineEmits(['close', 'cancel-order', 'open-review', 'reorder']);
 
+// ====================== CÁC HÀM CŨ (GIỮ NGUYÊN) ======================
 const orderSteps = [
   { value: 'pending', label: 'Chờ xác nhận', icon: 'bi-receipt' },
   { value: 'confirmed', label: 'Đã xác nhận', icon: 'bi-box-seam' },
@@ -246,7 +252,7 @@ const orderSteps = [
 
 const isStepCompleted = (currentStatus, stepValue) => {
   if (!currentStatus) return false;
-  if (['cancelled', 'returned'].includes(currentStatus)) return false;
+  if (['cancelled', 'returned', 'return_requested'].includes(currentStatus)) return false;
   const currentIdx = orderSteps.findIndex(s => s.value === currentStatus);
   const stepIdx = orderSteps.findIndex(s => s.value === stepValue);
   return currentIdx >= stepIdx;
@@ -288,7 +294,7 @@ const handleImageError = (e) => { e.target.src = defaultPlaceholder; };
 
 const translateStatus = (status) => ({
   pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', processing: 'Đang xử lý', shipping: 'Đang giao hàng',
-  delivered: 'Hoàn tất', cancelled: 'Đã hủy', returned: 'Trả hàng/Hoàn tiền'
+  delivered: 'Hoàn tất', cancelled: 'Đã hủy', returned: 'Trả hàng/Hoàn tiền', return_requested: 'Yêu cầu hoàn hàng'
 })[status] || status;
 
 const translatePaymentMethod = (method) => ({
@@ -310,14 +316,11 @@ const getPaymentStatusIcon = (status) => {
   if (status === 'refunded') return 'bi-arrow-counterclockwise';
   return 'bi-hourglass-split';
 };
-// === HÀM XUẤT HÓA ĐƠN ĐÃ SỬA ===
+
+// ====================== HÀM XUẤT HÓA ĐƠN ======================
 const exportInvoice = async () => {
   if (!props.order?.order_code) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi',
-      text: 'Không tìm thấy mã đơn hàng',
-    });
+    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không tìm thấy mã đơn hàng' });
     return;
   }
 
@@ -327,15 +330,11 @@ const exportInvoice = async () => {
     const res = await axios.get(
       `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/invoice`,
       {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-          Accept: 'application/pdf',
-        },
+        headers: { Authorization: token ? `Bearer ${token}` : '', Accept: 'application/pdf' },
         responseType: 'blob',
       }
     );
 
-    // Tạo link tải file
     const blobUrl = window.URL.createObjectURL(res.data);
     const link = document.createElement('a');
     link.href = blobUrl;
@@ -344,15 +343,60 @@ const exportInvoice = async () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(blobUrl);
-
   } catch (err) {
     console.error(err);
     Swal.fire({
       icon: 'error',
       title: 'Lỗi',
-      text: err.response?.data?.message || 'Không thể tải hóa đơn. Vui lòng thử lại.',
+      text: err.response?.data?.message || 'Không thể tải hóa đơn',
     });
   }
+};
+
+// ====================== HÀM YÊU CẦU HOÀN HÀNG (ĐÃ SỬA) ======================
+const confirmReturn = () => {
+  if (!props.order?.order_code) return;
+
+  Swal.fire({
+    title: 'Yêu cầu hoàn hàng',
+    text: `Bạn muốn yêu cầu hoàn đơn #${props.order.order_code}?`,
+    input: 'textarea',
+    inputPlaceholder: 'Lý do hoàn hàng (tối thiểu 10 ký tự)...',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Gửi yêu cầu',
+    cancelButtonText: 'Đóng',
+    reverseButtons: true,
+    inputValidator: (value) => {
+      if (!value || value.length < 10) return 'Vui lòng nhập lý do (ít nhất 10 ký tự)!';
+    }
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const token = localStorage.getItem('auth_token');
+
+      try {
+        await axios.post(
+          `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/return`,
+          { return_reason: result.value },
+          { headers: { Authorization: token ? `Bearer ${token}` : '' } }
+        );
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Đã gửi yêu cầu',
+          text: 'Chúng tôi sẽ kiểm tra và phản hồi sớm nhất!'
+        });
+
+        emit('close');   // đóng modal sau khi gửi thành công
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: err.response?.data?.message || 'Không thể gửi yêu cầu hoàn hàng'
+        });
+      }
+    }
+  });
 };
 </script>
 

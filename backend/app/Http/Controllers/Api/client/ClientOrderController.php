@@ -16,8 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-//Pdf
-use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf;   // ← Thêm dòng này
 
 class ClientOrderController extends Controller
 {
@@ -480,5 +479,70 @@ class ClientOrderController extends Controller
         ]);
 
         return $pdf->download("hoa-don-{$order->order_code}.pdf");
+    }
+        /**
+     * Khách hàng yêu cầu hoàn hàng / hoàn tiền
+     */
+    public function requestReturn(Request $request, string $order_code)
+    {
+        $user = auth('sanctum')->user();
+        $order = Order::with('items')->where('order_code', $order_code)->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        if ($order->status !== 'delivered') {
+            return response()->json(['success' => false, 'message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao thành công'], 400);
+        }
+
+        if ($order->user_id && (!$user || $user->id !== $order->user_id)) {
+            return response()->json(['success' => false, 'message' => 'Bạn không có quyền thực hiện'], 403);
+        }
+
+        $request->validate([
+            'return_reason' => 'required|string|min:10|max:500',
+            'images.*'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($order, $request, $user) {
+                // Cập nhật trạng thái đơn hàng
+                $order->update(['status' => 'return_requested']);
+
+                // Hoàn lại tồn kho (giống hủy đơn)
+                foreach ($order->items as $item) {
+                    if ($item->product_variant_id) {
+                        ProductVariant::where('id', $item->product_variant_id)
+                            ->increment('stock_quantity', $item->quantity);
+                    } elseif ($item->combo_id && is_array($item->combo_selections)) {
+                        foreach ($item->combo_selections as $selection) {
+                            $vId = $selection['selected_variant_id'] ?? null;
+                            if ($vId) {
+                                ProductVariant::where('id', $vId)
+                                    ->increment('stock_quantity', $item->quantity);
+                            }
+                        }
+                    }
+                }
+
+                // Lưu lịch sử
+                OrderStatusHistory::create([
+                    'order_id'        => $order->id,
+                    'old_status'      => 'delivered',
+                    'new_status'      => 'return_requested',
+                    'note'            => 'Khách yêu cầu hoàn hàng: ' . $request->return_reason,
+                    'changed_by'      => $user->id ?? null,
+                    'changed_by_type' => $user ? 'user' : 'guest',
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Yêu cầu hoàn hàng đã được gửi. Chúng tôi sẽ kiểm tra và phản hồi sớm nhất!'
+                ]);
+            });
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
