@@ -120,6 +120,7 @@ Route::prefix('client')->group(function () {
         // SỬA LẠI 2 ĐƯỜNG DẪN DƯỚI ĐÂY (chỉ cần /{order_code}/...)
         Route::post('/{order_code}/review', 'review'); // Đánh giá
         Route::post('/{order_code}/reorder', 'reorder'); // Mua lại
+        Route::post('/{order_code}/return', 'requestReturn');   // ← THÊM DÒNG NÀY
     });
 
     Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
