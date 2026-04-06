@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\admin;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail; // BẮT BUỘC IMPORT ĐỂ GỬI MAIL
+use Illuminate\Support\Facades\Mail; 
+use Illuminate\Support\Facades\Log;// BẮT BUỘC IMPORT ĐỂ GỬI MAIL
 
 class AdminContactController extends Controller
 {
@@ -116,7 +117,8 @@ class AdminContactController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Lỗi gửi mail SORA: ' . $e->getMessage());
+            // Sửa \Log thành Log
+            Log::error('Lỗi gửi mail SORA: ' . $e->getMessage()); 
             return response()->json([
                 'status' => false,
                 'message' => 'Gửi mail thất bại. Vui lòng kiểm tra lại cấu hình .env'

@@ -71,6 +71,11 @@ return [
         'module_code' => 'admin_inventory',
         'default_level' => 2
     ],
+     [
+        'module_name' => 'admin_contacts',
+        'module_code' => 'admin_contacts',
+        'default_level' => 2
+    ],
     [
         'module_name' => 'Dashboard',
         'module_code' => 'dashboard',

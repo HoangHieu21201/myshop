@@ -180,6 +180,12 @@ const menuItems = ref([
       { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' }
     ]
   },
+  {
+    name: 'Dịch vụ', icon: 'bi-headset', stateKey: 'services', 
+    children: [
+      { name: 'Hộp thư liên hệ', path: '/admin/contacts', moduleCode: 'admin_contacts' }
+    ]
+  },
 ]);
 
 const menuState = reactive({
