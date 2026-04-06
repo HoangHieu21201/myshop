@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPlacedMail;
 use App\Mail\AdminNewOrderMail;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache; // BỔ SUNG THƯ VIỆN CACHE ĐỂ DÙNG REDIS LOCK
+use Illuminate\Support\Facades\Cache;
 
 class ClientCheckoutController extends Controller
 {
@@ -73,12 +73,10 @@ class ClientCheckoutController extends Controller
         $user = auth('sanctum')->user();
         $sessionId = $request->header('X-Cart-Session-Id');
 
-        // BỌC REDIS LOCK: Ngăn chặn click đúp, chống tạo trùng đơn hàng cùng lúc
         $lockKey = 'checkout_lock_' . ($user ? $user->id : $sessionId);
-        $lock = Cache::lock($lockKey, 10); // Tạo ổ khóa 10 giây cho User/Session này
+        $lock = Cache::lock($lockKey, 10); 
 
         if (!$lock->get()) {
-            // Bị đá ra ngay lập tức nếu cố tình spam click, không tốn 1 nhịp chọc vào DB nào cả!
             return response()->json([
                 'success' => false,
                 'message' => 'Hệ thống đang xử lý đơn hàng của bạn, vui lòng không bấm liên tục...'
@@ -101,7 +99,6 @@ class ClientCheckoutController extends Controller
                     }
                 }
 
-                //  LẤY TOÀN BỘ CÁC ID CẦN LOCK
                 $variantIdsToLock = [];
                 $comboIdsToLock = [];
 
@@ -110,19 +107,16 @@ class ClientCheckoutController extends Controller
                         $variantIdsToLock[] = $item->product_variant_id;
                     } elseif ($item->combo_id) {
                         $comboIdsToLock[] = $item->combo_id;
-                        // Gom ID của các món khách tự chọn
                         if (is_array($item->combo_selections)) {
                             $variantIdsToLock = array_merge($variantIdsToLock, array_column($item->combo_selections, 'selected_variant_id'));
                         }
                     }
                 }
 
-                // Lấy các Combo tham gia trong giỏ hàng (Khóa luôn Combo để xử lý giới hạn mua - usage_limit)
                 $combos = Combo::with(['items' => function ($q) {
-                    $q->whereNotNull('product_variant_id'); // Chỉ lấy các món cố định
+                    $q->whereNotNull('product_variant_id'); 
                 }])->whereIn('id', array_unique($comboIdsToLock))->lockForUpdate()->get()->keyBy('id');
 
-                // Gom thêm ID của các món cố định (trong Combo) vào danh sách cần khóa kho
                 foreach ($combos as $combo) {
                     foreach ($combo->items as $cItem) {
                         if ($cItem->product_variant_id) {
@@ -131,17 +125,13 @@ class ClientCheckoutController extends Controller
                     }
                 }
 
-                // Khóa tất cả các Variants liên quan (chống Race Condition cấp độ Database)
                 $variants = ProductVariant::whereIn('id', array_unique($variantIdsToLock))
                     ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
                 $subTotal = 0;
                 $orderItemsData = [];
 
-                // TIẾN HÀNH TRỪ KHO VÀ TẠO DATA ITEMS
                 foreach ($cart->items as $item) {
-
-                    // --- XỬ LÝ SẢN PHẨM LẺ ---
                     if ($item->product_variant_id) {
                         $variant = $variants->get($item->product_variant_id);
                         if (!$variant || $variant->stock_quantity < $item->quantity) {
@@ -168,15 +158,12 @@ class ClientCheckoutController extends Controller
                             'combo_selections'   => null,
                         ];
                     }
-
-                    // --- XỬ LÝ COMBO ĐẶC QUYỀN ---
                     elseif ($item->combo_id) {
                         $combo = $combos->get($item->combo_id);
                         if (!$combo) {
                             throw new \Exception("Combo không tồn tại hoặc đã ngừng kinh doanh.");
                         }
 
-                        // 1. Trừ giới hạn mua (usage_limit) của Combo
                         if ($combo->usage_limit !== null) {
                             if ($combo->usage_limit < $item->quantity) {
                                 throw new \Exception("Gói ưu đãi {$combo->name} đã vượt quá số lượt bán cho phép.");
@@ -185,7 +172,6 @@ class ClientCheckoutController extends Controller
                             $combo->save();
                         }
 
-                        // 2. Trừ kho các mặt hàng KHÁCH TỰ CHỌN
                         if (is_array($item->combo_selections)) {
                             foreach ($item->combo_selections as $selection) {
                                 $vId = $selection['selected_variant_id'] ?? null;
@@ -200,11 +186,9 @@ class ClientCheckoutController extends Controller
                             }
                         }
 
-                        // 3. Trừ kho các mặt hàng CỐ ĐỊNH do Shop cài đặt
                         foreach ($combo->items as $cItem) {
                             if ($cItem->product_variant_id) {
                                 $variant = $variants->get($cItem->product_variant_id);
-                                // Số lượng cần trừ = SL Combo mua * SL món đó quy định trong Combo
                                 $totalQtyNeeded = $item->quantity * $cItem->quantity;
 
                                 if (!$variant || $variant->stock_quantity < $totalQtyNeeded) {
@@ -253,7 +237,6 @@ class ClientCheckoutController extends Controller
                 $shippingFee = $subTotal > 500000 ? 0 : 30000;
                 $totalAmount = max($subTotal - $discountAmount + $shippingFee, 0);
 
-                // LƯU ĐƠN HÀNG VÀ DỌN DẸP
                 $order = Order::create([
                     'order_code'       => 'SORA' . strtoupper(Str::random(8)),
                     'user_id'          => $user->id ?? null,
@@ -286,11 +269,22 @@ class ClientCheckoutController extends Controller
                     'changed_by_type' => $user ? 'user' : 'guest',
                 ]);
 
+                // ========================================================
+                // ĐÂY CHÍNH LÀ NƠI LARAVEL GỌI NODE.JS ĐỂ BÁO CÓ ĐƠN
+                // ========================================================
+                try {
+                    Http::post('http://localhost:3000/api/emit-order', [
+                        'orderCode' => $order->order_code,
+                        'totalAmount' => $order->total_amount
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Node.js Server is down: " . $e->getMessage());
+                }
+
                 if ($request->payment_method === 'cod') {
                     $cart->items()->delete();
                     $cart->delete();
 
-                    // GỬI MAIL CHO KHÁCH & ADMIN
                     $this->sendOrderConfirmationEmail($order);
 
                     return response()->json([
@@ -312,7 +306,6 @@ class ClientCheckoutController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         } finally {
-            // LUÔN MỞ KHÓA REDIS khi kết thúc tiến trình (bất kể thành công hay bị Exception ở trong catch)
             $lock->release();
         }
     }
@@ -427,20 +420,14 @@ class ClientCheckoutController extends Controller
             $order->update(['status' => 'cancelled', 'payment_status' => 'failed']);
 
             foreach ($order->items as $item) {
-
-                // --- TRẢ KHO SẢN PHẨM LẺ ---
                 if ($item->product_variant_id) {
                     ProductVariant::where('id', $item->product_variant_id)->increment('stock_quantity', $item->quantity);
                 }
-
-                // --- TRẢ KHO COMBO ---
                 elseif ($item->combo_id) {
-                    // 1. Trả lượt giới hạn Combo (usage_limit)
                     Combo::where('id', $item->combo_id)
                         ->whereNotNull('usage_limit')
                         ->increment('usage_limit', $item->quantity);
 
-                    // 2. Trả lại kho của các món Khách tự chọn
                     if (is_array($item->combo_selections)) {
                         foreach ($item->combo_selections as $selection) {
                             $vId = $selection['selected_variant_id'] ?? null;
@@ -450,7 +437,6 @@ class ClientCheckoutController extends Controller
                         }
                     }
 
-                    // 3. Trả lại kho của các món Cố định trong Combo
                     $combo = Combo::with('items')->find($item->combo_id);
                     if ($combo) {
                         foreach ($combo->items as $cItem) {

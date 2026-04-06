@@ -44,43 +44,55 @@ class AdminOrderController extends Controller
         }
 
         // =========================================================================
-        // PHÂN LUỒNG 1: DÀNH RIÊNG CHO TRANG XỬ LÝ HOÀN TRẢ
+        // PHÂN LUỒNG 1: TRANG XỬ LÝ HOÀN TRẢ (ĐÃ SỬA)
         // =========================================================================
         if ($request->boolean('is_return_page')) {
-            // Chỉ lấy các đơn Hàng bị trả lại HOẶC bị Hủy nhưng khách đã thanh toán
-            $baseQuery->where(function($q) {
-                $q->where('status', 'returned')
-                  ->orWhere(function($sub) {
-                      $sub->where('status', 'cancelled')->whereIn('payment_status', ['paid', 'refunded']);
-                  });
+            // LẤY CẢ return_requested + returned + cancelled đã thanh toán
+            $baseQuery->where(function ($q) {
+                $q->where('status', 'return_requested')           // ← THÊM
+                    ->orWhere('status', 'returned')
+                    ->orWhere(function ($sub) {
+                        $sub->where('status', 'cancelled')
+                            ->whereIn('payment_status', ['paid', 'refunded']);
+                    });
             });
 
-            // Tối ưu hóa: Lấy một bản sao để tính toán toàn bộ các Tab chỉ bằng 1 lần gom nhóm
+            // Tính count (đã cập nhật)
             $countQuery = clone $baseQuery;
-            $allReturns = $countQuery->get(['payment_status', 'refund_amount']);
-            
+            $allReturns = $countQuery->get(['status', 'payment_status', 'refund_amount']);
+
             $counts = [
-                'all'       => $allReturns->count(),
-                'pending'   => $allReturns->where('payment_status', 'paid')->whereNull('refund_amount')->count(),
-                'proposing' => $allReturns->filter(fn($q) => $q->payment_status === 'paid' && $q->refund_amount !== null && (float)$q->refund_amount > 0)->count(),
-                'refunded'  => $allReturns->where('payment_status', 'refunded')->count(),
-                'rejected'  => $allReturns->filter(fn($q) => $q->payment_status === 'paid' && $q->refund_amount !== null && (float)$q->refund_amount === 0.0)->count(),
+                'all'        => $allReturns->count(),
+                'pending'    => $allReturns->where('status', 'return_requested')->count(),           // ← THÊM
+                'proposing'  => $allReturns->where('status', 'returned')
+                    ->where('payment_status', 'paid')
+                    ->whereNotNull('refund_amount')
+                    ->where('refund_amount', '>', 0)->count(),
+                'refunded'   => $allReturns->where('payment_status', 'refunded')->count(),
+                'rejected'   => $allReturns->where('status', 'returned')
+                    ->where('payment_status', 'paid')
+                    ->where('refund_amount', 0)->count(),
             ];
 
-            // Áp dụng bộ lọc Tab do Frontend gửi lên
+            // Áp dụng tab filter
             if ($request->filled('return_tab') && $request->return_tab !== 'all') {
                 $tab = $request->return_tab;
                 if ($tab === 'pending') {
-                    $baseQuery->where('payment_status', 'paid')->whereNull('refund_amount');
+                    $baseQuery->where('status', 'return_requested');
                 } elseif ($tab === 'proposing') {
-                    $baseQuery->where('payment_status', 'paid')->whereNotNull('refund_amount')->where('refund_amount', '>', 0);
+                    $baseQuery->where('status', 'returned')
+                        ->where('payment_status', 'paid')
+                        ->whereNotNull('refund_amount')
+                        ->where('refund_amount', '>', 0);
                 } elseif ($tab === 'refunded') {
                     $baseQuery->where('payment_status', 'refunded');
                 } elseif ($tab === 'rejected') {
-                    $baseQuery->where('payment_status', 'paid')->whereNotNull('refund_amount')->where('refund_amount', 0);
+                    $baseQuery->where('status', 'returned')
+                        ->where('payment_status', 'paid')
+                        ->where('refund_amount', 0);
                 }
             }
-        } 
+        }
         // =========================================================================
         // PHÂN LUỒNG 2: DÀNH CHO TRANG QUẢN LÝ ĐƠN HÀNG BÌNH THƯỜNG
         // =========================================================================
@@ -206,13 +218,13 @@ class AdminOrderController extends Controller
             'action' => 'required|in:propose,reject,refunded',
             'refund_amount' => 'required|numeric|min:0',
             // FIX LỖI 422: Cho phép rỗng (nullable) khi Kế toán chỉ xác nhận chuyển khoản
-            'refund_note' => 'nullable|string' 
+            'refund_note' => 'nullable|string'
         ]);
 
         DB::beginTransaction();
         try {
             $order = Order::findOrFail($id);
-            
+
             // Ép refund_amount về 0 nếu TỪ CHỐI, làm cờ (flag) nhận biết trạng thái
             $order->refund_amount = $request->action === 'reject' ? 0 : $request->refund_amount;
             $order->refund_note = $request->refund_note;
@@ -224,9 +236,12 @@ class AdminOrderController extends Controller
                 }
 
                 OrderStatusHistory::create([
-                    'order_id' => $order->id, 'old_status' => $order->status, 'new_status' => $order->status,
+                    'order_id' => $order->id,
+                    'old_status' => $order->status,
+                    'new_status' => $order->status,
                     'note' => 'Kế toán xác nhận Đã chuyển khoản hoàn tiền.',
-                    'changed_by' => Auth::id(), 'changed_by_type' => 'admin'
+                    'changed_by' => Auth::id(),
+                    'changed_by_type' => 'admin'
                 ]);
             } else {
                 if ($order->customer_email) {
@@ -236,12 +251,15 @@ class AdminOrderController extends Controller
                         // Bỏ qua lỗi kết nối Mail cục bộ để không làm đứt luồng test
                     }
                 }
-                
+
                 $historyNote = $request->action === 'propose' ? 'Đã gửi Email thỏa thuận số tiền hoàn lại.' : 'Đã gửi Email từ chối hoàn tiền.';
                 OrderStatusHistory::create([
-                    'order_id' => $order->id, 'old_status' => $order->status, 'new_status' => $order->status,
+                    'order_id' => $order->id,
+                    'old_status' => $order->status,
+                    'new_status' => $order->status,
                     'note' => $historyNote,
-                    'changed_by' => Auth::id(), 'changed_by_type' => 'admin'
+                    'changed_by' => Auth::id(),
+                    'changed_by_type' => 'admin'
                 ]);
             }
 

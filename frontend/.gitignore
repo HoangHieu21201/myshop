@@ -41,3 +41,7 @@ __screenshots__/
 frontend/.env
 # backend/.env
 backend/.env
+
+# Socket Server
+/socket-server/node_modules
+/socket-server/package-lock.json
