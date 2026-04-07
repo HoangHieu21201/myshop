@@ -96,7 +96,7 @@
             <h3 class="font-serif text-dark mb-1">Gợi Ý Khám Phá</h3>
             <p class="text-secondary fw-light mb-0">Các sản phẩm thực tế từ Database để bạn test thả tim.</p>
           </div>
-          <router-link to="/shop/sora" class="text-decoration-none text-main fw-medium font-serif hover-underline d-none d-md-block">
+          <router-link to="/shop" class="text-decoration-none text-main fw-medium font-serif hover-underline d-none d-md-block">
             Xem tất cả sản phẩm <i class="bi bi-arrow-right ms-1"></i>
           </router-link>
         </div>
