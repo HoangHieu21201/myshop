@@ -137,7 +137,7 @@
                 </div>
               </div>
 
-              <!-- ĐÃ CẬP NHẬT: HIỂN THỊ ĐỊA CHỈ TRỰC TIẾP TRONG FORM -->
+              <!-- HIỂN THỊ SỔ ĐỊA CHỈ -->
               <div class="row mb-5 align-items-start">
                 <label class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium pt-2">Sổ Địa Chỉ</label>
                 <div class="col-sm-9 col-md-7">
@@ -152,7 +152,7 @@
                     </button>
                   </div>
 
-                  <!-- Trạng thái đã có địa chỉ (Hiện trực tiếp) -->
+                  <!-- Trạng thái đã có địa chỉ -->
                   <div v-else class="border border-light p-3 rounded-3 bg-light-custom position-relative transition-all hover-shadow">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                       <h6 class="mb-0 text-dark font-serif d-flex align-items-center fw-bold">
@@ -296,32 +296,42 @@
             <form @submit.prevent="saveAddress">
               <div class="row g-4 mb-4">
                 <div class="col-md-6">
-                  <label class="form-label text-secondary small fw-medium">Họ và tên người nhận</label>
+                  <label class="form-label text-secondary small fw-medium">Họ và tên người nhận <span class="text-danger">*</span></label>
                   <input type="text" class="form-control custom-input bg-white" v-model="addressForm.customer_name" required placeholder="Nhập họ tên">
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label text-secondary small fw-medium">Số điện thoại</label>
+                  <label class="form-label text-secondary small fw-medium">Số điện thoại <span class="text-danger">*</span></label>
                   <input type="tel" class="form-control custom-input bg-white" v-model="addressForm.customer_phone" required placeholder="Nhập số điện thoại">
                 </div>
               </div>
 
+              <!-- ĐÃ CẬP NHẬT: SỬ DỤNG BỘ DATA CHUẨN Kenzouno1 (GIỐNG ADMIN) -->
               <div class="row g-4 mb-4">
                 <div class="col-md-4">
-                  <label class="form-label text-secondary small fw-medium">Tỉnh / Thành phố</label>
-                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.city" required placeholder="VD: TP. Hồ Chí Minh">
+                  <label class="form-label text-secondary small fw-medium">Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                  <select class="form-select custom-input bg-white" v-model="addressForm.city" @change="handleCityChange" required>
+                    <option value="" disabled>-- Chọn Tỉnh/TP --</option>
+                    <option v-for="p in provincesData" :key="p.Id" :value="p.Name">{{ p.Name }}</option>
+                  </select>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label text-secondary small fw-medium">Quận / Huyện</label>
-                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.district" required placeholder="VD: Quận 1">
+                  <label class="form-label text-secondary small fw-medium">Quận / Huyện <span class="text-danger">*</span></label>
+                  <select class="form-select custom-input bg-white" v-model="addressForm.district" @change="handleDistrictChange" :disabled="!addressForm.city" required>
+                    <option value="" disabled>-- Chọn Quận/Huyện --</option>
+                    <option v-for="d in districtsData" :key="d.Id" :value="d.Name">{{ d.Name }}</option>
+                  </select>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label text-secondary small fw-medium">Phường / Xã</label>
-                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.ward" required placeholder="VD: Phường Bến Nghé">
+                  <label class="form-label text-secondary small fw-medium">Phường / Xã <span class="text-danger">*</span></label>
+                  <select class="form-select custom-input bg-white" v-model="addressForm.ward" :disabled="!addressForm.district" required>
+                    <option value="" disabled>-- Chọn Phường/Xã --</option>
+                    <option v-for="w in wardsData" :key="w.Id" :value="w.Name">{{ w.Name }}</option>
+                  </select>
                 </div>
               </div>
 
               <div class="mb-4">
-                <label class="form-label text-secondary small fw-medium">Địa chỉ cụ thể</label>
+                <label class="form-label text-secondary small fw-medium">Địa chỉ cụ thể <span class="text-danger">*</span></label>
                 <input type="text" class="form-control custom-input bg-white" v-model="addressForm.shipping_address" required placeholder="Số nhà, tên tòa nhà, tên đường...">
               </div>
 
@@ -350,7 +360,6 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-// ĐÃ FIX: Import thư viện SweetAlert2 giống hệt trang Sản Phẩm
 import Swal from 'sweetalert2';
 
 const router = useRouter();
@@ -388,6 +397,51 @@ const avatarFile = ref(null);
 const previewAvatar = ref(null);
 
 // ==========================================
+// STATE & LOGIC API TỈNH/THÀNH PHỐ MỚI (63 TỈNH)
+// ==========================================
+const provincesData = ref([]);
+const districtsData = ref([]);
+const wardsData = ref([]);
+
+// Thay đổi URL lấy dữ liệu thành bộ chuẩn 63 tỉnh
+const fetchProvinces = async () => {
+  try {
+    // Nếu trang Admin của sếp dùng file JSON nội bộ, sếp có thể đổi link này thành '/data/tinh_tp.json'
+    const response = await axios.get('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json');
+    provincesData.value = response.data;
+  } catch (error) {
+    console.error('Lỗi lấy dữ liệu hành chính:', error);
+  }
+};
+
+// Khi người dùng chọn Tỉnh/Thành phố
+const handleCityChange = () => {
+  addressForm.value.district = '';
+  addressForm.value.ward = '';
+  updateDistricts();
+  wardsData.value = []; // Reset luôn danh sách xã
+};
+
+// Khi người dùng chọn Quận/Huyện
+const handleDistrictChange = () => {
+  addressForm.value.ward = '';
+  updateWards();
+};
+
+// Hàm cập nhật danh sách Huyện theo Tỉnh đã chọn (Map theo biến .Name của data mới)
+const updateDistricts = () => {
+  const province = provincesData.value.find(p => p.Name === addressForm.value.city);
+  districtsData.value = province ? province.Districts : [];
+};
+
+// Hàm cập nhật danh sách Xã theo Huyện đã chọn (Map theo biến .Name của data mới)
+const updateWards = () => {
+  const district = districtsData.value.find(d => d.Name === addressForm.value.district);
+  wardsData.value = district ? district.Wards : [];
+};
+
+
+// ==========================================
 // STATE QUẢN LÝ SỔ ĐỊA CHỈ
 // ==========================================
 const addresses = ref([]);
@@ -407,33 +461,22 @@ const addressForm = ref({
   is_default: false
 });
 
-// Computed: Lấy địa chỉ mặc định để show lên Form Hồ Sơ (Trực quan ngay từ đầu)
 const defaultAddress = computed(() => {
   if (addresses.value.length === 0) return null;
   const def = addresses.value.find(addr => addr.is_default);
-  return def || addresses.value[0]; // Nếu không set mặc định, tự lấy cái đầu tiên
+  return def || addresses.value[0]; 
 });
 
-// Form data hồ sơ
 const form = ref({
-  fullName: '',
-  email: '',
-  phone: '',
-  gender: '',
-  birthday: '',
-  avatar_url: ''
+  fullName: '', email: '', phone: '', gender: '', birthday: '', avatar_url: ''
 });
 
-// Form data đổi mật khẩu
 const passwordForm = ref({
-  current_password: '',
-  password: '',
-  password_confirmation: ''
+  current_password: '', password: '', password_confirmation: ''
 });
 
 const apiBase = 'http://localhost:8000/api/client/profile'; 
 
-// Quét Token
 const getToken = () => {
   const commonKeys = ['access_token', 'token', 'auth_token', 'userToken', 'user_token'];
   for (const k of commonKeys) {
@@ -453,7 +496,6 @@ const getToken = () => {
   return '';
 };
 
-// Hàm lấy URL ảnh đầy đủ
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
@@ -463,25 +505,21 @@ const getImageUrl = (path) => {
 // ==========================================
 // CÁC HÀM XỬ LÝ SỔ ĐỊA CHỈ 
 // ==========================================
-
-// Mở Modal kèm form Thêm mới luôn
 const openAddAddressModal = () => {
   isAddressModalOpen.value = true;
   openAddAddressForm();
 };
 
-// Mở Modal nhưng show danh sách
 const openAddressListModal = () => {
   isAddressModalOpen.value = true;
   showAddressForm.value = false;
 };
 
-// Đóng Modal (Tự động chuyển về danh sách)
 const closeAddressModal = () => {
   isAddressModalOpen.value = false;
   setTimeout(() => {
     showAddressForm.value = false;
-  }, 300); // Đợi modal mờ đi rồi mới reset view
+  }, 300); 
 };
 
 const fetchAddresses = async () => {
@@ -512,6 +550,8 @@ const openAddAddressForm = () => {
     ward: '', 
     is_default: addresses.value.length === 0 
   };
+  districtsData.value = []; // Reset list Huyện
+  wardsData.value = [];     // Reset list Xã
   showAddressForm.value = true;
 };
 
@@ -521,11 +561,15 @@ const openEditAddressForm = (addr) => {
     ...addr, 
     is_default: addr.is_default === 1 || addr.is_default === true 
   };
+  
+  // Mồi sẵn dữ liệu Huyện/Xã để hiển thị đúng theo Tỉnh/Huyện mà DB trả ra
+  updateDistricts();
+  updateWards();
+  
   showAddressForm.value = true;
 };
 
 const closeAddressForm = () => {
-  // Nếu list rỗng mà user tắt form, đóng hẳn modal
   if (addresses.value.length === 0) {
     closeAddressModal();
   } else {
@@ -547,7 +591,7 @@ const saveAddress = async () => {
     if (response.data.status) {
       showToast(response.data.message, 'success');
       fetchAddresses(); 
-      showAddressForm.value = false; // Quay lại danh sách
+      showAddressForm.value = false; 
     }
   } catch (error) {
     if (error.response && error.response.status === 422) {
@@ -598,10 +642,7 @@ const setDefaultAddress = async (id) => {
     showToast('Lỗi thiết lập địa chỉ mặc định', 'error');
   }
 };
-// ==========================================
 
-
-// Lấy thông tin Profile từ API
 const fetchProfile = async () => {
   try {
     const response = await axios.get(apiBase, {
@@ -620,7 +661,6 @@ const fetchProfile = async () => {
       };
     }
   } catch (error) {
-    console.error('Lỗi lấy profile:', error);
     if (error.response && error.response.status === 401) {
       isLoggedIn.value = false;
     }
@@ -629,11 +669,7 @@ const fetchProfile = async () => {
   }
 };
 
-// XỬ LÝ UPLOAD ẢNH (Giao diện)
-const triggerFileInput = () => {
-  fileInput.value.click();
-};
-
+const triggerFileInput = () => { fileInput.value.click(); };
 const handleFileChange = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -642,20 +678,15 @@ const handleFileChange = (event) => {
   }
 };
 
-// CẬP NHẬT PROFILE
 const updateProfile = async () => {
   isSaving.value = true;
   try {
     const formData = new FormData();
-    
     formData.append('fullName', form.value.fullName || '');
     if (form.value.phone) formData.append('phone', form.value.phone);
     if (form.value.gender) formData.append('gender', form.value.gender);
     if (form.value.birthday) formData.append('birthday', form.value.birthday);
-    
-    if (avatarFile.value) {
-      formData.append('avatar', avatarFile.value);
-    }
+    if (avatarFile.value) formData.append('avatar', avatarFile.value);
 
     const response = await axios.post(apiBase, formData, {
       headers: { Authorization: `Bearer ${getToken()}` }
@@ -681,19 +712,16 @@ const updateProfile = async () => {
   }
 };
 
-// ĐỔI MẬT KHẨU
 const changePassword = async () => {
   if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
     showToast('Mật khẩu xác nhận không khớp!', 'error');
     return;
   }
-
   isChangingPassword.value = true;
   try {
     const response = await axios.post(`${apiBase}/password`, passwordForm.value, {
       headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
     });
-
     if (response.data.status) {
       showToast(response.data.message, 'success');
       passwordForm.value = { current_password: '', password: '', password_confirmation: '' };
@@ -713,7 +741,6 @@ const changePassword = async () => {
   }
 };
 
-// Hàm phụ trợ: Cập nhật tên mới vào LocalStorage
 const updateLocalAuthData = (newData) => {
   try {
     let authState = JSON.parse(localStorage.getItem('auth') || '{}');
@@ -727,7 +754,6 @@ const updateLocalAuthData = (newData) => {
   }
 };
 
-// Đăng xuất
 const logout = () => {
   localStorage.clear();
   sessionStorage.clear();
@@ -740,6 +766,7 @@ onMounted(() => {
     isLoggedIn.value = true;
     fetchProfile();
     fetchAddresses(); 
+    fetchProvinces(); // NẠP DỮ LIỆU TỈNH THÀNH KHI MỞ TRANG
   } else {
     isLoggedIn.value = false;
     isLoading.value = false;
@@ -793,7 +820,7 @@ onMounted(() => {
 .hover-shadow:hover { box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05); border-color: #e7ce7d !important; }
 .hover-main:hover { color: #9f273b !important; }
 
-/* Custom Input */
+/* Custom Input / Select */
 .custom-input {
   border-radius: 4px;
   border: 1px solid #ced4da;
@@ -803,6 +830,16 @@ onMounted(() => {
 .custom-input:focus {
   border-color: #9f273b;
   box-shadow: 0 0 0 0.2rem rgba(159, 39, 59, 0.15);
+  outline: none;
+}
+/* Trả lại không gian cho icon của form-select Bootstrap */
+select.custom-input {
+  padding-right: 2.5rem; 
+}
+/* CSS làm mờ mũi tên dropdown ở thẻ select nếu nó bị disable */
+.custom-input:disabled {
+  background-color: #f8f9fa !important;
+  cursor: not-allowed;
 }
 
 /* Custom Checkbox / Radio */
@@ -849,14 +886,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(3px); /* Làm mờ background nhẹ */
+  backdrop-filter: blur(3px);
 }
 .custom-modal-content {
   background: white;
   width: 100%;
   max-width: 850px;
   max-height: 85vh;
-  overflow-y: auto; /* Tạo cuộn trong nếu danh sách quá dài */
+  overflow-y: auto;
   border-radius: 12px;
   box-shadow: 0 1rem 4rem rgba(0,0,0,0.25);
 }
@@ -865,4 +902,4 @@ onMounted(() => {
 .modal-fade-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
 .modal-fade-enter-from,
 .modal-fade-leave-to { opacity: 0; transform: translateY(-20px); }
-</style>
+</style>  

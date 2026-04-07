@@ -369,6 +369,8 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+// BỔ SUNG THƯ VIỆN SOCKET.IO CLIENT TẠI ĐÂY
+import { io } from "socket.io-client";
 
 const route = useRoute();
 const orders = ref([]);
@@ -381,9 +383,9 @@ const isSilentLoading = ref(false);
 const searchQuery = ref('');
 const activeTab = ref('all');
 const filters = ref({ 
-    payment_status: 'all',
-    start_date: '',
-    end_date: ''
+  payment_status: 'all',
+  start_date: '',
+  end_date: ''
 });
 const currentPageLevel = ref(null);
 
@@ -393,10 +395,13 @@ let quickViewModalInstance = null;
 let isUnmounted = false;
 
 const statusCounts = ref({
-    all: 0, pending: 0, confirmed: 0, processing: 0, shipping: 0, delivered: 0, cancelled: 0, returned: 0
+  all: 0, pending: 0, confirmed: 0, processing: 0, shipping: 0, delivered: 0, cancelled: 0, returned: 0
 });
 
 const tabCache = ref({});
+
+// KHỞI TẠO KẾT NỐI SOCKET VỚI NODE.JS SERVER
+const socket = io("http://localhost:3000");
 
 onBeforeUnmount(() => {
   isUnmounted = true;
@@ -404,6 +409,11 @@ onBeforeUnmount(() => {
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
   document.body.className = '';
   document.body.style = '';
+
+  // NGẮT KẾT NỐI SOCKET KHI RỜI KHỎI TRANG NÀY
+  if (socket) {
+      socket.disconnect();
+  }
 });
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
@@ -718,6 +728,30 @@ const displayedOrders = computed(() => {
 
 onMounted(() => { 
     fetchData(1); 
+
+    // LẮNG NGHE SỰ KIỆN TỪ NODE.JS SERVER
+    socket.on("new_order_received", (data) => {
+        console.log("🔔 Có đơn hàng mới qua Socket.io:", data);
+
+        // Hiện thông báo ở góc màn hình
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'CÓ ĐƠN HÀNG MỚI!',
+            html: `Mã đơn: <b>${data.orderCode}</b><br>Trị giá: <b class="text-success">${formatCurrency(data.totalAmount)}</b>`,
+            showConfirmButton: false,
+            timer: 5000,
+            background: '#ffffff',
+            color: '#333'
+        });
+
+        // Xóa cache tab để đảm bảo load ra dữ liệu mới nhất
+        tabCache.value = {};
+        
+        // Gọi lại API ngầm để cập nhật danh sách
+        fetchData(1, true);
+    });
 });
 </script>
 

@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
 use App\Http\Controllers\Api\admin\AdminReviewController;
 use App\Http\Controllers\Api\admin\AdminInventoryController;
 use App\Http\Controllers\Api\admin\AdminDashboardController;
+use App\Http\Controllers\Api\admin\AdminContactController;
 
 
 // Controllers Client
@@ -36,6 +37,7 @@ use App\Http\Controllers\Api\client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\client\ClientCompareController;
+use App\Http\Controllers\Api\client\ClientContactController;
 use App\Http\Controllers\Api\Auth\AuthController;
 // use App\Http\Controllers\Api\client\ClientCheckoutController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
@@ -62,6 +64,8 @@ Route::prefix('client')->group(function () {
 
     // API CHATBOT AI (GEMINI)
     Route::post('/chatbot', [ChatbotController::class, 'chat']);
+
+    Route::post('/contact', [ClientContactController::class, 'store']);
 
     // MODULE GIỎ HÀNG (Cart)
     Route::controller(ClientCartController::class)->prefix('cart')->group(function () {
@@ -120,6 +124,7 @@ Route::prefix('client')->group(function () {
         // SỬA LẠI 2 ĐƯỜNG DẪN DƯỚI ĐÂY (chỉ cần /{order_code}/...)
         Route::post('/{order_code}/review', 'review'); // Đánh giá
         Route::post('/{order_code}/reorder', 'reorder'); // Mua lại
+        Route::post('/{order_code}/return', 'requestReturn');   // ← THÊM DÒNG NÀY
     });
 
     Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
@@ -315,6 +320,19 @@ Route::prefix('admin')->group(function () {
             Route::get('/variants', 'getVariants');
             Route::put('/variants/{id}/stock', 'updateVariantStock');
             Route::put('/combos/{id}/limit', 'updateComboLimit');
+        });
+        // ==================================================
+         // QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
+        // ==================================================
+        Route::middleware(['check.module:admin_contacts'])->group(function () {
+            Route::controller(AdminContactController::class)->prefix('contacts')->group(function () {
+                Route::get('/', 'index');
+                Route::put('/{id}/status', 'updateStatus');
+                Route::delete('/{id}', 'destroy');
+
+                // 👉 SẾP THÊM ĐÚNG DÒNG NÀY VÀO LÀ XONG:
+                Route::post('/{id}/reply', 'replyEmail');
+            });
         });
     });
 });

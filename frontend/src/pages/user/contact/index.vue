@@ -1,7 +1,7 @@
 <template>
   <div class="contact-page font-sans bg-light-custom pb-5">
     
-    <!-- 1. Tiêu đề chính (Hero Section) -->
+    <!-- Tiêu đề chính (Hero Section) -->
     <section class="hero-contact position-relative d-flex align-items-center justify-content-center text-center overflow-hidden">
       <div class="hero-overlay position-absolute w-100 h-100 top-0 start-0"></div>
       <div class="position-relative z-1 d-flex flex-column align-items-center px-3 pt-5">
@@ -15,7 +15,7 @@
     <section class="py-5" style="margin-top: -3rem; position: relative; z-index: 2;">
       <div class="container bg-white shadow-sm p-4 p-md-5">
         
-        <!-- 2. Đoạn mô tả ngắn -->
+        <!-- Đoạn mô tả ngắn -->
         <div class="text-center max-w-2xl mb-5 mx-auto">
           <h2 class="h3 font-serif text-main mb-3">Trải Nghiệm Chăm Sóc Độc Bản</h2>
           <p class="text-secondary fw-light" style="line-height: 1.8;">
@@ -25,13 +25,12 @@
 
         <div class="row g-5 mt-2">
           
-          <!-- 3. Thông tin liên hệ -->
+          <!-- Thông tin liên hệ -->
           <div class="col-lg-5 order-2 order-lg-1 pe-lg-5">
-            <div class="contact-info-wrapper h-100 bg-light p-4 p-md-5 border-start border-accent border-4">
+            <div class="contact-info-wrapper h-100 bg-light p-4 p-md-5 border-start border-accent border-4 d-flex flex-column">
               <h3 class="h4 font-serif text-dark mb-4">Thông Tin Liên Hệ</h3>
               
               <ul class="list-unstyled mb-5 text-secondary fw-light">
-                <!-- Địa chỉ -->
                 <li class="d-flex align-items-start mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="text-main me-3 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   <div>
@@ -39,23 +38,13 @@
                     Khu đô thị cao cấp, Quận 1, TP. Hồ Chí Minh
                   </div>
                 </li>
-                <!-- Điện thoại -->
                 <li class="d-flex align-items-start mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="text-main me-3 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                   <div>
-                    <strong class="d-block text-dark fw-medium mb-1">Dịch vụ khách hàng (24/7)</strong>
+                    <strong class="d-block text-dark fw-medium mb-1">Hotline CSKH (24/7)</strong>
                     <a href="tel:0901234567" class="text-secondary text-decoration-none custom-link">090 123 4567</a>
                   </div>
                 </li>
-                <!-- Email -->
-                <li class="d-flex align-items-start mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="text-main me-3 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                  <div>
-                    <strong class="d-block text-dark fw-medium mb-1">Email tiếp nhận</strong>
-                    <a href="mailto:concierge@sorajewelry.vn" class="text-secondary text-decoration-none custom-link">concierge@sorajewelry.vn</a>
-                  </div>
-                </li>
-                <!-- Giờ làm việc -->
                 <li class="d-flex align-items-start">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="text-main me-3 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   <div>
@@ -65,48 +54,63 @@
                 </li>
               </ul>
               
-              <!-- 5. Đoạn cam kết -->
+              <!-- Nút Liên Hệ Trực Tiếp Cố Định Ở Khối Trái -->
+              <div class="mt-2 mb-4 pt-4 border-top border-accent">
+                <h4 class="h6 font-serif text-dark mb-3 fw-bold">Trợ Giúp Tức Thời</h4>
+                <p class="text-secondary small fw-light mb-3">Kết nối trực tiếp với chuyên viên SORA để nhận tư vấn ngay lập tức.</p>
+                <div class="d-flex gap-2">
+                  <a href="https://zalo.me/0901234567" target="_blank" class="btn btn-zalo flex-grow-1 text-uppercase fw-medium rounded-0 py-2 d-flex justify-content-center align-items-center">
+                    <strong class="me-2" style="font-size: 1.1rem;">Zalo</strong> Chat
+                  </a>
+                  <a href="https://m.me/sorajewelry" target="_blank" class="btn btn-messenger flex-grow-1 text-uppercase fw-medium rounded-0 py-2 d-flex justify-content-center align-items-center">
+                    <i class="fa-brands fa-facebook-messenger me-2 fs-5"></i> Msg
+                  </a>
+                </div>
+              </div>
+
+              <!-- Đoạn cam kết -->
               <div class="p-3 bg-white border border-light text-center mt-auto">
                 <p class="mb-0 text-main font-serif fst-italic text-sm">
-                  "Mọi yêu cầu của quý khách sẽ được Chuyên viên SORA phản hồi tận tâm muộn nhất trong vòng 2 giờ làm việc."
+                  "Mọi yêu cầu qua Form hệ thống sẽ được Chuyên viên SORA phản hồi tận tâm muộn nhất trong vòng 2 giờ làm việc."
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- 4. Form liên hệ -->
+          <!-- Form liên hệ (Gọi API lưu Database) -->
           <div class="col-lg-7 order-1 order-lg-2">
             <div class="px-md-4 py-3">
-              <h3 class="h4 font-serif text-main mb-4">Gửi Lời Nhắn Cho Chúng Tôi</h3>
+              <h3 class="h4 font-serif text-main mb-4">Gửi Lời Nhắn Cho Hệ Thống</h3>
               <form @submit.prevent="submitContactForm">
                 <div class="row g-4">
                   <div class="col-md-6">
                     <div class="form-floating custom-floating">
-                      <input type="text" class="form-control custom-input" id="fullname" placeholder="Họ và tên" required>
+                      <input type="text" class="form-control custom-input" id="fullname" v-model="form.fullname" placeholder="Họ và tên" required>
                       <label for="fullname" class="text-muted fw-light">Danh xưng / Họ và tên *</label>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="form-floating custom-floating">
-                      <input type="tel" class="form-control custom-input" id="phone" placeholder="Số điện thoại" required>
+                      <input type="tel" class="form-control custom-input" id="phone" v-model="form.phone" placeholder="Số điện thoại" required>
                       <label for="phone" class="text-muted fw-light">Số điện thoại liên hệ *</label>
                     </div>
                   </div>
                   <div class="col-12">
                     <div class="form-floating custom-floating">
-                      <input type="email" class="form-control custom-input" id="email" placeholder="name@example.com" required>
+                      <input type="email" class="form-control custom-input" id="email" v-model="form.email" placeholder="name@example.com" required>
                       <label for="email" class="text-muted fw-light">Địa chỉ Email *</label>
                     </div>
                   </div>
                   <div class="col-12">
                     <div class="form-floating custom-floating">
-                      <textarea class="form-control custom-input" id="message" placeholder="Nội dung tin nhắn" style="height: 120px" required></textarea>
+                      <textarea class="form-control custom-input" id="message" v-model="form.message" placeholder="Nội dung tin nhắn" style="height: 120px" required></textarea>
                       <label for="message" class="text-muted fw-light">Mong muốn hoặc thắc mắc của bạn...</label>
                     </div>
                   </div>
                   <div class="col-12 mt-5 text-end">
-                    <!-- 6. CTA Button -->
-                    <button type="submit" class="btn btn-main btn-lg text-uppercase fw-medium px-5 py-3 w-100 w-md-auto rounded-0" style="letter-spacing: 0.1em;">
+                    <!-- Nút Gửi kèm trạng thái Loading -->
+                    <button type="submit" class="btn btn-main btn-lg text-uppercase fw-medium px-5 py-3 w-100 w-md-auto rounded-0 d-flex align-items-center justify-content-center ms-auto" style="letter-spacing: 0.1em;" :disabled="isSubmitting">
+                      <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
                       Gửi Lời Nhắn
                     </button>
                   </div>
@@ -133,11 +137,63 @@
 </template>
 
 <script setup>
-// Giao diện tĩnh, xử lý form liên hệ sau này gọi API tại đây
-const submitContactForm = () => {
-  // Logic gọi API gửi form sẽ code tại đây nhé sếp
-  alert("Cảm ơn bạn đã liên hệ SORA. Chuyên viên của chúng tôi sẽ phản hồi sớm nhất!");
-}
+import { ref } from 'vue';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+
+// 1. Quản lý trạng thái form
+const form = ref({
+  fullname: '',
+  phone: '',
+  email: '',
+  message: ''
+});
+const isSubmitting = ref(false);
+
+// 2. Đường dẫn API trỏ vào Controller mình vừa tạo
+const API_URL = 'http://localhost:8000/api/client/contact';
+
+// 3. Cấu hình SweetAlert2 đồng bộ với toàn hệ thống
+const soraAlert = Swal.mixin({
+  buttonsStyling: true,
+  confirmButtonColor: '#9f273b',
+  customClass: {
+    confirmButton: 'px-4 py-2 mx-2 rounded-0 shadow-sm fw-bold font-oswald tracking-widest text-uppercase'
+  }
+});
+
+// 4. Hàm Gửi Form Lưu Database
+const submitContactForm = async () => {
+  isSubmitting.value = true;
+  
+  try {
+    const response = await axios.post(API_URL, form.value, {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.data.status) {
+      soraAlert.fire({
+        icon: 'success',
+        title: 'Đã Gửi Thành Công!',
+        text: response.data.message
+      });
+      // Reset form cho sạch
+      form.value = { fullname: '', phone: '', email: '', message: '' };
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      // Lỗi do nhập thiếu dữ liệu
+      const errors = error.response.data.errors;
+      const firstErrorMsg = Object.values(errors)[0][0]; 
+      soraAlert.fire({ icon: 'error', title: 'Kiểm tra lại dữ liệu', text: firstErrorMsg });
+    } else {
+      // Lỗi do server sập hoặc chưa chạy php artisan serve
+      soraAlert.fire({ icon: 'error', title: 'Lỗi Kết Nối', text: 'Có lỗi máy chủ xảy ra. Vui lòng thử lại sau!' });
+    }
+  } finally {
+    isSubmitting.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -150,6 +206,39 @@ const submitContactForm = () => {
 .text-danger-custom { color: #cc1e2e !important; }
 .border-accent { border-color: #e7ce7d !important; }
 
+/* Nút Zalo & Messenger tĩnh (Trong trang) */
+.btn-zalo {
+  background-color: #0068FF;
+  color: white;
+  border: 1px solid #0068FF;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+.btn-zalo:hover {
+  background-color: #0054cc;
+  border-color: #0054cc;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 104, 255, 0.2);
+}
+
+.btn-messenger {
+  background-color: #000000;
+  color: white;
+  border: 1px solid #000000;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+.btn-messenger:hover {
+  background-color: #333333;
+  border-color: #333333;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* Font Serif cho tiêu đề */
 .font-serif {
   font-family: "Playfair Display", "Merriweather", serif;
@@ -158,14 +247,14 @@ const submitContactForm = () => {
 
 /* Hero Section */
 .hero-contact {
-  height: 40vh; /* Ngắn hơn trang About một chút */
+  height: 40vh;
   background-color: #1a1a1a;
-  background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f4568dbb?q=80&w=2000&auto=format&fit=crop'); /* Có thể thay ảnh nhẫn kim cương tối màu vào đây */
+  background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f4568dbb?q=80&w=2000&auto=format&fit=crop'); 
   background-size: cover;
   background-position: center 30%;
 }
 .hero-overlay {
-  background: rgba(40, 0, 10, 0.75); /* Ám đỏ đô tối */
+  background: rgba(40, 0, 10, 0.75); 
 }
 .divider {
   width: 3rem;

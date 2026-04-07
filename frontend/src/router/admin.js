@@ -242,7 +242,7 @@ const admin = [
         component: () => import('../pages/admin/combo/Edit.vue'),
         meta: { moduleCode: 'admin_combos' },
       },
-        // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
+      // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
       {
         path: 'reviews',
         name: 'admin-reviews',
@@ -255,7 +255,13 @@ const admin = [
         name: 'admin-inventory',
         component: () => import('../pages/admin/inventory/Index.vue'),
         meta: { moduleCode: 'admin_inventory' },
-      }
+      },
+      // ROUTE QUẢN LÝ Liên Hệ 
+      {
+        path: 'contacts',
+        name: 'admin-contacts',
+        component: () => import('../pages/admin/contact/index.vue')
+      },
 
     ],
   },
