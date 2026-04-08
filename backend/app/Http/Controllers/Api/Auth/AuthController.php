@@ -16,8 +16,11 @@ class AuthController extends Controller
         $request->validate([
             'fullName' => 'required|string|max:150',
             'email' => 'required|string|email|max:150|unique:users',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:6|confirmed', 
+            'phone' => 'nullable|string|max:20|unique:users,phone',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'phone.unique' => 'Số điện thoại này đã được sử dụng.',
+            'email.unique' => 'Email này đã được sử dụng.',
         ]);
 
         $user = User::create([

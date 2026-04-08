@@ -15,48 +15,42 @@
 
       <div class="modal-body p-4 p-md-5 overflow-auto bg-light" style="max-height: 75vh;">
 
-        <div class="bg-white p-4 shadow-sm border border-light-subtle mb-4 rounded">
-          <h5 class="fw-bold mb-4 font-serif text-primary-custom d-flex align-items-center">
-            <i class="bi bi-clock-history me-2"></i> TRẠNG THÁI ĐƠN HÀNG
-          </h5>
+        <!-- TRẠNG THÁI ĐƠN HÀNG -->
+<!-- TRẠNG THÁI ĐƠN HÀNG -->
+<div class="bg-white p-4 shadow-sm border border-light-subtle mb-4 rounded">
+  <h5 class="fw-bold mb-4 font-serif text-primary-custom d-flex align-items-center">
+    <i class="bi bi-clock-history me-2"></i> TRẠNG THÁI ĐƠN HÀNG
+  </h5>
 
-          <div v-if="!['cancelled', 'returned'].includes(order?.status)"
-            class="order-stepper-horizontal d-none d-md-flex mt-2 mb-2">
-            <div v-for="(step, index) in orderSteps" :key="index" class="stepper-step"
-              :class="{ 'completed': isStepCompleted(order?.status, step.value), 'active': order?.status === step.value }">
-              <div class="step-icon-wrap">
-                <div class="step-icon"><i :class="step.icon"></i></div>
-              </div>
-              <div class="step-text">
-                <div class="step-title" v-text="step.label"></div>
-                <div class="step-date" v-if="getStepDate(order, step.value)" v-text="getStepDate(order, step.value)">
-                </div>
-              </div>
-            </div>
-          </div>
+  <!-- Stepper chỉ hiển thị khi đơn hàng chưa yêu cầu hoàn / hủy / hoàn trả -->
+  <div v-if="!['cancelled', 'returned', 'return_requested'].includes(order?.status)"
+       class="order-stepper-horizontal d-none d-md-flex mt-2 mb-2">
+    
+    <div v-for="(step, index) in orderSteps" :key="index" class="stepper-step"
+         :class="{ 'completed': isStepCompleted(order?.status, step.value), 'active': order?.status === step.value }">
+      <div class="step-icon-wrap">
+        <div class="step-icon"><i :class="step.icon"></i></div>
+      </div>
+      <div class="step-text">
+        <div class="step-title" v-text="step.label"></div>
+        <div class="step-date" v-if="getStepDate(order, step.value)" v-text="getStepDate(order, step.value)"></div>
+      </div>
+    </div>
+  </div>
 
-          <ul v-if="!['cancelled', 'returned'].includes(order?.status)" class="timeline-vertical d-md-none mt-3">
-            <li v-for="(h, idx) in order?.histories" :key="h.id" :class="{ 'latest': idx === 0 }">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <h6 class="fw-bold mb-1" :class="idx === 0 ? 'text-primary-custom' : 'text-dark'"
-                  v-text="translateStatus(h.new_status)"></h6>
-                <div class="text-muted small mb-1" v-text="formatDateTime(h.created_at)"></div>
-                <div v-if="h.note" class="fst-italic text-secondary small">"<span v-text="h.note"></span>"</div>
-              </div>
-            </li>
-          </ul>
-
-          <div v-if="['cancelled', 'returned'].includes(order?.status)"
-            class="alert bg-light border border-light-subtle rounded-0 mb-0 d-flex align-items-center py-3 px-4">
-            <i class="bi bi-x-circle-fill text-secondary me-3 fs-3"></i>
-            <div>
-              <strong class="text-dark d-block mb-1">Đơn hàng đã bị <span
-                  v-text="order?.status === 'cancelled' ? 'Hủy' : 'Trả hàng'"></span>.</strong>
-              <span class="text-muted small">Cập nhật lúc: <span v-text="getCancelTime(order)"></span></span>
-            </div>
-          </div>
-        </div>
+  <!-- Alert thông báo khi đơn đã hủy, hoàn trả hoặc đang yêu cầu hoàn hàng -->
+  <div v-else class="alert bg-light border border-light-subtle rounded-0 mb-0 d-flex align-items-center py-3 px-4">
+    <i class="bi bi-arrow-return-left text-warning me-3 fs-3"></i>
+    <div>
+      <strong class="text-dark d-block mb-1">
+        <span v-if="order?.status === 'return_requested'">Đơn hàng đang yêu cầu hoàn hàng / trả hàng.</span>
+        <span v-else-if="order?.status === 'returned'">Đơn hàng đã được hoàn trả thành công.</span>
+        <span v-else>Đơn hàng đã bị hủy.</span>
+      </strong>
+      <span class="text-muted small">Cập nhật lúc: <span v-text="getCancelTime(order) || formatDateTime(order?.updated_at)"></span></span>
+    </div>
+  </div>
+</div>
 
         <div class="row g-4">
           <div class="col-lg-8">
@@ -194,7 +188,14 @@
               <i class="bi bi-star-fill me-1"></i> Đánh giá
             </button>
           </template>
-
+          <!-- NÚT YÊU CẦU HOÀN HÀNG -->
+          <!-- NÚT YÊU CẦU HOÀN HÀNG -->
+<template v-if="order?.status === 'delivered'">
+  <button v-on:click="confirmReturn"
+    class="btn btn-outline-warning rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+    <i class="bi bi-arrow-return-left me-1"></i> Yêu cầu hoàn hàng
+  </button>
+</template>
           <!-- NÚT MUA LẠI: Đã xóa v-if để hiển thị ở mọi trạng thái -->
           <button v-on:click="$emit('reorder', order)"
             class="btn btn-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
@@ -225,17 +226,17 @@
 
 <script setup>
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
-import axios from 'axios';           // ← THÊM
-import Swal from 'sweetalert2';      // ← THÊM
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
   isOpen: Boolean,
   order: Object
 });
 
-// Emit thêm sự kiện 'reorder' ra component cha để xử lý tập trung
 const emit = defineEmits(['close', 'cancel-order', 'open-review', 'reorder']);
 
+// ====================== CÁC HÀM CŨ (GIỮ NGUYÊN) ======================
 const orderSteps = [
   { value: 'pending', label: 'Chờ xác nhận', icon: 'bi-receipt' },
   { value: 'confirmed', label: 'Đã xác nhận', icon: 'bi-box-seam' },
@@ -246,7 +247,7 @@ const orderSteps = [
 
 const isStepCompleted = (currentStatus, stepValue) => {
   if (!currentStatus) return false;
-  if (['cancelled', 'returned'].includes(currentStatus)) return false;
+  if (['cancelled', 'returned', 'return_requested'].includes(currentStatus)) return false;
   const currentIdx = orderSteps.findIndex(s => s.value === currentStatus);
   const stepIdx = orderSteps.findIndex(s => s.value === stepValue);
   return currentIdx >= stepIdx;
@@ -287,8 +288,14 @@ const getImageUrl = (path) => {
 const handleImageError = (e) => { e.target.src = defaultPlaceholder; };
 
 const translateStatus = (status) => ({
-  pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', processing: 'Đang xử lý', shipping: 'Đang giao hàng',
-  delivered: 'Hoàn tất', cancelled: 'Đã hủy', returned: 'Trả hàng/Hoàn tiền'
+  pending: 'Chờ xác nhận', 
+  confirmed: 'Đã xác nhận', 
+  processing: 'Đang xử lý', 
+  shipping: 'Đang giao hàng',
+  delivered: 'Hoàn tất', 
+  cancelled: 'Đã hủy', 
+  returned: 'Trả hàng/Hoàn tiền', 
+  return_requested: 'Yêu cầu hoàn hàng'   // ← THÊM DÒNG NÀY
 })[status] || status;
 
 const translatePaymentMethod = (method) => ({
@@ -310,14 +317,11 @@ const getPaymentStatusIcon = (status) => {
   if (status === 'refunded') return 'bi-arrow-counterclockwise';
   return 'bi-hourglass-split';
 };
-// === HÀM XUẤT HÓA ĐƠN ĐÃ SỬA ===
+
+// ====================== HÀM XUẤT HÓA ĐƠN ======================
 const exportInvoice = async () => {
   if (!props.order?.order_code) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi',
-      text: 'Không tìm thấy mã đơn hàng',
-    });
+    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không tìm thấy mã đơn hàng' });
     return;
   }
 
@@ -327,15 +331,11 @@ const exportInvoice = async () => {
     const res = await axios.get(
       `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/invoice`,
       {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-          Accept: 'application/pdf',
-        },
+        headers: { Authorization: token ? `Bearer ${token}` : '', Accept: 'application/pdf' },
         responseType: 'blob',
       }
     );
 
-    // Tạo link tải file
     const blobUrl = window.URL.createObjectURL(res.data);
     const link = document.createElement('a');
     link.href = blobUrl;
@@ -344,15 +344,60 @@ const exportInvoice = async () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(blobUrl);
-
   } catch (err) {
     console.error(err);
     Swal.fire({
       icon: 'error',
       title: 'Lỗi',
-      text: err.response?.data?.message || 'Không thể tải hóa đơn. Vui lòng thử lại.',
+      text: err.response?.data?.message || 'Không thể tải hóa đơn',
     });
   }
+};
+
+// ====================== HÀM YÊU CẦU HOÀN HÀNG (ĐÃ SỬA) ======================
+const confirmReturn = () => {
+  if (!props.order?.order_code) return;
+
+  Swal.fire({
+    title: 'Yêu cầu hoàn hàng',
+    text: `Bạn muốn yêu cầu hoàn đơn #${props.order.order_code}?`,
+    input: 'textarea',
+    inputPlaceholder: 'Lý do hoàn hàng (tối thiểu 10 ký tự)...',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Gửi yêu cầu',
+    cancelButtonText: 'Đóng',
+    reverseButtons: true,
+    inputValidator: (value) => {
+      if (!value || value.length < 10) return 'Vui lòng nhập lý do (ít nhất 10 ký tự)!';
+    }
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const token = localStorage.getItem('auth_token');
+
+      try {
+        await axios.post(
+          `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/return`,
+          { return_reason: result.value },
+          { headers: { Authorization: token ? `Bearer ${token}` : '' } }
+        );
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Đã gửi yêu cầu',
+          text: 'Chúng tôi sẽ kiểm tra và phản hồi sớm nhất!'
+        });
+
+        emit('close');   // đóng modal sau khi gửi thành công
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: err.response?.data?.message || 'Không thể gửi yêu cầu hoàn hàng'
+        });
+      }
+    }
+  });
 };
 </script>
 

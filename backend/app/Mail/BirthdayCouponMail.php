@@ -23,7 +23,6 @@ class BirthdayCouponMail extends Mailable implements ShouldQueue
     public function build()
     {
         $name = $this->user->fullName ?? $this->user->name ?? 'Bạn';
-        
         return $this->subject("SORA Jewelry 🎁 Chúc mừng sinh nhật $name!")
                     ->view('emails.birthday_coupon');
     }
