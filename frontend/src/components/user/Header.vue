@@ -82,15 +82,18 @@
         </div>
       </div>
 
+      <!-- ĐÃ SỬA: Thêm class position-static để loại bỏ việc làm mốc tọa độ -->
       <div
-        class="header-tier-bottom d-none d-lg-flex justify-content-center align-items-center position-relative pb-2 mt-2">
+        class="header-tier-bottom d-none d-lg-flex justify-content-center align-items-center pb-2 mt-2 position-static">
 
-        <nav class="main-nav">
-          <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5">
+        <!-- ĐÃ SỬA: Thêm class position-static -->
+        <nav class="main-nav position-static">
+          <!-- ĐÃ SỬA: Thêm class position-static -->
+          <ul class="d-flex align-items-center m-0 p-0 list-unstyled gap-5 position-static">
             <li><router-link :to="{ name: 'home' }" class="nav-item-link">XU HƯỚNG</router-link></li>
 
-
-            <li class="position-relative" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
+            <!-- MEGA MENU SẢN PHẨM (ĐÃ SỬA: position-static thay vì position-relative để menu bung ra giữa màn hình) -->
+            <li class="position-static py-2" @mouseenter="isMegaMenuOpen = true" @mouseleave="isMegaMenuOpen = false">
               <a href="#" @click.prevent="safeNavigate('shop')" class="nav-item-link d-flex align-items-center">
                 SẢN PHẨM
               </a>
@@ -99,35 +102,35 @@
                 <div v-show="isMegaMenuOpen"
                   class="mega-menu-wrapper shadow-lg border-top border-3 border-primary-custom">
                   <div class="d-flex text-start">
-                    <div class="mega-category-list p-4 bg-light border-end">
-                      <h6 class="fw-bold mb-3 text-uppercase text-muted font-oswald" style="letter-spacing: 1px;">Danh
-                        Mục
+                    <!-- Khu vực danh mục -->
+                    <div class="mega-category-list p-4 bg-light border-end" style="width: 240px; flex-shrink: 0;">
+                      <h6 class="fw-bold mb-3 text-uppercase text-muted font-oswald" style="letter-spacing: 1px;">Danh Mục
                       </h6>
                       <ul class="list-unstyled m-0">
-                        <li v-for="cat in categories" :key="cat.id" class="mb-2" @mouseenter="hoveredCategory = cat">
+                        <li v-for="cat in categories" :key="cat.id" class="mb-3" @mouseenter="hoveredCategory = cat">
                           <a href="#" @click.prevent="safeNavigate('shop', { query: { category: cat.slug } })"
-                            class="mega-cat-link d-flex justify-content-between align-items-center fw-semibold text-decoration-none"
-                            :class="{ 'text-primary-custom': hoveredCategory?.id === cat.id }">
-                            {{ cat.name }} <i class="bi bi-arrow-right-short opacity-50"></i>
+                            class="mega-cat-link fw-semibold text-decoration-none"
+                            :class="{ 'active-cat text-primary-custom': hoveredCategory?.id === cat.id }">
+                            {{ cat.name }}
                           </a>
                         </li>
                       </ul>
                     </div>
 
+                    <!-- Khu vực lưới sản phẩm Mega Menu -->
                     <div class="mega-products-preview p-4 flex-grow-1 bg-white">
                       <h6 class="fw-bold mb-3 text-uppercase text-muted font-oswald" style="letter-spacing: 1px;">
                         Nổi bật: {{ hoveredCategory ? hoveredCategory.name : 'Mới Nhất' }}
                       </h6>
-                      <div class="row g-3" v-if="hoveredCategory && hoveredCategory.top_products">
+                      <div class="row g-4" v-if="hoveredCategory && hoveredCategory.top_products">
                         <div class="col-3" v-for="prod in hoveredCategory.top_products" :key="prod.id">
-                          <div class="mega-product-card cursor-pointer" @click="goToProduct(prod.slug)">
-                            <div class="mega-img-wrap bg-light rounded-3 mb-2 overflow-hidden border">
+                          <div class="mega-product-card" @click="goToProduct(prod.slug)">
+                            <div class="mega-img-wrap bg-light rounded-3 mb-2 border">
                               <img :src="getImage(prod.thumbnail_image)"
-                                class="w-100 h-100 object-fit-cover transition-transform" alt="Product">
+                                class="w-100 h-100 object-fit-cover" alt="Product">
                             </div>
-                            <h6 class="small fw-bold text-truncate mb-1">{{ prod.name }}</h6>
-                            <div class="text-danger fw-bold small">{{ formatCurrency(prod.promotional_price ||
-                              prod.base_price) }}</div>
+                            <h6 class="small fw-bold text-truncate mb-1 transition-color">{{ prod.name }}</h6>
+                            <div class="text-danger fw-bold small">{{ formatCurrency(prod.promotional_price || prod.base_price) }}</div>
                           </div>
                         </div>
                       </div>
@@ -138,12 +141,11 @@
               </transition>
             </li>
 
-
             <router-link :to="{ name: 'client-combos' }" class="nav-item-link">
               BỘ SƯU TẬP
             </router-link>
-            <li><a href="#" @click.prevent="safeNavigate('gifts')" class="nav-item-link">QUÀ TẶNG</a></li>
-            <li><a href="#" @click.prevent="safeNavigate('blog')" class="nav-item-link">TIN TỨC</a></li>
+            <li><a href="#" class="nav-item-link">QUÀ TẶNG</a></li>
+            <li><a href="#" class="nav-item-link">TIN TỨC</a></li>
           </ul>
         </nav>
 
@@ -192,9 +194,7 @@
                           style="width: 40px; height: 40px;">
                         <div class="overflow-hidden">
                           <div class="small fw-bold text-truncate" v-html="highlightText(prod.name)"></div>
-                          <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price ||
-                            prod.base_price)
-                            }}</div>
+                          <div class="small fw-bold text-danger">{{ formatCurrency(prod.promotional_price || prod.base_price) }}</div>
                         </div>
                       </a>
                     </li>
@@ -227,10 +227,11 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
+const route = useRoute();
 const router = useRouter();
 const BACKEND_URL = 'http://127.0.0.1:8000';
 
@@ -334,8 +335,10 @@ const handleSearch = () => {
 };
 
 const goToProduct = (slug) => {
-  showSearchResults.value = false; isMegaMenuOpen.value = false;
-  safeNavigate('ProductDetail', { params: { slug } });
+  showSearchResults.value = false; 
+  isMegaMenuOpen.value = false;
+  const shopSlugValue = route.params.shop_slug || 'aurora-jewelry';
+  safeNavigate('productDetail', { params: { shop_slug: shopSlugValue, slug: slug } });
 };
 
 const goToCategory = (slug) => {
@@ -391,54 +394,18 @@ onUnmounted(() => {
   --accent: #cc1e2e;
 }
 
-.text-primary-custom {
-  color: #9f273b !important;
-}
+.text-primary-custom { color: #9f273b !important; }
+.bg-primary-custom { background-color: #9f273b !important; }
+.border-primary-custom { border-color: #9f273b !important; }
 
-.bg-primary-custom {
-  background-color: #9f273b !important;
-}
-
-.border-primary-custom {
-  border-color: #9f273b !important;
-}
-
-.btn-brand {
-  background-color: #9f273b;
-  border: none;
-  transition: 0.2s;
-  color: white !important;
-}
-
-.btn-brand:hover {
-  background-color: #801f2f;
-  color: white !important;
-}
-
-.hover-primary:hover {
-  color: #9f273b !important;
-}
-
-.transition-color {
-  transition: color 0.2s ease;
-}
-
-.hover-bg-light:hover {
-  background-color: #f8f9fa;
-}
-
-.font-oswald {
-  font-family: 'Oswald', sans-serif !important;
-}
-
-.tracking-wide {
-  letter-spacing: 0.5px;
-}
-
-.site-header {
-  z-index: 1040;
-  background-color: #fff;
-}
+.btn-brand { background-color: #9f273b; border: none; transition: 0.2s; color: white !important; }
+.btn-brand:hover { background-color: #801f2f; color: white !important; }
+.hover-primary:hover { color: #9f273b !important; }
+.transition-color { transition: color 0.2s ease; }
+.hover-bg-light:hover { background-color: #f8f9fa; }
+.font-oswald { font-family: 'Oswald', sans-serif !important; }
+.tracking-wide { letter-spacing: 0.5px; }
+.site-header { z-index: 1040; background-color: #fff; }
 
 .top-link {
   font-family: 'Oswald', sans-serif;
@@ -449,16 +416,9 @@ onUnmounted(() => {
   letter-spacing: 1px;
   transition: color 0.2s ease;
 }
+.top-link:hover { color: #9f273b; }
 
-.top-link:hover {
-  color: #9f273b;
-}
-
-.icon-link {
-  color: #333;
-  font-size: 1.3rem;
-  text-decoration: none;
-}
+.icon-link { color: #333; font-size: 1.3rem; text-decoration: none; }
 
 .cart-badge {
   position: absolute;
@@ -473,12 +433,7 @@ onUnmounted(() => {
   border: 1px solid #fff;
 }
 
-.logo-img {
-  height: 80px;
-  width: auto;
-  object-fit: contain;
-  display: block;
-}
+.logo-img { height: 80px; width: auto; object-fit: contain; display: block; }
 
 .nav-item-link {
   color: #333;
@@ -491,7 +446,6 @@ onUnmounted(() => {
   position: relative;
   transition: color 0.2s ease;
 }
-
 .nav-item-link::after {
   content: '';
   position: absolute;
@@ -503,84 +457,98 @@ onUnmounted(() => {
   background-color: #9f273b;
   transition: width 0.3s ease;
 }
+.nav-item-link:hover { color: #9f273b; }
+.nav-item-link:hover::after { width: 100%; }
 
-.nav-item-link:hover {
-  color: #9f273b;
+.search-box-luxury { width: 220px; }
+.search-box-luxury input { font-size: 0.85rem; color: #333; }
+.search-box-luxury input:focus { outline: none; box-shadow: none; }
+.search-underline { position: absolute; bottom: 0; left: 0; width: 100%; height: 1px; background-color: #ddd; transition: background-color 0.3s ease; }
+.search-box-luxury input:focus~.search-underline { background-color: #9f273b; height: 2px; }
+
+/* HIỆU ỨNG VÀ BỐ CỤC MEGA MENU MỚI */
+.mega-menu-wrapper {
+  position: absolute;
+  top: 100%;
+  left: 50%; /* Nằm chính giữa container */
+  transform: translateX(-50%);
+  width: 980px; /* Tăng chiều rộng để nhìn sang trọng hơn */
+  background: #fff;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  margin-top: 0; 
+  cursor: default;
+  z-index: 1050;
 }
 
-.nav-item-link:hover::after {
-  width: 100%;
-}
-
-.search-box-luxury {
-  width: 220px;
-}
-
-.search-box-luxury input {
-  font-size: 0.85rem;
+/* LINK DANH MỤC TRONG MEGA MENU */
+.mega-cat-link {
   color: #333;
+  padding: 6px 0; /* Thêm padding để text thở */
+  border-radius: 0;
+  position: relative;
+  display: inline-block;
+  width: max-content; 
+  transition: color 0.3s ease;
+  background-color: transparent !important;
 }
 
-.search-box-luxury input:focus {
-  outline: none;
-  box-shadow: none;
+/* Hiệu ứng Line mượt mà bằng ScaleX (Phần cứng GPU) */
+.mega-cat-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%; /* Chữ đến đâu line chạy đến đó */
+  height: 1.5px;
+  background-color: #9f273b;
+  transform: scaleX(0); /* Ban đầu ẩn */
+  transform-origin: left; /* Chạy từ trái qua phải */
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Mượt và chậm lại */
+}
+.mega-cat-link:hover, .mega-cat-link.active-cat {
+  color: #9f273b !important;
+}
+.mega-cat-link:hover::after, .mega-cat-link.active-cat::after {
+  transform: scaleX(1); /* Hiện ra */
 }
 
-.search-underline {
+/* CARD SẢN PHẨM TRONG MEGA MENU */
+.mega-product-card {
+  position: relative;
+  padding-bottom: 8px;
+  cursor: pointer;
+}
+
+.mega-product-card::after {
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 1px;
-  background-color: #ddd;
-  transition: background-color 0.3s ease;
-}
-
-.search-box-luxury input:focus~.search-underline {
+  height: 1.5px;
   background-color: #9f273b;
-  height: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
-.mega-menu-wrapper {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 800px;
-  background: #fff;
-  border-radius: 0 0 8px 8px;
-  overflow: hidden;
-  margin-top: 10px;
-  cursor: default;
+.mega-product-card:hover::after {
+  transform: scaleX(1);
 }
-
-.mega-cat-link {
-  color: #333;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.mega-cat-link:hover {
-  background-color: #f9f9f9;
-  color: #9f273b;
-  padding-left: 16px;
-}
-
-.mega-product-card {
-  transition: transform 0.2s ease;
-}
-
-.mega-product-card:hover {
-  transform: translateY(-5px);
-}
-
 .mega-product-card:hover h6 {
   color: #9f273b;
 }
 
+/* Zoom ảnh mượt mà */
 .mega-img-wrap {
   aspect-ratio: 1;
+  overflow: hidden;
+}
+.mega-img-wrap img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.mega-product-card:hover .mega-img-wrap img {
+  transform: scale(1.08); /* Zoom nhẹ hình ảnh khi hover */
 }
 
 .search-results-dropdown,
@@ -589,35 +557,11 @@ onUnmounted(() => {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
 }
 
-.dropdown-item {
-  font-size: 0.9rem;
-  transition: background 0.2s;
-  color: #333;
-}
+.dropdown-item { font-size: 0.9rem; transition: background 0.2s; color: #333; }
+.dropdown-item:hover { background-color: #f8f9fa; color: #9f273b; }
 
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-  color: #9f273b;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 10px);
-}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
+.fade-slide-enter-from, .fade-slide-leave-to { opacity: 0; transform: translate(-50%, 10px); }
 </style>
