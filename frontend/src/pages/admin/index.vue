@@ -16,7 +16,7 @@
           <h1 class="h3 fw-bolder text-dark mb-2 tracking-tight">Bảng điều khiển</h1>
           <p class="text-secondary mb-0 font-size-sm">Chào mừng trở lại! Dưới đây là tổng quan cửa hàng hôm nay.</p>
         </div>
-        <!-- Nút hành động nhanh: Đã cập nhật sự kiện @click và loading -->
+        <!-- Nút hành động nhanh -->
         <button @click="exportToExcel" :disabled="isExporting" class="btn btn-brand d-flex align-items-center gap-2 px-4 py-2 fw-semibold btn-modern transition-all shadow-sm rounded-pill">
           <span v-if="isExporting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           <i v-else class="bi bi-file-earmark-excel-fill fs-5"></i>
@@ -29,21 +29,23 @@
         <!-- Thẻ Doanh thu -->
         <div class="col-12 col-md-6 col-xl-3">
           <div class="card custom-card h-100 border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-start justify-content-between mb-4">
-                <div>
-                  <p class="text-muted fw-medium font-size-sm mb-1 text-uppercase letter-spacing-1">Tổng Doanh Thu</p>
-                  <h3 class="fw-bolder mb-0 text-dark">{{ formatCurrency(stats.totalRevenue) }}</h3>
-                </div>
+            <div class="card-body p-4 d-flex flex-column">
+              <!-- Đưa Tiêu đề và Icon lên cùng 1 hàng -->
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <p class="text-muted fw-bold font-size-sm mb-0 text-uppercase letter-spacing-1 text-truncate pe-2">Tổng Doanh Thu</p>
                 <div class="icon-circle bg-brand-soft text-brand flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
-              <div class="d-flex align-items-center">
-                <span class="badge bg-brand-soft text-brand fw-bold me-2 px-2 py-1">
-                  <i class="bi bi-graph-up-arrow me-1"></i> 12.5%
+              <!-- Số tiền chiếm toàn bộ dòng dưới, không bị icon chèn ép -->
+              <div class="mb-3">
+                <h3 class="fw-bolder mb-0 text-dark stat-number">{{ formatCurrency(stats.totalRevenue) }}</h3>
+              </div>
+              <div class="d-flex align-items-center mt-auto">
+                <span class="badge fw-bold me-2 px-2 py-1" :class="getGrowthClass(stats.revenueGrowth)">
+                  <i class="me-1" :class="getGrowthIcon(stats.revenueGrowth)"></i> {{ formatGrowth(stats.revenueGrowth) }}
                 </span>
                 <span class="text-muted font-size-xs fw-medium">so với tháng trước</span>
               </div>
@@ -54,23 +56,23 @@
         <!-- Thẻ Đơn hàng mới -->
         <div class="col-12 col-md-6 col-xl-3">
           <div class="card custom-card h-100 border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-start justify-content-between mb-4">
-                <div>
-                  <p class="text-muted fw-medium font-size-sm mb-1 text-uppercase letter-spacing-1">Đơn hàng mới</p>
-                  <h3 class="fw-bolder mb-0 text-dark">{{ stats.newOrders }}</h3>
-                </div>
+            <div class="card-body p-4 d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <p class="text-muted fw-bold font-size-sm mb-0 text-uppercase letter-spacing-1 text-truncate pe-2">Đơn hàng mới</p>
                 <div class="icon-circle bg-info-soft text-info flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
               </div>
-              <div class="d-flex align-items-center">
-                <span class="badge bg-info-soft text-info fw-bold me-2 px-2 py-1">
-                  <i class="bi bi-arrow-up-right me-1"></i> 5.2%
+              <div class="mb-3">
+                <h3 class="fw-bolder mb-0 text-dark stat-number">{{ stats.newOrders }}</h3>
+              </div>
+              <div class="d-flex align-items-center mt-auto">
+                <span class="badge fw-bold me-2 px-2 py-1" :class="getGrowthClass(stats.ordersGrowth)">
+                  <i class="me-1" :class="getGrowthIcon(stats.ordersGrowth)"></i> {{ formatGrowth(stats.ordersGrowth) }}
                 </span>
-                <span class="text-muted font-size-xs fw-medium">so với tuần trước</span>
+                <span class="text-muted font-size-xs fw-medium">so với hôm qua</span>
               </div>
             </div>
           </div>
@@ -79,19 +81,19 @@
         <!-- Thẻ Tồn kho -->
         <div class="col-12 col-md-6 col-xl-3">
           <div class="card custom-card h-100 border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-start justify-content-between mb-4">
-                <div>
-                  <p class="text-muted fw-medium font-size-sm mb-1 text-uppercase letter-spacing-1">Tổng Tồn Kho</p>
-                  <h3 class="fw-bolder mb-0 text-dark">{{ stats.inventory }}</h3>
-                </div>
+            <div class="card-body p-4 d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <p class="text-muted fw-bold font-size-sm mb-0 text-uppercase letter-spacing-1 text-truncate pe-2">Tổng Tồn Kho</p>
                 <div class="icon-circle bg-warning-soft text-warning flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
               </div>
-              <div class="d-flex align-items-center">
+              <div class="mb-3">
+                <h3 class="fw-bolder mb-0 text-dark stat-number">{{ stats.inventory }}</h3>
+              </div>
+              <div class="d-flex align-items-center mt-auto">
                 <span class="badge bg-secondary-soft text-secondary fw-bold me-2 px-2 py-1">
                   Cập nhật
                 </span>
@@ -104,21 +106,21 @@
         <!-- Thẻ Khách hàng -->
         <div class="col-12 col-md-6 col-xl-3">
           <div class="card custom-card h-100 border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-start justify-content-between mb-4">
-                <div>
-                  <p class="text-muted fw-medium font-size-sm mb-1 text-uppercase letter-spacing-1">Khách hàng</p>
-                  <h3 class="fw-bolder mb-0 text-dark">{{ stats.totalCustomers }}</h3>
-                </div>
+            <div class="card-body p-4 d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <p class="text-muted fw-bold font-size-sm mb-0 text-uppercase letter-spacing-1 text-truncate pe-2">Khách hàng</p>
                 <div class="icon-circle bg-danger-soft text-danger flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
               </div>
-              <div class="d-flex align-items-center">
-                <span class="badge bg-danger-soft text-danger fw-bold me-2 px-2 py-1">
-                  <i class="bi bi-graph-down-arrow me-1"></i> 1.5%
+              <div class="mb-3">
+                <h3 class="fw-bolder mb-0 text-dark stat-number">{{ stats.totalCustomers }}</h3>
+              </div>
+              <div class="d-flex align-items-center mt-auto">
+                <span class="badge fw-bold me-2 px-2 py-1" :class="getGrowthClass(stats.customersGrowth)">
+                  <i class="me-1" :class="getGrowthIcon(stats.customersGrowth)"></i> {{ formatGrowth(stats.customersGrowth) }}
                 </span>
                 <span class="text-muted font-size-xs fw-medium">so với tháng trước</span>
               </div>
@@ -178,7 +180,7 @@
           <div class="card custom-card h-100 border-0 shadow-sm rounded-4">
             <div class="card-header bg-transparent border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
               <h5 class="fw-bold mb-0 text-dark">Đơn hàng mới nhất</h5>
-              <router-link :to="{ path: '/admin/order' }" class="btn btn-sm bg-brand-soft text-brand fw-bold rounded-pill px-3 transition-all border border-light">
+              <router-link :to="{ path: '/admin/orders' }" class="btn btn-sm bg-brand-soft text-brand fw-bold rounded-pill px-3 transition-all border border-light">
                 Xem tất cả
               </router-link>
             </div>
@@ -264,9 +266,9 @@
                     </p>
                   </div>
                   
-                  <!-- Giá tiền format thông minh (Tr / đ) -->
+                  <!-- Giá tiền hiển thị đầy đủ -->
                   <div class="fw-bolder text-brand font-size-sm ms-2 text-end whitespace-nowrap">
-                    {{ formatCurrencyShort(product.price) }}
+                    {{ formatCurrency(product.price) }}
                   </div>
                 </li>
               </ul>
@@ -283,7 +285,7 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import Chart from 'chart.js/auto';
 import axios from 'axios';
 import Swal from 'sweetalert2'; 
-import * as XLSX from 'xlsx'; // THÊM DÒNG NÀY ĐỂ IMPORT THƯ VIỆN EXCEL
+import * as XLSX from 'xlsx';
 
 const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
 
@@ -297,7 +299,7 @@ const getHeaders = () => {
 // -- CÁC BIẾN STATE (REFS) --
 const isLoading = ref(true); 
 const isFiltering = ref(false); 
-const isExporting = ref(false); // THÊM BIẾN NÀY ĐỂ QUẢN LÝ NÚT LOADING XUẤT EXCEL
+const isExporting = ref(false); 
 
 let chartInstance = null;
 
@@ -318,8 +320,13 @@ const generateColors = (count) => {
   return colors;
 };
 
-// -- Dữ liệu mặc định --
-const stats = ref({ totalRevenue: 0, newOrders: 0, inventory: 0, totalCustomers: 0 });
+// -- Dữ liệu mặc định ĐÃ CẬP NHẬT BIẾN GROWTH --
+const stats = ref({ 
+  totalRevenue: 0, revenueGrowth: 0,
+  newOrders: 0, ordersGrowth: 0,
+  inventory: 0, 
+  totalCustomers: 0, customersGrowth: 0
+});
 const recentOrders = ref([]);
 const topProducts = ref([]);
 const chartDataObj = ref({ labels: [], data: [] });
@@ -332,17 +339,24 @@ const fetchDashboardData = async () => {
     
     if (res.data && res.data.status) {
       const responseData = res.data.data || {};
-      stats.value = responseData.stats || { totalRevenue: 0, newOrders: 0, inventory: 0, totalCustomers: 0 };
+      
+      // Map đúng dữ liệu từ backend sang
+      stats.value = responseData.stats || { 
+        totalRevenue: 0, revenueGrowth: 0,
+        newOrders: 0, ordersGrowth: 0,
+        inventory: 0, 
+        totalCustomers: 0, customersGrowth: 0
+      };
+      
       recentOrders.value = responseData.recentOrders || [];
       
-      // NẾU DATABASE TRỐNG -> ĐIỀN DỮ LIỆU MẪU ĐỂ GIỮ GIAO DIỆN "TOP BÁN CHẠY" CHO EM XEM
       if (responseData.topProducts && responseData.topProducts.length > 0) {
          topProducts.value = responseData.topProducts;
       } else {
          topProducts.value = [
-            { id: 991, name: 'Sản phẩm mẫu 1 (Chưa có Data)', sold: 150, stock: 45, price: 1500000, image: '' },
-            { id: 992, name: 'Sản phẩm mẫu 2 (Chưa có Data)', sold: 120, stock: 15, price: 500000, image: '' },
-            { id: 993, name: 'Sản phẩm mẫu 3 (Chưa có Data)', sold: 85, stock: 200, price: 3200000, image: '' }
+            { id: 991, name: 'Sản phẩm mẫu 1 (Chưa có Data)', sold: 150, stock: 45, price: 15000000, image: '' },
+            { id: 992, name: 'Sản phẩm mẫu 2 (Chưa có Data)', sold: 120, stock: 15, price: 5000000, image: '' },
+            { id: 993, name: 'Sản phẩm mẫu 3 (Chưa có Data)', sold: 85, stock: 200, price: 32000000, image: '' }
          ];
       }
       
@@ -358,7 +372,7 @@ const fetchDashboardData = async () => {
     
     if (error.response) {
        if (error.response.status === 404) {
-         Swal.fire('Lỗi API (404)', 'Backend chưa thiết lập Route. Em nhớ chạy "php artisan route:clear" nha.', 'error');
+         Swal.fire('Lỗi API (404)', 'Backend chưa thiết lập Route.', 'error');
        } else if (error.response.status === 500) {
          Swal.fire('Lỗi Code Laravel (500)', error.response.data.message || 'Lỗi máy chủ', 'error');
        }
@@ -420,8 +434,7 @@ const initChart = () => {
               font: { family: "'Inter', sans-serif", size: 12 },
               color: '#8792a3',
               callback: function(value) {
-                if (value >= 1000000) return (value / 1000000) + ' Tr';
-                return value;
+                return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
               }
             }
           },
@@ -474,7 +487,6 @@ const exportToExcel = () => {
   isExporting.value = true;
 
   try {
-    // Tạo mảng dữ liệu cho Sheet 1: Tổng quan
     const overviewData = [
       ['CHỈ SỐ THỐNG KÊ', 'GIÁ TRỊ'],
       ['Tổng Doanh Thu (VNĐ)', stats.value.totalRevenue],
@@ -483,7 +495,6 @@ const exportToExcel = () => {
       ['Tổng Tồn Kho (Sản phẩm)', stats.value.inventory],
     ];
 
-    // Tạo mảng dữ liệu cho Sheet 2: Top Sản phẩm
     const productsData = topProducts.value.map((p, index) => ({
       'Xếp hạng': 'Top ' + (index + 1),
       'Tên sản phẩm': p.name,
@@ -492,7 +503,6 @@ const exportToExcel = () => {
       'Đơn giá (VNĐ)': p.price
     }));
 
-    // Tạo mảng dữ liệu cho Sheet 3: Đơn hàng gần đây
     const ordersData = recentOrders.value.map(o => ({
       'Mã Đơn Hàng': o.code,
       'Tên Khách Hàng': o.customer,
@@ -501,32 +511,25 @@ const exportToExcel = () => {
       'Trạng Thái': o.status
     }));
 
-    // Chuyển đổi dữ liệu thành các Sheet của Excel
     const wsOverview = XLSX.utils.aoa_to_sheet(overviewData);
     const wsProducts = XLSX.utils.json_to_sheet(productsData);
     const wsOrders = XLSX.utils.json_to_sheet(ordersData);
 
-    // Căn chỉnh độ rộng cột cho đẹp
     wsOverview['!cols'] = [{ wch: 25 }, { wch: 20 }];
     wsProducts['!cols'] = [{ wch: 10 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
     wsOrders['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
 
-    // Khởi tạo một File Excel (Workbook) trống
     const wb = XLSX.utils.book_new();
 
-    // Gắn các Sheet vào File Excel
     XLSX.utils.book_append_sheet(wb, wsOverview, "Tổng quan");
     XLSX.utils.book_append_sheet(wb, wsProducts, "Top Sản Phẩm");
     XLSX.utils.book_append_sheet(wb, wsOrders, "Đơn Hàng Mới");
 
-    // Lấy ngày hiện tại làm tên file
     const dateStr = new Date().toISOString().slice(0, 10);
     const fileName = `Bao_Cao_ThinkHub_${dateStr}.xlsx`;
 
-    // Tự động tải file xuống
     XLSX.writeFile(wb, fileName);
 
-    // Báo thành công
     Swal.fire({
       toast: true,
       position: 'top-end',
@@ -544,18 +547,23 @@ const exportToExcel = () => {
   }
 };
 
-// -- UTILS FORMAT & STYLES --
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+// -- CÁC HÀM TIỆN ÍCH DÀNH RIÊNG CHO PHẦN TRĂM (%) TĂNG TRƯỞNG --
+const getGrowthClass = (value) => {
+  return value >= 0 ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger';
 };
 
-// Format tiền thông minh (Triệu / đ)
-const formatCurrencyShort = (value) => {
-  if (!value) return '0 ₫';
-  if (value >= 1000000) {
-    // Chuyển 3000000 thành "3 Tr", 1500000 thành "1,5 Tr"
-    return (value / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' Tr';
-  }
+const getGrowthIcon = (value) => {
+  return value >= 0 ? 'bi-graph-up-arrow' : 'bi-graph-down-arrow';
+};
+
+const formatGrowth = (value) => {
+  if (value === undefined || value === null) return '0%';
+  const prefix = value > 0 ? '+' : '';
+  return `${prefix}${value}%`;
+};
+
+// -- UTILS FORMAT & STYLES --
+const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 };
 
@@ -606,6 +614,8 @@ onMounted(() => {
 .tracking-tight { letter-spacing: -0.5px; }
 .whitespace-nowrap { white-space: nowrap; }
 .transition-all { transition: all 0.3s ease; }
+/* Đảm bảo text không bị bung dãn */
+.min-w-0 { min-width: 0; } 
 
 .bg-brand { background-color: #009981 !important; }
 .text-brand { color: #009981 !important; }
@@ -621,8 +631,16 @@ onMounted(() => {
 
 .filter-group:hover { border-color: #009981 !important; box-shadow: 0 4px 10px rgba(0, 153, 129, 0.1) !important; }
 
-.icon-circle { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+/* Thu nhỏ icon circle lại một chút để vừa vặn khi đưa lên cùng hàng tiêu đề */
+.icon-circle { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
 .avatar-circle { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
+/* Style mới cho chữ số, chống rớt dòng thông minh và tự ép nhỏ chữ (clamp) nếu dãy số quá dài */
+.stat-number { 
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem); 
+  letter-spacing: -0.5px; 
+  white-space: nowrap; 
+}
 
 .bg-info-soft { background-color: rgba(13, 202, 240, 0.1) !important; color: #0dcaf0 !important;}
 .bg-success-soft { background-color: rgba(25, 135, 84, 0.1) !important; color: #198754 !important;}
