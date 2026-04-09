@@ -205,7 +205,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 import OrderDetailModal from './OrderDetailModal.vue';
-// import ReviewModal from './ReviewModal.vue'; 
+import ReviewModal from './ReviewModal.vue'; 
 
 const router = useRouter();
 const isLoading = ref(true);

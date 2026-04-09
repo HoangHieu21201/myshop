@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail; 
-use Illuminate\Support\Facades\Log;// BẮT BUỘC IMPORT ĐỂ GỬI MAIL
+use Illuminate\Support\Facades\Log;
 
 class AdminContactController extends Controller
 {
     /**
-     * Lấy danh sách liên hệ
+     * Lấy danh sách liên hệ (Mới nhất lên đầu)
      */
     public function index()
     {
@@ -42,7 +42,7 @@ class AdminContactController extends Controller
     }
 
     /**
-     * Xóa tin nhắn
+     * Xóa 1 tin nhắn
      */
     public function destroy($id)
     {
@@ -54,9 +54,25 @@ class AdminContactController extends Controller
     }
 
     /**
-     * ==========================================
-     * TÍNH NĂNG MỚI: TRẢ LỜI EMAIL CHO KHÁCH
-     * ==========================================
+     * XÓA HÀNG LOẠT (Tính năng mới cho các ô tích chọn)
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:contacts,id'
+        ]);
+
+        Contact::whereIn('id', $request->ids)->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã xóa các liên hệ được chọn thành công!'
+        ]);
+    }
+
+    /**
+     * TRẢ LỜI EMAIL CHO KHÁCH
      */
     public function replyEmail(Request $request, $id)
     {
@@ -75,54 +91,36 @@ class AdminContactController extends Controller
                 'originalMessage' => $contact->message
             ];
 
-            // Hàm gửi Email bằng Laravel Mail
+            // Gửi Email
             Mail::send([], [], function ($message) use ($contact, $request, $data) {
                 $message->to($contact->email)
                         ->subject($request->subject)
                         ->html("
-                            <div style='font-family: \"Segoe UI\", Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden;'>
-                                <div style='background-color: #9f273b; padding: 25px; text-align: center;'>
-                                    <h2 style='color: white; margin: 0; font-weight: 400; letter-spacing: 3px;'>SORA JEWELRY</h2>
+                            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;'>
+                                <div style='background-color: #9f273b; padding: 20px; text-align: center;'>
+                                    <h2 style='color: white; margin: 0;'>SORA JEWELRY</h2>
                                 </div>
-                                <div style='padding: 30px;'>
-                                    <p style='font-size: 16px;'>Kính gửi <strong>{$data['customerName']}</strong>,</p>
-                                    <p>Cảm ơn quý khách đã liên hệ với SORA. Chuyên viên của chúng tôi xin phản hồi yêu cầu của quý khách như sau:</p>
-                                    
-                                    <div style='background-color: #faf9f8; padding: 20px; border-left: 4px solid #e7ce7d; margin: 25px 0; border-radius: 0 4px 4px 0;'>
-                                        <p style='margin: 0;'>" . nl2br(htmlspecialchars($data['replyMessage'])) . "</p>
+                                <div style='padding: 20px;'>
+                                    <p>Chào <strong>{$data['customerName']}</strong>,</p>
+                                    <p>SORA xin phản hồi thắc mắc của bạn:</p>
+                                    <div style='background: #f9f9f9; padding: 15px; border-left: 4px solid #e7ce7d; margin: 15px 0;'>
+                                        " . nl2br(htmlspecialchars($data['replyMessage'])) . "
                                     </div>
-                                    
-                                    <p style='color: #666; font-size: 13px; margin-top: 30px;'>
-                                        <strong>Nội dung quý khách đã gửi trước đó:</strong><br>
-                                        <i style='color: #888;'>\"{$data['originalMessage']}\"</i>
-                                    </p>
-                                    <hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>
-                                    <p style='font-size: 14px; color: #555; text-align: center;'>
-                                        Trân trọng,<br>
-                                        <strong style='color: #9f273b;'>Đội ngũ Chăm sóc khách hàng SORA</strong><br>
-                                        <small>Hotline: 090 123 4567 | Website: sorajewelry.vn</small>
-                                    </p>
+                                    <p style='font-size: 12px; color: #999;'>Tin nhắn gốc của bạn: \"{$data['originalMessage']}\"</p>
                                 </div>
                             </div>
                         ");
             });
 
-            // Gửi xong thì tự động chuyển trạng thái thành "Đã xử lý"
+            // Cập nhật trạng thái
             $contact->status = 'resolved';
             $contact->save();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Đã gửi email phản hồi thành công!'
-            ]);
+            return response()->json(['status' => true, 'message' => 'Đã gửi email phản hồi thành công!']);
 
         } catch (\Exception $e) {
-            // Sửa \Log thành Log
-            Log::error('Lỗi gửi mail SORA: ' . $e->getMessage()); 
-            return response()->json([
-                'status' => false,
-                'message' => 'Gửi mail thất bại. Vui lòng kiểm tra lại cấu hình .env'
-            ], 500);
+            Log::error('Lỗi gửi mail: ' . $e->getMessage()); 
+            return response()->json(['status' => false, 'message' => 'Gửi mail thất bại.'], 500);
         }
     }
 }

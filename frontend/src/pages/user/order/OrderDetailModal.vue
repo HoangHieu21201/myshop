@@ -15,48 +15,42 @@
 
       <div class="modal-body p-4 p-md-5 overflow-auto bg-light" style="max-height: 75vh;">
 
-        <div class="bg-white p-4 shadow-sm border border-light-subtle mb-4 rounded">
-          <h5 class="fw-bold mb-4 font-serif text-primary-custom d-flex align-items-center">
-            <i class="bi bi-clock-history me-2"></i> TRẠNG THÁI ĐƠN HÀNG
-          </h5>
+        <!-- TRẠNG THÁI ĐƠN HÀNG -->
+<!-- TRẠNG THÁI ĐƠN HÀNG -->
+<div class="bg-white p-4 shadow-sm border border-light-subtle mb-4 rounded">
+  <h5 class="fw-bold mb-4 font-serif text-primary-custom d-flex align-items-center">
+    <i class="bi bi-clock-history me-2"></i> TRẠNG THÁI ĐƠN HÀNG
+  </h5>
 
-          <div v-if="!['cancelled', 'returned'].includes(order?.status)"
-            class="order-stepper-horizontal d-none d-md-flex mt-2 mb-2">
-            <div v-for="(step, index) in orderSteps" :key="index" class="stepper-step"
-              :class="{ 'completed': isStepCompleted(order?.status, step.value), 'active': order?.status === step.value }">
-              <div class="step-icon-wrap">
-                <div class="step-icon"><i :class="step.icon"></i></div>
-              </div>
-              <div class="step-text">
-                <div class="step-title" v-text="step.label"></div>
-                <div class="step-date" v-if="getStepDate(order, step.value)" v-text="getStepDate(order, step.value)">
-                </div>
-              </div>
-            </div>
-          </div>
+  <!-- Stepper chỉ hiển thị khi đơn hàng chưa yêu cầu hoàn / hủy / hoàn trả -->
+  <div v-if="!['cancelled', 'returned', 'return_requested'].includes(order?.status)"
+       class="order-stepper-horizontal d-none d-md-flex mt-2 mb-2">
+    
+    <div v-for="(step, index) in orderSteps" :key="index" class="stepper-step"
+         :class="{ 'completed': isStepCompleted(order?.status, step.value), 'active': order?.status === step.value }">
+      <div class="step-icon-wrap">
+        <div class="step-icon"><i :class="step.icon"></i></div>
+      </div>
+      <div class="step-text">
+        <div class="step-title" v-text="step.label"></div>
+        <div class="step-date" v-if="getStepDate(order, step.value)" v-text="getStepDate(order, step.value)"></div>
+      </div>
+    </div>
+  </div>
 
-          <ul v-if="!['cancelled', 'returned'].includes(order?.status)" class="timeline-vertical d-md-none mt-3">
-            <li v-for="(h, idx) in order?.histories" :key="h.id" :class="{ 'latest': idx === 0 }">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <h6 class="fw-bold mb-1" :class="idx === 0 ? 'text-primary-custom' : 'text-dark'"
-                  v-text="translateStatus(h.new_status)"></h6>
-                <div class="text-muted small mb-1" v-text="formatDateTime(h.created_at)"></div>
-                <div v-if="h.note" class="fst-italic text-secondary small">"<span v-text="h.note"></span>"</div>
-              </div>
-            </li>
-          </ul>
-
-          <div v-if="['cancelled', 'returned'].includes(order?.status)"
-            class="alert bg-light border border-light-subtle rounded-0 mb-0 d-flex align-items-center py-3 px-4">
-            <i class="bi bi-x-circle-fill text-secondary me-3 fs-3"></i>
-            <div>
-              <strong class="text-dark d-block mb-1">Đơn hàng đã bị <span
-                  v-text="order?.status === 'cancelled' ? 'Hủy' : 'Trả hàng'"></span>.</strong>
-              <span class="text-muted small">Cập nhật lúc: <span v-text="getCancelTime(order)"></span></span>
-            </div>
-          </div>
-        </div>
+  <!-- Alert thông báo khi đơn đã hủy, hoàn trả hoặc đang yêu cầu hoàn hàng -->
+  <div v-else class="alert bg-light border border-light-subtle rounded-0 mb-0 d-flex align-items-center py-3 px-4">
+    <i class="bi bi-arrow-return-left text-warning me-3 fs-3"></i>
+    <div>
+      <strong class="text-dark d-block mb-1">
+        <span v-if="order?.status === 'return_requested'">Đơn hàng đang yêu cầu hoàn hàng / trả hàng.</span>
+        <span v-else-if="order?.status === 'returned'">Đơn hàng đã được hoàn trả thành công.</span>
+        <span v-else>Đơn hàng đã bị hủy.</span>
+      </strong>
+      <span class="text-muted small">Cập nhật lúc: <span v-text="getCancelTime(order) || formatDateTime(order?.updated_at)"></span></span>
+    </div>
+  </div>
+</div>
 
         <div class="row g-4">
           <div class="col-lg-8">
@@ -195,12 +189,13 @@
             </button>
           </template>
           <!-- NÚT YÊU CẦU HOÀN HÀNG -->
-          <template v-if="order?.status === 'delivered'">
-            <button v-on:click="confirmReturn"
-              class="btn btn-outline-warning rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-              <i class="bi bi-arrow-return-left me-1"></i> Yêu cầu hoàn hàng
-            </button>
-          </template>
+          <!-- NÚT YÊU CẦU HOÀN HÀNG -->
+<template v-if="order?.status === 'delivered'">
+  <button v-on:click="confirmReturn"
+    class="btn btn-outline-warning rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
+    <i class="bi bi-arrow-return-left me-1"></i> Yêu cầu hoàn hàng
+  </button>
+</template>
           <!-- NÚT MUA LẠI: Đã xóa v-if để hiển thị ở mọi trạng thái -->
           <button v-on:click="$emit('reorder', order)"
             class="btn btn-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
@@ -293,8 +288,14 @@ const getImageUrl = (path) => {
 const handleImageError = (e) => { e.target.src = defaultPlaceholder; };
 
 const translateStatus = (status) => ({
-  pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', processing: 'Đang xử lý', shipping: 'Đang giao hàng',
-  delivered: 'Hoàn tất', cancelled: 'Đã hủy', returned: 'Trả hàng/Hoàn tiền', return_requested: 'Yêu cầu hoàn hàng'
+  pending: 'Chờ xác nhận', 
+  confirmed: 'Đã xác nhận', 
+  processing: 'Đang xử lý', 
+  shipping: 'Đang giao hàng',
+  delivered: 'Hoàn tất', 
+  cancelled: 'Đã hủy', 
+  returned: 'Trả hàng/Hoàn tiền', 
+  return_requested: 'Yêu cầu hoàn hàng'   // ← THÊM DÒNG NÀY
 })[status] || status;
 
 const translatePaymentMethod = (method) => ({
