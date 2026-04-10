@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\client;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Contact;
+use App\Events\NewContactSubmitted; // 👉 IMPORT SỰ KIỆN VỪA TẠO
 
 class ClientContactController extends Controller
 {
@@ -18,13 +19,16 @@ class ClientContactController extends Controller
         ]);
 
         // Lưu thông tin vào Database
-        Contact::create([
+        $contact = Contact::create([
             'fullname' => $request->fullname,
             'phone'    => $request->phone,
             'email'    => $request->email,
             'message'  => $request->message,
             'status'   => 'pending', // Mặc định là chờ Admin xử lý
         ]);
+
+        // 👉 BẮN SỰ KIỆN REAL-TIME CHO ADMIN NGAY LẬP TỨC
+        broadcast(new NewContactSubmitted($contact));
 
         // Sếp có thể thêm logic gửi Email tự động thông báo cho Admin ở đây sau này
 
