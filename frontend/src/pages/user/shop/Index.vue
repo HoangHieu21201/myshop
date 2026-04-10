@@ -696,8 +696,12 @@ const confirmAddToCart = async () => {
   quickAddModal.isAdding = true;
   try {
     const token = getToken();
-    let sessionId = localStorage.getItem('cart_session_id') || 'session_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('cart_session_id', sessionId);
+    let sessionId = localStorage.getItem('cart_session_id');
+    if (!sessionId) {
+      sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('cart_session_id', sessionId);
+    }
+
     const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Cart-Session-Id': sessionId };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -816,272 +820,64 @@ onMounted(() => {
 }
 
 .sora-luxury-card {
-    background: #ffffff;
-    border: 1px solid #f0f0f0;
-    border-radius: 12px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    cursor: pointer;
-    height: 100%;
+    background: #ffffff; border: 1px solid #f0f0f0; border-radius: 12px; position: relative; display: flex; flex-direction: column; overflow: hidden; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); cursor: pointer; height: 100%;
 }
+.sora-luxury-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #e5e5e5; transform: translateY(-5px); }
 
-.sora-luxury-card:hover {
-    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-    border-color: #e5e5e5;
-    transform: translateY(-5px);
-}
-
-.sora-card-image {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    background-color: #f9f9f9;
-}
-
-.sora-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    transition: opacity 0.6s ease;
-}
+.sora-card-image { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background-color: #f9f9f9; }
+.sora-card-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: opacity 0.6s ease; }
 
 .sora-main-img { z-index: 1; }
 .sora-hover-img { position: absolute; top:0; left:0; z-index: 2; opacity: 0; }
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-main-img { opacity: 0; }
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-hover-img { opacity: 1; }
 
-.sora-card-badges {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.sora-badge {
-    background: #ffffff;
-    color: #222;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+.sora-card-badges { position: absolute; top: 15px; left: 15px; z-index: 10; display: flex; flex-direction: column; gap: 8px; }
+.sora-badge { background: #ffffff; color: #222; font-family: 'Oswald', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .sale-badge { background-color: #9f273b !important; color: white !important; }
 
-.sora-wishlist-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 38px;
-    height: 38px;
-    background: #ffffff;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-    z-index: 10;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #6c757d;
-}
+.sora-wishlist-btn { position: absolute; top: 15px; right: 15px; width: 38px; height: 38px; background: #ffffff; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); z-index: 10; cursor: pointer; transition: all 0.3s ease; color: #6c757d; }
 .sora-wishlist-btn:hover:not(:disabled) { transform: scale(1.1); color: #cc1e2e; }
 .sora-wishlist-btn.active { color: #dc3545; }
 .sora-wishlist-btn.active i { color: #dc3545 !important; }
 .sora-wishlist-btn i { font-size: 1.15rem; margin-top: 2px; }
 
-.sora-card-info {
-    padding: 20px 15px 70px 15px; 
-    text-align: center;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+.sora-card-info { padding: 20px 15px 70px 15px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+.sora-card-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sora-card-category { font-family: 'Playfair Display', serif; font-style: italic; color: #666; font-size: 0.95rem; margin-bottom: 15px; }
+.sora-card-price { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: #9f273b; margin-top: auto; }
+.sora-card-price-old { font-size: 0.95rem; color: #999; text-decoration: line-through; margin-right: 10px; font-weight: 400; }
 
-.sora-card-title {
-    font-family: 'Oswald', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #111;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.sora-card-category {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    color: #666;
-    font-size: 0.95rem;
-    margin-bottom: 15px;
-}
-
-.sora-card-price {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #9f273b;
-    margin-top: auto;
-}
-.sora-card-price-old {
-    font-size: 0.95rem;
-    color: #999;
-    text-decoration: line-through;
-    margin-right: 10px;
-    font-weight: 400;
-}
-
-.sora-card-action {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    z-index: 10;
-}
-
+.sora-card-action { position: absolute; bottom: 0; left: 0; width: 100%; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); z-index: 10; }
 .sora-luxury-card:hover .sora-card-action { transform: translateY(0); }
-
-.sora-action-btn {
-    width: 100%;
-    padding: 14px 0;
-    background: #731621;
-    color: #ffffff;
-    border: none;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
+.sora-action-btn { width: 100%; padding: 14px 0; background: #731621; color: #ffffff; border: none; font-family: 'Oswald', sans-serif; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 0.3s ease; }
 .sora-action-btn:hover { background: #500f17; color: #fff;}
 
 .variant-select-btn:hover { border-color: #9f273b; color: #9f273b; }
 .variant-select-btn.selected { border-color: #9f273b; color: #9f273b; font-weight: 700; background-color: #fdf5f6; box-shadow: inset 0 0 0 1px #9f273b; }
 
-/* =========================================
-   SORA MARQUEE (CHÂN DUNG SORA MỚI)
-   ========================================= */
-.portrait-section {
-  background: linear-gradient(to bottom, #ffffff, #faf9f7);
-}
+/* SORA MARQUEE */
+.portrait-section { background: linear-gradient(to bottom, #ffffff, #faf9f7); }
+.sora-marquee-wrapper { width: 100%; padding: 20px 0; -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
+.sora-marquee-container { width: 100%; overflow: hidden; position: relative; padding: 20px 0; }
+.sora-marquee-track { display: flex; width: max-content; align-items: center; animation: sora-marquee 40s linear infinite; }
+.sora-marquee-container:hover .sora-marquee-track { animation-play-state: paused; }
+.sora-marquee-item { position: relative; width: 280px; height: 380px; margin-right: 24px; flex-shrink: 0; overflow: hidden; cursor: pointer; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: all 0.4s ease; }
+.sora-marquee-item:nth-child(even) { margin-top: 40px; }
+.sora-marquee-item img { transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.sora-marquee-item:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.12); z-index: 10; }
+.sora-marquee-item:hover img { transform: scale(1.1); }
 
-.sora-marquee-wrapper {
-  width: 100%;
-  padding: 20px 0;
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-}
+.overlay-hover { background: rgba(159, 39, 59, 0.7); backdrop-filter: blur(3px); }
+.overlay-content { transform: translateY(20px); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+.sora-marquee-item:hover .overlay-hover { opacity: 1 !important; }
+.sora-marquee-item:hover .overlay-content { transform: translateY(0); }
 
-.sora-marquee-container {
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-  padding: 20px 0;
-}
+@keyframes sora-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes slideUp { from { transform: translateY(30px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 
-.sora-marquee-track {
-  display: flex;
-  width: max-content;
-  align-items: center;
-  animation: sora-marquee 40s linear infinite; 
-}
-
-.sora-marquee-container:hover .sora-marquee-track {
-  animation-play-state: paused;
-}
-
-.sora-marquee-item {
-  position: relative;
-  width: 280px; 
-  height: 380px;
-  margin-right: 24px;
-  flex-shrink: 0;
-  overflow: hidden;
-  cursor: pointer;
-  border-radius: 16px; 
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-  transition: all 0.4s ease;
-}
-
-.sora-marquee-item:nth-child(even) {
-  margin-top: 40px;
-}
-
-.sora-marquee-item img {
-  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.sora-marquee-item:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.12);
-  z-index: 10;
-}
-
-.sora-marquee-item:hover img {
-  transform: scale(1.1);
-}
-
-.overlay-hover {
-  background: rgba(159, 39, 59, 0.7); 
-  backdrop-filter: blur(3px); 
-}
-
-.overlay-content {
-  transform: translateY(20px);
-  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.sora-marquee-item:hover .overlay-hover {
-  opacity: 1 !important;
-}
-
-.sora-marquee-item:hover .overlay-content {
-  transform: translateY(0);
-}
-
-@keyframes sora-marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } 
-}
-
-@keyframes slideUp {
-  from { transform: translateY(30px) scale(0.98); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-@media (max-width: 1200px) { 
-  .product-grid { grid-template-columns: repeat(2, 1fr); } 
-}
 @media (max-width: 768px) { 
-  .product-grid { grid-template-columns: repeat(1, 1fr); gap: 2rem; } 
-  .sora-marquee-wrapper {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-  }
+  .sora-marquee-wrapper { -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); }
   .sora-marquee-item { width: 220px; height: 300px; margin-right: 16px; }
   .sora-marquee-item:nth-child(even) { margin-top: 20px; }
   .sora-marquee-track { animation-duration: 25s; } 

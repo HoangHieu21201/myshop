@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Controllers Admin
-use App\Http\Controllers\Api\Client\ShopController;
+use App\Http\Controllers\Api\client\ShopController;
 use App\Http\Controllers\Api\admin\AdminCouponController;
 use App\Http\Controllers\Api\admin\AdminAccountController;
 use App\Http\Controllers\Api\admin\AdminForgotPasswordController;
@@ -35,7 +35,7 @@ use App\Http\Controllers\Api\admin\AdminNewController;
 use App\Http\Controllers\Api\client\ProductDetailController;
 use App\Http\Controllers\Api\client\ClientCartController;
 use App\Http\Controllers\Api\client\ClientOrderController;
-use App\Http\Controllers\Api\Client\ClientHeaderController;
+use App\Http\Controllers\Api\client\ClientHeaderController;
 use App\Http\Controllers\Api\client\ClientHomeController;
 use App\Http\Controllers\Api\client\ClientCompareController;
 use App\Http\Controllers\Api\client\ClientContactController;
@@ -44,7 +44,7 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\client\ClientFavouriteController;
 use App\Http\Controllers\Api\client\ClientProfileController;
-use App\Http\Controllers\Api\Client\ChatbotController;
+use App\Http\Controllers\Api\client\ChatbotController;
 
 
 use App\Http\Controllers\Api\client\ClientNewController;
@@ -54,17 +54,6 @@ Route::prefix('news')->group(function () {
     Route::get('/{slug}', [ClientNewController::class, 'show']);
 });
 
-
-// THÊM VÀO GROUP ADMIN ROUTES (Bên trong auth:sanctum group)
-
-// Quản lý Tin tức (Mã: admin_news - bạn có thể tạo module permission này)
-Route::controller(AdminNewController::class)->prefix('news')->group(function () {
-    Route::get('/', 'index');
-    Route::post('/', 'store');
-    Route::put('/{id}', 'update');
-    Route::delete('/{id}', 'destroy');
-    Route::patch('/{id}', 'updateStatus');
-});
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -92,18 +81,11 @@ Route::prefix('client')->group(function () {
         Route::post('/add-combo', 'addCombo');
         Route::post('/merge', 'mergeCart');
         Route::post('/clear', 'clear');
-        Route::post('/add-combo', 'addCombo');
-        Route::post('/merge', 'mergeCart');
-        Route::post('/clear', 'clear');
 
-        Route::get('/', 'index');
-        Route::post('/', 'store');
         Route::get('/', 'index');
         Route::post('/', 'store');
 
         // CÁC ROUTE ĐỘNG ĐẶT Ở DƯỚI CÙNG
-        Route::put('/{cartItem}', 'update');
-        Route::delete('/{cartItem}', 'destroy');
         Route::put('/{cartItem}', 'update');
         Route::delete('/{cartItem}', 'destroy');
     });
@@ -137,37 +119,30 @@ Route::prefix('client')->group(function () {
         Route::post('/', 'store');
         Route::get('/{order_code}', 'show');
         Route::put('/{order_code}', 'update');
-        Route::get('/', 'index');
-        Route::post('/', 'store');
-        Route::get('/{order_code}', 'show');
-        Route::put('/{order_code}', 'update');
         // SỬA LẠI 2 ĐƯỜNG DẪN DƯỚI ĐÂY (chỉ cần /{order_code}/...)
         Route::post('/{order_code}/review', 'review'); // Đánh giá
         Route::post('/{order_code}/reorder', 'reorder'); // Mua lại
         Route::post('/{order_code}/return', 'requestReturn');   // ← THÊM DÒNG NÀY
     });
 
-    Route::controller(\App\Http\Controllers\Api\Client\ClientComboController::class)->prefix('combos')->group(function () {
+    Route::controller(\App\Http\Controllers\Api\client\ClientComboController::class)->prefix('combos')->group(function () {
         Route::get('/', 'index');
         Route::get('/{slug}', 'show');
     });
 
     // ROUTE PAYMENT
     Route::prefix('checkout')->group(function () {
-        Route::get('/init', [\App\Http\Controllers\Api\Client\ClientCheckoutController::class, 'initData']);
-        Route::post('/', [\App\Http\Controllers\Api\Client\ClientCheckoutController::class, 'processCheckout']);
-        Route::get('/momo-return', [\App\Http\Controllers\Api\Client\ClientCheckoutController::class, 'momoReturn']);
-        Route::post('/momo-return', [\App\Http\Controllers\Api\Client\ClientCheckoutController::class, 'momoReturn']);
+        Route::get('/init', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'initData']);
+        Route::post('/', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'processCheckout']);
+        Route::get('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
+        Route::post('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
     });
-    // Trang chủ
-    Route::get('/home-data', [ClientHomeController::class, 'index']);
-    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
          ->name('client.orders.invoice');
 });
 
 // ROUTE SHOP CLIENT
 Route::prefix('shop/{shop_slug}')->group(function () {
-    Route::get('/info', [ShopController::class, 'shopInfo']);
     Route::get('/info', [ShopController::class, 'shopInfo']);
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
@@ -178,7 +153,7 @@ Route::prefix('shop/{shop_slug}')->group(function () {
     // Đã chuyển Route Compare vào đúng Group
     Route::post('/compare', [ClientCompareController::class, 'getCompareData']);
 });
-Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\Client\ShopController::class, 'categories']);
+Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\client\ShopController::class, 'categories']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();
