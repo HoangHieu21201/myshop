@@ -262,6 +262,13 @@ const admin = [
         name: 'admin-contacts',
         component: () => import('../pages/admin/contact/index.vue')
       },
+      // tin tứcccc
+       {
+        path: 'news',
+        name: 'admin-news',
+        component: () => import('../pages/admin/news/Index.vue'), 
+        meta: { moduleCode: 'admin_news' },
+      },
 
     ],
   },

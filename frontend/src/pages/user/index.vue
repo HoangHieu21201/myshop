@@ -213,7 +213,7 @@
                   <div class="divider-gold ms-0 mb-3" style="width: 40px; height: 2px;"></div>
                   
                   <p class="text-muted fw-light mb-4 text-truncate-3" style="font-size: 0.95rem; line-height: 1.6;">
-                    {{ combo.description || 'Sự kết hợp hoàn mỹ giữa nghệ thuật chế tác kim hoàn đỉnh cao và vẻ đẹp vượt thời gian. Một điểm nhấn sang trọng, quý phái dành riêng cho sự tỏa sáng của bạn.' }}
+                    {{ combo.description || 'Sự kết hợp hoàn mỹ giữa nghệ thuật chế tác kim hoàn đỉnh cao và vẻ đẹp vượt thời gian.' }}
                   </p>
 
                   <div class="d-flex align-items-center gap-3 mb-4">
@@ -266,7 +266,7 @@
             }"
             class="gallery-swiper-continuous"
           >
-            <swiper-slide v-for="(img, index) in (data.galleries && data.galleries.length ? data.galleries : dummyGalleries)" :key="index" class="gallery-slide-item">
+            <swiper-slide v-for="(img, index) in displayGalleries" :key="index" class="gallery-slide-item">
               <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
                  <img :src="img.image_path ? getImageUrl(img.image_path) : img" class="w-100 object-fit-cover" alt="Sora Customer" @error="handleImageError">
                  
@@ -332,7 +332,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+// THÊM computed VÀO ĐÂY ĐỂ DÙNG PHÉP NHÂN BẢN
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 
@@ -355,7 +356,6 @@ const onComboSwiperInit = (swiper) => {
   comboSwiperRef.value = swiper;
 };
 
-// Hàm bấm qua lại an toàn
 const nextCombo = () => {
   if (comboSwiperRef.value) comboSwiperRef.value.slideNext();
 };
@@ -386,10 +386,21 @@ const dummyGalleries = [
   'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&q=80&w=600'
 ];
 
-// Định tuyến API linh hoạt
+// MÁNH KHÓE CHỐNG LỖI SWIPER LOOP: Tự động nhân bản ảnh nếu Database có ít hơn 8 tấm
+const displayGalleries = computed(() => {
+  if (data.galleries && data.galleries.length > 0) {
+    let arr = [...data.galleries];
+    // Nếu ảnh ít quá (ví dụ có 2 tấm), Swiper 6 ảnh sẽ bị lỗi. Ta phải copy nối tiếp vào cho đủ 8 tấm.
+    while (arr.length < 8) {
+      arr = [...arr, ...data.galleries];
+    }
+    return arr;
+  }
+  return dummyGalleries; // Nếu Database trống trơn thì xài ảnh mẫu Unsplash
+});
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'; 
 
-// Hàm getImageUrl được nâng cấp: Tự nhận biết link ngoài và link nội bộ
 const getImageUrl = (path) => {
   if (!path) return '/default-luxury.jpg';
   if (path.startsWith('http')) return path;
@@ -398,7 +409,6 @@ const getImageUrl = (path) => {
   return `${baseUrl}/storage/${path}`;
 };
 
-// Chống lỗi vòng lặp vô hạn khi sập link ảnh
 const handleImageError = (e) => { 
   e.target.onerror = null; 
   e.target.src = 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=600&auto=format&fit=crop'; 

@@ -4,15 +4,14 @@
     <!-- HEADER BREADCRUMB -->
     <div class="container-fluid px-4 py-3 border-bottom sora-border-light bg-light">
       <div class="d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.15em;">
-      <a href=""> <span class="text-muted cursor-pointer hover-text-primary transition-colors">Trang chủ</span> </a>
-       
+        <a href=""> <span class="text-muted cursor-pointer hover-text-primary transition-colors">Trang chủ</span> </a>
         <span class="mx-2 text-muted">/</span>
         <span class="fw-medium text-dark">Cửa hàng trang sức</span>
       </div>
     </div>
 
     <!-- LỰA CHỌN LÝ TƯỞNG (DANH MỤC) -->
-   <section class="ideal-choices-section py-2 border-bottom sora-border-light" style="background-color: rgb(159,39,59);">
+    <section class="ideal-choices-section py-2 border-bottom sora-border-light" style="background-color: rgb(159,39,59);">
       <div class="container-fluid px-3 py-1 py-md-2">
         
         <!-- Header -->
@@ -79,7 +78,6 @@
     </section>
 
     <!-- MAIN CONTENT: BỘ LỌC VÀ LƯỚI SẢN PHẨM -->
-    <!-- Giới hạn max-width để màn hình rộng thì sản phẩm không bị biến thành khổng lồ -->
     <div class="container-fluid px-4 py-4 mt-2 mx-auto" style="max-width: 1440px;">
       <div class="row">
         
@@ -168,9 +166,18 @@
                       <h3 class="sora-card-title" :title="product.name">{{ product.name }}</h3>
                       <p class="sora-card-category">{{ product.category?.name || 'Trang sức SORA' }}</p>
                       
-                      <div class="sora-card-price">
-                          <span v-if="product.promotional_price" class="sora-card-price-old">{{ formatPrice(product.base_price) }}</span>
+                      <!-- SỬA LẠI HIỂN THỊ GIÁ VÀ % GIẢM GIÁ Ở ĐÂY -->
+                      <div class="sora-card-price d-flex align-items-center justify-content-center flex-wrap gap-1">
+                          <span v-if="product.promotional_price" class="sora-card-price-old">
+                            {{ formatPrice(product.base_price) }}
+                          </span>
                           <span>{{ formatPrice(product.promotional_price || product.base_price) }}</span>
+                          
+                          <!-- Tag % Giảm giá -->
+                          <span v-if="product.promotional_price && product.base_price && product.base_price > product.promotional_price" 
+                                class="sora-discount-tag">
+                              -{{ Math.round(((product.base_price - product.promotional_price) / product.base_price) * 100) }}%
+                          </span>
                       </div>
                   </div>
 
@@ -254,7 +261,15 @@
             <div class="d-flex flex-column justify-content-center">
               <span class="text-uppercase fw-bold mb-1" style="font-size: 0.7rem; color: #e7ce7d; letter-spacing: 2px;">{{ quickAddModal.product.category?.name || 'SẢN PHẨM' }}</span>
               <h6 class="fs-5 mb-2 fw-bold text-dark font-serif">{{ quickAddModal.product.name }}</h6>
-              <span class="fw-bold fs-5" style="color: #9f273b; font-family: 'Playfair Display', serif;">{{ displayPriceFormatted }}</span>
+              <div class="d-flex align-items-center flex-wrap gap-2">
+                <span class="fw-bold fs-5" style="color: #9f273b; font-family: 'Playfair Display', serif;">{{ displayPriceFormatted }}</span>
+                <span v-if="modalOldPrice" class="text-muted text-decoration-line-through" style="font-size: 0.95rem;">
+                  {{ formatPrice(modalOldPrice) }}
+                </span>
+                <span v-if="modalDiscount > 0" class="sora-discount-tag" style="padding: 2px 6px; font-size: 0.75rem;">
+                  -{{ modalDiscount }}%
+                </span>
+              </div>
             </div>
           </div>
           <div v-for="(options, attrName) in quickAddModal.attributes" :key="attrName" class="mb-4">
@@ -319,6 +334,7 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 
 const isLoadingCategories = ref(true);
 const isLoadingProducts = ref(true);
+const isPageLoading = ref(true); // Đã thêm biến này để tránh lỗi JS
 const categories = shallowRef([]);
 const allProducts = shallowRef([]);
 const defaultProducts = shallowRef([]); // Lưu danh sách mặc định làm fallback
@@ -403,7 +419,7 @@ const getToken = () => {
 const favourites = ref([]);
 const isTogglingFav = ref(null);
 
-const fetchFavorites = async () => {
+const loadFavourites = async () => {
   const token = getToken();
   if (!token) return; 
   try {
@@ -620,6 +636,26 @@ const displayPriceFormatted = computed(() => {
   return formatPrice(0);
 });
 
+const modalOldPrice = computed(() => {
+  if (currentVariant.value && currentVariant.value.promotional_price && currentVariant.value.price > currentVariant.value.promotional_price) {
+    return currentVariant.value.price;
+  }
+  if (!currentVariant.value && quickAddModal.product?.promotional_price && quickAddModal.product?.base_price > quickAddModal.product?.promotional_price) {
+    return quickAddModal.product.base_price;
+  }
+  return null;
+});
+
+const modalDiscount = computed(() => {
+  if (currentVariant.value && currentVariant.value.promotional_price && currentVariant.value.price > currentVariant.value.promotional_price) {
+    return Math.round(((currentVariant.value.price - currentVariant.value.promotional_price) / currentVariant.value.price) * 100);
+  }
+  if (!currentVariant.value && quickAddModal.product?.promotional_price && quickAddModal.product?.base_price > quickAddModal.product?.promotional_price) {
+    return Math.round(((quickAddModal.product.base_price - quickAddModal.product.promotional_price) / quickAddModal.product.base_price) * 100);
+  }
+  return 0;
+});
+
 const updateQuickAddQty = (delta) => {
   if (!isAllAttributesSelected.value) { return Toast.fire({ icon: 'info', title: 'Vui lòng chọn đầy đủ phân loại.' }); }
   const maxStock = currentVariant.value?.stock_quantity || 0;
@@ -685,12 +721,8 @@ const confirmAddToCart = async () => {
 };
 
 onMounted(() => { 
-  // Đảm bảo cuộn lên đầu trang ngay khi load
-  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  
-  fetchCategories();
-  fetchProducts(1);
-  fetchFavorites();
+  // Gọi đồng thời 3 hàm: Tải Danh mục, Tải Sản phẩm, Tải Tủ đồ Yêu thích (Nếu đã login)
+  Promise.all([fetchCategories(), fetchProducts(1), loadFavourites()]).then(() => isPageLoading.value = false); 
 });
 </script>
 

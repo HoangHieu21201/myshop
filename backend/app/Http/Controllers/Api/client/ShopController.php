@@ -33,14 +33,18 @@ class ShopController extends Controller
             $query->where('name', 'like', '%' . $request->keyword . '%');
         }
 
-        // Sắp xếp
+        // 3. Sắp xếp (Đã sửa lại logic sắp xếp chuẩn xác)
         if ($request->has('sort')) {
             switch ($request->sort) {
+                case 'new': // Thêm case xử lý sản phẩm "Mới nhất"
+                    $query->orderBy('created_at', 'desc');
+                    break;
                 case 'price_asc':
-                    $query->orderBy('base_price', 'asc');
+                    // Sắp xếp theo giá bán thực tế (có KM thì lấy KM, không thì lấy giá gốc)
+                    $query->orderByRaw('COALESCE(promotional_price, base_price) ASC');
                     break;
                 case 'price_desc':
-                    $query->orderBy('base_price', 'desc');
+                    $query->orderByRaw('COALESCE(promotional_price, base_price) DESC');
                     break;
                 case 'recommended':
                 default:

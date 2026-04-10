@@ -37,7 +37,8 @@
                      style="height: 300px; transition: all 0.3s ease;">
                   
                   <div class="w-100 h-100 position-relative">
-                    <img :src="previewUrl || form.old_image_url" class="w-100 h-100 object-fit-cover" alt="Sora Portrait" />
+                    <img v-if="previewUrl || form.old_image_url" :src="previewUrl || form.old_image_url" class="w-100 h-100 object-fit-cover" alt="Sora Portrait" />
+                    <div v-else class="text-muted text-center pt-5 mt-5">Chưa có ảnh</div>
                     <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-opacity">
                       <span class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm"><i class="bi bi-cloud-upload me-1"></i> Chọn ảnh khác</span>
                     </div>
@@ -48,7 +49,7 @@
                 <div v-if="errors.image" class="text-danger small mt-2"><i class="bi bi-exclamation-circle me-1"></i>{{ errors.image[0] }}</div>
                 
                 <div v-if="previewUrl" class="alert alert-warning py-2 mt-3 small mb-0 shadow-sm border-0 bg-warning bg-opacity-10 text-dark">
-                  <i class="bi bi-info-circle-fill text-warning me-1"></i> Bạn đang chọn một ảnh mới để thay thế.
+                  <i class="bi bi-info-circle-fill text-warning me-1"></i> Bạn đang chọn một ảnh mới.
                 </div>
               </div>
 
@@ -121,12 +122,15 @@ const fetchGallery = async () => {
     const id = route.params.id;
     const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries/${id}`, { headers: getHeaders() });
     
-    // Đổ dữ liệu vào form
-    const data = response.data.data || response.data; // Tùy cấu trúc API trả về
+    const data = response.data.data || response.data; 
+    
     form.id = data.id;
-    form.title = data.title;
-    form.status = data.status;
-    form.old_image_url = data.image_url;
+    form.title = data.title || '';
+    form.status = data.is_active === 1 ? 'active' : 'inactive';
+    
+    // Tự động lấy tên miền Backend để nối link ảnh
+    const backendUrl = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
+    form.old_image_url = data.image_path ? `${backendUrl}/storage/${data.image_path}` : '';
     
   } catch (error) {
     console.error(error);
@@ -138,7 +142,7 @@ const fetchGallery = async () => {
 };
 
 const triggerFileInput = () => {
-  fileInput.value.click();
+  if (fileInput.value) fileInput.value.click();
 };
 
 const handleFileChange = (event) => {
@@ -156,18 +160,15 @@ const updateForm = async () => {
 
   const formData = new FormData();
   formData.append('title', form.title);
-  formData.append('status', form.status);
+  formData.append('is_active', form.status === 'active' ? 1 : 0);
   
-  // Chỉ gửi file nếu người dùng có chọn ảnh mới
   if (form.newImageFile) {
     formData.append('image', form.newImageFile);
   }
 
-  // TRICK CHO LARAVEL: Gửi POST kèm _method=PUT để upload file cho route update
   formData.append('_method', 'PUT');
 
   try {
-    // Lưu ý ở đây dùng axios.post thay vì put nhé
     await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries/${form.id}`, formData, {
       headers: getHeaders()
     });
