@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\admin\AdminDashboardController;
 use App\Http\Controllers\Api\admin\AdminContactController;
 
 
+use App\Http\Controllers\Api\admin\AdminNewController;
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
 use App\Http\Controllers\Api\client\ClientCartController;
@@ -45,6 +46,25 @@ use App\Http\Controllers\Api\client\ClientFavouriteController;
 use App\Http\Controllers\Api\client\ClientProfileController;
 use App\Http\Controllers\Api\Client\ChatbotController;
 
+
+use App\Http\Controllers\Api\client\ClientNewController;
+Route::prefix('news')->group(function () {
+    Route::get('/', [ClientNewController::class, 'index']);
+    Route::get('/popular', [ClientNewController::class, 'popular']);
+    Route::get('/{slug}', [ClientNewController::class, 'show']);
+});
+
+
+// THÊM VÀO GROUP ADMIN ROUTES (Bên trong auth:sanctum group)
+
+// Quản lý Tin tức (Mã: admin_news - bạn có thể tạo module permission này)
+Route::controller(AdminNewController::class)->prefix('news')->group(function () {
+    Route::get('/', 'index');
+    Route::post('/', 'store');
+    Route::put('/{id}', 'update');
+    Route::delete('/{id}', 'destroy');
+    Route::patch('/{id}', 'updateStatus');
+});
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -333,6 +353,13 @@ Route::prefix('admin')->group(function () {
                 // 👉 SẾP THÊM ĐÚNG DÒNG NÀY VÀO LÀ XONG:
                 Route::post('/{id}/reply', 'replyEmail');
             });
+        });
+        Route::controller(AdminNewController::class)->prefix('news')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::put('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
+            Route::patch('/{id}', 'updateStatus');
         });
     });
 });
