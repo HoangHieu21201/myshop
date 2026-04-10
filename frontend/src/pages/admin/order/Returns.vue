@@ -323,6 +323,26 @@ const statusCounts = ref({
 
 const tabCache = ref({});
 
+// =======================================================
+// BỘ TỪ ĐIỂN CÂU TRẢ LỜI NHANH CHO TỪNG TRẠNG THÁI
+// =======================================================
+const quickRefundNotes = {
+    propose: [
+        'SORA xin phép khấu trừ 10% phí làm mới sản phẩm.',
+        'Sản phẩm bị xước nhẹ, khấu trừ 20% giá trị.',
+        'SORA xin phép trừ 150.000đ phí hộp và vận chuyển.'
+    ],
+    refunded: [
+        'Đã hoàn tiền thành công vào số tài khoản quý khách cung cấp.',
+        'Kế toán đã duyệt chi. Vui lòng kiểm tra biến động số dư.',
+    ],
+    reject: [
+        'Sản phẩm không đáp ứng điều kiện hoàn trả (đã qua sử dụng).',
+        'Sản phẩm đã quá thời hạn 7 ngày đổi trả theo quy định.',
+        'Sản phẩm bị hư hỏng nặng, không thể bảo hành hoặc hoàn tiền.'
+    ]
+};
+
 onBeforeUnmount(() => {
   isUnmounted = true;
   if (quickViewModalInstance) quickViewModalInstance.hide();
@@ -370,11 +390,12 @@ const getReturnStatusUi = (order) => {
     return { text: 'Chờ Xử Lý', class: 'bg-warning text-dark border-warning', icon: 'bi-inbox-fill', statusCode: 'pending' };
 };
 
-// Khởi tạo Modal Xử lý Hoàn tiền
+// =======================================================
+// KHỞI TẠO MODAL XỬ LÝ VỚI TRẢ LỜI NHANH
+// =======================================================
 const processRefund = async (order) => {
   const currentStatus = getReturnStatusUi(order).statusCode;
   
-  // Đặt giá trị mặc định cho form xử lý
   const defaultRefundValue = (order.refund_amount !== null && order.refund_amount > 0) 
       ? Math.round(order.refund_amount) 
       : Math.round(order.total_amount);
@@ -459,6 +480,7 @@ const processRefund = async (order) => {
 
           <div>
               <label class="form-label fw-bold small text-muted text-uppercase tracking-wide"><i class="bi bi-pencil-square text-brand me-1"></i> 3. Lời nhắn / Ghi chú <span class="text-danger">*</span></label>
+              <div id="quick-notes-container" class="d-flex flex-wrap gap-2 mb-2"></div>
               <textarea id="swal-refund-note" class="form-control shadow-sm" rows="3" placeholder="Ví dụ: SORA xin phép khấu trừ 10% phí đánh bóng lại sản phẩm...">${defaultNoteValue}</textarea>
               <div class="form-text small" style="font-size: 0.7rem;">Nội dung này sẽ được đính kèm vào Email gửi đi.</div>
           </div>
@@ -483,9 +505,42 @@ const processRefund = async (order) => {
       const hiddenAmt = document.getElementById('swal-refund-amount');
       const note = document.getElementById('swal-refund-note');
       const actionRadios = document.querySelectorAll('input[name="refund_action"]');
+      const container = document.getElementById('quick-notes-container');
       
       const origAmt = parseFloat(order.total_amount);
       const fmt = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
+
+      // --- LOGIC GHI CHÚ NHANH (QUICK NOTES) ---
+      const renderChips = (action) => {
+          const notesList = quickRefundNotes[action] || [];
+          if(notesList.length === 0) {
+              container.innerHTML = '';
+              return;
+          }
+          let html = '';
+          notesList.forEach(n => {
+              html += `<span class="badge bg-light text-dark border border-secondary-subtle shadow-sm quick-note-chip" style="font-size: 0.75rem; padding: 6px 10px; transition: all 0.2s; cursor: pointer;">${n}</span>`;
+          });
+          container.innerHTML = html;
+          
+          container.querySelectorAll('.quick-note-chip').forEach(chip => {
+              chip.addEventListener('click', () => {
+                  note.value = chip.innerText;
+                  chip.style.backgroundColor = '#009981';
+                  chip.style.color = '#fff';
+                  chip.style.transform = 'translateY(-2px)';
+                  setTimeout(() => {
+                      chip.style.backgroundColor = '#f8f9fa';
+                      chip.style.color = '#212529';
+                      chip.style.transform = 'translateY(0)';
+                  }, 200);
+              });
+          });
+      };
+
+      // Khởi tạo Quick Notes dựa vào Action đang chọn
+      const currentAction = document.querySelector('input[name="refund_action"]:checked').value;
+      renderChips(currentAction);
 
       if (order.refund_amount !== null && order.refund_amount < origAmt && order.refund_amount > 0) {
           document.getElementById('rt_fixed').checked = true;
@@ -505,14 +560,8 @@ const processRefund = async (order) => {
 
         if (type === 'percent') {
           finalAmt = Math.max(0, origAmt - (origAmt * val / 100));
-          if (val > 0 && (note.value === '' || note.value.includes('khấu trừ'))) {
-             note.value = `SORA xin phép khấu trừ ${val}% phí dịch vụ/hao mòn đối với sản phẩm hoàn trả. Số tiền thực nhận: ${fmt(finalAmt)}.`;
-          }
         } else if (type === 'fixed') {
           finalAmt = Math.max(0, origAmt - val);
-          if (val > 0 && (note.value === '' || note.value.includes('khấu trừ'))) {
-             note.value = `SORA xin phép khấu trừ ${fmt(val)} phí dịch vụ/hao mòn đối với sản phẩm hoàn trả. Số tiền thực nhận: ${fmt(finalAmt)}.`;
-          }
         }
         
         display.innerText = fmt(finalAmt);
@@ -533,12 +582,11 @@ const processRefund = async (order) => {
       input.addEventListener('input', calc);
 
       actionRadios.forEach(r => r.addEventListener('change', (e) => {
+         renderChips(e.target.value); // Thay đổi Ghi chú nhanh khi đổi Hướng xử lý
+         
          if (e.target.value === 'reject') {
              display.innerText = fmt(0);
              hiddenAmt.value = 0;
-             if (note.value === '' || note.value.includes('khấu trừ')) {
-                 note.value = 'SORA rất tiếc không thể chấp nhận yêu cầu hoàn tiền do sản phẩm không đáp ứng đủ điều kiện đổi trả ban đầu.';
-             }
          } else {
              calc();
          }
@@ -554,7 +602,7 @@ const processRefund = async (order) => {
         return false;
       }
       if (!note && action !== 'refunded') {
-        Swal.showValidationMessage('Vui lòng nhập Nội dung Email để giải thích cho khách hàng!');
+        Swal.showValidationMessage('Vui lòng nhập Ghi chú để gửi vào Email giải thích cho khách hàng!');
         return false;
       }
       return { amount, note, action };
@@ -627,7 +675,7 @@ const fetchCounts = async () => {
     } catch (e) {}
 };
 
-// Lấy dữ liệu danh sách
+// Lấy dữ liệu danh sách (Backend đã lo việc đếm và lọc trang)
 const fetchData = async (page = 1, silent = false) => {
   const cacheKey = `${activeTab.value}_${page}_${filters.value.start_date}_${filters.value.end_date}`;
 
@@ -692,20 +740,11 @@ const switchTab = (tabId) => {
     fetchData(1, true); 
 };
 
-// Computed: Lọc từ khóa tìm kiếm
+// =======================================================
+// FIX TỬ HUYỆT: Để Backend lọc, Frontend chỉ làm bộ search nhanh
+// =======================================================
 const displayedOrders = computed(() => {
     let result = orders.value;
-
-    if (activeTab.value === 'all') {
-        result = result.filter(o => 
-            o.status === 'return_requested' ||   // ← THÊM DÒNG NÀY
-            o.status === 'returned' || 
-            o.payment_status === 'refunded'
-        );
-    } 
-    else if (activeTab.value === 'pending') {
-        result = result.filter(o => o.status === 'return_requested');
-    }
 
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
@@ -743,5 +782,15 @@ onMounted(() => {
   :deep(.border-end-lg) {
     border-right: 1px solid #dee2e6;
   }
+}
+</style>
+
+<style>
+/* Style global (không scoped) cho các thẻ Quick Notes sinh ra động từ SweetAlert */
+.quick-note-chip:hover {
+    background-color: #009981 !important;
+    color: #fff !important;
+    border-color: #009981 !important;
+    transform: translateY(-2px);
 }
 </style>
