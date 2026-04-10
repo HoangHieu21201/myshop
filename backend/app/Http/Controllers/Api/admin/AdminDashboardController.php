@@ -14,18 +14,45 @@ use Illuminate\Support\Facades\Schema;
 
 class AdminDashboardController extends Controller
 {
-    // CÁCH MỚI: Tính doanh thu cho tất cả đơn hàng, NGOẠI TRỪ các đơn đã bị Hủy/Thất bại
-    private $excludedStatuses = ['Đã hủy', 'Hủy', 'cancelled', 'canceled', 'failed', 'Thất bại'];
+    /**
+     * Hàm dùng chung để lọc các đơn hàng được tính vào doanh thu.
+     * Logic MỚI CHUẨN: (Đã giao HOẶC Đã thanh toán) VÀ KHÔNG NẰM TRONG (Hủy, Đã hoàn trả, Đang yêu cầu hoàn trả)
+     */
+    private function applyRevenueFilter($query, $tablePrefix = '')
+    {
+        $statusCol = $tablePrefix ? $tablePrefix . '.status' : 'status';
+        $paymentStatusCol = $tablePrefix ? $tablePrefix . '.payment_status' : 'payment_status';
+
+        return $query->where(function ($q) use ($statusCol, $paymentStatusCol) {
+            // Điều kiện 1: Lấy tất cả những thằng Đã giao hoặc Đã thanh toán
+            $q->where($statusCol, 'delivered')
+              ->orWhere($paymentStatusCol, 'paid');
+        })
+        // Điều kiện 2: Trừ đi (Loại bỏ) dứt điểm những thằng bị Hủy hoặc liên quan đến Hoàn trả
+        ->whereNotIn($statusCol, ['cancelled', 'returned', 'return_requested']);
+    }
+
+    /**
+     * Hàm tính phần trăm tăng/giảm
+     */
+    private function calculatePercentageChange($current, $previous)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0; // Nếu kỳ trước bằng 0 mà kỳ này có => Tăng 100%
+        }
+        return round((($current - $previous) / $previous) * 100, 1); // Làm tròn 1 chữ số thập phân
+    }
 
     public function index()
     {
         try {
             // 1. TỔNG QUAN
-            // Sum 'total_amount' của các đơn hàng không bị hủy
-            $totalRevenue = Order::whereNotIn('status', $this->excludedStatuses)->sum('total_amount') ?? 0; 
+            $revenueQuery = Order::query();
+            $totalRevenue = $this->applyRevenueFilter($revenueQuery)->sum('total_amount') ?? 0; 
+
             $newOrders = Order::whereDate('created_at', Carbon::today())->count();
             
-            // Đếm toàn bộ User (Bảng users của em chỉ lưu khách hàng)
+            // Đếm toàn bộ User (Bảng users của bạn chỉ lưu khách hàng)
             $totalCustomers = User::count();
                 
             // Tính tổng tồn kho từ bảng product_variants
@@ -33,13 +60,36 @@ class AdminDashboardController extends Controller
                 ? DB::table('product_variants')->whereNull('deleted_at')->sum('stock') 
                 : 0;
 
+            // ==========================================
+            // TÍNH TOÁN % TĂNG/GIẢM SO VỚI KỲ TRƯỚC
+            // ==========================================
+            $now = Carbon::now();
+            $thisMonthStart = $now->copy()->startOfMonth();
+            $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
+            $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
+
+            // A. Tăng trưởng Doanh thu (Tháng này vs Tháng trước)
+            $revenueThisMonth = $this->applyRevenueFilter(Order::query())->where('created_at', '>=', $thisMonthStart)->sum('total_amount') ?? 0;
+            $revenueLastMonth = $this->applyRevenueFilter(Order::query())->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->sum('total_amount') ?? 0;
+            $revenueGrowth = $this->calculatePercentageChange($revenueThisMonth, $revenueLastMonth);
+
+            // B. Tăng trưởng Đơn hàng (Hôm nay vs Hôm qua)
+            $ordersYesterday = Order::whereDate('created_at', Carbon::yesterday())->count();
+            $ordersGrowth = $this->calculatePercentageChange($newOrders, $ordersYesterday);
+
+            // C. Tăng trưởng Khách hàng (Tháng này vs Tháng trước)
+            $customersThisMonth = User::where('created_at', '>=', $thisMonthStart)->count();
+            $customersLastMonth = User::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+            $customersGrowth = $this->calculatePercentageChange($customersThisMonth, $customersLastMonth);
+
+
             // 2. ĐƠN HÀNG GẦN ĐÂY
             $recentOrdersRaw = Order::with('user')->orderBy('created_at', 'desc')->take(5)->get();
             $recentOrders = $recentOrdersRaw->map(function($order) {
                 return [
                     'id' => $order->id,
                     'code' => $order->order_code ?? 'ORD-' . str_pad($order->id, 4, '0', STR_PAD_LEFT), 
-                    // Dùng fullName từ User model của em
+                    // Dùng fullName từ User model của bạn
                     'customer' => $order->user ? $order->user->fullName : ($order->customer_name ?? 'Khách lẻ'), 
                     'date' => $order->created_at->format('d/m/Y H:i'),
                     'total' => (float) ($order->total_amount ?? 0), 
@@ -48,11 +98,13 @@ class AdminDashboardController extends Controller
             });
 
             // 3. SẢN PHẨM BÁN CHẠY
-            $topProductsRaw = DB::table('order_items')
+            $productsQuery = DB::table('order_items')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->whereNull('orders.deleted_at') // Bỏ qua đơn hàng đã xóa mềm
-                ->whereNotIn('orders.status', $this->excludedStatuses) // Bỏ qua đơn bị hủy
-                ->whereNotNull('order_items.product_id') // CHỐNG LỖI: Bỏ qua các item là Combo (ko có product_id)
+                ->whereNotNull('order_items.product_id'); // Bỏ qua Combo
+                
+            // Áp dụng cùng 1 logic doanh thu cho Sản phẩm bán chạy
+            $topProductsRaw = $this->applyRevenueFilter($productsQuery, 'orders')
                 ->select('order_items.product_id', DB::raw('SUM(order_items.quantity) as total_sold'))
                 ->groupBy('order_items.product_id')
                 ->orderByDesc('total_sold')
@@ -81,7 +133,7 @@ class AdminDashboardController extends Controller
                     'sold' => (int) $item->total_sold,
                     'stock' => $stock,
                     'price' => $product ? ($product->promotional_price ?? $product->base_price) : ($snapshot->price ?? 0), 
-                    // Dùng thumbnail_image theo đúng Model Product của em
+                    // Dùng thumbnail_image theo đúng Model Product của bạn
                     'image' => $product && $product->thumbnail_image ? asset('storage/' . $product->thumbnail_image) : '', 
                 ];
             });
@@ -95,9 +147,12 @@ class AdminDashboardController extends Controller
                 'data' => [
                     'stats' => [
                         'totalRevenue' => (float) $totalRevenue,
+                        'revenueGrowth' => $revenueGrowth, // % tăng/giảm doanh thu
                         'newOrders' => $newOrders,
+                        'ordersGrowth' => $ordersGrowth,   // % tăng/giảm đơn hàng mới
                         'inventory' => (int) $inventory,
-                        'totalCustomers' => $totalCustomers
+                        'totalCustomers' => $totalCustomers,
+                        'customersGrowth' => $customersGrowth // % tăng/giảm khách hàng
                     ],
                     'recentOrders' => $recentOrders,
                     'topProducts' => $topProducts,
@@ -158,11 +213,11 @@ class AdminDashboardController extends Controller
 
     private function getChartData($startDate, $endDate)
     {
-        // Xử lý thống kê an toàn bằng PHP Collection để tránh lỗi SQL Group By ngày tháng
-        $orders = Order::whereNotIn('status', $this->excludedStatuses)
-            ->where('created_at', '>=', $startDate->copy()->startOfDay())
-            ->where('created_at', '<=', $endDate->copy()->endOfDay())
-            ->get(['created_at', 'total_amount']);
+        $ordersQuery = Order::where('created_at', '>=', $startDate->copy()->startOfDay())
+                            ->where('created_at', '<=', $endDate->copy()->endOfDay());
+
+        // Áp dụng cùng 1 logic doanh thu cho Biểu đồ
+        $orders = $this->applyRevenueFilter($ordersQuery)->get(['created_at', 'total_amount']);
 
         $revenues = [];
         foreach ($orders as $order) {
