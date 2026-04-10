@@ -270,7 +270,7 @@ Route::prefix('admin')->group(function () {
             Route::get('galleries', [AdminCustomerGalleryController::class, 'index']);
             Route::post('galleries', [AdminCustomerGalleryController::class, 'store']);
             Route::get('galleries/{id}', [AdminCustomerGalleryController::class, 'show']);
-            Route::put('galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
+            Route::match(['post', 'put'], 'galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
             Route::delete('galleries/{id}', [AdminCustomerGalleryController::class, 'destroy']);
         });
 
