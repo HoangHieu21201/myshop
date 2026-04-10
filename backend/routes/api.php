@@ -341,16 +341,20 @@ Route::prefix('admin')->group(function () {
             Route::put('/variants/{id}/stock', 'updateVariantStock');
             Route::put('/combos/{id}/limit', 'updateComboLimit');
         });
-        // ==================================================
-         // QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
+      // ==================================================
+        // QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
         // ==================================================
         Route::middleware(['check.module:admin_contacts'])->group(function () {
             Route::controller(AdminContactController::class)->prefix('contacts')->group(function () {
                 Route::get('/', 'index');
+                
+                // 1. Route xóa hàng loạt (Phải đặt trên các route có /{id} để tránh bị nhầm lẫn)
+                Route::post('/bulk-delete', 'bulkDelete'); 
+                
                 Route::put('/{id}/status', 'updateStatus');
                 Route::delete('/{id}', 'destroy');
-
-                // 👉 SẾP THÊM ĐÚNG DÒNG NÀY VÀO LÀ XONG:
+                
+                // 2. Route trả lời Email
                 Route::post('/{id}/reply', 'replyEmail');
             });
         });
