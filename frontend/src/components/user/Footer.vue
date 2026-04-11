@@ -122,18 +122,11 @@
       </div>
     </div>
     
+    
   </footer>
-  <ZaloFloatingButton />
 </template>
 
 <script setup>
-
-<<<<<<< Updated upstream
-
-=======
-// Nhớ import file component Zalo vào đây sếp nhé
-import ZaloFloatingButton from '@/components/ZaloFloatingButton.vue';
->>>>>>> Stashed changes
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
