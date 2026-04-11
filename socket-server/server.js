@@ -22,11 +22,21 @@ app.post('/api/emit-order', (req, res) => {
     const orderData = req.body;
     
     console.log("🔔 Nhận được lệnh từ Laravel, đang báo cho Admin...", orderData.orderCode);
-    
-    // Phát sóng sự kiện 'new_order_received' xuống Frontend (Vue.js)
     io.emit('new_order_received', orderData);
-    
     res.json({ success: true, message: "Đã phát sóng thành công!" });
+});
+
+// -----------------------------------------------------
+// [ĐÃ THÊM MỚI] KÊNH DÙNG CHUNG CHO MỌI CHỨC NĂNG CỦA ADMIN (THÊM/SỬA/XÓA)
+// -----------------------------------------------------
+app.post('/api/admin-refresh', (req, res) => {
+    const data = req.body;
+    console.log("🔄 Lệnh làm mới dữ liệu Admin, Module:", data.module);
+    
+    // Phát sóng sự kiện 'refresh_admin_data' xuống toàn bộ Frontend (Vue.js) đang mở
+    io.emit('refresh_admin_data', data);
+    
+    res.json({ success: true });
 });
 
 // Lắng nghe xem có Admin nào đang mở trang web không

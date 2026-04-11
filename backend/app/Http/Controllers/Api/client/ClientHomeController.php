@@ -29,27 +29,36 @@ class ClientHomeController extends Controller
 
             // 1. Lấy Banners
             if (Schema::hasTable('banners')) {
-                $data['banners'] = DB::table('banners')->where('status', 'active')->orderBy('sort_order', 'asc')->get();
+                $query = DB::table('banners')->where('status', 'active');
+                // LOGIC: Chỉ hiện nếu deleted_at = null
+                if (Schema::hasColumn('banners', 'deleted_at')) {
+                    $query->whereNull('deleted_at');
+                }
+                $data['banners'] = $query->orderBy('sort_order', 'asc')->get();
             }
 
             // 2. Lấy Coupons
             if (Schema::hasTable('coupons')) {
-                $data['coupons'] = DB::table('coupons')
+                $query = DB::table('coupons')
                     ->where('status', 'active')
-                    ->where(function ($query) {
-                        $query->whereNull('expires_at')
+                    ->where(function ($q) {
+                        $q->whereNull('expires_at')
                             ->orWhere('expires_at', '>=', now());
-                    })
-                    ->get()
-                    ->map(function ($coupon) {
-                        return [
-                            'id' => $coupon->id,
-                            'code' => $coupon->code,
-                            'discount_type' => $coupon->type == 'percentage' ? 'percent' : 'fixed',
-                            'discount_value' => $coupon->value,
-                            'min_order_value' => $coupon->min_spend ?? 0,
-                        ];
                     });
+                // LOGIC: Chỉ hiện nếu deleted_at = null
+                if (Schema::hasColumn('coupons', 'deleted_at')) {
+                    $query->whereNull('deleted_at');
+                }
+                
+                $data['coupons'] = $query->get()->map(function ($coupon) {
+                    return [
+                        'id' => $coupon->id,
+                        'code' => $coupon->code,
+                        'discount_type' => $coupon->type == 'percentage' ? 'percent' : 'fixed',
+                        'discount_value' => $coupon->value,
+                        'min_order_value' => $coupon->min_spend ?? 0,
+                    ];
+                });
             }
 
             // 3. Lấy Danh mục
@@ -79,9 +88,21 @@ class ClientHomeController extends Controller
 
             // 5. Lấy Combos
             if (Schema::hasTable('combos') && Schema::hasTable('combo_items')) {
-                $data['combos'] = DB::table('combos')
-                    ->where('status', 'active')
-                    ->orderBy('id', 'desc')
+                $query = DB::table('combos')->where('status', 'active');
+
+                // LOGIC: Chỉ hiện nếu deleted_at = null
+                if (Schema::hasColumn('combos', 'deleted_at')) {
+                    $query->whereNull('deleted_at');
+                }
+
+                // LOGIC: Kiểm tra thời hạn (còn hạn hoặc không có hạn)
+                $yesterday = Carbon::now()->subDay();
+                $query->where(function($q) use ($yesterday) {
+                    $q->whereNull('end_date')
+                      ->orWhere('end_date', '>=', $yesterday);
+                });
+
+                $data['combos'] = $query->orderBy('id', 'desc')
                     ->take(5)
                     ->get()
                     ->map(function ($combo) {
@@ -128,11 +149,14 @@ class ClientHomeController extends Controller
 
             // 6. Lấy Hạng hội viên
             if (Schema::hasTable('membership_tiers')) {
-                $data['tiers'] = DB::table('membership_tiers')
-                    ->where('min_spent', '>', 0)
-                    ->orderBy('min_spent', 'asc')
-                    ->take(3)
-                    ->get();
+                $query = DB::table('membership_tiers')->where('min_spent', '>', 0);
+                
+                // LOGIC: Chỉ hiện nếu deleted_at = null
+                if (Schema::hasColumn('membership_tiers', 'deleted_at')) {
+                    $query->whereNull('deleted_at');
+                }
+
+                $data['tiers'] = $query->orderBy('min_spent', 'asc')->take(3)->get();
             }
 
             // 7. LẤY CHÂN DUNG SORA (TRỰC TIẾP KHÔNG QUA CACHE)
