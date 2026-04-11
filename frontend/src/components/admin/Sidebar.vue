@@ -183,7 +183,8 @@ const menuItems = ref([
   {
     name: 'Dịch vụ', icon: 'bi-headset', stateKey: 'services', 
     children: [
-      { name: 'Hộp thư liên hệ', path: '/admin/contacts', moduleCode: 'admin_contacts' }
+      { name: 'Hỗ trợ Chat', path: '/admin/chat', moduleCode: null },
+      { name: 'Hộp thư liên hệ', path: '/admin/contacts', moduleCode: 'admin_contacts' },
     ]
   },
 ]);
