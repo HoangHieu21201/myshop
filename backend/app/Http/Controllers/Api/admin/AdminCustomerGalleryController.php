@@ -18,11 +18,22 @@ class AdminCustomerGalleryController extends Controller
         return response()->json(['success' => true, 'data' => $galleries]);
     }
 
+    // ĐÃ THÊM: Lấy thông tin 1 ảnh để hiển thị lên form Sửa (Vue Edit)
+    public function show($id)
+    {
+        try {
+            $gallery = CustomerGallery::findOrFail($id);
+            return response()->json(['success' => true, 'data' => $gallery]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy hình ảnh này'], 404);
+        }
+    }
+
     // Upload thêm ảnh mới
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'nullable|string|max:255', // Thêm validate title
+            'title' => 'nullable|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
@@ -31,7 +42,7 @@ class AdminCustomerGalleryController extends Controller
         $imagePath = $request->file('image')->store('customer_galleries', 'public');
 
         $gallery = CustomerGallery::create([
-            'title' => $request->title, // Lưu title
+            'title' => $request->title, 
             'image_path' => $imagePath,
             'sort_order' => $request->sort_order ?? 0,
             'is_active' => $request->is_active ?? 1,
@@ -40,16 +51,22 @@ class AdminCustomerGalleryController extends Controller
         return response()->json(['success' => true, 'data' => $gallery]);
     }
 
-    // Cập nhật ảnh / Vị trí / Trạng thái
+    // Cập nhật ảnh / Vị trí / Trạng thái / Tiêu đề
     public function update(Request $request, $id)
     {
         $gallery = CustomerGallery::findOrFail($id);
 
         $request->validate([
+            'title' => 'nullable|string|max:255', // Thêm validate cho title
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Cập nhật Tiêu đề (Đã bổ sung)
+        if ($request->has('title')) {
+            $gallery->title = $request->title;
+        }
 
         // Nếu có upload ảnh mới thì xóa ảnh cũ
         if ($request->hasFile('image')) {
@@ -64,6 +81,7 @@ class AdminCustomerGalleryController extends Controller
         }
         
         if ($request->has('is_active')) {
+            // Chuyển đổi boolean an toàn hơn
             $gallery->is_active = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         }
 
