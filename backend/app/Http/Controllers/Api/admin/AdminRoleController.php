@@ -7,8 +7,24 @@ use App\Models\Role;
 use App\Http\Requests\AdminStoreRoleRequest;
 use App\Http\Requests\AdminUpdateRoleRequest;
 
+// Thêm các use statements cần thiết
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 class AdminRoleController extends Controller
 {
+    private function broadcastUpdate()
+    {
+        try {
+            Http::post('http://localhost:3000/api/admin-refresh', [
+                'module' => 'roles', 
+                'time'   => now()->toDateTimeString()
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Trạm Node.js đang tắt: " . $e->getMessage());
+        }
+    }
+
     public function index()
     {
         $roles = Role::withTrashed()->orderBy('level', 'asc')->get();
@@ -19,6 +35,9 @@ class AdminRoleController extends Controller
     {
         try {
             $role = Role::create($request->only(['value', 'label', 'badgeClass', 'level']));
+            
+            $this->broadcastUpdate();
+
             return response()->json(['success' => true, 'message' => 'Tạo Role thành công', 'data' => $role], 201);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
@@ -35,6 +54,9 @@ class AdminRoleController extends Controller
 
         try {
             $role->update($request->only(['value', 'label', 'badgeClass', 'level']));
+            
+            $this->broadcastUpdate();
+
             return response()->json(['success' => true, 'message' => 'Cập nhật Role thành công', 'data' => $role]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
@@ -50,6 +72,9 @@ class AdminRoleController extends Controller
         }
 
         $role->delete();
+        
+        $this->broadcastUpdate();
+
         return response()->json(['success' => true, 'message' => 'Đã xóa Role thành công']);
     }
 
@@ -59,6 +84,8 @@ class AdminRoleController extends Controller
             $role = Role::withTrashed()->findOrFail($id);
             $role->restore();
             
+            $this->broadcastUpdate();
+
             return response()->json(['success' => true, 'message' => 'Đã khôi phục Role thành công']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);

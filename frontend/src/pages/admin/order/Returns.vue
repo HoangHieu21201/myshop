@@ -73,21 +73,23 @@
 
       <!-- BẢNG DỮ LIỆU -->
       <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <!-- ĐÃ FIX: Chuyển flex-md-row và gap-3 cho Responsive Header -->
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3">
           <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
             <i class="bi bi-arrow-return-left text-danger me-2"></i>Danh sách Đơn hoàn trả
             <div v-if="isSilentLoading" class="spinner-border spinner-border-sm text-brand ms-2" role="status"></div>
           </h6>
           
           <div class="search-box position-relative w-100" style="max-width: 350px;">
-            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" @keyup.enter="fetchData(1, true)" placeholder="Tìm Mã đơn, Tên KH, SĐT...">
+            <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light border-0 py-2 w-100" v-model="searchQuery" @keyup.enter="fetchData(1, true)" placeholder="Tìm Mã đơn, Tên KH, SĐT...">
             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" @click="fetchData(1, true)"></i>
           </div>
         </div>
         
         <div class="card-body p-0 mt-2">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="width: 100%; min-width: 850px;">
+          <!-- ĐÃ FIX: Thêm class .responsive-table và border-0 -->
+          <div class="table-responsive border-0">
+            <table class="table table-hover align-middle mb-0 responsive-table w-100">
               <thead class="bg-light">
                 <tr>
                   <th class="py-3 px-2 px-md-3 text-secondary border-0" style="width: 18%;">Mã Đơn / Cập nhật</th>
@@ -105,29 +107,30 @@
                 </tr>
                 <tr v-else v-for="order in displayedOrders" :key="order.id" class="bg-light">
                   
-                  <td class="px-2 px-md-3 py-3 text-nowrap">
+                  <!-- ĐÃ FIX: Thêm data-label cho từng cột -->
+                  <td data-label="Mã Đơn / Cập nhật" class="px-2 px-md-3 py-3 text-nowrap">
                     <div class="fw-bold text-danger fs-6 mb-1 font-monospace cursor-pointer" @click="openQuickView(order.id)">{{ order.order_code }}</div>
                     <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ formatDateTime(order.updated_at) }}</div>
                   </td>
                   
-                  <td class="px-2 px-md-3 overflow-hidden">
+                  <td data-label="Khách hàng" class="px-2 px-md-3 overflow-hidden">
                     <div class="fw-bold text-dark text-truncate mb-1"><i class="bi bi-person-fill me-1 text-secondary"></i> {{ order.customer_name }}</div>
                     <div class="small text-muted text-truncate"><i class="bi bi-telephone-fill me-1"></i> {{ order.customer_phone }}</div>
                   </td>
                   
-                  <td class="px-2 px-md-3 text-end text-nowrap">
+                  <td data-label="Giá trị hoàn" class="px-2 px-md-3 text-end text-nowrap">
                     <div v-if="order.refund_amount !== null && order.refund_amount < order.total_amount" class="text-muted text-decoration-line-through small">{{ formatCurrency(order.total_amount) }}</div>
                     <div class="fw-bold text-danger fs-5">{{ formatCurrency(order.refund_amount !== null ? order.refund_amount : order.total_amount) }}</div>
                   </td>
 
-                  <td class="px-2 px-md-3 text-center">
+                  <td data-label="Trạng thái Yêu cầu" class="px-2 px-md-3 text-center">
                     <div class="badge px-3 py-2 w-100 text-uppercase border" :class="getReturnStatusUi(order).class">
                         <i class="bi me-1" :class="getReturnStatusUi(order).icon"></i>
                         {{ getReturnStatusUi(order).text }}
                     </div>
                   </td>
 
-                  <td class="px-2 px-md-3 text-center">
+                  <td data-label="Thao tác" class="px-2 px-md-3 text-center">
                     <div class="d-flex gap-2 justify-content-center">
                       <button class="btn btn-sm btn-light text-brand shadow-sm border" @click="openQuickView(order.id)" title="Xem chi tiết đơn hoàn">
                           <i class="bi bi-eye-fill"></i>
@@ -153,9 +156,9 @@
         </div>
       </div>
 
-      <!-- PHÂN TRANG -->
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="pagination.lastPage > 1 && !isTableLoading">
-        <span class="text-muted small">Hiển thị trang {{ pagination.currentPage }} / {{ pagination.lastPage }} (Tổng: {{ pagination.total }} đơn)</span>
+      <!-- ĐÃ FIX: Chỉnh phân trang mượt mà trên mobile -->
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top gap-3" v-if="pagination.lastPage > 1 && !isTableLoading">
+        <span class="text-muted small text-center">Hiển thị trang {{ pagination.currentPage }} / {{ pagination.lastPage }} (Tổng: {{ pagination.total }} đơn)</span>
         <nav>
           <ul class="pagination pagination-sm mb-0 shadow-sm">
             <li class="page-item" :class="{ disabled: pagination.currentPage === 1 }"><button class="page-link text-brand" @click="fetchData(pagination.currentPage - 1, true)"><i class="bi bi-chevron-left"></i></button></li>
@@ -294,6 +297,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import { io } from "socket.io-client";
 
 const route = useRoute();
 const orders = ref([]);
@@ -323,6 +327,8 @@ const statusCounts = ref({
 
 const tabCache = ref({});
 
+const socket = io("http://localhost:3000");
+
 // =======================================================
 // BỘ TỪ ĐIỂN CÂU TRẢ LỜI NHANH CHO TỪNG TRẠNG THÁI
 // =======================================================
@@ -349,6 +355,10 @@ onBeforeUnmount(() => {
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
   document.body.className = '';
   document.body.style = '';
+
+  if (socket) {
+      socket.disconnect();
+  }
 });
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
@@ -632,7 +642,6 @@ const processRefund = async (order) => {
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xử lý hoàn tất!', showConfirmButton: false, timer: 1500 });
     tabCache.value = {}; 
     fetchData(pagination.value.currentPage, true); 
-    fetchCounts(); 
     
   } catch (error) { 
     if (error.response && error.response.status === 401) {
@@ -655,24 +664,6 @@ const openQuickView = async (id) => {
       quickViewModalInstance.show();
     }
   } catch(e){}
-};
-
-const fetchCounts = async () => {
-    try {
-        const tabs = ['all', 'pending', 'proposing', 'refunded', 'rejected'];
-        const requests = tabs.map(tab => {
-            let url = `http://127.0.0.1:8000/api/admin/orders?page=1`;
-            if (tab !== 'all') url += `&return_tab=${tab}`;
-            return axios.get(url, { headers: getHeaders() }).then(res => res.data);
-        });
-
-        const results = await Promise.all(requests);
-        tabs.forEach((tab, index) => {
-            if (results[index] && results[index].data) {
-                statusCounts.value[tab] = results[index].data.total;
-            }
-        });
-    } catch (e) {}
 };
 
 // Lấy dữ liệu danh sách (Backend đã lo việc đếm và lọc trang)
@@ -759,7 +750,24 @@ const displayedOrders = computed(() => {
 
 onMounted(() => {
     fetchData(1);
-    fetchCounts();
+
+    // ĐÃ BỔ SUNG: Vểnh tai nghe sóng tự động từ Node.js
+    socket.on("refresh_admin_data", (data) => {
+      // Vì Return là 1 phần của module Orders nên nghe chung sóng 'orders'
+      if (data.module === 'orders') {
+        Swal.fire({
+          toast: true,
+          position: 'bottom-start',
+          icon: 'info',
+          title: 'Hệ thống tự động',
+          text: data.message || 'Có cập nhật mới từ nhân viên khác.',
+          showConfirmButton: false,
+          timer: 4000
+        });
+        tabCache.value = {};
+        fetchData(pagination.value.currentPage, true);
+      }
+    });
 });
 </script>
 
@@ -781,6 +789,67 @@ onMounted(() => {
 @media (min-width: 992px) {
   :deep(.border-end-lg) {
     border-right: 1px solid #dee2e6;
+  }
+}
+
+/* CSS XỬ LÝ RESPONSIVE BẢNG THÀNH DẠNG CARD (KHÔNG THANH CUỘN NGANG) */
+@media (max-width: 767.98px) {
+  .responsive-table {
+    display: block;
+    width: 100%;
+  }
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table tbody, .responsive-table tr, .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+  .responsive-table tr {
+    margin-bottom: 1rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+    padding: 0.75rem 1rem !important;
+    border: none;
+    border-bottom: 1px solid #f8f9fa;
+  }
+  .responsive-table td:last-child {
+    border-bottom: none;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-right: 1rem;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .responsive-table td > div, .responsive-table td > span {
+    justify-content: flex-end !important;
+    text-align: right;
+  }
+  .responsive-table td[colspan] {
+    justify-content: center;
+  }
+  .responsive-table td[colspan]::before {
+    display: none;
+  }
+}
+@media (min-width: 768px) {
+  .responsive-table {
+    display: table;
+    min-width: 850px;
   }
 }
 </style>
