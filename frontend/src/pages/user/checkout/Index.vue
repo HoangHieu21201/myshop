@@ -113,10 +113,35 @@
                                 <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Số điện thoại <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control luxury-input" v-model="form.customer_phone" placeholder="SĐT liên hệ" :required="useNewAddress || addresses.length === 0">
                             </div>
-                            <div class="col-md-12">
-                                <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control luxury-input" v-model="form.customer_address" placeholder="Số nhà, Phường/Xã, Quận/Huyện, Tỉnh/TP" :required="useNewAddress || addresses.length === 0">
+
+                            <!-- PHẦN CHỌN ĐỊA CHỈ MỚI -->
+                            <div class="col-md-4">
+                                <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                <select class="form-select luxury-input" v-model="selectedProvinceCode" @change="fetchDistricts" :required="useNewAddress || addresses.length === 0">
+                                    <option value="" disabled>Chọn Tỉnh/Thành</option>
+                                    <option v-for="p in provinces" :key="p.code" :value="p.code">{{ p.name }}</option>
+                                </select>
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Quận/Huyện <span class="text-danger">*</span></label>
+                                <select class="form-select luxury-input" v-model="selectedDistrictCode" @change="fetchWards" :disabled="!selectedProvinceCode" :required="useNewAddress || addresses.length === 0">
+                                    <option value="" disabled>Chọn Quận/Huyện</option>
+                                    <option v-for="d in districts" :key="d.code" :value="d.code">{{ d.name }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Phường/Xã <span class="text-danger">*</span></label>
+                                <select class="form-select luxury-input" v-model="selectedWardCode" :disabled="!selectedDistrictCode" :required="useNewAddress || addresses.length === 0">
+                                    <option value="" disabled>Chọn Phường/Xã</option>
+                                    <option v-for="w in wards" :key="w.code" :value="w.code">{{ w.name }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Số nhà, Tên đường <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control luxury-input" v-model="specificAddress" placeholder="VD: 123 Đường Lê Lợi" :required="useNewAddress || addresses.length === 0">
+                            </div>
+                            <!-- KẾT THÚC PHẦN CHỌN ĐỊA CHỈ -->
+
                         </div>
                     </div>
                 </div>
@@ -131,7 +156,6 @@
                 <i class="bi bi-credit-card-2-front-fill text-gold me-2"></i> Phương Thức Thanh Toán
               </h4>
 
-              <!-- LOẠI BỎ VNPAY, THÊM MOMO GỌN GÀNG -->
               <div class="payment-methods-grid d-flex flex-column gap-3">
                 <label class="payment-method-box d-flex align-items-center justify-content-between p-3" :class="{'active': form.payment_method === 'cod'}">
                   <input type="radio" name="payment_method" value="cod" v-model="form.payment_method" class="d-none">
@@ -147,7 +171,6 @@
                   <div class="radio-indicator flex-shrink-0 ms-3"></div>
                 </label>
 
-                <!-- LỰA CHỌN THANH TOÁN MOMO ONLINE VỚI ICON ĐẸP HƠN -->
                 <label class="payment-method-box d-flex align-items-center justify-content-between p-3" :class="{'active': form.payment_method === 'momo'}">
                   <input type="radio" name="payment_method" value="momo" v-model="form.payment_method" class="d-none">
                   <div class="d-flex align-items-center gap-3">
@@ -216,7 +239,6 @@
               </div>
             </div>
 
-            <!-- CHỌN VOUCHER / COUPON -->
             <div class="p-4 bg-light border-top border-bottom border-light-subtle">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -341,13 +363,22 @@ const showAddressDropdown = ref(false);
 const selectedCoupon = ref(null);
 let couponModalInstance = null;
 
+// BIẾN CHO CHỌN TỈNH THÀNH
+const provinces = ref([]);
+const districts = ref([]);
+const wards = ref([]);
+const selectedProvinceCode = ref('');
+const selectedDistrictCode = ref('');
+const selectedWardCode = ref('');
+const specificAddress = ref(''); // Số nhà, tên đường
+
 const form = ref({
     customer_name: '',
     customer_phone: '',
     customer_email: '',
-    customer_address: '',
+    customer_address: '', // Trường này sẽ được gộp lại khi submit
     order_note: '',
-    payment_method: 'cod' // Thay đổi mặc định
+    payment_method: 'cod'
 });
 
 const soraAlert = Swal.mixin({
@@ -371,6 +402,43 @@ const getHeaders = () => {
   if (sid) headers['X-Cart-Session-Id'] = sid;
   return headers;
 };
+
+// --- API TỈNH/THÀNH PHỐ ---
+const fetchProvinces = async () => {
+    try {
+        const res = await axios.get('https://provinces.open-api.vn/api/p/');
+        provinces.value = res.data;
+    } catch (error) {
+        console.error("Lỗi lấy danh sách tỉnh thành", error);
+    }
+};
+
+const fetchDistricts = async () => {
+    selectedDistrictCode.value = '';
+    selectedWardCode.value = '';
+    districts.value = [];
+    wards.value = [];
+    if (!selectedProvinceCode.value) return;
+    try {
+        const res = await axios.get(`https://provinces.open-api.vn/api/p/${selectedProvinceCode.value}?depth=2`);
+        districts.value = res.data.districts;
+    } catch (error) {
+        console.error("Lỗi lấy danh sách quận huyện", error);
+    }
+};
+
+const fetchWards = async () => {
+    selectedWardCode.value = '';
+    wards.value = [];
+    if (!selectedDistrictCode.value) return;
+    try {
+        const res = await axios.get(`https://provinces.open-api.vn/api/d/${selectedDistrictCode.value}?depth=2`);
+        wards.value = res.data.wards;
+    } catch (error) {
+        console.error("Lỗi lấy danh sách phường xã", error);
+    }
+};
+
 
 // --- LOGIC GIAO DIỆN & TÍNH TOÁN ---
 const getItemName = (item) => {
@@ -417,10 +485,43 @@ const discountAmount = computed(() => {
     return subTotal.value * (parseFloat(selectedCoupon.value.value) / 100);
 });
 
-const shippingFee = computed(() => subTotal.value > 500000 ? 0 : 30000);
+// LOGIC TÍNH PHÍ VẬN CHUYỂN DỰA TRÊN TỈNH/THÀNH ĐÃ CHỌN
+const shippingFee = computed(() => {
+    let provinceName = '';
+
+    // 1. Trường hợp đang dùng địa chỉ đã lưu (sổ địa chỉ)
+    if (!useNewAddress.value && addresses.value.length > 0) {
+        const addr = getSelectedAddress();
+        if (addr && addr.city) {
+            provinceName = addr.city;           // Ví dụ: "Tỉnh Đắk Lắk"
+        }
+    } 
+    // 2. Trường hợp nhập địa chỉ mới
+    else if (selectedProvinceCode.value) {
+        const provinceObj = provinces.value.find(p => p.code === selectedProvinceCode.value);
+        if (provinceObj) provinceName = provinceObj.name;
+    }
+
+    // Nếu chưa chọn tỉnh nào → mặc định 30.000đ
+    if (!provinceName) return 30000;
+
+    const lowerProvince = provinceName.toLowerCase();
+
+    // MIỄN PHÍ VẬN CHUYỂN CHO ĐẮK LẮK
+    if (lowerProvince.includes('đắk lắk') || lowerProvince.includes('dak lak')) {
+        return 0;
+    }
+
+    // Nội thành (Hà Nội & TP.HCM)
+    if (lowerProvince.includes('hồ chí minh') || lowerProvince.includes('hà nội')) {
+        return 20000;
+    }
+
+    // Các tỉnh còn lại
+    return 35000;
+});
 const totalAmount = computed(() => Math.max(subTotal.value - discountAmount.value + shippingFee.value, 0));
 
-// TỰ ĐỘNG ĐIỀN EMAIL/SĐT KỂ CẢ GUEST CHƯA CÓ ĐỊA CHỈ
 const fetchInitData = async () => {
     try {
         const res = await axios.get('http://127.0.0.1:8000/api/client/checkout/init', { headers: getHeaders() });
@@ -429,13 +530,11 @@ const fetchInitData = async () => {
             addresses.value = res.data.addresses || [];
             availableCoupons.value = res.data.coupons || [];
 
-            // Ưu tiên đọc từ API Backend trả về (đã chuẩn hóa trong Controller)
             if (res.data.user) {
                 form.value.customer_email = res.data.user.email || '';
                 form.value.customer_name = res.data.user.name || '';
                 form.value.customer_phone = res.data.user.phone || '';
             } else {
-                // Fallback xuống LocalStorage nếu API không có
                 const userStr = getSafeStorage('user_info');
                 if (userStr) {
                     const u = JSON.parse(userStr);
@@ -451,10 +550,6 @@ const fetchInitData = async () => {
                 const defaultAddr = addresses.value.find(a => a.is_default === 1) || addresses.value[0];
                 selectedAddressId.value = defaultAddr.id;
                 useNewAddress.value = false;
-                
-                form.value.customer_name = defaultAddr.customer_name;
-                form.value.customer_phone = defaultAddr.customer_phone;
-                form.value.customer_address = formatFullAddress(defaultAddr);
             } else {
                 useNewAddress.value = true;
             }
@@ -482,30 +577,6 @@ const selectNewAddress = () => {
     useNewAddress.value = true;
     showAddressDropdown.value = false;
 };
-
-watch(selectedAddressId, (newId) => {
-    if (!useNewAddress.value && newId) {
-        const addr = addresses.value.find(a => a.id === newId);
-        if (addr) {
-            form.value.customer_name = addr.customer_name;
-            form.value.customer_phone = addr.customer_phone;
-            form.value.customer_address = formatFullAddress(addr);
-        }
-    }
-});
-
-watch(useNewAddress, (isNew) => {
-    if (isNew) {
-        form.value.customer_address = '';
-    } else {
-        const addr = getSelectedAddress();
-        if(addr) {
-            form.value.customer_name = addr.customer_name;
-            form.value.customer_phone = addr.customer_phone;
-            form.value.customer_address = formatFullAddress(addr);
-        }
-    }
-});
 
 const updateQuantity = async (item, delta) => {
     const newQty = item.quantity + delta;
@@ -590,17 +661,32 @@ const checkDirectBuy = async () => {
 };
 
 const submitOrder = async () => {
-    // ÉP BUỘC VALIDATION VÀ TRUYỀN DATA RÕ RÀNG
-    if (!form.value.customer_name || !form.value.customer_phone || !form.value.customer_email || !form.value.customer_address) {
+    if (!form.value.customer_name || !form.value.customer_phone || !form.value.customer_email) {
         soraAlert.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng điền đầy đủ các thông tin nhận hàng!' });
         return;
+    }
+
+    // XỬ LÝ GỘP ĐỊA CHỈ NẾU CHỌN ĐỊA CHỈ MỚI
+    if (useNewAddress.value || addresses.value.length === 0) {
+        if (!selectedProvinceCode.value || !selectedDistrictCode.value || !selectedWardCode.value || !specificAddress.value) {
+            soraAlert.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng chọn đầy đủ Tỉnh/Huyện/Xã và nhập số nhà!' });
+            return;
+        }
+        
+        // Lấy tên từ code
+        const pName = provinces.value.find(p => p.code === selectedProvinceCode.value)?.name || '';
+        const dName = districts.value.find(d => d.code === selectedDistrictCode.value)?.name || '';
+        const wName = wards.value.find(w => w.code === selectedWardCode.value)?.name || '';
+
+        // Gộp thành chuỗi
+        form.value.customer_address = `${specificAddress.value}, ${wName}, ${dName}, ${pName}`;
     }
 
     const payload = {
         user_address_id: useNewAddress.value ? null : selectedAddressId.value,
         customer_name: form.value.customer_name,
         customer_phone: form.value.customer_phone,
-        customer_address: form.value.customer_address, // Truyền trực tiếp những gì khách gõ
+        customer_address: form.value.customer_address, // Chuỗi đã được gộp
         customer_email: form.value.customer_email,
         order_note: form.value.order_note,
         payment_method: form.value.payment_method,
@@ -612,14 +698,11 @@ const submitOrder = async () => {
         const res = await axios.post('http://127.0.0.1:8000/api/client/checkout', payload, { headers: getHeaders() });
         
         if (res.data.success) {
-            
-            // REDIRECT TỚI MOMO HOẶC NGÂN HÀNG
             if (res.data.payment_url) {
                 window.location.href = res.data.payment_url;
                 return; 
             }
             
-            // NẾU COD HOẶC KHÔNG CÓ URL -> BÁO THÀNH CÔNG RỒI ĐẨY QUA SUCCESS
             soraAlert.fire({
                 icon: 'success',
                 title: 'ĐẶT HÀNG THÀNH CÔNG',
@@ -633,7 +716,6 @@ const submitOrder = async () => {
         }
     } catch (error) {
         let errorMsg = 'Không thể đặt hàng. Vui lòng thử lại sau.';
-        // Bóc tách lỗi Validation từ Laravel để hiển thị cho User
         if (error.response?.status === 422 && error.response?.data?.errors) {
             errorMsg = Object.values(error.response.data.errors)[0][0]; 
         } else if (error.response?.data?.message) {
@@ -649,6 +731,7 @@ onMounted(async () => {
     isInitializing.value = true;
     await checkDirectBuy();
     await fetchInitData(); 
+    await fetchProvinces(); // Gọi API lấy Tỉnh/Thành phố khi mở trang
     isInitializing.value = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -702,6 +785,13 @@ onUnmounted(() => {
     border-color: #9f273b;
     box-shadow: 0 0 0 0.2rem rgba(159, 39, 59, 0.1);
     outline: none;
+}
+.form-select.luxury-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
 }
 
 .payment-method-box {
