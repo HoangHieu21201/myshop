@@ -113,6 +113,20 @@ const user = [
         name: 'profile',
         component: () => import('../pages/user/profile/index.vue')
       },
+      //tin tứvvvvv
+
+       {
+        path: 'news',
+        name: 'news',
+        component: () => import('../pages/user/news/Index.vue'), // Đảm bảo đường dẫn đúng tới Tintuc.vue
+      },
+      {
+        // Chú ý: Component của bạn truyền name là 'PostDetailt' (có chữ t ở cuối), 
+        // mình khai báo giống vậy để không bị lỗi router-link
+        path: 'tin-tuc/:slug',
+        name: 'PostDetailt',
+        component: () => import('../pages/user/news/PostDetail.vue'), // File chi tiết bài viết (bạn cần tự tạo UI cho file này)
+      },
     ],
   },
 ]
