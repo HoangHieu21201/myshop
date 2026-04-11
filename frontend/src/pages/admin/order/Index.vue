@@ -452,14 +452,26 @@ const tabCache = ref({});
 
 const socket = io("http://localhost:3000");
 
-// TỪ ĐIỂN CÂU TRẢ LỜI NHANH (QUICK NOTES)
+// TỪ ĐIỂN CÂU TRẢ LỜI NHANH (QUICK NOTES) ĐƯỢC MỞ RỘNG
 const quickNotesDict = {
-    'confirmed': ['Hàng đã sẵn sàng', 'Đang chờ điều phối từ kho'],
-    'processing': ['Đang đóng gói sản phẩm', 'Đang kiểm tra chất lượng trước khi giao'],
-    'shipping': ['Đã bàn giao cho bưu tá', 'Đơn hàng đang trên đường giao đến bạn'],
+    'pending': ['Đơn hàng mới tiếp nhận', 'Đang chờ xác nhận thông tin'],
+    'confirmed': ['Đơn hàng đã được xác nhận', 'Hàng đã sẵn sàng', 'Đang chờ điều phối từ kho'],
+    'processing': ['Đơn hàng đang được xử lý', 'Đang đóng gói sản phẩm', 'Đang kiểm tra chất lượng trước khi giao'],
+    'shipping': ['Đơn hàng đã bắt đầu vận chuyển', 'Đã bàn giao cho bưu tá', 'Đơn hàng đang trên đường giao đến bạn'],
     'delivered': ['Giao hàng thành công', 'Khách đã nhận hàng và đồng kiểm'],
-    'cancelled': ['Khách hàng không nghe máy', 'Khách hàng đổi ý', 'Sản phẩm tạm hết hàng'],
-    'returned': ['Khách từ chối nhận hàng', 'Sai thông tin địa chỉ']
+    'cancelled': ['Khách hàng không nghe máy', 'Khách hàng đổi ý', 'Sản phẩm tạm hết hàng', 'Sai thông tin địa chỉ'],
+    'returned': ['Khách từ chối nhận hàng', 'Hàng hoàn về kho']
+};
+
+// ĐÃ BỔ SUNG: TỪ ĐIỂN GHI CHÚ MẶC ĐỊNH (PHÒNG HỜ ADMIN QUÊN BẤM)
+const defaultNotesDict = {
+    'pending': 'Hệ thống đã tiếp nhận đơn hàng.',
+    'confirmed': 'Đơn hàng đã được xác nhận thành công.',
+    'processing': 'Đơn hàng đang trong quá trình đóng gói và kiểm tra chất lượng.',
+    'shipping': 'Đơn hàng đã được bàn giao cho đối tác vận chuyển.',
+    'delivered': 'Đơn hàng đã giao thành công đến quý khách.',
+    'cancelled': '', // Cố tình để trống để ép Admin phải tự điền/chọn lý do hủy
+    'returned': ''   // Cố tình để trống để ép Admin giải thích
 };
 
 // BIẾN CỦA BẢN ĐỒ LIVE TRACKING VÀ DROPDOWN
@@ -551,7 +563,6 @@ const formatOrderStatus = (status) => {
     const map = { 'pending': 'Chờ duyệt', 'confirmed': 'Đã xác nhận', 'processing': 'Đang chuẩn bị', 'shipping': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy', 'returned': 'Hoàn trả' };
     return map[status] || status;
 };
-
 const getOrderStatusClass = (status) => {
   const map = { 
     'pending': 'text-warning border-warning bg-warning bg-opacity-10', 
@@ -560,7 +571,8 @@ const getOrderStatusClass = (status) => {
     'shipping': 'text-primary border-primary bg-primary bg-opacity-10', 
     'delivered': 'text-success border-success bg-success bg-opacity-10',
     'cancelled': 'text-danger border-danger bg-danger bg-opacity-10',
-    'returned': 'text-secondary border-secondary bg-secondary bg-opacity-10'
+    'returned': 'text-secondary border-secondary bg-secondary bg-opacity-10',
+    'return_requested': 'text-danger border-danger bg-danger bg-opacity-10'
   }; 
   return map[status] || 'bg-light text-secondary'; 
 };
@@ -572,7 +584,8 @@ const allowedTransitions = {
     'shipping': ['shipping', 'delivered', 'cancelled'],
     'delivered': ['delivered'],
     'cancelled': ['cancelled'],
-    'returned': ['returned']
+    'returned': ['returned'],
+    'return_requested': ['return_requested']
 };
 
 const canTransitionTo = (currentStatus, targetStatus) => {
@@ -597,7 +610,10 @@ const saveOrderStatus = async (order) => {
 
   const isRequireNote = order.localStatus === 'cancelled';
   
+  // ĐÃ FIX: Lấy Quick Notes và Default Note
   const notes = quickNotesDict[order.localStatus] || [];
+  const defaultNote = defaultNotesDict[order.localStatus] || '';
+
   let chipsHtml = '';
   if (notes.length > 0) {
       chipsHtml = '<div class="d-flex flex-wrap gap-2 mb-3 justify-content-center">';
@@ -612,7 +628,8 @@ const saveOrderStatus = async (order) => {
     html: `
         <p class="mb-3">Chuyển đơn hàng sang: <strong class="text-brand">${formatOrderStatus(order.localStatus)}</strong></p>
         ${chipsHtml}
-        <textarea id="swal-custom-note" class="form-control shadow-sm" rows="3" placeholder="Nhập ghi chú / lý do cập nhật (Bắt buộc nếu Hủy đơn)..."></textarea>
+        <textarea id="swal-custom-note" class="form-control shadow-sm" rows="3" placeholder="Nhập ghi chú / lý do cập nhật...">${defaultNote}</textarea>
+        <div class="form-text small mt-2 text-start"><i class="bi bi-info-circle me-1"></i> Câu trả lời mặc định đã được điền sẵn. Bạn có thể sửa hoặc chọn các gợi ý bên trên.</div>
     `,
     showCancelButton: true,
     confirmButtonColor: '#009981',
@@ -642,7 +659,7 @@ const saveOrderStatus = async (order) => {
             Swal.showValidationMessage('Bạn cần nhập lý do cho thao tác này!');
             return false;
         }
-        return val;
+        return val.trim();
     }
   });
 
@@ -655,7 +672,7 @@ const saveOrderStatus = async (order) => {
   const payload = {
       status: order.localStatus,
       payment_status: order.payment_status,
-      note: noteText || ''
+      note: noteText
   };
 
   await sendUpdateRequest(order, payload, 'isUpdatingStatus', 'status', order.localStatus, 'isStatusChanged');
@@ -997,7 +1014,7 @@ const openMapSimulation = async (orderId, isAutoTriggered = false) => {
 
 const displayedOrders = computed(() => {
     if (activeTab.value === 'all') {
-        return orders.value.filter(o => o.status !== 'returned');
+        return orders.value.filter(o => !['returned', 'return_requested'].includes(o.status));
     }
     return orders.value;
 });
@@ -1043,6 +1060,7 @@ onMounted(() => {
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
 
+/* CSS cho Map Modal */
 .glass-modal { backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); background-color: rgba(0, 0, 0, 0.3); }
 </style>
 
