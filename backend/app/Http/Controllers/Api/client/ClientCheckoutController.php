@@ -74,7 +74,7 @@ class ClientCheckoutController extends Controller
         $sessionId = $request->header('X-Cart-Session-Id');
 
         $lockKey = 'checkout_lock_' . ($user ? $user->id : $sessionId);
-        $lock = Cache::lock($lockKey, 10); 
+        $lock = Cache::lock($lockKey, 10);
 
         if (!$lock->get()) {
             return response()->json([
@@ -114,7 +114,7 @@ class ClientCheckoutController extends Controller
                 }
 
                 $combos = Combo::with(['items' => function ($q) {
-                    $q->whereNotNull('product_variant_id'); 
+                    $q->whereNotNull('product_variant_id');
                 }])->whereIn('id', array_unique($comboIdsToLock))->lockForUpdate()->get()->keyBy('id');
 
                 foreach ($combos as $combo) {
@@ -157,8 +157,7 @@ class ClientCheckoutController extends Controller
                             'combo_id'           => null,
                             'combo_selections'   => null,
                         ];
-                    }
-                    elseif ($item->combo_id) {
+                    } elseif ($item->combo_id) {
                         $combo = $combos->get($item->combo_id);
                         if (!$combo) {
                             throw new \Exception("Combo không tồn tại hoặc đã ngừng kinh doanh.");
@@ -234,7 +233,17 @@ class ClientCheckoutController extends Controller
                     $coupon->increment('usage_count');
                 }
 
-                $shippingFee = $subTotal > 500000 ? 0 : 30000;
+                // LOGIC TÍNH PHÍ VẬN CHUYỂN
+                $lowerAddress = mb_strtolower($customerAddress, 'UTF-8');
+
+                if (str_contains($lowerAddress, 'đắk lắk') || str_contains($lowerAddress, 'dak lak')) {
+                    $shippingFee = 0; // Đắk Lắk miễn phí
+                } elseif (str_contains($lowerAddress, 'hà nội') || str_contains($lowerAddress, 'hồ chí minh')) {
+                    $shippingFee = 20000; // Nội thành
+                } else {
+                    $shippingFee = 35000; // Tỉnh khác
+                }
+
                 $totalAmount = max($subTotal - $discountAmount + $shippingFee, 0);
 
                 $order = Order::create([
@@ -422,8 +431,7 @@ class ClientCheckoutController extends Controller
             foreach ($order->items as $item) {
                 if ($item->product_variant_id) {
                     ProductVariant::where('id', $item->product_variant_id)->increment('stock_quantity', $item->quantity);
-                }
-                elseif ($item->combo_id) {
+                } elseif ($item->combo_id) {
                     Combo::where('id', $item->combo_id)
                         ->whereNotNull('usage_limit')
                         ->increment('usage_limit', $item->quantity);

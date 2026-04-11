@@ -13,14 +13,31 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderRefundDealMail;
+use Illuminate\Support\Facades\Http; // Thêm Http để gọi sang Node.js
+use Illuminate\Support\Facades\Log;  // Thêm Log để ghi nhận lỗi nếu trạm tắt
 
 class AdminOrderController extends Controller
 {
+    /**
+     * Hàm dùng chung để phát sóng Socket cho toàn bộ Controller Đơn hàng
+     */
+    private function broadcastUpdate($message = 'Có cập nhật mới về đơn hàng!')
+    {
+        try {
+            Http::post('http://localhost:3000/api/admin-refresh', [
+                'module'  => 'orders', // Báo cho Frontend biết là bảng 'orders' vừa thay đổi
+                'message' => $message, // Truyền kèm lời nhắn đích danh mã đơn hàng
+                'time'    => now()->toDateTimeString()
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Trạm Node.js đang tắt: " . $e->getMessage());
+        }
+    }
+
     public function index(Request $request)
     {
         $baseQuery = Order::query();
 
-        // Lọc ngày tháng
         if ($request->filled('start_date')) {
             $baseQuery->where('created_at', '>=', $request->start_date . ' 00:00:00');
         }
@@ -28,12 +45,10 @@ class AdminOrderController extends Controller
             $baseQuery->where('created_at', '<=', $request->end_date . ' 23:59:59');
         }
 
-        // Lọc thanh toán chung
         if ($request->filled('payment_status') && $request->payment_status !== 'all') {
             $baseQuery->where('payment_status', $request->payment_status);
         }
 
-        // Lọc tìm kiếm chung
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $baseQuery->where(function ($q) use ($searchTerm) {
@@ -43,19 +58,14 @@ class AdminOrderController extends Controller
             });
         }
 
-        // =========================================================================
-        // PHÂN LUỒNG 1: DÀNH RIÊNG CHO TRANG XỬ LÝ HOÀN TRẢ
-        // =========================================================================
         if ($request->boolean('is_return_page')) {
-            // Chỉ lấy các đơn Hàng bị trả lại, YÊU CẦU HOÀN TRẢ, HOẶC bị Hủy nhưng khách đã thanh toán
             $baseQuery->where(function ($q) {
-                $q->whereIn('status', ['returned', 'return_requested']) // <-- ĐÃ BỔ SUNG TRẠNG THÁI MỚI VÀO ĐÂY
+                $q->whereIn('status', ['returned', 'return_requested'])
                     ->orWhere(function ($sub) {
                         $sub->where('status', 'cancelled')->whereIn('payment_status', ['paid', 'refunded']);
                     });
             });
 
-            // Tối ưu hóa: Lấy một bản sao để tính toán toàn bộ các Tab chỉ bằng 1 lần gom nhóm
             $countQuery = clone $baseQuery;
             $allReturns = $countQuery->get(['payment_status', 'refund_amount']);
 
@@ -67,7 +77,6 @@ class AdminOrderController extends Controller
                 'rejected'  => $allReturns->filter(fn($q) => $q->payment_status === 'paid' && $q->refund_amount !== null && (float)$q->refund_amount === 0.0)->count(),
             ];
 
-            // Áp dụng bộ lọc Tab do Frontend gửi lên
             if ($request->filled('return_tab') && $request->return_tab !== 'all') {
                 $tab = $request->return_tab;
                 if ($tab === 'pending') {
@@ -81,7 +90,6 @@ class AdminOrderController extends Controller
                 }
             }
         }
-        // PHÂN LUỒNG 2: DÀNH CHO TRANG QUẢN LÝ ĐƠN HÀNG BÌNH THƯỜNG
         else {
             $countQuery = clone $baseQuery;
             $rawCounts = $countQuery->select('status', DB::raw('count(*) as total'))
@@ -100,7 +108,6 @@ class AdminOrderController extends Controller
                 'returned'   => $rawCounts['returned'] ?? 0,
             ];
 
-            // ĐÂY LÀ CHỖ CHẶN LẠI NÈ SẾP
             if ($request->filled('status') && $request->status !== 'all') {
                 $baseQuery->where('status', $request->status);
             } else {
@@ -195,6 +202,10 @@ class AdminOrderController extends Controller
             }
 
             DB::commit();
+            
+            // BẮN SÓNG REALTIME: Vừa sửa trạng thái hoặc thanh toán kèm thông điệp cụ thể
+            $this->broadcastUpdate("Trạng thái đơn hàng #{$order->order_code} vừa được cập nhật!");
+
             return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái đơn hàng thành công']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -207,13 +218,14 @@ class AdminOrderController extends Controller
         $request->validate([
             'action' => 'required|in:propose,reject,refunded',
             'refund_amount' => 'required|numeric|min:0',
-            'refund_note' => 'nullable|string'
+            // FIX LỖI 422: Cho phép rỗng (nullable) khi Kế toán chỉ xác nhận chuyển khoản
+            'refund_note' => 'nullable|string' 
         ]);
 
         DB::beginTransaction();
         try {
             $order = Order::findOrFail($id);
-
+            
             // Ép refund_amount về 0 nếu TỪ CHỐI, làm cờ (flag) nhận biết trạng thái
             $order->refund_amount = $request->action === 'reject' ? 0 : $request->refund_amount;
             $order->refund_note = $request->refund_note;
@@ -225,35 +237,32 @@ class AdminOrderController extends Controller
                 }
 
                 OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'old_status' => $order->status,
-                    'new_status' => $order->status,
+                    'order_id' => $order->id, 'old_status' => $order->status, 'new_status' => $order->status,
                     'note' => 'Kế toán xác nhận Đã chuyển khoản hoàn tiền.',
-                    'changed_by' => Auth::id(),
-                    'changed_by_type' => 'admin'
+                    'changed_by' => Auth::id(), 'changed_by_type' => 'admin'
                 ]);
             } else {
                 if ($order->customer_email) {
                     try {
                         Mail::to($order->customer_email)->send(new OrderRefundDealMail($order, $request->action));
                     } catch (\Exception $e) {
-                        // Bỏ qua lỗi kết nối Mail cục bộ
+                        // Bỏ qua lỗi kết nối Mail cục bộ để không làm đứt luồng test
                     }
                 }
-
+                
                 $historyNote = $request->action === 'propose' ? 'Đã gửi Email thỏa thuận số tiền hoàn lại.' : 'Đã gửi Email từ chối hoàn tiền.';
                 OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'old_status' => $order->status,
-                    'new_status' => $order->status,
+                    'order_id' => $order->id, 'old_status' => $order->status, 'new_status' => $order->status,
                     'note' => $historyNote,
-                    'changed_by' => Auth::id(),
-                    'changed_by_type' => 'admin'
+                    'changed_by' => Auth::id(), 'changed_by_type' => 'admin'
                 ]);
             }
 
             $order->save();
             DB::commit();
+
+            // BẮN SÓNG REALTIME: Vừa xử lý hoàn tiền
+            $this->broadcastUpdate("Đơn hàng #{$order->order_code} vừa được xử lý hoàn trả/hoàn tiền!");
 
             return response()->json(['success' => true, 'message' => 'Xử lý thành công']);
         } catch (\Exception $e) {
@@ -268,7 +277,12 @@ class AdminOrderController extends Controller
         if (!in_array($order->status, ['cancelled', 'returned'])) {
             return response()->json(['success' => false, 'message' => 'Chỉ có thể xóa hóa đơn đã Hủy hoặc Hoàn trả'], 400);
         }
+
+        $orderCode = $order->order_code;
         $order->delete();
+        
+        $this->broadcastUpdate("Đơn hàng #{$orderCode} đã bị đưa vào thùng rác!");
+
         return response()->json(['success' => true, 'message' => 'Đã đưa đơn hàng vào thùng rác']);
     }
 }
