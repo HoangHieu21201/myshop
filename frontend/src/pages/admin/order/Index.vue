@@ -71,10 +71,9 @@
         </ul>
       </div>
 
-      <!-- ĐÃ SỬA: Đổi align-items-md-end thành align-items-start để các label luôn thẳng hàng với nhau từ trên xuống -->
+      <!-- Lọc -->
       <div class="d-flex flex-column flex-md-row flex-wrap gap-3 gap-md-4 mb-4 align-items-start">
         
-        <!-- Lọc Thanh toán -->
         <div class="filter-wrapper">
           <label class="form-label small text-muted fw-bold mb-2"><i class="bi bi-credit-card-fill text-brand me-1"></i>Trạng thái Thanh toán</label>
           <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
@@ -86,16 +85,13 @@
           </div>
         </div>
 
-        <!-- Lọc Khoảng thời gian -->
         <div class="filter-wrapper">
           <label class="form-label small text-muted fw-bold mb-2"><i class="bi bi-calendar-range text-brand me-1"></i>Lọc theo Khoảng thời gian</label>
           <div class="d-flex flex-wrap gap-2">
-            <!-- Ô Từ Ngày -->
             <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
               <span class="text-muted small fw-semibold me-2">Từ:</span>
               <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0" style="box-shadow: none; width: 115px;" v-model="filters.start_date" @change="fetchData(1, true)">
             </div>
-            <!-- Ô Đến Ngày -->
             <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
               <span class="text-muted small fw-semibold me-2">Đến:</span>
               <input type="date" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0" style="box-shadow: none; width: 115px;" v-model="filters.end_date" @change="fetchData(1, true)">
@@ -105,6 +101,7 @@
 
       </div>
 
+      <!-- Bảng Đơn Hàng -->
       <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
@@ -246,12 +243,34 @@
       </div>
     </div>
 
+    <!-- MODAL QUICK VIEW (CHI TIẾT ĐƠN HÀNG) -->
     <div class="modal fade" id="quickViewOrderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow">
           <div class="modal-header border-bottom pb-3 bg-light rounded-top-4">
             <h5 class="fw-bold text-dark mb-0"><i class="bi bi-receipt text-brand me-2"></i>Chi Tiết Đơn Hàng <span class="text-brand font-monospace">{{ selectedOrder?.order_code }}</span></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            
+            <!-- NÚT BẢN ĐỒ TRACKING TÍCH HỢP VỚI DROPDOWN KHO -->
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+               <!-- Dropdown chọn kho xuất phát (chỉ hiện khi nút Tracking hiện) -->
+               <select v-if="selectedOrder && !['pending', 'cancelled'].includes(selectedOrder.status)"
+                       class="form-select form-select-sm border-brand text-brand fw-bold shadow-sm cursor-pointer bg-white"
+                       style="width: auto; min-width: 140px; border-width: 2px;"
+                       v-model="selectedWarehouseId"
+                       title="Chọn kho xuất phát">
+                  <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">
+                    Kho {{ wh.name }}
+                  </option>
+               </select>
+
+               <button v-if="selectedOrder && !['pending', 'cancelled'].includes(selectedOrder.status)" 
+                       type="button" 
+                       class="btn btn-sm text-white fw-bold shadow-sm d-flex align-items-center bg-brand border-0 px-3 py-1.5" 
+                       @click="openMapSimulation(selectedOrder.id)">
+                  <i class="bi bi-geo-alt-fill me-2"></i> Tracking Bản Đồ
+               </button>
+               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
           </div>
           
           <div class="modal-body p-4 bg-white" v-if="selectedOrder">
@@ -361,6 +380,38 @@
       </div>
     </div>
 
+    <!-- MODAL LIVE MAP TRACKING -->
+    <div class="modal fade glass-modal" id="mapTrackingModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+          <div class="modal-header border-bottom bg-light p-3">
+            <div class="d-flex align-items-center">
+              <div class="bg-brand text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
+                <i class="bi bi-truck fs-5"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold text-dark mb-0">Hệ Thống Tracking SORA</h5>
+                <p class="text-muted small mb-0 font-monospace">Lộ trình: <span class="text-brand fw-bold">{{ mapData?.origin?.name }}</span> <i class="bi bi-arrow-right"></i> <span class="text-brand fw-bold">{{ mapData?.destination?.name }}</span></p>
+              </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="stopAnimation"></button>
+          </div>
+          <div class="modal-body p-0 position-relative map-container">
+            <div id="tracking-map" style="height: 60vh; width: 100%; background-color: #e5e5e5; z-index: 1;"></div>
+            
+            <div v-if="isMapLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 10;">
+                <div class="spinner-border text-brand mb-2" style="width: 3rem; height: 3rem;"></div>
+                <div class="fw-bold text-brand">Đang kết nối vệ tinh mã hóa...</div>
+            </div>
+          </div>
+          <div class="modal-footer border-top-0 bg-light p-3 justify-content-between align-items-center">
+            <div class="small text-muted"><i class="bi bi-shield-check text-success me-1"></i>Hành trình được bảo mật bằng công nghệ định vị OSRM.</div>
+            <button type="button" class="btn btn-secondary px-4 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal" @click="stopAnimation">Đóng bản đồ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -369,7 +420,6 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-// BỔ SUNG THƯ VIỆN SOCKET.IO CLIENT TẠI ĐÂY
 import { io } from "socket.io-client";
 
 const route = useRoute();
@@ -400,8 +450,46 @@ const statusCounts = ref({
 
 const tabCache = ref({});
 
-// KHỞI TẠO KẾT NỐI SOCKET VỚI NODE.JS SERVER
 const socket = io("http://localhost:3000");
+
+// TỪ ĐIỂN CÂU TRẢ LỜI NHANH (QUICK NOTES) ĐƯỢC MỞ RỘNG
+const quickNotesDict = {
+    'pending': ['Đơn hàng mới tiếp nhận', 'Đang chờ xác nhận thông tin'],
+    'confirmed': ['Đơn hàng đã được xác nhận', 'Hàng đã sẵn sàng', 'Đang chờ điều phối từ kho'],
+    'processing': ['Đơn hàng đang được xử lý', 'Đang đóng gói sản phẩm', 'Đang kiểm tra chất lượng trước khi giao'],
+    'shipping': ['Đơn hàng đã bắt đầu vận chuyển', 'Đã bàn giao cho bưu tá', 'Đơn hàng đang trên đường giao đến bạn'],
+    'delivered': ['Giao hàng thành công', 'Khách đã nhận hàng và đồng kiểm'],
+    'cancelled': ['Khách hàng không nghe máy', 'Khách hàng đổi ý', 'Sản phẩm tạm hết hàng', 'Sai thông tin địa chỉ'],
+    'returned': ['Khách từ chối nhận hàng', 'Hàng hoàn về kho']
+};
+
+// ĐÃ BỔ SUNG: TỪ ĐIỂN GHI CHÚ MẶC ĐỊNH (PHÒNG HỜ ADMIN QUÊN BẤM)
+const defaultNotesDict = {
+    'pending': 'Hệ thống đã tiếp nhận đơn hàng.',
+    'confirmed': 'Đơn hàng đã được xác nhận thành công.',
+    'processing': 'Đơn hàng đang trong quá trình đóng gói và kiểm tra chất lượng.',
+    'shipping': 'Đơn hàng đã được bàn giao cho đối tác vận chuyển.',
+    'delivered': 'Đơn hàng đã giao thành công đến quý khách.',
+    'cancelled': '', // Cố tình để trống để ép Admin phải tự điền/chọn lý do hủy
+    'returned': ''   // Cố tình để trống để ép Admin giải thích
+};
+
+// BIẾN CỦA BẢN ĐỒ LIVE TRACKING VÀ DROPDOWN
+const isMapLoading = ref(false);
+const mapData = ref(null);
+let leafletMap = null;
+let routingLine = null;
+let truckMarker = null;
+let animationFrameId = null;
+
+const warehouses = ref([
+  { id: 'bmt', name: 'Buôn Ma Thuột', lat: 12.6667, lng: 108.0383 },
+  { id: 'hn', name: 'Hà Nội', lat: 21.028511, lng: 105.804817 },
+  { id: 'hcm', name: 'TP.HCM', lat: 10.762622, lng: 106.660172 },
+  { id: 'dn', name: 'Đà Nẵng', lat: 16.054407, lng: 108.202164 },
+  { id: 'ct', name: 'Cần Thơ', lat: 10.045162, lng: 105.746857 }
+]);
+const selectedWarehouseId = ref('bmt'); 
 
 onBeforeUnmount(() => {
   isUnmounted = true;
@@ -409,8 +497,9 @@ onBeforeUnmount(() => {
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
   document.body.className = '';
   document.body.style = '';
+  
+  stopAnimation(); 
 
-  // NGẮT KẾT NỐI SOCKET KHI RỜI KHỎI TRANG NÀY
   if (socket) {
       socket.disconnect();
   }
@@ -474,7 +563,6 @@ const formatOrderStatus = (status) => {
     const map = { 'pending': 'Chờ duyệt', 'confirmed': 'Đã xác nhận', 'processing': 'Đang chuẩn bị', 'shipping': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy', 'returned': 'Hoàn trả' };
     return map[status] || status;
 };
-
 const getOrderStatusClass = (status) => {
   const map = { 
     'pending': 'text-warning border-warning bg-warning bg-opacity-10', 
@@ -483,7 +571,8 @@ const getOrderStatusClass = (status) => {
     'shipping': 'text-primary border-primary bg-primary bg-opacity-10', 
     'delivered': 'text-success border-success bg-success bg-opacity-10',
     'cancelled': 'text-danger border-danger bg-danger bg-opacity-10',
-    'returned': 'text-secondary border-secondary bg-secondary bg-opacity-10'
+    'returned': 'text-secondary border-secondary bg-secondary bg-opacity-10',
+    'return_requested': 'text-danger border-danger bg-danger bg-opacity-10'
   }; 
   return map[status] || 'bg-light text-secondary'; 
 };
@@ -495,7 +584,8 @@ const allowedTransitions = {
     'shipping': ['shipping', 'delivered', 'cancelled'],
     'delivered': ['delivered'],
     'cancelled': ['cancelled'],
-    'returned': ['returned']
+    'returned': ['returned'],
+    'return_requested': ['return_requested']
 };
 
 const canTransitionTo = (currentStatus, targetStatus) => {
@@ -520,17 +610,56 @@ const saveOrderStatus = async (order) => {
 
   const isRequireNote = order.localStatus === 'cancelled';
   
+  // ĐÃ FIX: Lấy Quick Notes và Default Note
+  const notes = quickNotesDict[order.localStatus] || [];
+  const defaultNote = defaultNotesDict[order.localStatus] || '';
+
+  let chipsHtml = '';
+  if (notes.length > 0) {
+      chipsHtml = '<div class="d-flex flex-wrap gap-2 mb-3 justify-content-center">';
+      notes.forEach(n => {
+          chipsHtml += `<span class="badge bg-light text-dark border border-secondary-subtle shadow-sm quick-note-chip" style="font-size: 0.8rem; padding: 8px 12px; transition: all 0.2s; cursor: pointer;">${n}</span>`;
+      });
+      chipsHtml += '</div>';
+  }
+
   const { value: noteText, isDismissed } = await Swal.fire({
     title: 'Cập nhật Trạng thái',
-    text: `Chuyển đơn hàng sang: ${formatOrderStatus(order.localStatus)}`,
-    input: 'textarea',
-    inputPlaceholder: 'Nhập ghi chú / lý do cập nhật (Bắt buộc nếu Hủy đơn)...',
+    html: `
+        <p class="mb-3">Chuyển đơn hàng sang: <strong class="text-brand">${formatOrderStatus(order.localStatus)}</strong></p>
+        ${chipsHtml}
+        <textarea id="swal-custom-note" class="form-control shadow-sm" rows="3" placeholder="Nhập ghi chú / lý do cập nhật...">${defaultNote}</textarea>
+        <div class="form-text small mt-2 text-start"><i class="bi bi-info-circle me-1"></i> Câu trả lời mặc định đã được điền sẵn. Bạn có thể sửa hoặc chọn các gợi ý bên trên.</div>
+    `,
     showCancelButton: true,
     confirmButtonColor: '#009981',
     cancelButtonText: 'Hủy bỏ',
     confirmButtonText: 'Lưu cập nhật',
-    inputValidator: (value) => {
-        if (isRequireNote && !value) return 'Bạn cần nhập lý do cho thao tác này!';
+    didOpen: () => {
+        const textarea = document.getElementById('swal-custom-note');
+        const chips = document.querySelectorAll('.quick-note-chip');
+        
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                textarea.value = chip.innerText;
+                chip.style.backgroundColor = '#009981';
+                chip.style.color = '#fff';
+                chip.style.transform = 'translateY(-2px)';
+                setTimeout(() => {
+                    chip.style.backgroundColor = '#f8f9fa';
+                    chip.style.color = '#212529';
+                    chip.style.transform = 'translateY(0)';
+                }, 200);
+            });
+        });
+    },
+    preConfirm: () => {
+        const val = document.getElementById('swal-custom-note').value;
+        if (isRequireNote && !val.trim()) {
+            Swal.showValidationMessage('Bạn cần nhập lý do cho thao tác này!');
+            return false;
+        }
+        return val.trim();
     }
   });
 
@@ -543,7 +672,7 @@ const saveOrderStatus = async (order) => {
   const payload = {
       status: order.localStatus,
       payment_status: order.payment_status,
-      note: noteText || ''
+      note: noteText
   };
 
   await sendUpdateRequest(order, payload, 'isUpdatingStatus', 'status', order.localStatus, 'isStatusChanged');
@@ -597,7 +726,20 @@ const sendUpdateRequest = async (order, payload, loadingFlag, targetField, newVa
     
     order[targetField] = newValue; 
     order[changedFlag] = false;
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật hệ thống thành công', showConfirmButton: false, timer: 1500 });
+    
+    if (targetField === 'status' && newValue === 'delivered') {
+        Swal.fire({ 
+            icon: 'success', 
+            title: 'Giao hàng thành công!', 
+            text: 'Đang mở hệ thống định vị vệ tinh...', 
+            timer: 2000, 
+            showConfirmButton: false 
+        }).then(() => {
+            openMapSimulation(order.id, true); 
+        });
+    } else {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật hệ thống thành công', showConfirmButton: false, timer: 1500 });
+    }
     
     tabCache.value = {}; 
     fetchData(pagination.value.currentPage, true);
@@ -635,7 +777,6 @@ const openQuickView = async (id) => {
   } catch(e){}
 };
 
-// LẤY DỮ LIỆU ĐƠN HÀNG (Kèm tìm kiếm & Cập nhật biến counts)
 const fetchData = async (page = 1, silent = false) => {
   const cacheKey = `${activeTab.value}_${page}_${filters.value.payment_status}_${filters.value.start_date}_${filters.value.end_date}_${searchQuery.value}`;
 
@@ -654,7 +795,6 @@ const fetchData = async (page = 1, silent = false) => {
   if (filters.value.start_date) queryParams.append('start_date', filters.value.start_date);
   if (filters.value.end_date) queryParams.append('end_date', filters.value.end_date);
   
-  // NỐI TỪ KHÓA TÌM KIẾM ĐỂ GỬI LÊN BACKEND
   if (searchQuery.value) queryParams.append('search', searchQuery.value);
 
   try {
@@ -672,7 +812,6 @@ const fetchData = async (page = 1, silent = false) => {
     const result = resOrders.data;
     const dataPayload = result.data.data ? result.data.data : result.data; 
     
-    // CẬP NHẬT COUNTS TỪ BACKEND ĐỂ KHÔNG CẦN CHẠY 8 REQUEST NỮA
     if (result.counts) {
       statusCounts.value = result.counts;
     }
@@ -718,10 +857,164 @@ const printOrder = () => {
     Swal.fire({icon: 'info', title: 'Đang phát triển', text: 'Tính năng in hóa đơn PDF sẽ được ra mắt trong bản cập nhật tới.'});
 };
 
+const loadLeafletScript = () => {
+  return new Promise((resolve) => {
+    if (window.L) return resolve();
+    const link = document.createElement('link');
+    link.rel = 'stylesheet'; link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => resolve();
+    document.head.appendChild(script);
+  });
+};
+
+const stopAnimation = () => {
+   if(animationFrameId) cancelAnimationFrame(animationFrameId);
+};
+
+const openMapSimulation = async (orderId, isAutoTriggered = false) => {
+  if (document.activeElement) {
+      document.activeElement.blur();
+  }
+
+  if (quickViewModalInstance) {
+      quickViewModalInstance.hide();
+  }
+
+  const modalEl = document.getElementById('mapTrackingModal');
+  let modal = window.bootstrap.Modal.getInstance(modalEl);
+  if (!modal) {
+      modal = new window.bootstrap.Modal(modalEl);
+  }
+  modal.show();
+
+  isMapLoading.value = true;
+
+  try {
+    const res = await axios.get(`http://127.0.0.1:8000/api/admin/orders/${orderId}/simulation`, { headers: getHeaders() });
+    mapData.value = res.data.data;
+    
+    const selectedWh = warehouses.value.find(w => w.id === selectedWarehouseId.value);
+    if (selectedWh) {
+        mapData.value.origin = {
+            name: `SORA Jewelry (${selectedWh.name})`,
+            lat: selectedWh.lat,
+            lng: selectedWh.lng
+        };
+    }
+    
+    const p1 = [mapData.value.origin.lat, mapData.value.origin.lng];
+    const p2 = [mapData.value.destination.lat, mapData.value.destination.lng];
+
+    await loadLeafletScript();
+    
+    setTimeout(async () => {
+      if (!leafletMap) {
+        leafletMap = window.L.map('tracking-map').setView(p1, 6);
+        window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; SORA Routing'
+        }).addTo(leafletMap);
+
+        const bounds = [
+            [8.0, 102.0], 
+            [24.0, 110.0] 
+        ];
+        leafletMap.setMaxBounds(bounds);
+        leafletMap.options.minZoom = 5; 
+      } else {
+        if (routingLine) leafletMap.removeLayer(routingLine);
+        if (truckMarker) leafletMap.removeLayer(truckMarker);
+      }
+
+      leafletMap.invalidateSize(); 
+
+      const iconA_HTML = `<div style="background-color:#111; color:#fff; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid #e7ce7d; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.4); font-size:14px;">A</div>`;
+      const iconB_HTML = `<div style="background-color:#111; color:#fff; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid #e7ce7d; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.4); font-size:14px;">B</div>`;
+      
+      const iconA = window.L.divIcon({ html: iconA_HTML, className: '', iconSize: [32,32], iconAnchor: [16, 16] });
+      const iconB = window.L.divIcon({ html: iconB_HTML, className: '', iconSize: [32,32], iconAnchor: [16, 16] });
+      
+      window.L.marker(p1, {icon: iconA}).bindPopup('<b>Kho Xuất Phát:</b><br>' + mapData.value.origin.name).addTo(leafletMap);
+      window.L.marker(p2, {icon: iconB}).bindPopup('<b>Nơi Nhận Hàng:</b><br>' + mapData.value.destination.name).addTo(leafletMap);
+
+      let osrmUrl = '';
+      const isNorthToSouth = (p1[0] > 17 && p2[0] < 14) || (p1[0] < 14 && p2[0] > 17);
+      
+      if (isNorthToSouth) {
+          const daNangWaypoint = "108.202164,16.054407"; 
+          osrmUrl = `https://router.project-osrm.org/route/v1/driving/${p1[1]},${p1[0]};${daNangWaypoint};${p2[1]},${p2[0]}?overview=full&geometries=geojson`;
+      } else {
+          osrmUrl = `https://router.project-osrm.org/route/v1/driving/${p1[1]},${p1[0]};${p2[1]},${p2[0]}?overview=full&geometries=geojson`;
+      }
+
+      let routeCoords = [];
+      try {
+         const osrmRes = await axios.get(osrmUrl);
+         routeCoords = osrmRes.data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+      } catch (err) {
+         routeCoords = [p1, p2]; 
+      }
+
+      routingLine = window.L.polyline(routeCoords, { color: '#9f273b', weight: 5, opacity: 0.8, dashArray: '10, 10' }).addTo(leafletMap);
+      leafletMap.fitBounds(routingLine.getBounds(), { padding: [50, 50] });
+
+      const truckHtml = `<div style="background-color:#9f273b; color:#fff; border-radius:8px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; box-shadow: 0 4px 12px rgba(159,39,59,0.5); font-size: 20px;"><i class="bi bi-truck"></i></div>`;
+      const truckDivIcon = window.L.divIcon({ html: truckHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+      
+      const totalPoints = routeCoords.length;
+      let currentIndex = 0; 
+      let speed = 0;
+
+      if (mapData.value.status === 'delivered') {
+          if (isAutoTriggered) {
+              currentIndex = Math.floor(totalPoints * 0.5); 
+              speed = Math.ceil(totalPoints / 100) || 2; 
+          } else {
+              currentIndex = totalPoints - 1;
+              speed = 0;
+          }
+      } else if (mapData.value.status === 'shipping') {
+          currentIndex = Math.floor(totalPoints * 0.5); 
+          speed = 0; 
+      } else {
+          currentIndex = 0; 
+          speed = 0; 
+      }
+
+      truckMarker = window.L.marker(routeCoords[currentIndex], {icon: truckDivIcon}).addTo(leafletMap);
+
+      isMapLoading.value = false;
+
+      if (speed > 0 && routeCoords.length > 2) {
+          const animate = () => {
+             if (currentIndex < totalPoints - 1) {
+                 currentIndex += speed;
+                 if(currentIndex >= totalPoints) currentIndex = totalPoints - 1;
+                 truckMarker.setLatLng(routeCoords[currentIndex]);
+                 animationFrameId = requestAnimationFrame(animate);
+             }
+          };
+          animate();
+      }
+
+    }, 300);
+
+  } catch(e) {
+    isMapLoading.value = false;
+    if (e.response && e.response.status === 404) {
+        Swal.fire('Thiếu API Route', 'Sếp chưa khai báo Route /simulation trong file api.php của Laravel rồi!', 'error');
+    } else {
+        Swal.fire('Lỗi', 'Không thể khởi tạo Bản đồ Live: Lỗi kết nối', 'error');
+    }
+  }
+};
+
 const displayedOrders = computed(() => {
-    // Không dùng JS để lọc nữa vì Backend đã phân trang và tìm kiếm
     if (activeTab.value === 'all') {
-        return orders.value.filter(o => o.status !== 'returned');
+        return orders.value.filter(o => !['returned', 'return_requested'].includes(o.status));
     }
     return orders.value;
 });
@@ -729,11 +1022,7 @@ const displayedOrders = computed(() => {
 onMounted(() => { 
     fetchData(1); 
 
-    // LẮNG NGHE SỰ KIỆN TỪ NODE.JS SERVER
     socket.on("new_order_received", (data) => {
-        console.log("🔔 Có đơn hàng mới qua Socket.io:", data);
-
-        // Hiện thông báo ở góc màn hình
         Swal.fire({
             toast: true,
             position: 'top-end',
@@ -746,10 +1035,7 @@ onMounted(() => {
             color: '#333'
         });
 
-        // Xóa cache tab để đảm bảo load ra dữ liệu mới nhất
         tabCache.value = {};
-        
-        // Gọi lại API ngầm để cập nhật danh sách
         fetchData(1, true);
     });
 });
@@ -766,11 +1052,23 @@ onMounted(() => {
 @keyframes shine { to { background-position: 200% center; } }
 
 .bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
-.btn-brand { background-color: #009981; border: none; transition: 0.2s; } .btn-brand:hover { background-color: #007a67; }
+.btn-brand { background-color: #009981; border: none; transition: 0.2s; color: white; } .btn-brand:hover { background-color: #007a67; color: white; }
 .btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; } .btn-outline-brand:hover { background-color: #009981; color: white; }
 
 .cursor-pointer { cursor: pointer; }
 .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+
+/* CSS cho Map Modal */
+.glass-modal { backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); background-color: rgba(0, 0, 0, 0.3); }
+</style>
+
+<style>
+.quick-note-chip:hover {
+    background-color: #009981 !important;
+    color: #fff !important;
+    border-color: #009981 !important;
+    transform: translateY(-2px);
+}
 </style>
