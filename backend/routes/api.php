@@ -97,19 +97,19 @@ Route::prefix('client')->group(function () {
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
     // Hồ Sơ Cá Nhân (Profile)
-    Route::prefix('profile')->group(function () {
-        // Thông tin cá nhân & Mật khẩu
-        Route::get('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'show']);
-        Route::post('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'update']);
-        Route::post('/password', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updatePassword']);
-
-        // Sổ Địa Chỉ (Address Book)
-        Route::get('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'getAddresses']);
-        Route::post('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'storeAddress']);
-        Route::put('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updateAddress']);
-        Route::delete('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'deleteAddress']);
-        Route::put('/addresses/{id}/default', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'setDefaultAddress']);
-    });
+        Route::prefix('profile')->group(function () {
+            // Thông tin cá nhân & Mật khẩu
+            Route::get('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'show']);
+            Route::post('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'update']);
+            Route::post('/password', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updatePassword']);
+            
+            // Sổ Địa Chỉ (Address Book)
+            Route::get('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'getAddresses']);
+            Route::post('/addresses', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'storeAddress']);
+            Route::put('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updateAddress']);
+            Route::delete('/addresses/{id}', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'deleteAddress']);
+            Route::put('/addresses/{id}/default', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'setDefaultAddress']);
+        });
 
 
 
@@ -137,10 +137,8 @@ Route::prefix('client')->group(function () {
         Route::get('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
         Route::post('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
     });
-    // Trang chủ
-    Route::get('/home-data', [ClientHomeController::class, 'index']);
-    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
-        ->name('client.orders.invoice');
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
+         ->name('client.orders.invoice');
 });
 
 // ROUTE SHOP CLIENT
@@ -270,7 +268,7 @@ Route::prefix('admin')->group(function () {
             Route::get('galleries', [AdminCustomerGalleryController::class, 'index']);
             Route::post('galleries', [AdminCustomerGalleryController::class, 'store']);
             Route::get('galleries/{id}', [AdminCustomerGalleryController::class, 'show']);
-            Route::match(['post', 'put'], 'galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
+            Route::put('galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
             Route::delete('galleries/{id}', [AdminCustomerGalleryController::class, 'destroy']);
         });
 
@@ -283,8 +281,6 @@ Route::prefix('admin')->group(function () {
                 Route::delete('orders/{id}', 'destroy');
                 Route::post('orders/{id}/refund-process', 'processRefundAction');
             });
-
-            Route::get('orders/{id}/simulation', [App\Http\Controllers\Api\admin\OrderSimulationController::class, 'getSimulationData']);
         });
 
         // Quản lý Mã giảm giá (Mã: admin_coupons)
@@ -320,25 +316,26 @@ Route::prefix('admin')->group(function () {
             Route::put('/variants/{id}/stock', 'updateVariantStock');
             Route::put('/combos/{id}/limit', 'updateComboLimit');
         });
-
-
+      // ==================================================
         // QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
+        // ==================================================
         Route::middleware(['check.module:admin_contacts'])->group(function () {
             Route::controller(AdminContactController::class)->prefix('contacts')->group(function () {
                 Route::get('/', 'index');
-
+                
                 // 1. Route xóa hàng loạt (Phải đặt trên các route có /{id} để tránh bị nhầm lẫn)
-                Route::post('/bulk-delete', 'bulkDelete');
-
+                Route::post('/bulk-delete', 'bulkDelete'); 
+                
                 Route::put('/{id}/status', 'updateStatus');
                 Route::delete('/{id}', 'destroy');
-
+                
                 // 2. Route trả lời Email
                 Route::post('/{id}/reply', 'replyEmail');
             });
         });
-        Route::controller(AdminNewController::class)->prefix('news')->group(function () {
+       Route::controller(AdminNewController::class)->prefix('news')->group(function () {
             Route::get('/', 'index');
+            Route::get('/{id}', 'show'); 
             Route::post('/', 'store');
             Route::put('/{id}', 'update');
             Route::delete('/{id}', 'destroy');

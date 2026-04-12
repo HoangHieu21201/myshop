@@ -309,13 +309,15 @@ watch(() => route.params.slug, (newSlug) => {
 
 <style scoped>
 :root {
-    --primary: #009981;
-    --accent: #00483D;
+    --primary: #9f273b;
+    --accent: #e7ce7d;
+    --primary-dark: #cc1e2e;
 }
 
 .post-detail-page {
-    --primary: #009981;
-    --accent: #00483D;
+    --primary: #9f273b;
+    --accent: #e7ce7d;
+    --primary-dark: #cc1e2e;
     font-family: 'Inter', sans-serif;
 }
 
@@ -327,15 +329,24 @@ watch(() => route.params.slug, (newSlug) => {
     background-color: var(--primary) !important;
 }
 
+.border-primary {
+    border-color: var(--primary) !important;
+}
+
 .btn-primary {
     background-color: var(--primary);
     border-color: var(--primary);
 }
 
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
 .article-title {
     font-weight: 800;
     font-size: 2.2rem;
-    color: var(--accent);
+    color: var(--primary);
 }
 
 .article-body :deep(img) {
@@ -349,8 +360,8 @@ watch(() => route.params.slug, (newSlug) => {
 .widget-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--accent);
-    border-bottom: 2px solid var(--primary);
+    color: var(--primary);
+    border-bottom: 2px solid var(--accent);
     padding-bottom: 10px;
     margin-bottom: 20px;
 }

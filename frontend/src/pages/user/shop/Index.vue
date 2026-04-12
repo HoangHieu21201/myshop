@@ -90,7 +90,7 @@
               <li v-for="cat in categories" :key="cat.id" class="mb-3">
                 <div class="custom-checkbox d-flex align-items-center cursor-pointer" @click="filterByCategory(cat.slug)">
                   <div class="checkmark transition-all duration-300 shadow-sm" :class="{'checked': filters.categories === cat.slug}"></div>
-                  <span class="label-text ms-3 transition-colors" :class="filters.categories === cat.slug ? 'text-primary-custom fw-bold' : 'text-muted'">{{ cat.name }}</span>
+                  <span class="label-text ms-3 transition-colors" :class="filters.categories === cat.slug ? 'text-dark fw-bold' : 'text-muted'">{{ cat.name }}</span>
                 </div>
               </li>
             </ul>
@@ -103,7 +103,7 @@
                 <li v-for="(option, optIdx) in group.options" :key="optIdx" class="mb-3">
                   <div class="custom-checkbox d-flex align-items-center cursor-pointer" @click="toggleFilter(group.key, option.value)">
                     <div class="checkmark transition-all duration-300 shadow-sm" :class="{'checked': filters[group.key] === option.value}"></div>
-                    <span class="label-text ms-3 transition-colors" :class="filters[group.key] === option.value ? 'text-primary-custom fw-bold' : 'text-muted'">{{ option.label }}</span>
+                    <span class="label-text ms-3 transition-colors" :class="filters[group.key] === option.value ? 'text-dark fw-bold' : 'text-muted'">{{ option.label }}</span>
                   </div>
                 </li>
               </ul>
@@ -797,13 +797,40 @@ onMounted(() => {
   width: 100%;
 }
 
-/* CUSTOM CHECKBOX */
+/* THAY ĐỔI: CUSTOM CHECKBOX -> RADIO STYLE CAO CẤP */
 .custom-checkbox .checkmark {
-  position: relative; width: 18px; height: 18px; background-color: #fff; border: 1px solid #ccc; border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  position: relative; 
+  width: 18px; 
+  height: 18px; 
+  background-color: #fff; 
+  border: 1px solid #999; /* Viền nhạt hơn mặc định */
+  border-radius: 50%; /* Tròn thay vì vuông */
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  flex-shrink: 0;
 }
-.custom-checkbox:hover .checkmark { border-color: var(--sora-primary); }
-.custom-checkbox .checkmark.checked { background-color: var(--sora-primary); border-color: var(--sora-primary); }
-.custom-checkbox .checkmark::after { content: ""; position: absolute; display: none; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-top: -2px; }
+.custom-checkbox:hover .checkmark { border-color: #111; }
+/* Trạng thái được chọn */
+.custom-checkbox .checkmark.checked { 
+  background-color: #fff; 
+  border-color: #111; 
+}
+/* Dấu chấm đen ở giữa */
+.custom-checkbox .checkmark::after { 
+  content: ""; 
+  position: absolute; 
+  display: none; 
+  width: 10px; 
+  height: 10px; 
+  background-color: #111; 
+  border-radius: 50%; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%); 
+  border: none; 
+  margin: 0; 
+}
 .custom-checkbox .checkmark.checked::after { display: block; }
 .filter-list .label-text { font-size: 0.95rem; }
 
@@ -819,8 +846,18 @@ onMounted(() => {
   gap: 2.5rem 1.5rem; 
 }
 
+/* THAY ĐỔI: SORA LUXURY CARD BO GÓC ÍT HƠN (Luxury style) */
 .sora-luxury-card {
-    background: #ffffff; border: 1px solid #f0f0f0; border-radius: 12px; position: relative; display: flex; flex-direction: column; overflow: hidden; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); cursor: pointer; height: 100%;
+    background: #ffffff; 
+    border: 1px solid #f0f0f0; 
+    border-radius: 2px; /* GIẢM BO GÓC TỪ 12px XUỐNG 2px ĐỂ TRÔNG CỨNG CÁP, CAO CẤP HƠN */
+    position: relative; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
+    cursor: pointer; 
+    height: 100%;
 }
 .sora-luxury-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #e5e5e5; transform: translateY(-5px); }
 
@@ -833,7 +870,7 @@ onMounted(() => {
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-hover-img { opacity: 1; }
 
 .sora-card-badges { position: absolute; top: 15px; left: 15px; z-index: 10; display: flex; flex-direction: column; gap: 8px; }
-.sora-badge { background: #ffffff; color: #222; font-family: 'Oswald', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.sora-badge { background: #ffffff; color: #222; font-family: 'Oswald', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; border-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .sale-badge { background-color: #9f273b !important; color: white !important; }
 
 .sora-wishlist-btn { position: absolute; top: 15px; right: 15px; width: 38px; height: 38px; background: #ffffff; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); z-index: 10; cursor: pointer; transition: all 0.3s ease; color: #6c757d; }
@@ -862,7 +899,8 @@ onMounted(() => {
 .sora-marquee-container { width: 100%; overflow: hidden; position: relative; padding: 20px 0; }
 .sora-marquee-track { display: flex; width: max-content; align-items: center; animation: sora-marquee 40s linear infinite; }
 .sora-marquee-container:hover .sora-marquee-track { animation-play-state: paused; }
-.sora-marquee-item { position: relative; width: 280px; height: 380px; margin-right: 24px; flex-shrink: 0; overflow: hidden; cursor: pointer; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: all 0.4s ease; }
+/* THAY ĐỔI: SORA MARQUEE ITEM BO GÓC ÍT HƠN (Đồng bộ với Card) */
+.sora-marquee-item { position: relative; width: 280px; height: 380px; margin-right: 24px; flex-shrink: 0; overflow: hidden; cursor: pointer; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: all 0.4s ease; }
 .sora-marquee-item:nth-child(even) { margin-top: 40px; }
 .sora-marquee-item img { transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 .sora-marquee-item:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.12); z-index: 10; }
