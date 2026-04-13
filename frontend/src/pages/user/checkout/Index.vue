@@ -184,7 +184,6 @@
                   </div>
                   <div class="radio-indicator flex-shrink-0 ms-3"></div>
                 </label>
-
               </div>
             </form>
           </div>
@@ -261,11 +260,18 @@
                 <span class="fw-bold">{{ formatPrice(subTotal) }}</span>
               </div>
               <div class="d-flex justify-content-between mb-3 text-dark font-oswald tracking-wide text-uppercase small">
-                <span class="text-muted">Phí giao hàng:</span>
-                <span class="fw-bold" :class="shippingFee === 0 ? 'text-success' : ''">
-                  {{ shippingFee === 0 ? 'Miễn phí' : formatPrice(shippingFee) }}
-                </span>
-              </div>
+    <span class="text-muted">Phí giao hàng:</span>
+    <span class="fw-bold" :class="shippingFee === 0 ? 'text-success' : ''">
+        {{ shippingFee === 0 ? 'Miễn phí' : formatPrice(shippingFee) }}
+    </span>
+</div>
+<small class="text-muted d-block mt-1" style="font-size: 0.78rem; line-height: 1.3;">
+    {{ shippingNote }}
+</small>
+              <!-- THÔNG BÁO CÁCH TÍNH PHÍ SHIP -->
+              <small class="text-muted d-block mt-1" style="font-size: 0.75rem; line-height: 1.3;">
+                <i class="bi bi-info-circle me-1"></i> Phí vận chuyển tính theo khoảng cách thực tế từ Buôn Ma Thuột, Đắk Lắk (dùng Google Maps &amp; OpenStreetMap).
+              </small>
               <div v-if="discountAmount > 0" class="d-flex justify-content-between mb-3 text-success font-oswald tracking-wide text-uppercase small fw-bold">
                 <span>Ưu đãi áp dụng:</span>
                 <span>- {{ formatPrice(discountAmount) }}</span>
@@ -439,6 +445,137 @@ const fetchWards = async () => {
     }
 };
 
+// ==================== PHÍ SHIP THEO KHOẢNG CÁCH (ĐÃ SỬA HOÀN CHỈNH - KHÔNG CÒN 35K SAI) ====================
+const SHOP_LAT = 12.6675;
+const SHOP_LNG = 108.0378;
+const DAKLAK_PROVINCE_CODE = '12';   // Mã tỉnh Đắk Lắk
+
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+const getLatLongFromAddress = async (fullAddress) => {
+    if (!fullAddress || fullAddress.length < 10) return null;
+
+    // Tách địa chỉ thành các mảng dựa theo dấu phẩy
+    const parts = fullAddress.split(',').map(p => p.trim());
+
+    // Thử tìm địa chỉ, nếu thất bại thì bỏ dần phần chi tiết nhất (số nhà -> xã -> huyện)
+    while (parts.length >= 2) { 
+        const queryAddress = parts.join(', ');
+        try {
+            console.log('🔍 Nominatim đang tìm →', queryAddress);
+            const res = await axios.get('https://nominatim.openstreetmap.org/search', {
+                params: { 
+                    q: queryAddress, 
+                    format: 'json', 
+                    limit: 1,
+                    countrycodes: 'vn',
+                    addressdetails: 1
+                }
+            });
+            
+            if (res.data?.length > 0) {
+                console.log(`✅ Tọa độ tìm thấy: ${res.data[0].lat}, ${res.data[0].lon}`);
+                return { lat: parseFloat(res.data[0].lat), lng: parseFloat(res.data[0].lon) };
+            } else {
+                console.log(`⚠️ Không tìm thấy: ${queryAddress}, tiến hành mở rộng phạm vi...`);
+                // Bỏ phần tử chi tiết nhất ở đầu (ví dụ bỏ Số nhà, hoặc bỏ Xã) để tìm mờ hơn
+                parts.shift();
+            }
+        } catch (e) {
+            console.error('❌ Nominatim lỗi:', e.message);
+            return null; // Lỗi mạng thì mới dừng hẳn
+        }
+    }
+    
+    return null; // Không thể tìm ra vị trí
+};
+
+const calculateShippingFee = (distance) => {
+    distance = Math.max(0, Math.round(distance || 0));
+    if (distance <= 25) return 0;
+    if (distance <= 70)  return 25000;
+    if (distance <= 150) return 35000;
+    if (distance <= 250) return 45000;
+    const extraKm = distance - 250;
+    const extraFee = Math.ceil(extraKm / 120) * 15000;
+    return Math.min(45000 + extraFee, 130000);
+};
+
+const shippingFee = ref(0);
+const shippingNote = ref('Đang tính phí vận chuyển...');
+
+let shippingTimeout = null;
+
+watch(
+    [
+        selectedProvinceCode,
+        selectedDistrictCode,
+        selectedWardCode,
+        specificAddress,
+        useNewAddress,
+        () => form.value.customer_address
+    ],
+    () => {
+        if (shippingTimeout) clearTimeout(shippingTimeout);
+
+        shippingTimeout = setTimeout(async () => {
+            shippingNote.value = 'Đang tính phí vận chuyển...';
+
+            // Ưu tiên Đắk Lắk → miễn phí ngay
+            if (selectedProvinceCode.value === DAKLAK_PROVINCE_CODE) {
+                shippingFee.value = 0;
+                shippingNote.value = 'Miễn phí (nội tỉnh Đắk Lắk)';
+                console.log('🚀 Đắk Lắk → phí ship = 0đ');
+                return;
+            }
+
+            // Xây dựng địa chỉ sạch (không còn ", ,")
+            let addressParts = [];
+            if (useNewAddress.value || addresses.value.length === 0) {
+                if (specificAddress.value) addressParts.push(specificAddress.value.trim());
+                const wName = wards.value.find(w => w.code === selectedWardCode.value)?.name || '';
+                const dName = districts.value.find(d => d.code === selectedDistrictCode.value)?.name || '';
+                const pName = provinces.value.find(p => p.code === selectedProvinceCode.value)?.name || '';
+                if (wName) addressParts.push(wName);
+                if (dName) addressParts.push(dName);
+                if (pName) addressParts.push(pName);
+            } else {
+                addressParts = [form.value.customer_address];
+            }
+
+            const fullAddress = addressParts.filter(Boolean).join(', ') + ', Việt Nam';
+
+            if (!fullAddress || fullAddress.length < 15) {
+                shippingFee.value = 35000;
+                shippingNote.value = 'Chưa có địa chỉ đầy đủ';
+                return;
+            }
+
+            const coords = await getLatLongFromAddress(fullAddress);
+            if (coords) {
+                const distance = haversineDistance(SHOP_LAT, SHOP_LNG, coords.lat, coords.lng);
+                shippingFee.value = calculateShippingFee(distance);
+                shippingNote.value = `📍 ${distance.toFixed(1)} km từ Buôn Ma Thuột`;
+                console.log(`✅ Phí ship cuối: ${shippingFee.value}đ (${distance.toFixed(1)} km)`);
+            } else {
+                shippingFee.value = 35000;
+                shippingNote.value = 'Phí vận chuyển: 35.000đ (không lấy được khoảng cách)';
+            }
+        }, 650);
+    },
+    { immediate: true }
+);
+
+const totalAmount = computed(() => Math.max(subTotal.value - discountAmount.value + shippingFee.value, 0));
 
 // --- LOGIC GIAO DIỆN & TÍNH TOÁN ---
 const getItemName = (item) => {
@@ -485,43 +622,6 @@ const discountAmount = computed(() => {
     return subTotal.value * (parseFloat(selectedCoupon.value.value) / 100);
 });
 
-// LOGIC TÍNH PHÍ VẬN CHUYỂN DỰA TRÊN TỈNH/THÀNH ĐÃ CHỌN
-const shippingFee = computed(() => {
-    let provinceName = '';
-
-    // 1. Trường hợp đang dùng địa chỉ đã lưu (sổ địa chỉ)
-    if (!useNewAddress.value && addresses.value.length > 0) {
-        const addr = getSelectedAddress();
-        if (addr && addr.city) {
-            provinceName = addr.city;           // Ví dụ: "Tỉnh Đắk Lắk"
-        }
-    } 
-    // 2. Trường hợp nhập địa chỉ mới
-    else if (selectedProvinceCode.value) {
-        const provinceObj = provinces.value.find(p => p.code === selectedProvinceCode.value);
-        if (provinceObj) provinceName = provinceObj.name;
-    }
-
-    // Nếu chưa chọn tỉnh nào → mặc định 30.000đ
-    if (!provinceName) return 30000;
-
-    const lowerProvince = provinceName.toLowerCase();
-
-    // MIỄN PHÍ VẬN CHUYỂN CHO ĐẮK LẮK
-    if (lowerProvince.includes('đắk lắk') || lowerProvince.includes('dak lak')) {
-        return 0;
-    }
-
-    // Nội thành (Hà Nội & TP.HCM)
-    if (lowerProvince.includes('hồ chí minh') || lowerProvince.includes('hà nội')) {
-        return 20000;
-    }
-
-    // Các tỉnh còn lại
-    return 35000;
-});
-const totalAmount = computed(() => Math.max(subTotal.value - discountAmount.value + shippingFee.value, 0));
-
 const fetchInitData = async () => {
     try {
         const res = await axios.get('http://127.0.0.1:8000/api/client/checkout/init', { headers: getHeaders() });
@@ -550,6 +650,7 @@ const fetchInitData = async () => {
                 const defaultAddr = addresses.value.find(a => a.is_default === 1) || addresses.value[0];
                 selectedAddressId.value = defaultAddr.id;
                 useNewAddress.value = false;
+                form.value.customer_address = formatFullAddress(defaultAddr); // ← ĐÃ SỬA: populate địa chỉ để tính phí ship
             } else {
                 useNewAddress.value = true;
             }
@@ -567,15 +668,25 @@ const formatFullAddress = (addr) => {
     if (!addr) return '';
     return [addr.shipping_address, addr.ward, addr.district, addr.city].filter(Boolean).join(', ');
 };
+
+// SỬA: populate customer_address khi chọn địa chỉ có sẵn
 const selectAddress = (id) => {
     selectedAddressId.value = id;
     useNewAddress.value = false;
     showAddressDropdown.value = false;
+    
+    const addr = addresses.value.find(a => a.id === id);
+    if (addr) {
+        form.value.customer_address = formatFullAddress(addr);
+        // Trigger tính phí ngay
+    }
 };
+
 const selectNewAddress = () => {
     selectedAddressId.value = null;
     useNewAddress.value = true;
     showAddressDropdown.value = false;
+    form.value.customer_address = ''; // clear khi chuyển sang địa chỉ mới
 };
 
 const updateQuantity = async (item, delta) => {
@@ -673,12 +784,10 @@ const submitOrder = async () => {
             return;
         }
         
-        // Lấy tên từ code
         const pName = provinces.value.find(p => p.code === selectedProvinceCode.value)?.name || '';
         const dName = districts.value.find(d => d.code === selectedDistrictCode.value)?.name || '';
         const wName = wards.value.find(w => w.code === selectedWardCode.value)?.name || '';
 
-        // Gộp thành chuỗi
         form.value.customer_address = `${specificAddress.value}, ${wName}, ${dName}, ${pName}`;
     }
 
@@ -686,11 +795,12 @@ const submitOrder = async () => {
         user_address_id: useNewAddress.value ? null : selectedAddressId.value,
         customer_name: form.value.customer_name,
         customer_phone: form.value.customer_phone,
-        customer_address: form.value.customer_address, // Chuỗi đã được gộp
+        customer_address: form.value.customer_address,
         customer_email: form.value.customer_email,
         order_note: form.value.order_note,
         payment_method: form.value.payment_method,
-        coupon_code: selectedCoupon.value && !isCouponBlocked.value ? selectedCoupon.value.code : null
+        coupon_code: selectedCoupon.value && !isCouponBlocked.value ? selectedCoupon.value.code : null,
+        shipping_fee: shippingFee.value
     };
 
     isSubmitting.value = true;
@@ -711,7 +821,7 @@ const submitOrder = async () => {
                 allowOutsideClick: false
             }).then(() => {
                 removeSafeStorage('cart_session_id');
-                router.push('/checkout/success?order=' + res.data.data.order_code).catch(()=>{}); 
+                router.push('/checkout/success?order=' + res.data.data.order_code).catch(()=>{});
             });
         }
     } catch (error) {
@@ -731,17 +841,19 @@ onMounted(async () => {
     isInitializing.value = true;
     await checkDirectBuy();
     await fetchInitData(); 
-    await fetchProvinces(); // Gọi API lấy Tỉnh/Thành phố khi mở trang
+    await fetchProvinces();
     isInitializing.value = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 onUnmounted(() => {
     if (couponModalInstance) couponModalInstance.dispose();
+    if (shippingTimeout) clearTimeout(shippingTimeout);
 });
 </script>
 
 <style scoped>
+/* Giữ nguyên toàn bộ style cũ */
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
 .bg-light-custom { background-color: #faf9f6; }
