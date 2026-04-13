@@ -231,7 +231,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/', 'index');
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
-                Route::post('/{id}', 'update');
+                Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
             });
         });

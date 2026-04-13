@@ -234,13 +234,15 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
         <!-- Hero Section -->
         <header class="page-hero">
             <div class="hero-inner">
-                <p class="hero-pre-title">THÔNG TIN & KIẾN THỨC</p>
+                <p class="hero-title" style="color: rgb(159,39,59); font-style: italic;">
+  SORA - Chạm đến sự hoàn mỹ
+</p>
                 <h1 v-if="searchQuery">Tìm kiếm: "{{ searchQuery }}"</h1>
                 <h1 v-else-if="authorQuery">Tác giả: "{{ authorQuery }}"</h1>
                 <h1 v-else-if="categoryQuery">Danh mục: "{{ categoryQuery }}"</h1>
                 <h1 v-else>ThinkHub</h1>
                 <p class="hero-subtitle">
-                    Cập nhật xu hướng công nghệ mới nhất, đánh giá sản phẩm và mẹo hay từ đội ngũ chuyên gia.
+                    Khám phá xu hướng trang sức & bí quyết làm đẹp tinh tế mỗi ngày.
                 </p>
             </div>
         </header>
