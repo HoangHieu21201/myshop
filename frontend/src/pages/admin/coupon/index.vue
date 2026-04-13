@@ -76,11 +76,11 @@
               <thead class="bg-light">
                 <tr>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Mã & Tên Chương Trình</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 18%;">Mức Giảm</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 15%;">Mức Giảm</th>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 17%;">Lượt dùng</th>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 15%;">Hạn sử dụng</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Trạng thái</th>
-                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 10%;">Thao tác</th>
+                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 15%;">Thao tác</th>
                 </tr>
               </thead>
               <tbody>

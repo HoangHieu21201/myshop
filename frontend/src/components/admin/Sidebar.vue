@@ -137,7 +137,7 @@ const userLevel = computed(() => {
       return parseInt(savedLevel);
     }
   } catch (e) {
-    console.warn("Không thể parse localStorage cho Sidebar");
+    console.warn("Không thể parse localStorage cho Sidebar", e);
   }
 
   return 999;
@@ -177,7 +177,8 @@ const menuItems = ref([
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
       { name: 'Mã Giảm Giá', path: '/admin/coupons', moduleCode: 'admin_coupons' },
       { name: 'Chân dung SORA', path: '/admin/gallery', moduleCode: 'admin_banners' },
-      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' }
+      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' },
+      { name: 'Tin tức', path: '/admin/news', moduleCode: 'admin_news' }
     ]
   },
   {

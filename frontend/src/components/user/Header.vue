@@ -137,7 +137,7 @@
 
             <router-link :to="{ name: 'client-combos' }" class="nav-item-link">BỘ SƯU TẬP</router-link>
             <li><a href="#" class="nav-item-link">QUÀ TẶNG</a></li>
-            <li><a href="#" class="nav-item-link">TIN TỨC</a></li>
+            <li><router-link :to="{ name: 'news'}" class="nav-item-link">TIN TỨC</router-link></li>
           </ul>
         </nav>
 
@@ -266,7 +266,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
