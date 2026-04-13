@@ -233,16 +233,9 @@ class ClientCheckoutController extends Controller
                     $coupon->increment('usage_count');
                 }
 
-                // LOGIC TÍNH PHÍ VẬN CHUYỂN
-                $lowerAddress = mb_strtolower($customerAddress, 'UTF-8');
-
-                if (str_contains($lowerAddress, 'đắk lắk') || str_contains($lowerAddress, 'dak lak')) {
-                    $shippingFee = 0; // Đắk Lắk miễn phí
-                } elseif (str_contains($lowerAddress, 'hà nội') || str_contains($lowerAddress, 'hồ chí minh')) {
-                    $shippingFee = 20000; // Nội thành
-                } else {
-                    $shippingFee = 35000; // Tỉnh khác
-                }
+                // ==================== PHÍ SHIP MỚI (LẤY TỪ FRONTEND) ====================
+                $shippingFee = (int) $request->shipping_fee;   // frontend đã tính theo km
+                // ========================================================================
 
                 $totalAmount = max($subTotal - $discountAmount + $shippingFee, 0);
 
