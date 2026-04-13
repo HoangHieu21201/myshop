@@ -51,7 +51,7 @@ const user = [
       {
         path: 'category/:id',
         name: 'category-detail',
-        component: () => import('../pages/user/shop/Index.vue'), 
+        component: () => import('../pages/user/shop/Index.vue'),
       },
       {
         path: 'shop/:shop_slug/product/:slug',
@@ -106,7 +106,7 @@ const user = [
       {
         path: 'shop/:shop_slug/compare',
         name: 'compare',
-        component: () => import('../pages/user/compare/Index.vue'), 
+        component: () => import('../pages/user/compare/Index.vue'),
       },
       {
         path: 'profile',
@@ -115,7 +115,7 @@ const user = [
       },
       //tin tứvvvvv
 
-       {
+      {
         path: 'news',
         name: 'news',
         component: () => import('../pages/user/news/Index.vue'), // Đảm bảo đường dẫn đúng tới Tintuc.vue
@@ -127,6 +127,12 @@ const user = [
         name: 'PostDetailt',
         component: () => import('../pages/user/news/PostDetail.vue'), // File chi tiết bài viết (bạn cần tự tạo UI cho file này)
       },
+      {
+        path: 'policy',
+        name: 'policy',
+        component: () => import('../pages/user/policy/index.vue'),
+      },
+
     ],
   },
 ]

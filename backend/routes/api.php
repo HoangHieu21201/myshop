@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Controllers Admin
+use Illuminate\Support\Facades\Broadcast;
+
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 use App\Http\Controllers\Api\client\ShopController;
 use App\Http\Controllers\Api\admin\AdminCouponController;
 use App\Http\Controllers\Api\admin\AdminAccountController;
@@ -140,6 +143,12 @@ Route::prefix('client')->group(function () {
     });
     Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
         ->name('client.orders.invoice');
+
+    // BỔ SUNG ROUTE REAL-TIME CHAT CHO CLIENT
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/messages', [\App\Http\Controllers\Api\MessageController::class, 'history']);
+        Route::post('/messages', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+    });
 });
 
 // ROUTE SHOP CLIENT
@@ -345,6 +354,13 @@ Route::prefix('admin')->group(function () {
                 Route::delete('/{id}', 'destroy');
                 Route::patch('/{id}', 'updateStatus');
             });
+        });
+
+        // BỔ SUNG ROUTE REAL-TIME CHAT CHO ADMIN
+        Route::prefix('messages')->group(function () {
+            Route::get('/conversations', [\App\Http\Controllers\Api\MessageController::class, 'getConversations']);
+            Route::get('/', [\App\Http\Controllers\Api\MessageController::class, 'history']);
+            Route::post('/', [\App\Http\Controllers\Api\MessageController::class, 'store']);
         });
     });
 });

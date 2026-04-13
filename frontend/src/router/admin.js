@@ -262,6 +262,12 @@ const admin = [
         name: 'admin-contacts',
         component: () => import('../pages/admin/contact/index.vue')
       },
+      // ROUTE CHAT
+      {
+        path: 'chat',
+        name: 'admin-chat',
+        component: () => import('../pages/admin/AdminChat.vue')
+      },
       // tin tứcccc
        {
         path: 'news',

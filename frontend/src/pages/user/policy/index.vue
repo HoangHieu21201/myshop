@@ -19,7 +19,7 @@
         <!-- ========================================== -->
         <!-- PHẦN 1: CHÍNH SÁCH ĐỔI TRẢ & THU MUA -->
         <!-- ========================================== -->
-        <div class="text-center max-w-2xl mb-5 mx-auto">
+        <div id="return-policy" class="text-center max-w-2xl mb-5 mx-auto">
           <h2 class="h3 font-serif text-main mb-3">Chính Sách Đổi Trả & Thu Mua</h2>
           <p class="text-secondary fw-light" style="line-height: 1.8;">
             Tại SORA, chúng tôi trân trọng mọi quyết định của bạn. Chính sách hậu mãi được thiết kế rõ ràng nhằm bảo vệ quyền lợi tối đa cho khách hàng, đồng thời duy trì giá trị nguyên bản của từng kiệt tác trang sức.
@@ -138,7 +138,7 @@
         <!-- ========================================== -->
         <!-- PHẦN 2: CÂU HỎI THƯỜNG GẶP (FAQ) -->
         <!-- ========================================== -->
-        <div class="text-center max-w-2xl mb-5 mx-auto border-top pt-5">
+        <div id="faq" class="text-center max-w-2xl mb-5 mx-auto border-top pt-5">
           <span class="text-accent text-uppercase fw-bold mb-2 d-block tracking-wide" style="font-size: 0.75rem;">SORA Lắng Nghe</span>
           <h2 class="h3 font-serif text-main mb-3">Câu Hỏi Thường Gặp (FAQ)</h2>
           <p class="text-secondary fw-light" style="line-height: 1.8;">
@@ -286,8 +286,8 @@
               </div>
             </div>
 
-             <!-- Nhóm 4: Thanh Toán -->
-            <div id="payment" class="faq-section">
+            <!-- Nhóm 4: Thanh Toán -->
+            <div id="payment" class="faq-section mb-5 pb-4">
               <h4 class="h5 font-serif text-dark mb-4 d-flex align-items-center">
                 <i class="fa-regular fa-credit-card text-accent me-3 d-lg-none"></i> Thanh Toán & Bảo Mật
               </h4>
@@ -302,6 +302,28 @@
                   <div id="collapsePay1" class="accordion-collapse collapse" data-bs-parent="#accordionPayment">
                     <div class="accordion-body px-4 pb-4 pt-0 text-secondary fw-light" style="line-height: 1.7;">
                       Đa dạng phương thức thanh toán an toàn: Chuyển khoản ngân hàng, Thẻ tín dụng/ATM nội địa (qua VNPay), Ví điện tử, và Thanh toán tiền mặt khi nhận hàng (COD - Yêu cầu cọc trước 10% với đơn hàng trên 5 triệu).
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nhóm 5: Chính Sách Bảo Mật -->
+            <div id="privacy-policy" class="faq-section border-top pt-4">
+              <h4 class="h5 font-serif text-dark mb-4 d-flex align-items-center">
+                <i class="fa-solid fa-user-shield text-accent me-3 d-lg-none"></i> Chính Sách Bảo Mật
+              </h4>
+              
+              <div class="accordion custom-accordion" id="accordionPrivacy">
+                <div class="accordion-item mb-3 border-0 rounded-3 bg-light shadow-sm">
+                  <h2 class="accordion-header" id="headingPriv1">
+                    <button class="accordion-button collapsed bg-transparent text-dark fw-medium py-3 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePriv1">
+                      Dữ liệu cá nhân của tôi được bảo mật như thế nào?
+                    </button>
+                  </h2>
+                  <div id="collapsePriv1" class="accordion-collapse collapse" data-bs-parent="#accordionPrivacy">
+                    <div class="accordion-body px-4 pb-4 pt-0 text-secondary fw-light" style="line-height: 1.7;">
+                      SORA cam kết bảo mật tuyệt đối thông tin khách hàng bằng công nghệ mã hóa SSL. Chúng tôi chỉ sử dụng dữ liệu cho mục đích liên hệ giao hàng và chăm sóc hậu mãi, tuyệt đối không tiết lộ cho bên thứ ba.
                     </div>
                   </div>
                 </div>
@@ -334,6 +356,11 @@
 </template>
 
 <script setup>
+import { onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+
 // Hiệu ứng cuộn mượt và kích hoạt Menu bên cột trái
 const scrollToSection = (sectionId) => {
   const element = document.getElementById(sectionId);
@@ -353,6 +380,20 @@ const scrollToSection = (sectionId) => {
     }
   }
 };
+
+onMounted(() => {
+  if (route.hash) {
+    const sectionId = route.hash.replace('#', '');
+    setTimeout(() => scrollToSection(sectionId), 300);
+  }
+});
+
+watch(() => route.hash, (newHash) => {
+  if (newHash) {
+    const sectionId = newHash.replace('#', '');
+    scrollToSection(sectionId);
+  }
+});
 </script>
 
 <style scoped>
