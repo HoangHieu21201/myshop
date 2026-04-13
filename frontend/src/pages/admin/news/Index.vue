@@ -1,8 +1,192 @@
+<template>
+  <div class="news-index-wrapper pb-5 mb-5">
+    
+    <!-- Loading Shimmer -->
+    <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
+      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
+      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải dữ liệu...</p>
+    </div>
+
+    <div class="container-fluid py-4" v-else>
+      <!-- Header chung 1 hàng -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-0">Quản Lý Tin Tức</h3>
+            <p class="text-secondary mb-0 small mt-1">Thêm, sửa, xóa và xuất bản các bài viết.</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <button @click="goToCreate" class="btn btn-brand btn-brand-solid px-4 py-2 fw-bold shadow-sm text-nowrap">
+            <i class="bi bi-plus-circle-fill me-1"></i> Viết bài mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs, Sort và Search Box chung 1 hàng -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 border-bottom pb-2">
+        <ul class="nav nav-underline border-0 mb-0 flex-nowrap overflow-hidden custom-scrollbar-x flex-grow-1">
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': currentTab === 'all' }" @click.prevent="switchTab('all')">
+              <i class="bi bi-grid-fill me-2"></i> Tất cả
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': currentTab === 'all'}">{{ statusCounts.all }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': currentTab === 'published' }" @click.prevent="switchTab('published')">
+              <i class="bi bi-check-circle-fill me-2 text-success"></i> Xuất bản
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': currentTab === 'published'}">{{ statusCounts.published }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': currentTab === 'pending' }" @click.prevent="switchTab('pending')">
+              <i class="bi bi-hourglass-split me-2 text-warning"></i> Đợi duyệt
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': currentTab === 'pending'}">{{ statusCounts.pending }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': currentTab === 'draft' }" @click.prevent="switchTab('draft')">
+              <i class="bi bi-eye-slash-fill me-2 text-secondary"></i> Đã ẩn
+              <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': currentTab === 'draft'}">{{ statusCounts.draft }}</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Sort & Search box -->
+        <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm shadow-sm bg-white border py-2 rounded-pill px-3" style="width: 150px; font-size: 0.875rem;" v-model="sortOption">
+                <option value="newest">Mới nhất</option>
+                <option value="oldest">Cũ nhất</option>
+                <option value="a-z">Tên (A-Z)</option>
+                <option value="z-a">Tên (Z-A)</option>
+            </select>
+
+            <div class="search-box position-relative" style="width: 250px; max-width: 100%;">
+                <input type="text" class="form-control form-control-sm rounded-pill pe-5 shadow-sm bg-white border py-2" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm tên bài viết...">
+                <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+            </div>
+        </div>
+      </div>
+
+      <!-- Bảng Dữ liệu -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-0 mt-2">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1100px;">
+              <thead class="bg-light">
+                <tr>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 8%;">ID</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 32%;">Bài viết</th>
+                  <th class="py-3 px-4 text-secondary border-0" style="width: 15%;">Tác giả</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 10%;">Lượt xem</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center text-nowrap" style="width: 15%;">Trạng thái</th>
+                  <th class="py-3 px-4 text-secondary text-center border-0 text-nowrap" style="width: 20%;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="isLoading && !isFirstLoad">
+                  <td colspan="6" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-brand mb-2" role="status"></div>
+                    <div class="small fw-semibold">Đang tải dữ liệu...</div>
+                  </td>
+                </tr>
+                <tr v-else-if="paginatedNews.length === 0">
+                  <td colspan="6" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
+                  </td>
+                </tr>
+                <tr v-else v-for="item in paginatedNews" :key="item.id" 
+                    :class="{'bg-light opacity-75': item.status === 'draft', 'table-warning-custom': item.status === 'pending'}">
+                  
+                  <td class="px-4 fw-bold text-muted small">#{{ item.id }}</td>
+
+                  <!-- Ảnh và Tiêu đề -->
+                  <td class="px-4 py-3">
+                    <div class="d-flex align-items-center">
+                      <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm flex-shrink-0 me-3" style="width: 100px;">
+                          <img :src="getFullImage(item.image_url)" class="object-fit-cover" onerror="this.src='https://placehold.co/100x56?text=Img'">
+                      </div>
+                      <div class="overflow-hidden">
+                        <h6 class="mb-1 fw-bold text-dark text-truncate" :title="item.title">{{ item.title }}</h6>
+                        <small class="text-muted d-block text-truncate">{{ item.excerpt || 'Chưa có mô tả ngắn...' }}</small>
+                        <span class="badge bg-light text-secondary border mt-1 fw-normal" v-if="item.category">{{ item.category }}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Tác giả -->
+                  <td class="px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle text-white fw-bold me-2 shadow-sm" style="background-color: #009981;">
+                            {{ getDisplayAuthor(item).charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold text-dark small text-truncate" style="max-width: 100px;">{{ getDisplayAuthor(item) }}</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">{{ getFormattedDate(item.created_at) }}</span>
+                        </div>
+                    </div>
+                  </td>
+
+                  <!-- Lượt xem -->
+                  <td class="px-4 text-center fw-bold text-secondary">
+                    <i class="bi bi-eye me-1"></i> {{ item.views || 0 }}
+                  </td>
+
+                  <!-- Trạng thái -->
+                  <td class="px-4 text-center text-nowrap">
+                    <div class="d-flex flex-column align-items-center justify-content-center">
+                        <span class="badge rounded-pill fw-medium px-3 py-1 mb-1 border border-opacity-25" :class="getStatusInfo(item.status).badgeClass">
+                            <i class="bi me-1" :class="getStatusInfo(item.status).icon"></i>{{ getStatusInfo(item.status).text }}
+                        </span>
+                        <!-- Switch Toggle nếu là admin -->
+                        <div class="form-check form-switch m-0 d-flex align-items-center" v-if="hasRole(['admin'])" title="Bật/Tắt xuất bản">
+                            <input class="form-check-input custom-switch" type="checkbox" role="switch" :checked="item.status === 'published'" @click.prevent="handleToggleStatus(item)">
+                        </div>
+                    </div>
+                  </td>
+
+                  <!-- Thao tác -->
+                  <td class="px-4 text-center text-nowrap">
+                    <button class="btn btn-sm btn-light text-info me-1 shadow-sm border" title="Xem bài viết" @click="viewOnFrontend(item.slug)">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light text-primary me-1 shadow-sm border" title="Chỉnh sửa" @click="goToEdit(item.id)">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light text-danger shadow-sm border" title="Xóa" v-if="hasRole(['admin']) || item.author_name === currentUser.name" @click="handleDelete(item)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phân trang -->
+      <div class="d-flex justify-content-between align-items-center" v-if="!isLoading && totalPages > 1">
+        <span class="text-muted small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, processedNews.length) }}</span>
+        <nav>
+          <ul class="pagination pagination-sm mb-0 shadow-sm">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }"><button class="page-link text-brand" @click="goToPage(currentPage - 1)"><i class="bi bi-chevron-left"></i></button></li>
+            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }"><button class="page-link" :class="currentPage === page ? 'bg-brand border-brand text-white' : 'text-dark'" @click="goToPage(page)">{{ page }}</button></li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }"><button class="page-link text-brand" @click="goToPage(currentPage + 1)"><i class="bi bi-chevron-right"></i></button></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+
+// Khai báo Component name
+defineOptions({
+  name: 'NewsIndex'
+});
 
 // CONFIGURATION
 const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
@@ -59,7 +243,7 @@ const checkAuthState = async () => {
             currentUser.value = { ...data, role_id: Number(data.role_id), name: data.fullname || data.full_name || data.name || 'Admin' };
             localStorage.setItem('adminData', JSON.stringify(currentUser.value));
             return true;
-        } catch (error) { return false; }
+        } catch (error) { return error; }
     }
     return false;
 };
@@ -74,12 +258,13 @@ const requireLogin = () => {
 
 // STATE MANAGEMENT
 const isLoading = ref(true);
+const isFirstLoad = ref(true); // Thêm biến cho hiệu ứng Shimmer
 const news = ref([]);
 const searchQuery = ref('');
 const currentTab = ref('all');
 const sortOption = ref('newest');
 const currentPage = ref(1);
-const itemsPerPage = ref(5);
+const itemsPerPage = ref(10);
 
 // COMPUTED & WATCHERS
 const statusCounts = computed(() => {
@@ -131,18 +316,18 @@ const getFullImage = (path) => {
 
 const getFormattedDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    return new Date(dateString).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
 
 const getDisplayAuthor = (item) => item.author_name || 'Không rõ';
 
 const getStatusInfo = (status) => {
     const map = {
-        'published': { text: 'Xuất bản', class: 'bg-success', icon: 'bi-check-circle' },
-        'pending': { text: 'Đợi duyệt', class: 'bg-warning text-dark', icon: 'bi-hourglass-split' },
-        'draft': { text: 'Đã ẩn', class: 'bg-secondary', icon: 'bi-eye-slash' }
+        'published': { text: 'Xuất bản', badgeClass: 'bg-success bg-opacity-10 text-success border-success', icon: 'bi-check-circle-fill' },
+        'pending': { text: 'Đợi duyệt', badgeClass: 'bg-warning bg-opacity-10 text-warning border-warning', icon: 'bi-hourglass-split' },
+        'draft': { text: 'Đã ẩn', badgeClass: 'bg-secondary bg-opacity-10 text-secondary border-secondary', icon: 'bi-eye-slash-fill' }
     };
-    return map[status] || { text: 'Không rõ', class: 'bg-light text-dark', icon: 'bi-question-circle' };
+    return map[status] || { text: 'Không rõ', badgeClass: 'bg-light text-dark', icon: 'bi-question-circle' };
 };
 
 // NAVIGATION
@@ -150,10 +335,11 @@ const goToCreate = () => router.push('/admin/news/create');
 const goToEdit = (id) => router.push(`/admin/news/edit/${id}`);
 const viewOnFrontend = (slug) => window.open(`${FRONTEND_URL}/tin-tuc/${slug}`, '_blank');
 const goToPage = (page) => { if (page >= 1 && page <= totalPages.value) currentPage.value = page; };
+const switchTab = (tabId) => { currentTab.value = tabId; currentPage.value = 1; };
 
 // ACTIONS (HANDLERS)
 async function fetchNews() {
-    isLoading.value = true;
+    if (!isFirstLoad.value) isLoading.value = true;
     try {
         const response = await axios.get(`${apiUrl}/admin/news`, { headers: getHeaders() });
         news.value = response.data.data ? response.data.data : response.data;
@@ -162,6 +348,7 @@ async function fetchNews() {
         else Swal.fire('Lỗi', 'Không thể tải danh sách tin tức.', 'error');
     } finally {
         isLoading.value = false;
+        isFirstLoad.value = false;
     }
 }
 
@@ -176,7 +363,7 @@ async function handleToggleStatus(newsItem) {
             await axios.patch(`${apiUrl}/admin/news/${newsItem.id}`, { status: newStatus }, { headers: getHeaders() });
             newsItem.status = newStatus;
             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', timer: 1500, showConfirmButton: false });
-        } catch (e) { Swal.fire('Lỗi', 'Không thể cập nhật trạng thái.', 'error'); }
+        } catch (e) { Swal.fire('Lỗi', 'Không thể cập nhật trạng thái.', e); }
     }
 }
 
@@ -188,180 +375,60 @@ async function handleDelete(newsItem) {
     if (result.isConfirmed) {
         try {
             await axios.delete(`${apiUrl}/admin/news/${newsItem.id}`, { headers: getHeaders() });
-            Swal.fire('Đã xóa!', 'Bài viết đã bị xóa.', 'success');
+            Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
             if (paginatedNews.value.length === 1 && currentPage.value > 1) currentPage.value--;
             fetchNews();
-        } catch (e) { Swal.fire('Lỗi', 'Không thể xóa bài viết.', 'error'); }
+        } catch (e) { Swal.fire('Lỗi', 'Không thể xóa bài viết.', e); }
     }
 }
 
 onMounted(async () => {
     await checkAuthState();
-    if (!requireLogin()) { isLoading.value = false; return; }
+    if (!requireLogin()) { isLoading.value = false; isFirstLoad.value = false; return; }
     fetchNews();
 });
 </script>
 
-<template>
-    <div class="news-admin-page p-4 min-vh-100">
-        <!-- Tiêu đề & Thống kê & Bộ lọc -->
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-            <div>
-                <h2 class="h3 font-serif mb-2 fw-bold">Quản lý Tin tức</h2>
-                <div class="d-flex align-items-center gap-3">
-                    <p class="text-secondary mb-0 small">Thêm, sửa, xóa và xuất bản các bài viết.</p>
-                </div>
-            </div>
-
-            <!-- KHU VỰC BỘ LỌC VÀ TÁC VỤ NHANH -->
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <!-- Bộ lọc tìm kiếm -->
-                <div class="input-group input-group-sm shadow-sm border-0 rounded-3 overflow-hidden bg-white px-2 py-1 w-auto align-items-center">
-                    <span class="border-0 bg-transparent text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-0 shadow-none bg-transparent form-control-sm" placeholder="Tìm kiếm bài viết..." v-model="searchQuery">
-                </div>
-
-                <!-- Bộ lọc trạng thái -->
-                <select class="form-select form-select-sm shadow-sm border-0 rounded-3 w-auto px-3 py-2" v-model="currentTab">
-                    <option value="all">Tất cả ({{ statusCounts.all }})</option>
-                    <option value="pending">Đợi duyệt ({{ statusCounts.pending }})</option>
-                    <option value="published">Đã xuất bản ({{ statusCounts.published }})</option>
-                    <option value="draft">Đã ẩn ({{ statusCounts.draft }})</option>
-                </select>
-
-                <!-- Bộ lọc sắp xếp -->
-                <select class="form-select form-select-sm shadow-sm border-0 rounded-3 w-auto px-3 py-2" v-model="sortOption">
-                    <option value="newest">⏱️ Mới nhất</option>
-                    <option value="oldest">⏳ Cũ nhất</option>
-                    <option value="a-z">🔤 Tên (A-Z)</option>
-                    <option value="z-a">🔤 Tên (Z-A)</option>
-                </select>
-
-                <!-- Nút Viết bài mới -->
-                <button @click="goToCreate" class="btn btn-sm btn-primary px-3 py-2 shadow-sm rounded-3 d-inline-flex align-items-center">
-                    <i class="bi bi-plus-lg me-2"></i> Viết bài mới
-                </button>
-            </div>
-        </div>
-
-        <!-- Bảng danh sách tin tức -->
-        <div class="card shadow-sm rounded-4 border-0 overflow-hidden">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 custom-table">
-                        <thead>
-                            <tr class="table-dark">
-                                <th scope="col" class="ps-4 py-3" style="width: 60px;">ID</th>
-                                <th scope="col" class="py-3" style="width: 100px;">Ảnh</th>
-                                <th scope="col" class="py-3 text-uppercase small">Tiêu đề / Danh mục</th>
-                                <th scope="col" class="py-3 text-uppercase small d-none d-md-table-cell" style="width: 150px;">Tác giả</th>
-                                <th scope="col" class="py-3 text-uppercase small text-center" style="width: 100px;">Lượt xem</th>
-                                <th scope="col" class="py-3 text-uppercase small text-center" style="width: 120px;">Trạng thái</th>
-                                <th scope="col" class="py-3 text-uppercase small d-none d-lg-table-cell" style="width: 130px;">Ngày tạo</th>
-                                <th scope="col" class="pe-4 py-3 text-uppercase small text-end" style="width: 180px;">Tác Vụ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="isLoading">
-                                <td colspan="8" class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                </td>
-                            </tr>
-                            <tr v-else-if="paginatedNews.length === 0">
-                                <td colspan="8" class="text-center py-5 text-muted small">Không tìm thấy bài viết nào phù hợp.</td>
-                            </tr>
-                            <tr v-else v-for="item in paginatedNews" :key="item.id" :class="{'table-warning-custom': item.status === 'pending'}">
-                                <td class="ps-4 fw-bold text-muted">{{ item.id }}</td>
-                                <td>
-                                    <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm" style="width: 80px;">
-                                        <img :src="getFullImage(item.image_url)" class="object-fit-cover" onerror="this.src='https://placehold.co/80x45?text=Img'">
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-light text-dark border mb-1" v-if="item.category">{{ item.category }}</span>
-                                    <span class="fw-bold d-block text-dark text-truncate" style="max-width: 280px;" :title="item.title">{{ item.title }}</span>
-                                    <small class="text-muted d-block text-truncate" style="max-width: 280px;">{{ item.excerpt || 'Chưa có mô tả ngắn...' }}</small>
-                                </td>
-                                <td class="d-none d-md-table-cell small">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-circle text-white fw-bold me-2" style="background-color: #009981;">
-                                            {{ getDisplayAuthor(item).charAt(0).toUpperCase() }}
-                                        </div>
-                                        <span class="fw-medium text-truncate" style="max-width: 100px;">{{ getDisplayAuthor(item) }}</span>
-                                    </div>
-                                </td>
-                                <td class="text-center fw-bold text-secondary small">
-                                    <i class="bi bi-eye me-1"></i> {{ item.views || 0 }}
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge rounded-pill text-white fw-normal px-3 py-2" :class="getStatusInfo(item.status).class">
-                                        <i class="bi me-1" :class="getStatusInfo(item.status).icon"></i>{{ getStatusInfo(item.status).text }}
-                                    </span>
-                                </td>
-                                <td class="d-none d-lg-table-cell small text-secondary">{{ getFormattedDate(item.created_at) }}</td>
-                                <td class="pe-4 text-end">
-                                    <div class="d-flex justify-content-end align-items-center gap-2">
-                                        <div class="form-check form-switch m-0 d-flex align-items-center" v-if="hasRole(['admin'])" title="Bật/Tắt xuất bản">
-                                            <input class="form-check-input custom-switch" type="checkbox" role="switch" :checked="item.status === 'published'" @click.prevent="handleToggleStatus(item)">
-                                        </div>
-                                        <!-- Mở trên tab mới bên Frontend thay vì Modal -->
-                                        <button class="btn btn-sm btn-outline-info shadow-sm d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" title="Xem bài viết" @click="viewOnFrontend(item.slug)">
-                                            <i class="bi bi-eye-fill"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary shadow-sm d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" title="Sửa" @click="goToEdit(item.id)">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger shadow-sm d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" title="Xóa" v-if="hasRole(['admin']) || item.author_name === currentUser.name" @click="handleDelete(item)">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Phân trang -->
-            <div class="card-footer bg-white border-top-0 py-3" v-if="!isLoading && totalPages > 1">
-                <div class="d-flex justify-content-between align-items-center px-2">
-                    <small class="text-muted">Hiển thị {{ paginatedNews.length }} / {{ processedNews.length }} bài viết</small>
-                    <ul class="pagination pagination-sm m-0 gap-1">
-                        <li class="page-item" :class="{ disabled: currentPage === 1 }"><button class="page-link border-0 rounded" @click="goToPage(currentPage - 1)"><i class="bi bi-chevron-left"></i></button></li>
-                        <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }"><button class="page-link border-0 rounded mx-1" @click="goToPage(page)">{{ page }}</button></li>
-                        <li class="page-item" :class="{ disabled: currentPage === totalPages }"><button class="page-link border-0 rounded" @click="goToPage(currentPage + 1)"><i class="bi bi-chevron-right"></i></button></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <style scoped>
-.font-serif { font-family: "Playfair Display", serif; }
+/* Hiệu ứng Logo Shimmer lúc Load */
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+@keyframes shine { to { background-position: 200% center; } }
 
+/* Cấu hình Tabs giống mã giảm giá */
+.custom-tab { font-weight: 600 !important; color: #6c757d; border-bottom: 2px solid transparent !important; margin-bottom: -1px; transition: color 0.2s ease; }
+.custom-tab:hover { color: #009981; }
+.custom-tab.active-tab { color: #009981 !important; border-bottom: 2px solid #009981 !important; }
+.tab-badge { font-size: 0.75rem; font-weight: 600; background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; transition: all 0.2s ease; }
+.active-badge { background-color: #e6f5f2 !important; color: #009981 !important; border-color: #009981 !important; }
+
+/* Colors & Buttons */
+.bg-brand { background-color: #009981 !important; } 
+.text-brand { color: #009981 !important; } 
+.border-brand { border-color: #009981 !important; }
+.btn-brand-solid { background-color: #009981 !important; color: white !important; transition: all 0.2s ease; border: none; }
+.btn-brand-solid:hover { background-color: #007a67 !important; color: white !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+/* Switch custom */
+.custom-switch { cursor: pointer; }
+.custom-switch:checked { background-color: #009981; border-color: #009981; }
+
+/* Avatar Tác giả */
 .avatar-circle {
-    width: 30px; 
-    height: 30px; 
+    width: 36px; 
+    height: 36px; 
     border-radius: 50%; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: 0.8rem; 
+    font-size: 1rem; 
 }
 
+/* Row warning cho bài đang chờ */
 .table-warning-custom { background-color: rgba(255, 193, 7, 0.05) !important; }
-.table-warning-custom td { font-weight: 500; }
 
-.custom-table thead th { border: none; font-size: 0.75rem; letter-spacing: 0.5px; }
-.custom-table tbody td { border-bottom: 1px solid var(--bs-border-color); }
-
-.btn-primary { background-color: #009981 !important; border-color: #009981 !important; color: white !important; }
-.btn-primary:hover, .btn-primary:active { background-color: #007a67 !important; border-color: #007a67 !important; }
-
-.custom-switch { cursor: pointer; }
-.custom-switch:checked { background-color: #009981; border-color: #009981; }
-
-.page-item.active .page-link { background-color: #009981 !important; color: white !important; border-color: #009981 !important; }
-.page-link { color: #666; }
+/* Scrollbar */
+.custom-scrollbar-x::-webkit-scrollbar { height: 4px; }
+.custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #c0c0c0; }
 </style>
