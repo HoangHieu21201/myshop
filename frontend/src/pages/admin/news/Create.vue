@@ -1,12 +1,165 @@
+<template>
+    <div class="news-create-wrapper pb-5 mb-5">
+        <div class="container-fluid py-4">
+            <form @submit.prevent="handleSave" autocomplete="off">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-center">
+                        <router-link :to="{ name: 'admin-news' }"
+                            class="btn btn-light shadow-sm me-3 rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 42px; height: 42px;">
+                            <i class="bi bi-arrow-left fw-bold"></i>
+                        </router-link>
+                        <div>
+                            <h3 class="fw-bold text-dark mb-0">Viết Bài Tin Tức Mới</h3>
+                            <p class="text-secondary mb-0 small mt-1">Soạn thảo và xuất bản nội dung lên hệ thống.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Các nút tác vụ được đưa lên góc phải -->
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-light border px-4 py-2 fw-semibold shadow-sm text-nowrap" @click="router.push('/admin/news')">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-brand btn-brand-solid px-4 py-2 fw-bold shadow-sm text-nowrap" :disabled="isLoading">
+                            <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                            <i v-else class="bi bi-send-fill me-1"></i> Xuất Bản Bài Viết
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- CỘT TRÁI: Nội dung chính -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-journal-text text-brand me-2"></i>Nội dung bài viết</h6>
+                                
+                                <!-- Tiêu đề -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold text-dark required">Tiêu đề bài viết</label>
+                                    <input type="text" class="form-control form-control-lg border rounded-3 bg-white shadow-sm fs-5 fw-bold" 
+                                           v-model="formData.title" placeholder="Nhập tiêu đề thật hấp dẫn..." required>
+                                </div>
+
+                                <!-- Đường dẫn (Slug) -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold text-dark">Đường dẫn thân thiện (Slug)</label>
+                                    <div class="input-group shadow-sm rounded-3 overflow-hidden border">
+                                        <span class="input-group-text bg-light border-0 text-muted">/tin-tuc/</span>
+                                        <input type="text" class="form-control border-0 bg-white" v-model="formData.slug" placeholder="tu-dong-tao-tu-tieu-de">
+                                    </div>
+                                    <small class="text-muted mt-1 d-block">Để trống hệ thống sẽ tự động tạo từ tiêu đề.</small>
+                                </div>
+
+                                <!-- Mô tả ngắn -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold text-dark required">Mô tả ngắn (Excerpt)</label>
+                                    <textarea class="form-control border rounded-3 bg-white shadow-sm" rows="3" v-model="formData.excerpt" 
+                                              placeholder="Tóm tắt ngắn gọn nội dung bài viết (sẽ hiển thị ở trang chủ và danh sách tin tức)..." required></textarea>
+                                </div>
+
+                                <!-- Trình soạn thảo Word (Quill Editor) -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark required">Nội dung chi tiết</label>
+                                    <div class="editor-container shadow-sm rounded-4">
+                                        <QuillEditor theme="snow" toolbar="full" v-model:content="formData.content" contentType="html" placeholder="Bắt đầu soạn thảo nội dung..." />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CỘT PHẢI: Cài đặt & SEO -->
+                    <div class="col-lg-4">
+                        
+                        <!-- Ảnh đại diện -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4 text-center">
+                                <h6 class="fw-bold text-start mb-3 text-dark"><i class="bi bi-image text-brand me-2"></i>Ảnh đại diện</h6>
+                                <div class="image-upload-box bg-white border border-2 border-dashed border-secondary rounded-4 p-3 position-relative shadow-sm"
+                                     @click="triggerFileInput" style="cursor: pointer; min-height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: 0.3s;">
+                                    <img v-if="previewImage" :src="previewImage" class="img-fluid rounded-3 object-fit-cover w-100" style="height: 180px;">
+                                    <div v-else class="text-muted">
+                                        <i class="bi bi-cloud-arrow-up fs-1 text-brand opacity-50"></i>
+                                        <p class="mt-2 mb-0 fw-semibold">Click để chọn ảnh</p>
+                                        <small>(Khuyên dùng ảnh tỷ lệ 16:9)</small>
+                                    </div>
+                                    <!-- Nút xóa ảnh -->
+                                    <button v-if="previewImage" type="button" @click.stop="removeImage" 
+                                            class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow" style="width: 30px; height: 30px; padding: 0;">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <input type="file" class="d-none" ref="fileInput" @change="handleFileChange" accept="image/*">
+                            </div>
+                        </div>
+
+                        <!-- Cài đặt bài viết -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-gear text-brand me-2"></i>Cài đặt chung</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark text-sm">Trạng thái hiển thị</label>
+                                    <select class="form-select border shadow-sm rounded-3 bg-white py-2 fw-medium" v-model="formData.status" :class="getStatusColor(formData.status)">
+                                        <option value="published" class="text-success fw-bold">🚀 Xuất bản ngay</option>
+                                        <option value="pending" class="text-warning fw-bold">⏳ Đợi duyệt</option>
+                                        <option value="draft" class="text-secondary fw-bold">🔒 Lưu nháp (Ẩn)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark text-sm">Danh mục</label>
+                                    <select class="form-select border shadow-sm rounded-3 bg-white py-2" v-model="formData.category">
+                                        <option value="">-- Chọn danh mục --</option>
+                                        <option v-for="cat in CATEGORIES" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label class="form-label fw-semibold text-dark text-sm required">Bút danh (Tác giả)</label>
+                                    <input type="text" class="form-control border shadow-sm rounded-3 bg-white py-2" v-model="formData.author_name" placeholder="Tên tác giả hiển thị..." required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEO Meta -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-search text-brand me-2"></i>Tối ưu tìm kiếm (SEO)</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark text-sm">Meta Title</label>
+                                    <input type="text" class="form-control form-control-sm border shadow-sm rounded-3 bg-white py-2" v-model="formData.meta_title" placeholder="Mặc định lấy tiêu đề bài viết...">
+                                </div>
+
+                                <div class="mb-0">
+                                    <label class="form-label fw-semibold text-dark text-sm">Meta Description</label>
+                                    <textarea class="form-control form-control-sm border shadow-sm rounded-3 bg-white py-2" rows="3" v-model="formData.meta_description" placeholder="Mặc định lấy mô tả ngắn..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+// Import bộ soạn thảo Quill chuẩn Word
+import { QuillEditor } from '@vueup/vue-quill';
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
-// CONFIGURATION
+// Khai báo Component name
+defineOptions({
+    name: 'NewsCreate'
+});
+
 const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
-const BACKEND_URL = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
 const router = useRouter();
 
 const getHeaders = (isMultipart = false) => {
@@ -28,236 +181,174 @@ const CATEGORIES = [
 
 const currentUser = ref({});
 const isLoading = ref(false);
+const fileInput = ref(null);
 const selectedFile = ref(null);
 const previewImage = ref(null);
 
 const formData = reactive({
     title: '', excerpt: '', content: '', slug: '',
-    status: 'pending', author_name: '', category: '',
-    meta_title: '', meta_description: '', meta_keywords: ''
+    status: 'published', author_name: '', category: '', meta_title: '', meta_description: ''
 });
 
-const errors = reactive({ title: '', slug: '', content: '', author_name: '' });
+// Lấy thông tin user hiện tại để gán sẵn tên tác giả
+const checkAuthState = async () => {
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('adminToken');
+    const storedAdmin = localStorage.getItem('adminData');
+    const storedUser = localStorage.getItem('user_info');
+    let userData = null;
 
-const hasRole = (allowedRoles) => {
-    const userRoleId = Number(currentUser.value?.role_id);
-    if (userRoleId === 1) return true;
-    const roleName = userRoleId === 12 ? 'staff' : (userRoleId === 13 ? 'blogger' : '');
-    return allowedRoles.includes(roleName);
-};
+    try {
+        if (storedAdmin) userData = JSON.parse(storedAdmin);
+        else if (storedUser) userData = JSON.parse(storedUser);
+    } catch (e) { console.error("Parse user error", e); }
 
-const checkAuthState = () => {
-    const data = localStorage.getItem('adminData') || localStorage.getItem('user_info');
-    if (data) {
-        const parsed = JSON.parse(data);
-        currentUser.value = { ...parsed, name: parsed.fullname || parsed.full_name || parsed.name || 'Admin' };
+    // Nếu có data lưu sẵn thì lấy tên ra luôn
+    if (userData) {
+        currentUser.value = { ...userData, name: userData.fullname || userData.full_name || userData.name || 'Admin' };
+        // Gán tên vào ô Bút danh
         formData.author_name = currentUser.value.name;
+        return;
+    }
+
+    // Nếu không có, gọi API lấy thông tin mới nhất
+    if (token) {
+        try {
+            const response = await axios.get(`${apiUrl}/user`, { headers: getHeaders() });
+            let data = response.data.data && !response.data.id ? response.data.data : response.data;
+            currentUser.value = { ...data, name: data.fullname || data.full_name || data.name || 'Admin' };
+            localStorage.setItem('adminData', JSON.stringify(currentUser.value));
+            
+            // Gán tên vào ô Bút danh
+            formData.author_name = currentUser.value.name;
+        } catch (error) { 
+            console.error("Không lấy được thông tin user", error); 
+        }
     }
 };
 
-watch(() => formData.title, (newTitle) => {
-    if (newTitle) {
-        formData.slug = slugify(newTitle);
-        if(!formData.meta_title) formData.meta_title = newTitle;
+const getStatusColor = (status) => {
+    if(status === 'published') return 'text-success bg-success bg-opacity-10 border-success';
+    if(status === 'pending') return 'text-warning bg-warning bg-opacity-10 border-warning';
+    return 'text-secondary bg-secondary bg-opacity-10 border-secondary';
+};
+
+// Auto generate Slug từ Title
+const createSlug = (str) => {
+    if(!str) return '';
+    return str.toLowerCase()
+        .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a")
+        .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e")
+        .replace(/ì|í|ị|ỉ|ĩ/g, "i")
+        .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o")
+        .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u")
+        .replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y")
+        .replace(/đ/g, "d")
+        .replace(/[^a-z0-9 -]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+};
+
+watch(() => formData.title, (newVal) => {
+    if (!formData.slug || formData.slug === createSlug(newVal.slice(0, -1))) {
+        formData.slug = createSlug(newVal);
     }
 });
 
-watch(() => formData.excerpt, (newExcerpt) => {
-     if (newExcerpt && !formData.meta_description) formData.meta_description = newExcerpt;
-});
+const triggerFileInput = () => fileInput.value.click();
 
-const slugify = (text) => text ? text.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '') : '';
-
-const validateImageFile = async (file) => {
-    if (file.size > 10 * 1024 * 1024) return { valid: false, msg: 'Dung lượng tối đa 10MB.' };
-    return { valid: true };
-};
-
-const handleFileChange = async (event) => {
-    const file = event.target.files[0];
+const handleFileChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
-        const checkResult = await validateImageFile(file);
-        if (!checkResult.valid) { Swal.fire('Lỗi File', checkResult.msg, 'error'); event.target.value = null; return; }
-        selectedFile.value = file; 
+        selectedFile.value = file;
         previewImage.value = URL.createObjectURL(file);
     }
 };
 
-const resetImageSelect = () => {
+const removeImage = () => {
     selectedFile.value = null;
     previewImage.value = null;
-    const fileInput = document.getElementById('imageInput');
-    if (fileInput) fileInput.value = '';
-};
-
-const validateForm = () => {
-    Object.assign(errors, { title: '', slug: '', content: '', author_name: '' });
-    let isValid = true;
-    if (!formData.title.trim()) { errors.title = 'Tiêu đề là bắt buộc.'; isValid = false; }
-    if (!formData.slug.trim()) { errors.slug = 'Slug là bắt buộc.'; isValid = false; }
-    if (!formData.author_name.trim()) { errors.author_name = 'Tên tác giả bắt buộc.'; isValid = false; }
-    const strippedContent = formData.content.replace(/<[^>]*>/g, '').trim();
-    if (!strippedContent && !formData.content.includes('<img')) { errors.content = 'Nội dung trống.'; isValid = false; }
-    return isValid;
+    if (fileInput.value) fileInput.value.value = '';
 };
 
 const handleSave = async () => {
-    if (!formData.excerpt?.trim() && formData.content) {
-        const plainText = formData.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        formData.excerpt = plainText.slice(0, 160) + (plainText.length > 160 ? '...' : '');
+    if (!formData.title || !formData.excerpt || !formData.content || formData.content === '<p><br></p>') {
+        return Swal.fire('Cảnh báo', 'Vui lòng nhập đủ Tiêu đề, Mô tả ngắn và Nội dung.', 'warning');
     }
-    if (!validateForm()) return;
-    
+
+    if (!formData.author_name) {
+        return Swal.fire('Cảnh báo', 'Vui lòng nhập tên tác giả.', 'warning');
+    }
+
     isLoading.value = true;
-    const payload = new FormData();
-    Object.keys(formData).forEach(key => payload.append(key, formData[key] || ''));
-    if (selectedFile.value) payload.append('image', selectedFile.value);
+    const submitData = new FormData();
     
-    try {
-        await axios.post(`${apiUrl}/admin/news`, payload, { headers: getHeaders(true) });
-        Swal.fire({ icon: 'success', title: 'Đăng bài thành công!', timer: 1500, showConfirmButton: false });
-        router.push('/admin/news');
-    } catch (error) {
-        if (error.response?.status === 422) {
-            const errs = error.response.data.errors;
-            let html = '<ul>' + Object.values(errs).map(e => `<li class="text-danger text-start">${e[0]}</li>`).join('') + '</ul>';
-            Swal.fire({ title: 'Dữ liệu lỗi', html: html, icon: 'warning' });
-        } else {
-            Swal.fire('Lỗi Server', error.response?.data?.message || 'Có lỗi xảy ra', 'error');
+    Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== undefined) {
+            submitData.append(key, formData[key]);
         }
-    } finally { isLoading.value = false; }
+    });
+
+    if (selectedFile.value) submitData.append('image', selectedFile.value);
+
+    try {
+        await axios.post(`${apiUrl}/admin/news`, submitData, { headers: getHeaders(true) });
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Thêm bài viết thành công!', timer: 1500, showConfirmButton: false });
+        router.push('/admin/news');
+    } catch (err) {
+        console.error('Save error:', err);
+        Swal.fire('Lỗi', err.response?.data?.message || 'Không thể lưu bài viết.', 'error');
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 onMounted(() => {
-    checkAuthState();
+    checkAuthState(); // Gọi hàm lấy thông tin user để tự động điền Tên tác giả
 });
 </script>
 
-<template>
-    <div class="news-create-page p-4 min-vh-100">
-        <!-- HEADER -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="h3 font-serif mb-1 fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Viết bài mới</h2>
-                <p class="text-muted small mb-0">Tạo nội dung hấp dẫn để thu hút khách hàng.</p>
-            </div>
-            <button @click="router.push('/admin/news')" class="btn btn-light border shadow-sm rounded-3">
-                <i class="bi bi-arrow-left me-1"></i> Quay lại
-            </button>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card shadow-sm rounded-4 border-0 mb-4">
-                    <div class="card-body p-4">
-                        <div class="mb-4">
-                            <label class="form-label required fw-bold">Tiêu đề bài viết</label>
-                            <input type="text" class="form-control form-control-lg bg-light border-0" :class="{ 'is-invalid': errors.title }" v-model="formData.title" placeholder="Nhập tiêu đề hấp dẫn...">
-                            <div class="invalid-feedback">{{ errors.title }}</div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Danh mục</label>
-                                <select class="form-select border-0 bg-light" v-model="formData.category">
-                                    <option value="">-- Chọn danh mục --</option>
-                                    <option v-for="cat in CATEGORIES" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label required fw-bold text-muted">Slug (Đường dẫn)</label>
-                                <input type="text" class="form-control border-0 bg-light text-muted" :class="{ 'is-invalid': errors.slug }" v-model="formData.slug" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Mô tả ngắn (Trích dẫn)</label>
-                            <textarea class="form-control border-0 bg-light" rows="3" v-model="formData.excerpt" placeholder="Tóm tắt nội dung chính..."></textarea>
-                            <div class="form-text small mt-1">Hệ thống sẽ tự động lấy 160 ký tự đầu của bài viết nếu bạn để trống.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label required fw-bold">Nội dung chi tiết</label>
-                            <textarea class="form-control border-0 bg-light" :class="{ 'is-invalid': errors.content }" rows="15" v-model="formData.content" placeholder="Nhập nội dung bài viết ở đây... (Hỗ trợ mã HTML)"></textarea>
-                            <div class="invalid-feedback" v-if="errors.content">{{ errors.content }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CỘT RIGHT: CẤU HÌNH & XUẤT BẢN -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm rounded-4 border-0 mb-4">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 fw-bold">Trạng thái & Tác giả</div>
-                    <div class="card-body">
-                        <div class="mb-3" v-if="hasRole(['admin'])">
-                            <label class="form-label text-muted small">Trạng thái hiển thị</label>
-                            <select class="form-select border-0 bg-light" v-model="formData.status">
-                                <option value="pending">Đợi duyệt</option>
-                                <option value="published">Xuất bản ngay</option>
-                                <option value="draft">Lưu nháp (Ẩn)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label required text-muted small">Bút danh tác giả</label>
-                            <input type="text" class="form-control border-0 bg-light" :class="{ 'is-invalid': errors.author_name }" v-model="formData.author_name">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm rounded-4 border-0 mb-4">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 fw-bold">Ảnh đại diện</div>
-                    <div class="card-body">
-                        <div class="text-center position-relative border border-dashed rounded-3 p-2 bg-light mb-3" style="min-height: 180px; display: flex; align-items: center; justify-content: center;">
-                            <img v-if="previewImage" :src="previewImage" class="img-fluid rounded shadow-sm" style="max-height: 200px;">
-                            <span v-else class="text-muted"><i class="bi bi-image fs-1 d-block opacity-50"></i> Chưa chọn ảnh</span>
-                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow" v-if="selectedFile" @click="resetImageSelect" title="Xóa ảnh"><i class="bi bi-x"></i></button>
-                        </div>
-                        <input type="file" class="form-control border-0 bg-light" id="imageInput" accept="image/*" @change="handleFileChange">
-                    </div>
-                </div>
-
-                <div class="card shadow-sm rounded-4 border-0 mb-4">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 fw-bold text-primary"><i class="bi bi-google me-1"></i> Tối ưu SEO (Tùy chọn)</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label small text-muted">Meta Title</label>
-                            <input type="text" class="form-control form-control-sm border-0 bg-light" v-model="formData.meta_title" placeholder="Mặc định lấy tiêu đề bài viết">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small text-muted">Meta Keywords</label>
-                            <input type="text" class="form-control form-control-sm border-0 bg-light" v-model="formData.meta_keywords" placeholder="Ví dụ: trang sức, kim cương...">
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small text-muted">Meta Description</label>
-                            <textarea class="form-control form-control-sm border-0 bg-light" rows="3" v-model="formData.meta_description" placeholder="Mặc định lấy mô tả ngắn..."></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOTER ACTIONS -->
-        <div class="card shadow-sm rounded-4 border-0 mt-2 sticky-bottom" style="bottom: 20px; z-index: 10;">
-            <div class="card-body p-3 d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-light border px-4" @click="router.push('/admin/news')">Hủy bỏ</button>
-                <button type="button" class="btn btn-primary px-5 fw-bold" @click="handleSave" :disabled="isLoading">
-                    <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-                    <i v-else class="bi bi-send-fill me-2"></i> Lưu bài viết
-                </button>
-            </div>
-        </div>
-    </div>
-</template>
-
 <style scoped>
-.font-serif { font-family: "Playfair Display", serif; }
 .required::after { content: " *"; color: #dc3545; }
 .border-dashed { border-style: dashed !important; border-width: 2px !important; border-color: #dee2e6 !important; }
 
-.btn-primary { background-color: #009981 !important; border-color: #009981 !important; color: white !important; }
-.btn-primary:hover { background-color: #007a67 !important; border-color: #007a67 !important; }
-.text-primary { color: #009981 !important; }
+/* Nút & Màu chủ đạo */
+.bg-brand { background-color: #009981 !important; }
+.text-brand { color: #009981 !important; }
+.btn-brand-solid { background-color: #009981 !important; color: white !important; transition: all 0.2s ease; border: none; }
+.btn-brand-solid:hover { background-color: #007a67 !important; color: white !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.btn-brand-solid:disabled { background-color: #a5d6cd !important; cursor: not-allowed; }
 
-textarea.form-control { resize: vertical; }
+.image-upload-box:hover { border-color: #009981 !important; background-color: #f8fcfb !important; }
+
+/* Tùy chỉnh giao diện bộ soạn thảo Quill (Word-like) siêu xịn */
+.editor-container {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    border: 1px solid #dee2e6;
+}
+:deep(.ql-toolbar.ql-snow) {
+    border: none !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    background-color: #f8f9fa;
+    padding: 12px;
+    font-family: inherit;
+}
+:deep(.ql-container.ql-snow) {
+    border: none !important;
+    border-bottom-left-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+    min-height: 450px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    background-color: #ffffff;
+}
+:deep(.ql-editor) {
+    min-height: 450px;
+    padding: 1.5rem;
+}
+:deep(.ql-editor:focus) {
+    outline: none;
+}
 </style>

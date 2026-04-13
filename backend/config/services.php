@@ -24,6 +24,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'sepay' => [
+        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN'),
+        'bank_acc' => env('SEPAY_BANK_ACC'),
+        'bank_name' => env('SEPAY_BANK_NAME'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
