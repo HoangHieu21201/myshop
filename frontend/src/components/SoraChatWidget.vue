@@ -136,12 +136,15 @@ const fetchHistory = async () => {
     try {
         const res = await axios.get(`${API_URL}/messages`, axiosConfig());
         if (res.data.status) {
-            messages.value = res.data.data.map(m => ({
-                id: m.id,
-                type: m.sender_id === userId.value ? 'user' : 'admin',
-                text: m.content,
-                time: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-            }));
+            messages.value = res.data.data.map(m => {
+                renderedIds.add(m.id);
+                return {
+                    id: m.id,
+                    type: m.sender_id === userId.value ? 'user' : 'admin',
+                    text: m.content,
+                    time: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                };
+            });
 
             if (messages.value.length === 0) {
                  messages.value.push({ 
@@ -190,12 +193,29 @@ const sendMessage = async () => {
   scrollToBottom();
 
   try {
-      await axios.post(`${API_URL}/messages`, {
+      const res = await axios.post(`${API_URL}/messages`, {
           receiver_id: 1, 
           content: userMessage
       }, axiosConfig());
+
+      if (res.data.status) {
+          const realMsg = res.data.data;
+          // Thay thế tin tạm bằng tin thật
+          const idx = messages.value.findIndex(m => m.id === tempMsg.id);
+          if (idx !== -1) {
+              renderedIds.add(realMsg.id);
+              messages.value[idx] = {
+                  id: realMsg.id,
+                  type: 'user',
+                  text: realMsg.content,
+                  time: new Date(realMsg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+              };
+          }
+      }
   } catch(err) {
       console.error(err);
+      // Xóa tin nhắn nếu gửi lỗi
+      messages.value = messages.value.filter(m => m.id !== tempMsg.id);
   } finally {
       isTyping.value = false;
   }

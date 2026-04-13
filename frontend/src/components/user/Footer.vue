@@ -70,9 +70,9 @@
             <h5 class="footer-title font-oswald text-uppercase mb-4 text-white">Hỗ Trợ Khách Hàng</h5>
             <ul class="footer-links list-unstyled m-0 p-0">
               <li><a href="#" @click.prevent="safeNavigate('contact')">Trung Tâm Trợ Giúp</a></li>
-              <li><a href="#" @click.prevent="safeNavigate('FAQ')">Câu Hỏi Thường Gặp</a></li>
-              <li><a href="#" @click.prevent="safeNavigate('policy')">Chính Sách Đổi Trả</a></li>
-              <li><a href="#" @click.prevent="safeNavigate('policy')">Chính Sách Bảo Mật</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('policy', { hash: '#faq' })">Câu Hỏi Thường Gặp</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('policy', { hash: '#return-policy' })">Chính Sách Đổi Trả</a></li>
+              <li><a href="#" @click.prevent="safeNavigate('policy', { hash: '#privacy-policy' })">Chính Sách Bảo Mật</a></li>
               <li><a href="#" @click.prevent="safeNavigate('profile')">Tra Cứu Đơn Hàng</a></li>
             </ul>
           </div>
@@ -139,7 +139,9 @@ const isSubscribing = ref(false);
 const safeNavigate = (routeName, options = {}) => {
     if (router.hasRoute(routeName)) {
         router.push({ name: routeName, ...options });
-        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        if (!options.hash) {
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
     } else {
         Swal.fire({ 
             toast: true, 

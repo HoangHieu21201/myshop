@@ -303,11 +303,18 @@ const sendMessage = async () => {
     // Thay thế optimistic message bằng message thật từ server
     if (res.data.status) {
       const realMsg = res.data.data;
-      const idx = messages.value.findIndex(m => m.id === tempId);
-      if (idx !== -1) {
+      
+      // Nếu tin nhắn này đã được thêm bởi WebSocket trước đó
+      if (renderedIds.value.has(realMsg.id)) {
+        messages.value = messages.value.filter(m => m.id !== tempId);
         renderedIds.value.delete(tempId);
-        messages.value[idx] = realMsg;
-        renderedIds.value.add(realMsg.id);
+      } else {
+        const idx = messages.value.findIndex(m => m.id === tempId);
+        if (idx !== -1) {
+          renderedIds.value.delete(tempId);
+          messages.value[idx] = realMsg;
+          renderedIds.value.add(realMsg.id);
+        }
       }
     }
   } catch (err) {
@@ -333,10 +340,21 @@ onMounted(() => {
 
         // Tránh duplicate
         if (renderedIds.value.has(msg.id)) return;
-        renderedIds.value.add(msg.id);
 
         // Nếu đang xem conversation của user này
         if (activeUserId.value && (msg.sender_id === activeUserId.value || msg.receiver_id === activeUserId.value)) {
+          // Nếu là admin gửi (từ tab khác chẳng hạn), kiểm tra xem có tin tạm tương ứng không
+          if (msg.sender_id === 1) {
+            const tempIdx = messages.value.findIndex(m => String(m.id).startsWith('temp_') && m.content === msg.content);
+            if (tempIdx !== -1) {
+              renderedIds.value.delete(messages.value[tempIdx].id);
+              messages.value[tempIdx] = msg;
+              renderedIds.value.add(msg.id);
+              return;
+            }
+          }
+
+          renderedIds.value.add(msg.id);
           messages.value.push(msg);
           scrollToBottom();
         } else if (msg.sender_id !== 1) {
