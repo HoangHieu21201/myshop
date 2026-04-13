@@ -1,12 +1,6 @@
 <template>
   <div class="storefront-wrapper font-luxury bg-white">
-    
-    <div v-if="isLoading" class="min-vh-100 d-flex flex-column justify-content-center align-items-center bg-white z-index-max position-fixed top-0 start-0 w-100 h-100">
-      <div class="spinner-grow text-primary-luxury mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-      <p class="text-gold tracking-widest fw-bold text-uppercase">Đang chuẩn bị không gian mua sắm...</p>
-    </div>
-
-    <div v-else>
+    <div >
       <section class="hero-carousel position-relative">
         <div id="homeBannerCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
           <div class="carousel-inner">
@@ -176,65 +170,78 @@
       </section>
 
       <section class="combo-section py-5 overflow-hidden" style="background-color: #fbf9f6;" v-if="data.combos && data.combos.length > 0">
-        <div class="container text-center mb-5">
+        <div class="container text-center mb-4">
           <h6 class="text-primary-luxury tracking-widest text-uppercase fw-bold mb-2">Đồng Điệu</h6>
           <h3 class="font-serif fw-bold text-dark display-6 mb-3">Bộ Sưu Tập Giới Hạn</h3>
           <div class="divider-gold mx-auto"></div>
         </div>
 
-        <div class="container-fluid px-0 pb-4 position-relative">
+        <div class="container-fluid px-0 pb-2 position-relative">
+          <!-- ĐÃ FIX: Chuyển loop sang false để không bị nhảy ngược lại trang đầu -->
           <swiper
             :key="data.combos.length"
             :modules="swiperModules"
             :grabCursor="true"
             :centeredSlides="true"
             slidesPerView="auto"
-            :spaceBetween="40"
-            :loop="true"
+            :breakpoints="{
+              '320': { spaceBetween: -30 },
+              '768': { spaceBetween: -80 },
+              '1024': { spaceBetween: -120 }
+            }"
+            :loop="false"
             :speed="800"
             :autoplay="{ delay: 5000, disableOnInteraction: false }"
             @swiper="onComboSwiperInit"
+            @slideChange="onComboSlideChange"
             class="combo-swiper-luxury"
           >
             <swiper-slide v-for="combo in data.combos" :key="combo.id" class="combo-slide-luxury">
-              <div class="luxury-horizontal-card bg-white shadow-sm d-flex flex-column flex-md-row overflow-hidden">
+              
+              <div class="luxury-horizontal-card bg-white d-flex flex-column flex-md-row align-items-center p-4 p-lg-5 mx-auto">
                 
-                <router-link :to="'/combos/' + combo.slug" class="combo-img-container d-block position-relative bg-light">
-                  <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="object-fit-cover w-100 h-100" alt="Combo SORA" @error="handleImageError">
-                </router-link>
+                <div class="combo-img-wrapper position-relative flex-shrink-0 mb-4 mb-md-0 mx-auto" style="width: 100%; max-width: 320px;">
+                  <div class="position-absolute bg-secondary bg-opacity-10 d-none d-md-block" style="top: 25px; bottom: -25px; left: -25px; right: 25px; z-index: 0;"></div>
+                  
+                  <router-link :to="'/combos/' + combo.slug" class="d-block position-relative z-index-1 shadow-sm bg-white" style="aspect-ratio: 1/1; padding: 12px;">
+                    <img :src="getImageUrl(combo.thumbnail_image || combo.image)" class="w-100 h-100 object-fit-cover" alt="Combo SORA" @error="handleImageError">
+                  </router-link>
+                </div>
 
-                <div class="combo-content-container d-flex flex-column justify-content-center text-start bg-white p-4 p-md-5">
-                  <span class="text-gold tracking-widest text-uppercase mb-2 fw-bold font-oswald" style="font-size: 0.75rem;">Sora Collection</span>
+                <div class="combo-content-container flex-grow-1 ps-md-5 ms-md-3 text-start text-center text-md-start">
+                  <span class="text-gold tracking-widest text-uppercase mb-2 fw-bold font-oswald d-block" style="font-size: 0.75rem;">Sora Collection</span>
                   
                   <router-link :to="'/combos/' + combo.slug" class="text-decoration-none">
-                    <h3 class="font-serif fw-bold text-dark mb-3 hover-text-primary transition-colors">{{ combo.name }}</h3>
+                    <h3 class="font-serif fw-bold text-dark mb-3 hover-text-primary transition-colors fs-2">{{ combo.name }}</h3>
                   </router-link>
                   
-                  <div class="divider-gold ms-0 mb-3" style="width: 40px; height: 2px;"></div>
+                  <div class="divider-gold mb-3 mx-auto mx-md-0" style="width: 40px; height: 2px;"></div>
                   
-                  <p class="text-muted fw-light mb-4 text-truncate-3" style="font-size: 0.95rem; line-height: 1.6;">
+                  <p class="text-muted fw-light mb-4 text-truncate-3" style="font-size: 1rem; line-height: 1.7;">
                     {{ combo.description || 'Sự kết hợp hoàn mỹ giữa nghệ thuật chế tác kim hoàn đỉnh cao và vẻ đẹp vượt thời gian.' }}
                   </p>
 
-                  <div class="d-flex align-items-center gap-3 mb-4">
-                    <span class="text-primary-luxury fw-bold fs-4">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
-                    <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through small fw-light">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
+                  <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 mb-4">
+                    <span class="text-primary-luxury fw-bold fs-3 font-serif">{{ formatCurrency(combo.promotional_price || combo.price) }}</span>
+                    <span v-if="combo.base_price || combo.old_price" class="text-muted text-decoration-line-through small fw-light font-serif">{{ formatCurrency(combo.base_price || combo.old_price) }}</span>
                   </div>
                   
-                  <router-link :to="'/combos/' + combo.slug" class="btn btn-outline-primary-luxury rounded-0 py-2 px-4 text-uppercase tracking-widest fw-bold align-self-start font-oswald shadow-none" style="font-size: 0.85rem;">
+                  <router-link :to="'/combos/' + combo.slug" class="btn btn-outline-primary-luxury rounded-0 py-3 px-5 text-uppercase tracking-widest fw-bold font-oswald shadow-none" style="font-size: 0.85rem;">
                     Khám Phá Ngay
                   </router-link>
                 </div>
               </div>
+
             </swiper-slide>
           </swiper>
 
-          <div class="d-flex justify-content-center align-items-center gap-4 mt-5">
-            <button @click="prevCombo" class="btn custom-combo-prev d-flex justify-content-center align-items-center shadow-sm bg-white hover-bg-primary transition-colors border-0" style="width: 50px; height: 50px; border-radius: 50%;">
-              <i class="bi bi-chevron-left fs-5 text-dark"></i>
+          <!-- ĐÃ FIX: Gắn thuộc tính :disabled cho các nút, áp dụng css mờ -->
+          <div class="d-flex justify-content-center align-items-center gap-3 mt-2 pb-2">
+            <button @click="prevCombo" :disabled="isComboBeginning" class="btn bg-white rounded-circle shadow-sm border border-light-subtle d-flex justify-content-center align-items-center custom-nav-btn" style="width: 48px; height: 48px;">
+              <i class="bi bi-chevron-left fs-5"></i>
             </button>
-            <button @click="nextCombo" class="btn custom-combo-next d-flex justify-content-center align-items-center shadow-sm bg-white hover-bg-primary transition-colors border-0" style="width: 50px; height: 50px; border-radius: 50%;">
-              <i class="bi bi-chevron-right fs-5 text-dark"></i>
+            <button @click="nextCombo" :disabled="isComboEnd" class="btn bg-white rounded-circle shadow-sm border border-light-subtle d-flex justify-content-center align-items-center custom-nav-btn" style="width: 48px; height: 48px;">
+              <i class="bi bi-chevron-right fs-5"></i>
             </button>
           </div>
         </div>
@@ -250,32 +257,32 @@
         </div>
 
         <div class="container-fluid px-0 overflow-hidden">
-          <swiper
-            :modules="swiperModules"
-            :slidesPerView="2"
-            :spaceBetween="0"
-            :loop="true"
-            :autoplay="{ delay: 0, disableOnInteraction: false }"
-            :speed="3000"
-            :allowTouchMove="false"
-            :breakpoints="{
-              '576': { slidesPerView: 3 },
-              '768': { slidesPerView: 4 },
-              '1024': { slidesPerView: 5 },
-              '1400': { slidesPerView: 6 }
-            }"
-            class="gallery-swiper-continuous"
-          >
-            <swiper-slide v-for="(img, index) in displayGalleries" :key="index" class="gallery-slide-item">
-              <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
-                 <img :src="img.image_path ? getImageUrl(img.image_path) : img" class="w-100 object-fit-cover" alt="Sora Customer" @error="handleImageError">
-                 
-                 <div class="gallery-overlay position-absolute inset-0 d-flex justify-content-center align-items-center opacity-0 transition-all duration-500 z-index-2">
-                    <i class="bi bi-instagram text-white fs-1"></i>
-                 </div>
+          <div class="sora-marquee-wrapper">
+            <div class="sora-marquee-track">
+              <!-- Nhóm ảnh 1 -->
+              <div class="sora-marquee-group">
+                <div v-for="(img, index) in displayGalleries" :key="'g1-' + index" class="gallery-slide-item">
+                  <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
+                     <img :src="img.image_path ? getImageUrl(img.image_path) : img" class="w-100 object-fit-cover" alt="Sora Customer" @error="handleImageError">
+                     <div class="gallery-overlay position-absolute inset-0 d-flex justify-content-center align-items-center opacity-0 transition-all duration-500 z-index-2">
+                        <i class="bi bi-instagram text-white fs-1"></i>
+                     </div>
+                  </div>
+                </div>
               </div>
-            </swiper-slide>
-          </swiper>
+              <!-- Nhóm ảnh 2 (Nhân bản để tạo vòng lặp mượt mà không nháy) -->
+              <div class="sora-marquee-group">
+                <div v-for="(img, index) in displayGalleries" :key="'g2-' + index" class="gallery-slide-item">
+                  <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
+                     <img :src="img.image_path ? getImageUrl(img.image_path) : img" class="w-100 object-fit-cover" alt="Sora Customer" @error="handleImageError">
+                     <div class="gallery-overlay position-absolute inset-0 d-flex justify-content-center align-items-center opacity-0 transition-all duration-500 z-index-2">
+                        <i class="bi bi-instagram text-white fs-1"></i>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -332,8 +339,7 @@
 </template>
 
 <script setup>
-// THÊM computed VÀO ĐÂY ĐỂ DÙNG PHÉP NHÂN BẢN
-import { ref, reactive, onMounted, computed } from 'vue';
+import { reactive, onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 
@@ -348,12 +354,21 @@ const isLoading = ref(true);
 const router = useRouter();
 
 // ==========================================
-// ĐIỀU KHIỂN SWIPER COMBO CHUẨN XÁC
+// ĐIỀU KHIỂN SWIPER COMBO & BẮT SỰ KIỆN NÚT BẤM
 // ==========================================
 const comboSwiperRef = ref(null);
+const isComboBeginning = ref(true);
+const isComboEnd = ref(false);
 
 const onComboSwiperInit = (swiper) => {
   comboSwiperRef.value = swiper;
+  isComboBeginning.value = swiper.isBeginning;
+  isComboEnd.value = swiper.isEnd;
+};
+
+const onComboSlideChange = (swiper) => {
+  isComboBeginning.value = swiper.isBeginning;
+  isComboEnd.value = swiper.isEnd;
 };
 
 const nextCombo = () => {
@@ -386,23 +401,21 @@ const dummyGalleries = [
   'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&q=80&w=600'
 ];
 
-// MÁNH KHÓE CHỐNG LỖI SWIPER LOOP: Tự động nhân bản ảnh nếu Database có ít hơn 8 tấm
 const displayGalleries = computed(() => {
-  if (data.galleries && data.galleries.length > 0) {
-    let arr = [...data.galleries];
-    // Nếu ảnh ít quá (ví dụ có 2 tấm), Swiper 6 ảnh sẽ bị lỗi. Ta phải copy nối tiếp vào cho đủ 8 tấm.
-    while (arr.length < 8) {
-      arr = [...arr, ...data.galleries];
-    }
-    return arr;
+  let baseArray = (data.galleries && data.galleries.length > 0) ? data.galleries : dummyGalleries;
+  let arr = [...baseArray];
+  while (arr.length < 10) {
+    arr = [...arr, ...baseArray];
   }
-  return dummyGalleries; // Nếu Database trống trơn thì xài ảnh mẫu Unsplash
+  return arr;
 });
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'; 
 
+const soraPlaceholder = '/Sora-placeholder.png';
+
 const getImageUrl = (path) => {
-  if (!path) return '/default-luxury.jpg';
+  if (!path) return soraPlaceholder;
   if (path.startsWith('http')) return path;
   
   const baseUrl = API_BASE.replace('/api', '');
@@ -411,7 +424,7 @@ const getImageUrl = (path) => {
 
 const handleImageError = (e) => { 
   e.target.onerror = null; 
-  e.target.src = 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=600&auto=format&fit=crop'; 
+  e.target.src = soraPlaceholder; 
 };
 
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
@@ -587,28 +600,104 @@ onMounted(() => {
 .text-danger { color: var(--color-accent) !important; }
 
 /* ========================================== */
-/* BỘ SƯU TẬP GIỚI HẠN                        */
+/* BỘ SƯU TẬP GIỚI HẠN (ĐÃ UPDATE CHUẨN FIGMA)*/
 /* ========================================== */
-.combo-swiper-luxury { padding: 20px 0 60px 0; }
-.combo-slide-luxury { width: 90%; max-width: 900px; transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); opacity: 0.5; transform: scale(0.85); }
-.combo-slide-luxury.swiper-slide-active { opacity: 1; transform: scale(1); }
-.luxury-horizontal-card { height: auto; min-height: 400px; border-radius: 8px; border: 1px solid #f1f1f1; }
-.combo-slide-luxury.swiper-slide-active .luxury-horizontal-card { box-shadow: 0 20px 40px rgba(0,0,0,0.06) !important; }
-.combo-img-container { flex: 0 0 100%; height: 250px; }
-.combo-content-container { flex: 1; }
-@media (min-width: 768px) { .luxury-horizontal-card { height: 420px; } .combo-img-container { flex: 0 0 45%; height: 100%; } }
-.custom-combo-prev, .custom-combo-next { color: #333; z-index: 10; transition: all 0.3s ease; cursor: pointer; outline: none; }
-.hover-bg-primary:hover { background-color: var(--color-primary) !important; color: white !important; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(159, 39, 59, 0.3) !important; }
-.hover-bg-primary:hover i { color: white !important; }
+.combo-section { background-color: #fbf9f6; }
+.combo-swiper-luxury { padding: 40px 0 60px 0; overflow: hidden; } 
+.combo-slide-luxury { 
+  width: 90%; 
+  max-width: 850px; 
+  transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  opacity: 0.4; 
+  transform: scale(0.85); 
+  z-index: 1;
+  position: relative;
+}
+.combo-slide-luxury.swiper-slide-active { 
+  opacity: 1; 
+  transform: scale(1); 
+  z-index: 10;
+}
+.combo-slide-luxury.swiper-slide-prev,
+.combo-slide-luxury.swiper-slide-next {
+  z-index: 5;
+}
+
+.luxury-horizontal-card { 
+  border-radius: 6px; 
+  border: 1px solid rgba(0,0,0,0.03); 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+}
+.combo-slide-luxury.swiper-slide-active .luxury-horizontal-card { 
+  box-shadow: 0 25px 50px rgba(0,0,0,0.1) !important; 
+}
+
+.combo-img-wrapper { z-index: 2; }
+.combo-content-container { z-index: 3; position: relative; }
+
+/* ĐÃ FIX: Định dạng nút điều hướng (Custom Navigation Buttons) */
+.custom-nav-btn {
+  color: #333;
+  transition: all 0.3s ease;
+}
+.custom-nav-btn:hover:not(:disabled) {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(159, 39, 59, 0.2) !important;
+}
+/* Trạng thái chạm đáy (Bị mù màu / Vô hiệu hóa) */
+.custom-nav-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed;
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #adb5bd !important;
+  box-shadow: none !important;
+}
 
 /* ========================================== */
-/* CHÂN DUNG SORA (CUSTOMER GALLERY CSS MỚI)  */
+/* CHÂN DUNG SORA (CSS MARQUEE CHUẨN VÔ CỰC)  */
 /* ========================================== */
-.gallery-swiper-continuous :deep(.swiper-wrapper) {
-  transition-timing-function: linear !important; 
-  align-items: center; 
+.sora-marquee-wrapper {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
 }
-.gallery-slide-item { padding: 0; }
+
+.sora-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: soraMarquee 30s linear infinite;
+}
+
+.sora-marquee-track:hover {
+  animation-play-state: paused; 
+}
+
+.sora-marquee-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.gallery-slide-item {
+  width: 50vw; 
+  flex-shrink: 0;
+  padding: 0;
+}
+
+@media (min-width: 576px) { .gallery-slide-item { width: 33.333vw; } }
+@media (min-width: 768px) { .gallery-slide-item { width: 25vw; } }
+@media (min-width: 1024px) { .gallery-slide-item { width: 20vw; } }
+@media (min-width: 1400px) { .gallery-slide-item { width: 16.666vw; } }
+
+@keyframes soraMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } 
+}
+
 .gallery-img-wrapper { width: 100%; overflow: hidden; }
 .gallery-slide-item:nth-child(odd) .gallery-img-wrapper { height: 320px; }
 .gallery-slide-item:nth-child(even) .gallery-img-wrapper { height: 450px; }

@@ -117,10 +117,11 @@
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
                       <div class="position-relative d-inline-block me-3 shadow-sm border rounded-3 overflow-hidden bg-white flex-shrink-0" style="width: 55px; height: 55px;">
-                        <img :src="getThumbnail(product.thumbnail_image)" class="w-100 h-100 object-fit-cover">
+                        <!-- ĐÃ THÊM @error CHỐNG VỠ ẢNH -->
+                        <img :src="getThumbnail(product.thumbnail_image)" @error="handleImageError" class="w-100 h-100 object-fit-cover">
                       </div>
                       <div class="overflow-hidden">
-                        <div class="fw-bold text-dark fs-6 mb-1 text-truncate" :title="product.name">{{ product.name }}</div>
+                        <div class="fw-bold text-dark fs-6 mb-1 text-truncate cursor-pointer hover-brand" @click="openQuickView(product.id)" :title="product.name">{{ product.name }}</div>
                         
                         <!-- HIỂN THỊ GIÁ VÀ ĐÁNH GIÁ -->
                         <div class="d-flex align-items-center gap-2">
@@ -233,7 +234,8 @@
           
           <div class="modal-body p-0" v-if="selectedProduct">
             <div class="p-3 bg-white border-bottom d-flex align-items-center gap-3">
-              <img :src="getThumbnail(selectedProduct.thumbnail_image)" class="rounded border object-fit-cover shadow-sm" style="width: 60px; height: 60px;">
+              <!-- ĐÃ THÊM @error CHỐNG VỠ ẢNH -->
+              <img :src="getThumbnail(selectedProduct.thumbnail_image)" @error="handleImageError" class="rounded border object-fit-cover shadow-sm" style="width: 60px; height: 60px;">
               <div>
                  <h5 class="mb-1 fw-bold text-dark">{{ selectedProduct.name }}</h5>
                  <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -269,7 +271,8 @@
                 <tbody>
                   <tr v-for="v in selectedProduct.variants" :key="v.id">
                     <td class="px-3">
-                        <img :src="getThumbnail(v.image_url)" class="rounded border object-fit-cover" style="width: 40px; height: 40px;">
+                        <!-- ĐÃ THÊM @error CHỐNG VỠ ẢNH -->
+                        <img :src="getThumbnail(v.image_url)" @error="handleImageError" class="rounded border object-fit-cover" style="width: 40px; height: 40px;">
                     </td>
                     <td class="px-3 font-monospace fw-bold text-secondary">{{ v.sku }}</td>
                     <td class="px-3">
@@ -304,6 +307,8 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+// Import file ảnh mặc định
+import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -341,9 +346,15 @@ const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bear
 
 const formatCurrency = (val) => { if (val === null || val === undefined || val === '' || isNaN(val)) return '---'; return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val); };
 
+// Chỉnh lại hàm lấy ảnh để ưu tiên trả về placeholder cục bộ
 const getThumbnail = (url) => { 
     if (url) return `http://127.0.0.1:8000/storage/${url}`; 
-    return 'https://placehold.co/150x150/e0e0e0/6c757d?text=No+Image'; 
+    return defaultPlaceholder; 
+};
+
+// Sự kiện handle ảnh lỗi (khi đường dẫn có nhưng file vật lý không tồn tại)
+const handleImageError = (e) => {
+    e.target.src = defaultPlaceholder;
 };
 
 const getLevelColor = (level) => {

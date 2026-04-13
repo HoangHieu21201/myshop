@@ -164,5 +164,11 @@ class AdminNewController extends Controller
                 'message' => 'Lỗi: ' . $e->getMessage()
             ], 500);
         }
+        
     }
+    public function show($id)
+{
+    $news = News::findOrFail($id);
+    return response()->json(['data' => $news]);
+}
 }

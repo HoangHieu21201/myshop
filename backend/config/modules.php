@@ -81,4 +81,9 @@ return [
         'module_code' => 'dashboard',
         'default_level' => 2
     ],
+    [
+        'module_name' => 'admin_news',
+        'module_code' => 'admin_news',
+        'default_level' => 2
+    ],
 ];

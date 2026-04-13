@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\client\ChatbotController;
 
 
 use App\Http\Controllers\Api\client\ClientNewController;
+
 Route::prefix('news')->group(function () {
     Route::get('/', [ClientNewController::class, 'index']);
     Route::get('/popular', [ClientNewController::class, 'popular']);
@@ -137,9 +138,7 @@ Route::prefix('client')->group(function () {
         Route::get('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
         Route::post('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
     });
-    // Trang chủ
-    Route::get('/home-data', [ClientHomeController::class, 'index']);
-    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
         ->name('client.orders.invoice');
 });
 
@@ -270,7 +269,7 @@ Route::prefix('admin')->group(function () {
             Route::get('galleries', [AdminCustomerGalleryController::class, 'index']);
             Route::post('galleries', [AdminCustomerGalleryController::class, 'store']);
             Route::get('galleries/{id}', [AdminCustomerGalleryController::class, 'show']);
-            Route::match(['post', 'put'], 'galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
+            Route::put('galleries/{id}', [AdminCustomerGalleryController::class, 'update']);
             Route::delete('galleries/{id}', [AdminCustomerGalleryController::class, 'destroy']);
         });
 
@@ -283,8 +282,6 @@ Route::prefix('admin')->group(function () {
                 Route::delete('orders/{id}', 'destroy');
                 Route::post('orders/{id}/refund-process', 'processRefundAction');
             });
-
-            Route::get('orders/{id}/simulation', [App\Http\Controllers\Api\admin\OrderSimulationController::class, 'getSimulationData']);
         });
 
         // Quản lý Mã giảm giá (Mã: admin_coupons)
@@ -320,9 +317,9 @@ Route::prefix('admin')->group(function () {
             Route::put('/variants/{id}/stock', 'updateVariantStock');
             Route::put('/combos/{id}/limit', 'updateComboLimit');
         });
-
-
+        // ==================================================
         // QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
+        // ==================================================
         Route::middleware(['check.module:admin_contacts'])->group(function () {
             Route::controller(AdminContactController::class)->prefix('contacts')->group(function () {
                 Route::get('/', 'index');
@@ -337,12 +334,17 @@ Route::prefix('admin')->group(function () {
                 Route::post('/{id}/reply', 'replyEmail');
             });
         });
-        Route::controller(AdminNewController::class)->prefix('news')->group(function () {
-            Route::get('/', 'index');
-            Route::post('/', 'store');
-            Route::put('/{id}', 'update');
-            Route::delete('/{id}', 'destroy');
-            Route::patch('/{id}', 'updateStatus');
+
+        // Quản lí tin tức
+        Route::middleware(['check.module:admin_news'])->group(function () {
+            Route::controller(AdminNewController::class)->prefix('news')->group(function () {
+                Route::get('/', 'index');
+                Route::get('/{id}', 'show');
+                Route::post('/', 'store');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+                Route::patch('/{id}', 'updateStatus');
+            });
         });
     });
 });

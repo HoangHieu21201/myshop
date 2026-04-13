@@ -275,6 +275,18 @@ const admin = [
         component: () => import('../pages/admin/news/Index.vue'), 
         meta: { moduleCode: 'admin_news' },
       },
+       {
+        path: 'news/create',
+        name: 'admin-news-create',
+        component: () => import('../pages/admin/news/Create.vue'), 
+        meta: { moduleCode: 'admin_news' },
+      },
+       {
+       path: 'news/edit/:id',
+        name: 'admin-news-edit',
+        component: () => import('../pages/admin/news/Edit.vue'), 
+        meta: { moduleCode: 'admin_news' },
+      },
 
     ],
   },
