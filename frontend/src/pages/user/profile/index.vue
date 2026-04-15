@@ -364,9 +364,9 @@ import Swal from 'sweetalert2';
 
 const router = useRouter();
 
-// ==========================================
+
 // CẤU HÌNH THÔNG BÁO (SWEETALERT2 ĐỒNG BỘ UI)
-// ==========================================
+
 const soraAlert = Swal.mixin({
   buttonsStyling: true,
   confirmButtonColor: '#9f273b',
@@ -385,65 +385,67 @@ const showToast = (message, type = 'success') => {
   });
 };
 
-// Trạng thái chung
 const isLoggedIn = ref(false);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const isChangingPassword = ref(false);
 
-// Khai báo quản lý upload Ảnh
 const fileInput = ref(null);
 const avatarFile = ref(null);
 const previewAvatar = ref(null);
 
-// ==========================================
-// STATE & LOGIC API TỈNH/THÀNH PHỐ MỚI (63 TỈNH)
-// ==========================================
 const provincesData = ref([]);
 const districtsData = ref([]);
 const wardsData = ref([]);
 
-// Thay đổi URL lấy dữ liệu thành bộ chuẩn 63 tỉnh
 const fetchProvinces = async () => {
   try {
-    // Nếu trang Admin của sếp dùng file JSON nội bộ, sếp có thể đổi link này thành '/data/tinh_tp.json'
-    const response = await axios.get('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json');
-    provincesData.value = response.data;
+    const response = await fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json');
+    
+    if (!response.ok) {
+        throw new Error('Lỗi mạng khi tải dữ liệu');
+    }
+    
+    const data = await response.json();
+    provincesData.value = data;
+    
   } catch (error) {
     console.error('Lỗi lấy dữ liệu hành chính:', error);
+    
+    try {
+      const fallbackResponse = await fetch('https://provinces.open-api.vn/api/p/');
+      const fallbackData = await fallbackResponse.json();
+      provincesData.value = fallbackData.map(p => ({ Id: p.code, Name: p.name, Districts: [] }));
+    } catch (fallbackError) {
+      console.error('Fallback API cũng lỗi:', fallbackError);
+    }
   }
 };
 
-// Khi người dùng chọn Tỉnh/Thành phố
 const handleCityChange = () => {
   addressForm.value.district = '';
   addressForm.value.ward = '';
   updateDistricts();
-  wardsData.value = []; // Reset luôn danh sách xã
+  wardsData.value = [];
 };
 
-// Khi người dùng chọn Quận/Huyện
 const handleDistrictChange = () => {
   addressForm.value.ward = '';
   updateWards();
 };
 
-// Hàm cập nhật danh sách Huyện theo Tỉnh đã chọn (Map theo biến .Name của data mới)
 const updateDistricts = () => {
   const province = provincesData.value.find(p => p.Name === addressForm.value.city);
   districtsData.value = province ? province.Districts : [];
 };
-
-// Hàm cập nhật danh sách Xã theo Huyện đã chọn (Map theo biến .Name của data mới)
 const updateWards = () => {
   const district = districtsData.value.find(d => d.Name === addressForm.value.district);
   wardsData.value = district ? district.Wards : [];
 };
 
 
-// ==========================================
 // STATE QUẢN LÝ SỔ ĐỊA CHỈ
-// ==========================================
+
 const addresses = ref([]);
 const isLoadingAddresses = ref(false);
 const isAddressModalOpen = ref(false); 
@@ -502,9 +504,9 @@ const getImageUrl = (path) => {
   return `http://localhost:8000/storage/${path}`;
 };
 
-// ==========================================
+
 // CÁC HÀM XỬ LÝ SỔ ĐỊA CHỈ 
-// ==========================================
+
 const openAddAddressModal = () => {
   isAddressModalOpen.value = true;
   openAddAddressForm();

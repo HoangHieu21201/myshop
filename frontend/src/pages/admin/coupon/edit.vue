@@ -188,7 +188,7 @@ const formatCurrency = (val) => {
 
 const fetchCoupon = async () => {
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/coupons/${route.params.id}`, { headers: getHeaders() });
+    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/coupons/${route.params.id}`, { headers: getHeaders() });
     const u = res.data.data;
     
     // Cần format lại expires_at thành YYYY-MM-DDTHH:mm cho thẻ input type="datetime-local"
@@ -234,7 +234,7 @@ const updateCoupon = async () => {
     const payload = { ...form.value, expires_at: payloadDate };
 
     try {
-        const res = await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/coupons/${route.params.id}`, payload, {
+        const res = await axios.patch(`http://127.0.0.1:8000/api/v1/admin/coupons/${route.params.id}`, payload, {
             headers: getHeaders()
         });
         

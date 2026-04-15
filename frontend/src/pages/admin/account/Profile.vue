@@ -24,20 +24,21 @@
                             style="cursor: pointer; color: #009981;">
                             <i class="bi bi-camera-fill fs-5"></i>
                         </label>
-                        <input type="file" id="avatarUpload" class="d-none" accept="image/png, image/jpeg, image/jpg, image/webp"
-                            @change="handleAvatarChange">
+                        <input type="file" id="avatarUpload" class="d-none"
+                            accept="image/png, image/jpeg, image/jpg, image/webp" @change="handleAvatarChange">
                     </div>
 
                     <h5 class="fw-bold mb-1">{{ adminData.fullname }}</h5>
                     <span class="badge mt-1" :class="adminData.status === 'active' ? 'bg-success' : 'bg-danger'">
-                        <i class="bi me-1" :class="adminData.status === 'active' ? 'bi-check-circle' : 'bi-lock-fill'"></i>
+                        <i class="bi me-1"
+                            :class="adminData.status === 'active' ? 'bi-check-circle' : 'bi-lock-fill'"></i>
                         {{ adminData.status === 'active' ? 'Đang hoạt động' : 'Bị khóa' }}
                     </span>
 
                     <div class="mt-4">
-                        <button v-if="previewAvatar || (adminData.avatar && !adminData.avatar.includes('ui-avatars') && !adminData.avatar.includes('avatar1.png'))"
-                                @click="removeAvatar" 
-                                class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
+                        <button
+                            v-if="previewAvatar || (adminData.avatar && !adminData.avatar.includes('ui-avatars') && !adminData.avatar.includes('avatar1.png'))"
+                            @click="removeAvatar" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
                             <i class="bi bi-trash me-1"></i> Xóa ảnh hiện tại
                         </button>
                     </div>
@@ -68,61 +69,78 @@
                             <form @submit.prevent="updateProfile">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-lg fs-6" v-model="adminData.fullname" required>
+                                        <label class="form-label fw-semibold">Họ và tên <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-lg fs-6"
+                                            v-model="adminData.fullname" required>
                                     </div>
-                                    
+
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
-                                        <input type="tel" class="form-control form-control-lg fs-6" v-model="adminData.phone" required @input="validatePhone">
+                                        <label class="form-label fw-semibold">Số điện thoại <span
+                                                class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control form-control-lg fs-6"
+                                            v-model="adminData.phone" required @input="validatePhone">
                                     </div>
 
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-semibold text-muted">Email đăng nhập</label>
-                                        <input type="email" class="form-control bg-light text-muted cursor-not-allowed" :value="adminData.email" readonly disabled>
+                                        <input type="email" class="form-control bg-light text-muted cursor-not-allowed"
+                                            :value="adminData.email" readonly disabled>
                                     </div>
-                                    
+
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-semibold text-muted">Phân quyền</label>
-                                        <input type="text" class="form-control bg-light text-muted cursor-not-allowed" :value="getRoleName(adminData.role_id)" readonly disabled>
+                                        <input type="text" class="form-control bg-light text-muted cursor-not-allowed"
+                                            :value="getRoleName(adminData.role_id)" readonly disabled>
                                     </div>
-                                    
+
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-semibold text-muted">Trạng thái tài khoản</label>
-                                        <input type="text" class="form-control bg-light text-muted cursor-not-allowed" :value="adminData.status === 'active' ? 'Hoạt động' : 'Khóa'" readonly disabled>
+                                        <input type="text" class="form-control bg-light text-muted cursor-not-allowed"
+                                            :value="adminData.status === 'active' ? 'Hoạt động' : 'Khóa'" readonly
+                                            disabled>
                                     </div>
 
                                     <!-- Địa chỉ hiện tại -->
                                     <div class="col-12 mb-2 mt-2">
                                         <label class="form-label fw-semibold">Địa chỉ hiện tại</label>
-                                        <input type="text" class="form-control bg-light text-muted" :value="adminData.address || 'Chưa có dữ liệu'" readonly disabled>
+                                        <input type="text" class="form-control bg-light text-muted"
+                                            :value="adminData.address || 'Chưa có dữ liệu'" readonly disabled>
                                     </div>
 
                                     <!-- Cập nhật địa chỉ mới -->
                                     <div class="col-12 mb-4">
-                                        <label class="form-label fw-semibold">Cập nhật địa chỉ mới <span class="text-muted fw-normal fs-7">(Tùy chọn)</span></label>
+                                        <label class="form-label fw-semibold">Cập nhật địa chỉ mới <span
+                                                class="text-muted fw-normal fs-7">(Tùy chọn)</span></label>
                                         <div class="card border border-light-subtle shadow-none bg-light p-3 rounded-3">
                                             <div class="row g-3">
                                                 <div class="col-md-4">
                                                     <select class="form-select" v-model="addressSelector.province">
                                                         <option value="">-- Tỉnh / Thành phố --</option>
-                                                        <option v-for="p in provinces" :key="p.code" :value="p.name">{{ p.name }}</option>
+                                                        <option v-for="p in provinces" :key="p.code" :value="p.name">{{
+                                                            p.name }}</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <select class="form-select" v-model="addressSelector.district" :disabled="!addressSelector.province">
+                                                    <select class="form-select" v-model="addressSelector.district"
+                                                        :disabled="!addressSelector.province">
                                                         <option value="">-- Quận / Huyện --</option>
-                                                        <option v-for="d in availableDistricts" :key="d.code" :value="d.name">{{ d.name }}</option>
+                                                        <option v-for="d in availableDistricts" :key="d.code"
+                                                            :value="d.name">{{ d.name }}</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <select class="form-select" v-model="addressSelector.ward" :disabled="!addressSelector.district">
+                                                    <select class="form-select" v-model="addressSelector.ward"
+                                                        :disabled="!addressSelector.district">
                                                         <option value="">-- Phường / Xã --</option>
-                                                        <option v-for="w in availableWards" :key="w.code" :value="w.name">{{ w.name }}</option>
+                                                        <option v-for="w in availableWards" :key="w.code"
+                                                            :value="w.name">{{ w.name }}</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-12">
-                                                    <input type="text" class="form-control" v-model="addressSelector.street" placeholder="Số nhà, tên đường (Ví dụ: 123 Đường Ngọc Hồi)">
+                                                    <input type="text" class="form-control"
+                                                        v-model="addressSelector.street"
+                                                        placeholder="Số nhà, tên đường (Ví dụ: 123 Đường Ngọc Hồi)">
                                                 </div>
                                             </div>
                                         </div>
@@ -130,7 +148,8 @@
                                 </div>
 
                                 <div class="text-end mt-4 pt-3 border-top">
-                                    <button type="submit" class="btn btn-brand px-5 py-2 fw-bold text-white shadow-sm" :disabled="isLoading">
+                                    <button type="submit" class="btn btn-brand px-5 py-2 fw-bold text-white shadow-sm"
+                                        :disabled="isLoading">
                                         <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
                                         {{ isLoading ? 'Đang lưu...' : 'Lưu thay đổi' }}
                                     </button>
@@ -142,11 +161,13 @@
                         <div v-if="activeTab === 'password'">
                             <h4 class="fw-bold mb-4">Đổi mật khẩu</h4>
                             <form @submit.prevent="updatePassword">
-                                
-                                <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark mb-4 rounded-3 d-flex align-items-center">
+
+                                <div
+                                    class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark mb-4 rounded-3 d-flex align-items-center">
                                     <i class="bi bi-shield-lock-fill me-3 text-warning fs-3"></i>
                                     <div>
-                                      <strong>Yêu cầu bảo mật:</strong> Mật khẩu phải có ít nhất 8 ký tự. Nên kết hợp chữ cái và số để đảm bảo an toàn cho hệ thống.
+                                        <strong>Yêu cầu bảo mật:</strong> Mật khẩu phải có ít nhất 8 ký tự. Nên kết hợp
+                                        chữ cái và số để đảm bảo an toàn cho hệ thống.
                                     </div>
                                 </div>
 
@@ -154,7 +175,8 @@
                                 <div class="row g-4">
                                     <!-- Input Mật khẩu mới -->
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Mật khẩu mới <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-semibold">Mật khẩu mới <span
+                                                class="text-danger">*</span></label>
                                         <div class="position-relative">
                                             <input :type="showNewPassword ? 'text' : 'password'"
                                                 class="form-control form-control-lg fs-6 pe-5"
@@ -170,7 +192,8 @@
 
                                     <!-- Input Xác nhận mật khẩu mới -->
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-semibold">Xác nhận mật khẩu mới <span
+                                                class="text-danger">*</span></label>
                                         <div class="position-relative">
                                             <input :type="showConfirmPassword ? 'text' : 'password'"
                                                 class="form-control form-control-lg fs-6 pe-5"
@@ -179,14 +202,16 @@
                                             <button type="button"
                                                 class="btn border-0 position-absolute top-50 end-0 translate-middle-y text-muted me-1"
                                                 @click="showConfirmPassword = !showConfirmPassword">
-                                                <i class="bi" :class="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                                <i class="bi"
+                                                    :class="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="text-end mt-5 pt-3 border-top">
-                                    <button type="submit" class="btn btn-brand px-5 py-2 fw-bold text-white shadow-sm" :disabled="isLoading">
+                                    <button type="submit" class="btn btn-brand px-5 py-2 fw-bold text-white shadow-sm"
+                                        :disabled="isLoading">
                                         <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
                                         {{ isLoading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu' }}
                                     </button>
@@ -224,28 +249,28 @@ const selectedFile = ref(null);
 const previewAvatar = ref(null);
 const isRemoveAvatar = ref(false);
 
-const getHeaders = () => ({ 
-    'Accept': 'application/json', 
-    'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
+const getHeaders = () => ({
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
 });
 
 const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
-  if (e.response) {
-    if (e.response.status === 422) {
-      let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
-      Object.values(e.response.data.errors).flat().forEach(msg => {
-          errorHtml += `<li class="mb-1">${msg}</li>`;
-      });
-      errorHtml += '</ul>';
-      Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
-    } else if (e.response.status === 401) {
-      Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+    if (e.response) {
+        if (e.response.status === 422) {
+            let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
+            Object.values(e.response.data.errors).flat().forEach(msg => {
+                errorHtml += `<li class="mb-1">${msg}</li>`;
+            });
+            errorHtml += '</ul>';
+            Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
+        } else if (e.response.status === 401) {
+            Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
+        } else {
+            Swal.fire('Lỗi', e.response.data.message || defaultMsg, 'error');
+        }
     } else {
-      Swal.fire('Lỗi', e.response.data.message || defaultMsg, 'error');
+        Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
     }
-  } else {
-    Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
-  }
 };
 
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
@@ -255,8 +280,15 @@ const addressSelector = ref({ province: '', district: '', ward: '', street: '' }
 
 const fetchProvinces = async () => {
     try {
-        const response = await axios.get('https://provinces.open-api.vn/api/?depth=3');
-        provinces.value = response.data;
+        // Dùng fetch thay vì axios để tránh lỗi dính Header Auth/CORS
+        const response = await fetch('https://provinces.open-api.vn/api/?depth=3');
+        
+        if (!response.ok) {
+            throw new Error('Lỗi lấy dữ liệu từ API mở');
+        }
+        
+        const data = await response.json();
+        provinces.value = data;
     } catch (error) {
         console.error("Lỗi tải dữ liệu địa chỉ:", error);
     }
@@ -340,22 +372,22 @@ const updateProfile = async () => {
     try {
         const res = await axios.post('http://127.0.0.1:8000/api/admin/profile', formData, { headers: getHeaders() });
         const updatedData = res.data.data;
-        
+
         localStorage.setItem('admin_info', JSON.stringify(updatedData));
-        
+
         if (currentUser) {
             currentUser.value = updatedData;
         }
-        
+
         adminData.value.avatar = updatedData.avatar_url ? `http://127.0.0.1:8000/storage/${updatedData.avatar_url}` : defaultAvatar;
         adminData.value.address = updatedData.address;
-        
+
         previewAvatar.value = null;
         selectedFile.value = null;
         isRemoveAvatar.value = false;
 
         Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã cập nhật hồ sơ.', confirmButtonColor: '#009981' });
-            
+
     } catch (error) {
         handleAxiosError(error, 'Cập nhật thất bại');
     } finally {
@@ -374,11 +406,11 @@ const updatePassword = async () => {
     isLoading.value = true;
     try {
         const res = await axios.put('http://127.0.0.1:8000/api/admin/profile/password', passwordForm.value, { headers: getHeaders() });
-        
+
         Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message || 'Mật khẩu đã được đổi. Vui lòng đăng nhập lại.', confirmButtonColor: '#009981' })
             .then(() => {
-                localStorage.removeItem('admin_token'); 
-                localStorage.removeItem('admin_info'); 
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_info');
                 localStorage.removeItem('admin_level');
                 window.location.href = '/admin/login';
             });
@@ -391,34 +423,63 @@ const updatePassword = async () => {
 </script>
 
 <style scoped>
-.bg-brand { background-color: #009981 !important; }
-.text-brand { color: #009981 !important; }
-.btn-brand { background-color: #009981; border: none; transition: 0.2s; }
-.btn-brand:hover { background-color: #007a67; }
+.bg-brand {
+    background-color: #009981 !important;
+}
+
+.text-brand {
+    color: #009981 !important;
+}
+
+.btn-brand {
+    background-color: #009981;
+    border: none;
+    transition: 0.2s;
+}
+
+.btn-brand:hover {
+    background-color: #007a67;
+}
 
 .custom-tab {
     color: #495057;
     border-radius: 10px;
     transition: all 0.2s ease-in-out;
 }
+
 .custom-tab:hover {
     background-color: #f8f9fa;
     color: #009981;
 }
+
 .active-tab {
     background-color: #009981 !important;
     color: #ffffff !important;
     box-shadow: 0 4px 6px rgba(0, 153, 129, 0.2);
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: #009981;
     box-shadow: 0 0 0 0.25rem rgba(0, 153, 129, 0.25);
 }
 
-.cursor-not-allowed { cursor: not-allowed; opacity: 0.8; }
-.cursor-pointer { cursor: pointer; }
-.cursor-pointer:hover { background-color: #f8f9fa !important; transform: scale(1.05); transition: 0.2s; }
+.cursor-not-allowed {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
 
-.fs-7 { font-size: 0.85rem; }
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-pointer:hover {
+    background-color: #f8f9fa !important;
+    transform: scale(1.05);
+    transition: 0.2s;
+}
+
+.fs-7 {
+    font-size: 0.85rem;
+}
 </style>
