@@ -139,7 +139,7 @@ const submitForm = async () => {
   formData.append('image', form.imageFile);
 
   try {
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries`, formData, {
+    await axios.post(`http://127.0.0.1:8000/api/v1/admin/galleries`, formData, {
       headers: getHeaders()
     });
     

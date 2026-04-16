@@ -71,6 +71,10 @@ class ClientCheckoutController extends Controller
         }
 
         $user = auth('sanctum')->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập để thực hiện thanh toán.'], 401);
+        }
+
         $sessionId = $request->header('X-Cart-Session-Id');
 
         $lockKey = 'checkout_lock_' . ($user ? $user->id : $sessionId);
@@ -233,16 +237,9 @@ class ClientCheckoutController extends Controller
                     $coupon->increment('usage_count');
                 }
 
-                // LOGIC TÍNH PHÍ VẬN CHUYỂN
-                $lowerAddress = mb_strtolower($customerAddress, 'UTF-8');
-
-                if (str_contains($lowerAddress, 'đắk lắk') || str_contains($lowerAddress, 'dak lak')) {
-                    $shippingFee = 0; // Đắk Lắk miễn phí
-                } elseif (str_contains($lowerAddress, 'hà nội') || str_contains($lowerAddress, 'hồ chí minh')) {
-                    $shippingFee = 20000; // Nội thành
-                } else {
-                    $shippingFee = 35000; // Tỉnh khác
-                }
+                // ==================== PHÍ SHIP MỚI (LẤY TỪ FRONTEND) ====================
+                $shippingFee = (int) $request->shipping_fee;   // frontend đã tính theo km
+                // ========================================================================
 
                 $totalAmount = max($subTotal - $discountAmount + $shippingFee, 0);
 
@@ -456,6 +453,27 @@ class ClientCheckoutController extends Controller
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * API TRUNG GIAN (PROXY) ĐỂ LẤY TỈNH/THÀNH VÀ TRÁNH LỖI CORS
+     */
+    public function getLocations(Request $request)
+    {
+        try {
+            // Mặc định gọi danh sách tỉnh thành
+            $apiPath = $request->query('api_path', 'p/'); 
+            $depth = $request->query('depth', 1);
+
+            $response = Http::get("https://provinces.open-api.vn/api/{$apiPath}", [
+                'depth' => $depth
+            ]);
+
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            Log::error("Lỗi lấy địa giới hành chính: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối máy chủ tỉnh thành.'], 500);
         }
     }
 

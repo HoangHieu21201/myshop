@@ -349,13 +349,127 @@ const getPaymentStatusClass = (status) => {
 
 // ================= CÁC HÀM XỬ LÝ NÚT BẤM =================
 
-const handleReview = () => {
-  Swal.fire({
-    icon: 'info',
-    title: 'Tính năng đang bảo trì',
-    text: 'Hệ thống đánh giá sẽ sớm được cập nhật. Cảm ơn bạn!',
-    confirmButtonColor: '#9f273b'
+const handleReview = async () => {
+  if (!props.order?.items?.length) {
+    Swal.fire({ icon: 'info', title: 'Không có sản phẩm để đánh giá' });
+    return;
+  }
+
+  let html = `
+    <div style="text-align:left; max-height: 60vh; overflow-y:auto; padding-right:10px;">
+      <h5 class="mb-3 text-sora-primary">Đánh giá đơn hàng #${props.order.order_code}</h5>
+      <small class="text-muted d-block mb-4">Bạn đã nhận hàng. Hãy cho chúng tôi biết cảm nhận của bạn về từng sản phẩm nhé!</small>
+  `;
+
+  props.order.items.forEach((item, index) => {
+    const name = item.product_name || (item.combo_id ? 'Combo' : 'Sản phẩm');
+    html += `
+      <div class="mb-4 p-3 border rounded-3 bg-light">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <img src="${getImageUrl(item.variant_image)}" 
+               onerror="this.src='${defaultPlaceholder}'" 
+               style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+          <div class="flex-grow-1">
+            <strong>${name}</strong>
+            ${item.variant_attributes ? `<div class="text-muted small">${item.variant_attributes}</div>` : ''}
+          </div>
+        </div>
+
+        <!-- 5 sao clickable -->
+        <div class="star-rating mb-3" data-index="${index}">
+          ${[1,2,3,4,5].map(star => `
+            <i class="bi bi-star fs-3 me-1 star" 
+               data-value="${star}" 
+               style="cursor:pointer;color:#ddd;"></i>
+          `).join('')}
+        </div>
+
+        <textarea class="form-control review-comment" 
+                  data-index="${index}" 
+                  rows="2" 
+                  placeholder="Viết nhận xét của bạn (tùy chọn)..."></textarea>
+      </div>`;
   });
+
+  html += `</div>`;
+
+  const { value: formValues, isDismissed } = await Swal.fire({
+    title: 'Đánh giá sản phẩm',
+    html: html,
+    width: '700px',
+    showCancelButton: true,
+    confirmButtonText: 'Gửi đánh giá',
+    cancelButtonText: 'Hủy',
+    confirmButtonColor: '#9f273b',
+    cancelButtonColor: '#6c757d',
+    didOpen: () => {
+      // Làm cho sao có thể click
+      document.querySelectorAll('.star-rating').forEach(rating => {
+        const stars = rating.querySelectorAll('.star');
+        let currentRating = 0;
+
+        stars.forEach(star => {
+          star.addEventListener('click', () => {
+            currentRating = parseInt(star.dataset.value);
+            stars.forEach((s, i) => {
+              s.style.color = i < currentRating ? '#ffc107' : '#ddd';
+            });
+            // Lưu rating vào data attribute
+            rating.dataset.rating = currentRating;
+          });
+        });
+      });
+    },
+    preConfirm: () => {
+      const reviews = [];
+      document.querySelectorAll('.star-rating').forEach(rating => {
+        const index = parseInt(rating.dataset.index);
+        const ratingValue = parseInt(rating.dataset.rating) || 0;
+        const comment = document.querySelectorAll('.review-comment')[index].value.trim();
+
+        if (ratingValue === 0) {
+          Swal.showValidationMessage('Vui lòng chọn số sao cho tất cả sản phẩm!');
+          return false;
+        }
+
+        reviews.push({
+          order_item_id: props.order.items[index].id,
+          rating: ratingValue,
+          comment: comment || null
+        });
+      });
+      return reviews;
+    }
+  });
+
+  if (isDismissed || !formValues) return;
+
+  // Gửi lên backend
+  Swal.fire({ title: 'Đang gửi đánh giá...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  try {
+    await axios.post(
+      `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/reviews`,
+      { reviews: formValues },
+      { headers: getHeaders() }
+    );
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Cảm ơn bạn!',
+      text: 'Đánh giá đã được ghi nhận. SORA rất trân trọng ý kiến của bạn ❤️',
+      confirmButtonColor: '#9f273b'
+    });
+
+    emit('refresh');   // Refresh danh sách đơn hàng
+    emit('close');     // Đóng modal
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Gửi thất bại',
+      text: error.response?.data?.message || 'Vui lòng thử lại sau'
+    });
+  }
 };
 
 const handleReturn = async () => {

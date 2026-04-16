@@ -120,7 +120,7 @@ const getHeaders = () => ({
 const fetchGallery = async () => {
   try {
     const id = route.params.id;
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries/${id}`, { headers: getHeaders() });
+    const response = await axios.get(`http://127.0.0.1:8000/api/v1/admin/galleries/${id}`, { headers: getHeaders() });
     
     const data = response.data.data || response.data; 
     
@@ -169,7 +169,7 @@ const updateForm = async () => {
   formData.append('_method', 'PUT');
 
   try {
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries/${form.id}`, formData, {
+    await axios.post(`http://127.0.0.1:8000/api/v1/admin/galleries/${form.id}`, formData, {
       headers: getHeaders()
     });
     

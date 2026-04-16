@@ -345,9 +345,14 @@ const findLocationByName = (list, name) => {
 
 const fetchProvinces = async () => {
   try {
-    const res = await axios.get('https://esgoo.net/api-tinhthanh/1/0.htm');
-    if(res.data.error === 0) provinces.value = res.data.data;
-  } catch(e) {}
+    // Dùng fetch thay vì axios
+    const res = await fetch('https://esgoo.net/api-tinhthanh/1/0.htm');
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.json();
+    if (data.error === 0) provinces.value = data.data;
+  } catch (e) {
+    console.error("Lỗi lấy Tỉnh/Thành:", e);
+  }
 };
 
 const onCityChange = async () => {
@@ -355,8 +360,15 @@ const onCityChange = async () => {
   selectedDistrictId.value = ''; selectedWardId.value = '';
   addrForm.value.city = provinces.value.find(p => p.id === selectedCityId.value)?.full_name || '';
   if (selectedCityId.value) {
-    const res = await axios.get(`https://esgoo.net/api-tinhthanh/2/${selectedCityId.value}.htm`);
-    if(res.data.error === 0) districts.value = res.data.data;
+    try {
+      // Dùng fetch thay vì axios
+      const res = await fetch(`https://esgoo.net/api-tinhthanh/2/${selectedCityId.value}.htm`);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      if (data.error === 0) districts.value = data.data;
+    } catch (e) {
+      console.error("Lỗi lấy Quận/Huyện:", e);
+    }
   }
 };
 
@@ -364,8 +376,15 @@ const onDistrictChange = async () => {
   wards.value = []; selectedWardId.value = '';
   addrForm.value.district = districts.value.find(d => d.id === selectedDistrictId.value)?.full_name || '';
   if (selectedDistrictId.value) {
-    const res = await axios.get(`https://esgoo.net/api-tinhthanh/3/${selectedDistrictId.value}.htm`);
-    if(res.data.error === 0) wards.value = res.data.data;
+    try {
+      // Dùng fetch thay vì axios
+      const res = await fetch(`https://esgoo.net/api-tinhthanh/3/${selectedDistrictId.value}.htm`);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      if (data.error === 0) wards.value = data.data;
+    } catch (e) {
+      console.error("Lỗi lấy Phường/Xã:", e);
+    }
   }
 };
 
