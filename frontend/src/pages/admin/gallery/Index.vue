@@ -271,8 +271,8 @@ const fetchData = async () => {
   if (!isFirstLoad.value) isLoading.value = true;
   try {
     const [resGalleries, resModules] = await Promise.all([
-      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries`, { headers: getHeaders() }),
-      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() })
+      axios.get(`http://127.0.0.1:8000/api/v1/admin/galleries`, { headers: getHeaders() }),
+      axios.get(`http://127.0.0.1:8000/api/v1/admin/modules`, { headers: getHeaders() })
     ]);
 
     if (resGalleries.data) {
@@ -338,7 +338,7 @@ const saveGalleryStatus = async (item) => {
   };
 
   try {
-    await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries/${item.id}`, payload, { headers: getHeaders() });
+    await axios.put(`http://127.0.0.1:8000/api/v1/admin/galleries/${item.id}`, payload, { headers: getHeaders() });
     
     item.mappedStatus = item.localStatus; 
     item.isStatusChanged = false;
@@ -395,7 +395,7 @@ const confirmDelete = (id, title) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/galleries/${id}`, { headers: getHeaders() });
+        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/galleries/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData();
       } catch (err) {

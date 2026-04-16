@@ -71,6 +71,10 @@ class ClientCheckoutController extends Controller
         }
 
         $user = auth('sanctum')->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập để thực hiện thanh toán.'], 401);
+        }
+
         $sessionId = $request->header('X-Cart-Session-Id');
 
         $lockKey = 'checkout_lock_' . ($user ? $user->id : $sessionId);
@@ -449,6 +453,27 @@ class ClientCheckoutController extends Controller
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * API TRUNG GIAN (PROXY) ĐỂ LẤY TỈNH/THÀNH VÀ TRÁNH LỖI CORS
+     */
+    public function getLocations(Request $request)
+    {
+        try {
+            // Mặc định gọi danh sách tỉnh thành
+            $apiPath = $request->query('api_path', 'p/'); 
+            $depth = $request->query('depth', 1);
+
+            $response = Http::get("https://provinces.open-api.vn/api/{$apiPath}", [
+                'depth' => $depth
+            ]);
+
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            Log::error("Lỗi lấy địa giới hành chính: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối máy chủ tỉnh thành.'], 500);
         }
     }
 
