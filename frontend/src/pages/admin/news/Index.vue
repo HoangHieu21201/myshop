@@ -85,9 +85,9 @@ const requireLogin = () => {
 // ==========================================
 // 3. STATE MANAGEMENT
 // ==========================================
-const isFirstLoad = ref(true); // Thêm state cho UI đồng bộ Combo
+const isFirstLoad = ref(true);
 const isLoading = ref(true);
-const isSilentLoading = ref(false); // Loading ngầm khi thao tác
+const isSilentLoading = ref(false);
 const news = ref([]);
 const searchQuery = ref('');
 const currentTab = ref('all');
@@ -101,25 +101,36 @@ const itemsPerPage = ref(10);
 const statusCounts = computed(() => {
     const list = news.value || [];
     return {
-        all: list.length,
-        pending: list.filter(i => i.status === 'pending').length,
-        published: list.filter(i => i.status === 'published').length,
-        draft: list.filter(i => i.status === 'draft').length
+        // Chỉ đếm những bài chưa bị xóa (deleted_at == null)
+        all: list.filter(i => !i.deleted_at).length,
+        pending: list.filter(i => i.status === 'pending' && !i.deleted_at).length,
+        published: list.filter(i => i.status === 'published' && !i.deleted_at).length,
+        draft: list.filter(i => i.status === 'draft' && !i.deleted_at).length,
+        // Đếm bài đã xóa
+        deleted: list.filter(i => i.deleted_at).length
     };
 });
 
 const processedNews = computed(() => {
     let result = [...(news.value || [])];
+
+    // Lọc theo Tab Xóa hoặc Tab Thường
+    if (currentTab.value === 'deleted') {
+        result = result.filter(item => item.deleted_at);
+    } else {
+        result = result.filter(item => !item.deleted_at);
+        if (currentTab.value !== 'all') {
+            result = result.filter(item => item.status === currentTab.value);
+        }
+    }
+
+    // Lọc theo từ khóa tìm kiếm
     const query = searchQuery.value.toLowerCase().trim();
-    
     if (query) {
         result = result.filter(item => item.title?.toLowerCase().includes(query));
     }
     
-    if (currentTab.value !== 'all') {
-        result = result.filter(item => item.status === currentTab.value);
-    }
-
+    // Sắp xếp
     result.sort((a, b) => {
         if (sortOption.value === 'newest') return new Date(b.created_at) - new Date(a.created_at);
         if (sortOption.value === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
@@ -253,7 +264,7 @@ async function handleDelete(newsItem) {
 
     const result = await Swal.fire({ 
         title: 'Xóa bài viết?', 
-        text: `Bài viết "${newsItem.title}" sẽ bị xóa. Hành động này không thể hoàn tác!`, 
+        text: `Bài viết "${newsItem.title}" sẽ được đưa vào thùng rác. Bạn có thể khôi phục sau.`, 
         icon: 'warning', 
         showCancelButton: true, 
         confirmButtonColor: '#d33', 
@@ -265,14 +276,40 @@ async function handleDelete(newsItem) {
         isSilentLoading.value = true;
         try {
             await axios.delete(`${apiUrl}/admin/news/${newsItem.id}`, { headers: getHeaders() });
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa bài viết', showConfirmButton: false, timer: 1500 });
-            
-            if (paginatedNews.value.length === 1 && currentPage.value > 1) {
-                currentPage.value--;
-            }
-            fetchNews(true);
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã đưa vào thùng rác', showConfirmButton: false, timer: 1500 });
+            fetchNews(true); // Cập nhật lại list sau khi xóa (bài viết sẽ chuyển sang tab Đã xóa)
         } catch (e) { 
             Swal.fire('Lỗi', 'Không thể xóa bài viết.', 'error'); 
+            isSilentLoading.value = false;
+        }
+    }
+}
+
+async function handleRestore(newsItem) {
+    if (!requireLogin()) return;
+    
+    if (!hasRole(['admin'])) {
+        return Swal.fire('Quyền hạn', 'Bạn không có quyền khôi phục bài viết này.', 'error');
+    }
+
+    const result = await Swal.fire({ 
+        title: 'Khôi phục bài viết?', 
+        text: `Khôi phục bài viết "${newsItem.title}" về danh sách hiển thị?`, 
+        icon: 'info', 
+        showCancelButton: true, 
+        confirmButtonColor: '#009981', 
+        confirmButtonText: 'Đồng ý', 
+        cancelButtonText: 'Hủy' 
+    });
+
+    if (result.isConfirmed) {
+        isSilentLoading.value = true;
+        try {
+            await axios.post(`${apiUrl}/admin/news/${newsItem.id}/restore`, {}, { headers: getHeaders() });
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã khôi phục thành công', showConfirmButton: false, timer: 1500 });
+            fetchNews(true);
+        } catch (e) { 
+            Swal.fire('Lỗi', 'Không thể khôi phục bài viết.', 'error'); 
             isSilentLoading.value = false;
         }
     }
@@ -296,14 +333,12 @@ onMounted(async () => {
 <template>
     <div class="news-index-wrapper pb-5 mb-5">
         
-        <!-- Loading Screen giống Combo -->
         <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
             <h1 class="logo-shimmer mb-3">ThinkHub</h1>
             <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải tin tức...</p>
         </div>
 
         <div class="container-fluid py-4" v-else>
-            <!-- Header giống Combo -->
             <div class="row mb-4 align-items-center">
                 <div class="col-md-6">
                     <h3 class="fw-bold text-dark mb-0">Quản lý Tin tức</h3>
@@ -318,7 +353,7 @@ onMounted(async () => {
                 </div>
             </div>
 
-            <!-- Tabs Navigation -->
+            <!-- Tabs Navigation Đồng Bộ (Cho phép rớt dòng & Thêm tab Đã xóa) -->
             <div class="mb-3">
                 <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
                     <li class="nav-item">
@@ -343,6 +378,14 @@ onMounted(async () => {
                         <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': currentTab === 'draft' }" @click.prevent="switchTab('draft')">
                             <i class="bi bi-eye-slash-fill me-2 text-secondary"></i> Đã ẩn
                             <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': currentTab === 'draft'}">{{ statusCounts.draft }}</span>
+                        </a>
+                    </li>
+                    
+                    <!-- TAB ĐÃ XÓA nằm góc phải giống hệt màn hình Trang sức -->
+                    <li class="nav-item ms-auto">
+                        <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-danger" href="#" :class="{ 'active-tab': currentTab === 'deleted' }" @click.prevent="switchTab('deleted')">
+                            <i class="bi bi-trash3-fill me-2"></i> Đã xóa
+                            <span class="badge ms-2 rounded-pill bg-danger text-white">{{ statusCounts.deleted }}</span>
                         </a>
                     </li>
                 </ul>
@@ -394,8 +437,10 @@ onMounted(async () => {
                                     </td>
                                 </tr>
                                 
-                                <tr v-else v-for="item in paginatedNews" :key="item.id" :class="{'bg-warning bg-opacity-10': item.status === 'pending'}">
-                                    <!-- Cột Thông tin -->
+                                <!-- Làm mờ dòng nếu bị xóa mềm (deleted_at) -->
+                                <tr v-else v-for="item in paginatedNews" :key="item.id" 
+                                    :class="{'bg-warning bg-opacity-10': item.status === 'pending' && !item.deleted_at, 'bg-light opacity-75': item.deleted_at}">
+                                    
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center">
                                             <div class="position-relative d-inline-block me-3 shadow-sm border rounded-3 overflow-hidden bg-white flex-shrink-0" style="width: 80px; height: 50px;">
@@ -406,12 +451,13 @@ onMounted(async () => {
                                                     <span class="badge bg-light text-secondary border" v-if="item.category">{{ item.category }}</span>
                                                     <span class="text-muted small">#{{ item.id }}</span>
                                                 </div>
-                                                <div class="fw-bold text-dark fs-6 mb-1 text-truncate" :title="item.title">{{ item.title }}</div>
+                                                <div class="fw-bold text-dark fs-6 mb-1 text-truncate" :title="item.title">
+                                                    {{ item.title }}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
                                     
-                                    <!-- Cột Tác giả -->
                                     <td class="px-4">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-circle text-white fw-bold me-2 shadow-sm flex-shrink-0" style="background-color: #009981;">
@@ -421,40 +467,52 @@ onMounted(async () => {
                                         </div>
                                     </td>
 
-                                    <!-- Cột Lượt xem -->
                                     <td class="px-4 text-center fw-bold text-secondary">
                                         <i class="bi bi-eye me-1"></i> {{ item.views || 0 }}
                                     </td>
 
-                                    <!-- Cột Trạng thái -->
                                     <td class="px-4 text-center">
-                                        <span class="badge px-3 py-2 rounded-pill fw-medium" :class="getStatusInfo(item.status).class">
+                                        <!-- Hiển thị badge Đã Xóa thay vì trạng thái bình thường -->
+                                        <span v-if="item.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2 rounded-pill fw-medium">
+                                            <i class="bi bi-trash3-fill me-1"></i> Đã xóa
+                                        </span>
+                                        <span v-else class="badge px-3 py-2 rounded-pill fw-medium" :class="getStatusInfo(item.status).class">
                                             <i class="bi me-1" :class="getStatusInfo(item.status).icon"></i>{{ getStatusInfo(item.status).text }}
                                         </span>
                                     </td>
 
-                                    <!-- Cột Ngày tạo -->
                                     <td class="px-4 text-center small text-secondary fw-medium">
                                         {{ getFormattedDate(item.created_at) }}
                                     </td>
 
-                                    <!-- Cột Thao tác -->
                                     <td class="px-4 text-end">
                                         <div class="d-flex justify-content-end align-items-center gap-2">
-                                            <!-- Switch duyệt bài (Chỉ admin) -->
-                                            <div class="form-check form-switch m-0 d-flex align-items-center me-1" v-if="hasRole(['admin'])" title="Đổi trạng thái xuất bản/ẩn">
-                                                <input class="form-check-input custom-switch" type="checkbox" role="switch" :checked="item.status === 'published'" @click.prevent="handleToggleStatus(item)">
-                                            </div>
-                                            
-                                            <button class="btn btn-sm btn-light text-info shadow-sm border" @click="viewOnFrontend(item.slug)" title="Xem bài viết">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-light text-primary shadow-sm border" @click="goToEdit(item.id)" title="Chỉnh sửa">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-light text-danger shadow-sm border" v-if="hasRole(['admin']) || item.author_name === currentUser.name" @click="handleDelete(item)" title="Xóa bài">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <!-- Thao tác hiển thị khi BÀI VIẾT BÌNH THƯỜNG -->
+                                            <template v-if="!item.deleted_at">
+                                                <div class="form-check form-switch m-0 d-flex align-items-center me-1" v-if="hasRole(['admin'])" title="Đổi trạng thái xuất bản/ẩn">
+                                                    <input class="form-check-input custom-switch" type="checkbox" role="switch" :checked="item.status === 'published'" @click.prevent="handleToggleStatus(item)">
+                                                </div>
+                                                
+                                                <button class="btn btn-sm btn-light text-info shadow-sm border" @click="viewOnFrontend(item.slug)" title="Xem bài viết">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-light text-primary shadow-sm border" @click="goToEdit(item.id)" title="Chỉnh sửa">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-light text-danger shadow-sm border" v-if="hasRole(['admin']) || item.author_name === currentUser.name" @click="handleDelete(item)" title="Xóa bài">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </template>
+
+                                            <!-- Thao tác hiển thị khi BÀI VIẾT ĐÃ XÓA MỀM (Thùng rác) -->
+                                            <template v-else>
+                                                <button class="btn btn-sm btn-light text-info shadow-sm border" @click="viewOnFrontend(item.slug)" title="Xem bài viết đã xóa">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-light text-success shadow-sm border" v-if="hasRole(['admin']) || item.author_name === currentUser.name" @click="handleRestore(item)" title="Khôi phục">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </button>
+                                            </template>
                                         </div>
                                     </td>
                                 </tr>

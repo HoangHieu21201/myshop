@@ -240,7 +240,7 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
                 <h1 v-if="searchQuery">Tìm kiếm: "{{ searchQuery }}"</h1>
                 <h1 v-else-if="authorQuery">Tác giả: "{{ authorQuery }}"</h1>
                 <h1 v-else-if="categoryQuery">Danh mục: "{{ categoryQuery }}"</h1>
-                <h1 v-else>ThinkHub</h1>
+                <h1 v-else>SORA</h1>
                 <p class="hero-subtitle">
                     Khám phá xu hướng trang sức & bí quyết làm đẹp tinh tế mỗi ngày.
                 </p>

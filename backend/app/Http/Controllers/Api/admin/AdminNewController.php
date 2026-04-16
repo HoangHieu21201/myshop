@@ -16,7 +16,8 @@ class AdminNewController extends Controller
     public function index()
     {
         try {
-            $news = News::orderBy('created_at', 'desc')->get();
+            // Thêm withTrashed() để lấy cả bài viết đã xóa mềm (cho tab Đã xóa)
+            $news = News::withTrashed()->orderBy('created_at', 'desc')->get();
             return response()->json([
                 'status' => 'success',
                 'data' => $news
@@ -75,7 +76,8 @@ class AdminNewController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $news = News::findOrFail($id);
+            // Cho phép Admin cập nhật cả bài viết đang trong thùng rác
+            $news = News::withTrashed()->findOrFail($id);
 
             $validated = $request->validate([
                 'title'             => 'required|string|max:255',
@@ -117,22 +119,51 @@ class AdminNewController extends Controller
     }
 
     /**
-     * Xóa bài viết
+     * Xóa bài viết (Soft Delete)
      */
     public function destroy($id)
     {
         try {
             $news = News::findOrFail($id);
             
-            if ($news->image_url) {
-                $oldPath = str_replace('/storage/', '', $news->image_url);
-                Storage::disk('public')->delete($oldPath);
-            }
+            // Xóa file ảnh đi nếu bạn muốn dọn dẹp dung lượng. 
+            // Tuy nhiên, vì đây là xóa mềm, việc giữ lại ảnh có thể tốt hơn để khôi phục sau.
+            // Đoạn dưới đây bị comment để giữ lại ảnh khi xóa mềm.
+            // if ($news->image_url) {
+            //     $oldPath = str_replace('/storage/', '', $news->image_url);
+            //     Storage::disk('public')->delete($oldPath);
+            // }
 
-            $news->delete();
+            // Gọi hàm delete() sẽ đánh dấu deleted_at thay vì xóa hẳn khỏi DB
+            $news->delete(); 
+            
             return response()->json([
                 'status' => 'success',
-                'message' => 'Xóa bài viết thành công'
+                'message' => 'Đã đưa bài viết vào thùng rác'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Khôi phục bài viết đã xóa (Restore)
+     */
+    public function restore($id)
+    {
+        try {
+            // Tìm bài viết trong thùng rác
+            $news = News::withTrashed()->findOrFail($id);
+            
+            // Hàm khôi phục bài viết
+            $news->restore(); 
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Khôi phục bài viết thành công'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -150,7 +181,8 @@ class AdminNewController extends Controller
         try {
             $request->validate(['status' => 'required|in:pending,published,draft']);
             
-            $news = News::findOrFail($id);
+            // Dùng withTrashed để lỡ như cần update status bài đã xoá mềm
+            $news = News::withTrashed()->findOrFail($id);
             $news->status = $request->status;
             $news->save();
 
@@ -166,9 +198,14 @@ class AdminNewController extends Controller
         }
         
     }
+
+    /**
+     * Xem chi tiết bài viết (Dùng cho giao diện Admin sửa/xem)
+     */
     public function show($id)
-{
-    $news = News::findOrFail($id);
-    return response()->json(['data' => $news]);
-}
+    {
+        // Thêm withTrashed() để quản trị viên có thể xem được nội dung bài viết đang nằm trong thùng rác
+        $news = News::withTrashed()->findOrFail($id);
+        return response()->json(['data' => $news]);
+    }
 }
