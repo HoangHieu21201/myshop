@@ -296,14 +296,15 @@
                  <button @click="updateQuickAddQty(1)" class="btn btn-outline-secondary" type="button"><i class="bi bi-plus"></i></button>
                </div>
                <span v-if="isAllAttributesSelected && currentVariant" class="text-muted small fw-medium">
-                 {{ currentVariant.stock_quantity > 0 ? `Còn ${currentVariant.stock_quantity} sản phẩm` : 'Hết hàng' }}
+                 <span v-if="currentVariant.stock_quantity > 0" class="text-success"><i class="bi bi-check-circle me-1"></i>Còn {{ currentVariant.stock_quantity }} sản phẩm</span>
+                 <span v-else class="text-danger fw-bold"><i class="bi bi-x-circle me-1"></i>Hết hàng</span>
                </span>
                <span v-else class="text-muted small fw-medium fst-italic">Vui lòng chọn phân loại</span>
             </div>
           </div>
           <div v-if="!isAllAttributesSelected && Object.keys(quickAddModal.attributes).length > 0" class="alert alert-info py-2 small mb-0"><i class="bi bi-info-circle me-1"></i> Vui lòng chọn đầy đủ phân loại sản phẩm.</div>
           <div v-else-if="!currentVariant && Object.keys(quickAddModal.attributes).length > 0" class="alert alert-warning py-2 small mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Phân loại này tạm thời không khả dụng.</div>
-          <div v-else-if="currentVariant && currentVariant.stock_quantity <= 0" class="alert alert-danger py-2 small mb-0"><i class="bi bi-slash-circle me-1"></i> Sản phẩm này đã hết hàng trong kho.</div>
+          <div v-else-if="currentVariant && currentVariant.stock_quantity <= 0" class="alert alert-danger py-2 small mb-0"><i class="bi bi-slash-circle me-1"></i> Phân loại sản phẩm này hiện đã hết hàng trong kho.</div>
         </div>
         <div class="p-3 bg-light border-top">
           <button 
@@ -334,18 +335,16 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 
 const isLoadingCategories = ref(true);
 const isLoadingProducts = ref(true);
-const isPageLoading = ref(true); // Đã thêm biến này để tránh lỗi JS
+const isPageLoading = ref(true);
 const categories = shallowRef([]);
 const allProducts = shallowRef([]);
-const defaultProducts = shallowRef([]); // Lưu danh sách mặc định làm fallback
+const defaultProducts = shallowRef([]);
 const pagination = ref({ current_page: 1, last_page: 1, total: 0 });
 
-// Computed property để luôn lấy ra ít nhất 2 sản phẩm cho phần banner "Lựa chọn lý tưởng"
 const promoProducts = computed(() => {
   let items = allProducts.value.slice(0, 2);
   if (items.length < 2) {
     const needed = 2 - items.length;
-    // Bù thêm từ danh sách mặc định nếu không đủ 2 sản phẩm
     const fallback = defaultProducts.value.filter(dp => !items.some(item => item.id === dp.id)).slice(0, needed);
     items = [...items, ...fallback];
   }
@@ -372,7 +371,11 @@ const fallbackJewelryImages = [
 const soraAlert = Swal.mixin({
   buttonsStyling: true,
   confirmButtonColor: '#9f273b',
-  customClass: { confirmButton: 'px-4 py-2 mx-2 rounded shadow-sm fw-bold font-oswald tracking-widest text-uppercase' },
+  cancelButtonColor: '#6c757d',
+  customClass: { 
+    confirmButton: 'px-4 py-2 mx-2 rounded shadow-sm fw-bold font-oswald tracking-widest text-uppercase',
+    cancelButton: 'px-4 py-2 mx-2 rounded shadow-sm fw-bold font-oswald tracking-widest text-uppercase'
+  },
   didOpen: (modal) => { if (modal.parentElement) modal.parentElement.style.zIndex = '10005'; }
 });
 
@@ -520,7 +523,6 @@ const fetchProducts = async (page = 1) => {
       allProducts.value = data.data.data; 
       pagination.value = { current_page: data.data.current_page, last_page: data.data.last_page, total: data.data.total };
       
-      // Lưu lại danh sách sản phẩm lúc mới load trang (không có bộ lọc) để dự phòng cho banner
       if (defaultProducts.value.length === 0 && data.data.data.length > 0) {
         defaultProducts.value = data.data.data;
       }
@@ -546,7 +548,6 @@ const resetFilters = () => {
   applyFilters(); 
 };
 
-// Đã sửa lại lỗi cuộn màn hình khi chuyển trang
 const changePage = (page) => { 
   if(page >= 1 && page <= pagination.value.last_page) { 
     fetchProducts(page); 
@@ -711,8 +712,36 @@ const confirmAddToCart = async () => {
     });
     
     const data = await response.json();
-    if (data.success) { closeQuickAdd(); router.push('/cart'); } 
-    else { soraAlert.fire({ icon: 'error', title: 'Không thể thêm', text: data.message || "Đã có lỗi xảy ra." }); }
+    if (data.success) { 
+      // BƯỚC 1: TRỪ TỒN KHO LOCAL THEO SỐ LƯỢNG VỪA THÊM VÀO GIỎ
+      currentVariant.value.stock_quantity -= quickAddModal.quantity;
+      
+      // Nếu tồn kho <= 0 thì reset quantity chọn về 1 để tránh lỗi hiển thị khi mở lại
+      if (currentVariant.value.stock_quantity <= 0) {
+        quickAddModal.quantity = 1;
+      }
+
+      // BƯỚC 2: ĐÓNG MODAL (Mục đích Quick Add là để người dùng tiếp tục mua sắm mà không bị ngắt quãng)
+      closeQuickAdd(); 
+      
+      // BƯỚC 3: HIỂN THỊ THÔNG BÁO VÀ HỎI USER CÓ MUỐN CHUYỂN HƯỚNG TỚI GIỎ HÀNG KHÔNG
+      soraAlert.fire({
+        icon: 'success',
+        title: 'Thêm giỏ hàng thành công',
+        text: 'Sản phẩm đã được đưa vào giỏ hàng của bạn.',
+        showCancelButton: true,
+        confirmButtonText: 'Đến giỏ hàng',
+        cancelButtonText: 'Tiếp tục mua sắm',
+        reverseButtons: true // Đảo chiều nút để nút Mua sắm ở bên trái tiện tay hơn
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/cart');
+        }
+      });
+    } 
+    else { 
+      soraAlert.fire({ icon: 'error', title: 'Không thể thêm', text: data.message || "Đã có lỗi xảy ra." }); 
+    }
   } catch (error) { 
     soraAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi kết nối tới máy chủ.' }); 
   } finally { 
@@ -721,7 +750,6 @@ const confirmAddToCart = async () => {
 };
 
 onMounted(() => { 
-  // Gọi đồng thời 3 hàm: Tải Danh mục, Tải Sản phẩm, Tải Tủ đồ Yêu thích (Nếu đã login)
   Promise.all([fetchCategories(), fetchProducts(1), loadFavourites()]).then(() => isPageLoading.value = false); 
 });
 </script>
