@@ -186,12 +186,13 @@ const menuItems = ref([
     children: [
       { name: 'Hỗ trợ Chat', path: '/admin/chat', moduleCode: null },
       { name: 'Hộp thư liên hệ', path: '/admin/contacts', moduleCode: 'admin_contacts' },
+      { name: 'Chatbot', path: '/admin/chatbot', moduleCode: 'admin_chatbot' }
     ]
   },
 ]);
 
 const menuState = reactive({
-  users: false, products: false, orders: false, marketing: false,
+  users: false, products: false, orders: false, marketing: false, services: false
 });
 
 const toggleSidebar = () => {
@@ -239,18 +240,24 @@ const getModuleLevel = (code) => {
   return mod ? mod.required_level : null;
 };
 
+// ĐÃ SỬA: HÀM PHÂN QUYỀN THÔNG MINH HƠN
 const hasAccess = (code) => {
   if (!code) return true;
   const requiredLevel = getModuleLevel(code);
-  if (!requiredLevel) return false;
+  
+  // Nếu chưa có trong Database, tự động mở khóa cho Super Admin (Cấp 1) vào xài luôn
+  if (!requiredLevel) return userLevel.value === 1; 
+  
   return userLevel.value <= requiredLevel;
 };
 
+// ĐÃ SỬA: THÔNG BÁO LỖI RÕ RÀNG HƠN
 const showAccessDenied = (menuName, reqLevel) => {
+  const levelText = reqLevel ? reqLevel : '1 (Chưa cấu hình CSDL)';
   Swal.fire({
     toast: true, position: 'top-end', icon: 'error',
     title: 'Truy cập bị từ chối!',
-    text: `Tính năng "${menuName}" yêu cầu Cấp ${reqLevel}. (Bạn đang ở Cấp ${userLevel.value})`,
+    text: `Tính năng "${menuName}" yêu cầu Cấp ${levelText}. (Bạn đang ở Cấp ${userLevel.value})`,
     showConfirmButton: false, timer: 4000, timerProgressBar: true,
   });
 };
