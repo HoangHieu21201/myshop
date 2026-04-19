@@ -262,6 +262,15 @@ const admin = [
         name: 'admin-contacts',
         component: () => import('../pages/admin/contact/index.vue')
       },
+      
+      // ROUTE QUẢN LÝ CHATBOT
+      {
+        path: 'chatbot',
+        name: 'admin-chatbot',
+        component: () => import('../pages/admin/chatbot/Index.vue'),
+        meta: { moduleCode: 'admin_chatbot' },
+      },
+
       // ROUTE CHAT
       {
         path: 'chat',

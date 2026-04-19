@@ -8,9 +8,8 @@
 
     <Footer />
 
-    <SoraChatbot />
+    <ChatbotWidget />
 
-    <!-- Nút Lên đầu trang -->
     <transition name="fade">
       <button
         v-show="isVisible"
@@ -30,7 +29,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import Header from '../components/user/Header.vue';
 import Footer from '../components/user/Footer.vue';
-import SoraChatbot from '@/components/user/SoraChatbot.vue';
+import ChatbotWidget from '@/components/user/ChatbotWidget.vue';
 import router from '@/router';
 
 // State quản lý việc hiển thị nút

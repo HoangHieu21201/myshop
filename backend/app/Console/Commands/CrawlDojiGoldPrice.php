@@ -76,9 +76,9 @@ class CrawlDojiGoldPrice extends Command
                 Cache::put('sora_gold_prices', $goldPrices, 300);
                 Cache::put('sora_gold_last_updated', now()->format('H:i d/m/Y'), 300);
 
-                $this->info('Thành công! Đã lấy được ' . count($goldPrices) . ' mã vàng, ĐÃ CHUẨN HÓA DẤU PHẨY và lưu vào Cache.');
+                $this->info('Thành công! Đã lấy được ' . count($goldPrices) . ' mã vàng.');
             } else {
-                $this->warn('Không tìm thấy dữ liệu giá vàng. DOJI có thể đã đổi giao diện HTML!');
+                $this->warn('Không tìm thấy dữ liệu giá vàng!');
             }
 
         } catch (\Exception $e) {
