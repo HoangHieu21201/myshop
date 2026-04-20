@@ -28,9 +28,11 @@
           </a>
 
           <div class="user-menu-wrapper position-relative" ref="userMenuContainer">
+            <!-- User Menu khi đăng nhập phải đổi màu và đổi biểu tượng biểu thị là đã dăng nhập -->
             <button @click="toggleUserMenu"
               class="btn border-0 p-0 bg-transparent icon-link hover-primary transition-color d-flex align-items-center justify-content-center">
-              <i class="bi bi-person" :class="user ? 'text-sora-primary fw-bold' : ''"></i>
+              <i v-if="user" class="bi bi-person-circle text-primary-custom"></i>
+              <i v-else class="bi bi-person-circle"></i>
             </button>
 
             <transition name="fade">
