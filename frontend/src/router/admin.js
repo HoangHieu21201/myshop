@@ -260,7 +260,8 @@ const admin = [
       {
         path: 'contacts',
         name: 'admin-contacts',
-        component: () => import('../pages/admin/contact/index.vue')
+        component: () => import('../pages/admin/contact/index.vue'),
+        meta: { moduleCode: 'admin_contacts' },
       },
       
       // ROUTE QUẢN LÝ CHATBOT
@@ -275,7 +276,8 @@ const admin = [
       {
         path: 'chat',
         name: 'admin-chat',
-        component: () => import('../pages/admin/AdminChat.vue')
+        component: () => import('../pages/admin/AdminChat.vue'),
+        meta: { moduleCode: 'admin_chat' },
       },
       // tin tứcccc
        {

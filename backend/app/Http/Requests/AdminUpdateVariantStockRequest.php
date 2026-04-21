@@ -11,19 +11,24 @@ class AdminUpdateVariantStockRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
-            'stock_quantity' => 'required|integer|min:0'
+            'action'   => 'required|in:add,subtract',
+            'quantity' => 'required|integer|min:1',  
+            'note'     => 'nullable|string|max:500', 
         ];
     }
 
     public function messages(): array
     {
         return [
-            'stock_quantity.required' => 'Vui lòng nhập số lượng tồn kho.',
-            'stock_quantity.integer'  => 'Số lượng tồn kho phải là số nguyên.',
-            'stock_quantity.min'      => 'Số lượng tồn kho không được nhỏ hơn 0.',
+            'action.required'   => 'Vui lòng chọn loại thao tác (Nhập thêm hoặc Trừ bớt).',
+            'action.in'         => 'Loại thao tác không hợp lệ.',
+            'quantity.required' => 'Vui lòng nhập số lượng thay đổi.',
+            'quantity.integer'  => 'Số lượng phải là một số nguyên.',
+            'quantity.min'      => 'Số lượng thay đổi phải lớn hơn 0.',
+            'note.max'          => 'Ghi chú không được vượt quá 500 ký tự.',
         ];
     }
 }

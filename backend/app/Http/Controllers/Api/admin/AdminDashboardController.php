@@ -50,15 +50,16 @@ class AdminDashboardController extends Controller
             $revenueQuery = Order::query();
             $totalRevenue = $this->applyRevenueFilter($revenueQuery)->sum('total_amount') ?? 0; 
 
-            $newOrders = Order::whereDate('created_at', Carbon::today())->count();
+           $newOrders = Order::whereDate('created_at', Carbon::today())->count();
             
             // Đếm toàn bộ User (Bảng users của bạn chỉ lưu khách hàng)
             $totalCustomers = User::count();
                 
-            // Tính tổng tồn kho từ bảng product_variants
-            $inventory = Schema::hasTable('product_variants') && Schema::hasColumn('product_variants', 'stock') 
-                ? DB::table('product_variants')->whereNull('deleted_at')->sum('stock') 
+            // Tính tổng tồn kho từ bảng product_variants (Sửa 'stock' thành 'stock_quantity')
+            $inventory = Schema::hasTable('product_variants') && Schema::hasColumn('product_variants', 'stock_quantity') 
+                ? DB::table('product_variants')->whereNull('deleted_at')->sum('stock_quantity') 
                 : 0;
+
 
             // ==========================================
             // TÍNH TOÁN % TĂNG/GIẢM SO VỚI KỲ TRƯỚC
@@ -111,18 +112,19 @@ class AdminDashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            $topProducts = $topProductsRaw->map(function($item) {
+           $topProducts = $topProductsRaw->map(function($item) {
                 // Dùng withTrashed() để tránh lỗi nếu sản phẩm đó đã bị người quản trị xóa mềm
                 $product = Product::withTrashed()->find($item->product_id);
                 
-                // Lấy tồn kho của tất cả biến thể thuộc sản phẩm này
+                // Lấy tồn kho của tất cả biến thể thuộc sản phẩm này (Sửa 'stock' thành 'stock_quantity')
                 $stock = 0;
-                if ($product && Schema::hasTable('product_variants') && Schema::hasColumn('product_variants', 'stock')) {
+                if ($product && Schema::hasTable('product_variants') && Schema::hasColumn('product_variants', 'stock_quantity')) {
                     $stock = DB::table('product_variants')
                         ->where('product_id', $product->id)
                         ->whereNull('deleted_at')
-                        ->sum('stock');
+                        ->sum('stock_quantity');
                 }
+
 
                 // Lấy thông tin lưu trữ trong order_items đề phòng product bị xóa vĩnh viễn
                 $snapshot = DB::table('order_items')->where('product_id', $item->product_id)->first();

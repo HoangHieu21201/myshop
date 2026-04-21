@@ -11,18 +11,19 @@ class AdminUpdateComboLimitRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
-            'usage_limit' => 'nullable|integer|min:0'
+            'usage_limit' => 'required|integer|min:0',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'usage_limit.integer' => 'Giới hạn số lượng phải là số nguyên.',
-            'usage_limit.min'     => 'Giới hạn số lượng không được nhỏ hơn 0.',
+            'usage_limit.required' => 'Vui lòng nhập giới hạn số lượng Combo.',
+            'usage_limit.integer'  => 'Giới hạn Combo phải là một số nguyên.',
+            'usage_limit.min'      => 'Giới hạn Combo không được là số âm.',
         ];
     }
 }

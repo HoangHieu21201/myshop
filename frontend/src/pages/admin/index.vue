@@ -30,7 +30,6 @@
         <div class="col-12 col-md-6 col-xl-3">
           <div class="card custom-card h-100 border-0 shadow-sm rounded-4">
             <div class="card-body p-4 d-flex flex-column">
-              <!-- Đưa Tiêu đề và Icon lên cùng 1 hàng -->
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <p class="text-muted fw-bold font-size-sm mb-0 text-uppercase letter-spacing-1 text-truncate pe-2">Tổng Doanh Thu</p>
                 <div class="icon-circle bg-brand-soft text-brand flex-shrink-0">
@@ -39,7 +38,6 @@
                   </svg>
                 </div>
               </div>
-              <!-- Số tiền chiếm toàn bộ dòng dưới, không bị icon chèn ép -->
               <div class="mb-3">
                 <h3 class="fw-bolder mb-0 text-dark stat-number">{{ formatCurrency(stats.totalRevenue) }}</h3>
               </div>
@@ -218,7 +216,7 @@
                       <td class="py-3 fw-bolder text-dark">{{ formatCurrency(order.total) }}</td>
                       <td class="pe-4 py-3 text-center">
                         <span class="badge rounded-pill border-0 fw-bold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1 justify-content-center" :class="getStatusBadgeClass(order.status)" style="min-width: 120px;">
-                          <i :class="getStatusIcon(order.status)"></i> {{ order.status }}
+                          <i :class="getStatusIcon(order.status)"></i> {{ translateStatus(order.status) }}
                         </span>
                       </td>
                     </tr>
@@ -238,7 +236,7 @@
             <div class="card-body px-4 pt-4 pb-4">
               <p v-if="topProducts.length === 0" class="text-center text-muted py-3">Chưa có sản phẩm nào được bán.</p>
               
-              <!-- Danh sách hiển thị Top Products -->
+              <!-- Danh sách hiển thị Top Products Đã Fix Giao Diện -->
               <ul v-else class="list-unstyled mb-0 d-flex flex-column gap-4">
                 <li v-for="(product, index) in topProducts" :key="product.id" class="d-flex align-items-center product-item">
                   <!-- Xếp hạng (Badge) -->
@@ -246,29 +244,39 @@
                     {{ index + 1 }}
                   </div>
                   
-                  <!-- Hình ảnh -->
-                  <div class="product-img-box ms-3 me-3 bg-light-soft d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm border border-light">
-                    <img v-if="product.image" :src="product.image" alt="Product" class="img-fluid rounded-3 h-100 w-100" style="object-fit: cover;"/>
-                    <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-secondary rounded-3">
+                  <!-- Hình ảnh có xử lý Error Fallback -->
+                  <div class="product-img-box ms-3 me-3 bg-light-soft position-relative d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm border border-light">
+                    <!-- Ảnh thật (Nếu load lỗi, tự động gán product.image = rỗng để hiện Box Icon) -->
+                    <img v-if="product.image" :src="product.image" @error="product.image = ''" alt="Product" class="img-fluid rounded-3 h-100 w-100 position-absolute top-0 start-0" style="object-fit: cover; z-index: 1;"/>
+                    
+                    <!-- Icon Placeholder (Hiện khi không có ảnh) -->
+                    <div v-if="!product.image" class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-secondary rounded-3">
                       <i class="bi bi-box-seam fs-4"></i>
                     </div>
                   </div>
                   
-                  <!-- Thông tin -->
-                  <div class="flex-grow-1 min-w-0">
-                    <h6 class="mb-1 fw-bold text-dark text-truncate font-size-sm" :class="{'text-decoration-line-through text-muted opacity-75': product.is_deleted}">
+                  <!-- Thông tin được cấu trúc lại Flexbox để không bao giờ bị ép -->
+                  <div class="flex-grow-1 min-w-0 d-flex flex-column justify-content-center">
+                    <!-- Tên SP: Hiển thị 2 dòng rồi mới thêm dấu ... -->
+                    <h6 class="mb-1 fw-bold text-dark font-size-sm" 
+                        style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;" 
+                        :class="{'text-decoration-line-through text-muted opacity-75': product.is_deleted}" 
+                        :title="product.name">
                       {{ product.name }}
                     </h6>
-                    <p class="mb-0 text-secondary font-size-xs fw-medium">
-                      Bán: <span class="text-dark">{{ product.sold }}</span> 
-                      <span class="mx-2 text-light">|</span> 
-                      Tồn: <span :class="product.stock < 20 ? 'text-danger fw-bolder' : 'text-dark'">{{ product.stock }}</span>
-                    </p>
-                  </div>
-                  
-                  <!-- Giá tiền hiển thị đầy đủ -->
-                  <div class="fw-bolder text-brand font-size-sm ms-2 text-end whitespace-nowrap">
-                    {{ formatCurrency(product.price) }}
+                    
+                    <!-- Hàng chứa Thông số và Giá được đẩy xuống dòng dưới -->
+                    <div class="d-flex justify-content-between align-items-end mt-1 flex-wrap gap-1">
+                      <p class="mb-0 text-secondary font-size-xs fw-medium">
+                        Bán: <span class="text-dark fw-bold">{{ product.sold }}</span> 
+                        <span class="mx-1 text-light">|</span> 
+                        Tồn: <span class="fw-bold" :class="product.stock < 20 ? 'text-danger' : 'text-dark'">{{ product.stock }}</span>
+                      </p>
+                      
+                      <div class="fw-bolder text-brand font-size-sm whitespace-nowrap">
+                        {{ formatCurrency(product.price) }}
+                      </div>
+                    </div>
                   </div>
                 </li>
               </ul>
@@ -320,7 +328,7 @@ const generateColors = (count) => {
   return colors;
 };
 
-// -- Dữ liệu mặc định ĐÃ CẬP NHẬT BIẾN GROWTH --
+// -- Dữ liệu mặc định --
 const stats = ref({ 
   totalRevenue: 0, revenueGrowth: 0,
   newOrders: 0, ordersGrowth: 0,
@@ -350,15 +358,8 @@ const fetchDashboardData = async () => {
       
       recentOrders.value = responseData.recentOrders || [];
       
-      if (responseData.topProducts && responseData.topProducts.length > 0) {
-         topProducts.value = responseData.topProducts;
-      } else {
-         topProducts.value = [
-            { id: 991, name: 'Sản phẩm mẫu 1 (Chưa có Data)', sold: 150, stock: 45, price: 15000000, image: '' },
-            { id: 992, name: 'Sản phẩm mẫu 2 (Chưa có Data)', sold: 120, stock: 15, price: 5000000, image: '' },
-            { id: 993, name: 'Sản phẩm mẫu 3 (Chưa có Data)', sold: 85, stock: 200, price: 32000000, image: '' }
-         ];
-      }
+      // Cập nhật lấy hoàn toàn từ API
+      topProducts.value = responseData.topProducts || [];
       
       chartDataObj.value = {
         labels: responseData.chartData?.labels || [],
@@ -508,7 +509,7 @@ const exportToExcel = () => {
       'Tên Khách Hàng': o.customer,
       'Ngày Đặt Hàng': o.date,
       'Tổng Tiền (VNĐ)': o.total,
-      'Trạng Thái': o.status
+      'Trạng Thái': translateStatus(o.status)
     }));
 
     const wsOverview = XLSX.utils.aoa_to_sheet(overviewData);
@@ -567,25 +568,41 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 };
 
-// --- MÀU SẮC ĐẶC SẮC (GRADIENT) CHO BADGE TRẠNG THÁI ---
+// Dịch trạng thái từ API tiếng Anh sang tiếng Việt mượt mà
+const translateStatus = (status) => {
+  const map = {
+    'pending': 'Chờ xác nhận',
+    'confirmed': 'Đã xác nhận',
+    'processing': 'Đang xử lý',
+    'shipping': 'Đang giao hàng',
+    'delivered': 'Đã giao hàng',
+    'cancelled': 'Đã hủy',
+    'returned': 'Đã hoàn trả',
+    'return_requested': 'Yêu cầu hoàn trả'
+  };
+  return map[status] || status;
+};
+
+// --- MÀU SẮC ĐẶC SẮC (GRADIENT) BẮT CHUẨN API ---
 const getStatusBadgeClass = (status) => {
   const s = status ? status.toLowerCase() : '';
-  if (s.includes('hoàn thành') || s.includes('giao thành công')) return 'badge-gradient-success';
-  if (s.includes('đang xử lý') || s.includes('chuẩn bị')) return 'badge-gradient-warning';
-  if (s.includes('đang giao') || s.includes('vận chuyển')) return 'badge-gradient-info';
-  if (s.includes('hủy') || s.includes('thất bại')) return 'badge-gradient-danger';
-  if (s.includes('chờ')) return 'badge-gradient-primary';
+  if (s === 'delivered') return 'badge-gradient-success';
+  if (s === 'processing' || s === 'confirmed') return 'badge-gradient-warning';
+  if (s === 'shipping') return 'badge-gradient-info';
+  if (s === 'cancelled' || s === 'returned' || s === 'return_requested') return 'badge-gradient-danger';
+  if (s === 'pending') return 'badge-gradient-primary';
   return 'badge-gradient-secondary';
 };
 
 // --- ICON ĐI KÈM CHO BADGE TRẠNG THÁI ---
 const getStatusIcon = (status) => {
   const s = status ? status.toLowerCase() : '';
-  if (s.includes('hoàn thành')) return 'bi-check-circle-fill';
-  if (s.includes('đang xử lý') || s.includes('chuẩn bị')) return 'bi-box-seam-fill';
-  if (s.includes('đang giao')) return 'bi-truck';
-  if (s.includes('hủy')) return 'bi-x-circle-fill';
-  if (s.includes('chờ')) return 'bi-hourglass-split';
+  if (s === 'delivered') return 'bi-check-circle-fill';
+  if (s === 'processing' || s === 'confirmed') return 'bi-box-seam-fill';
+  if (s === 'shipping') return 'bi-truck';
+  if (s === 'cancelled' || s === 'returned') return 'bi-x-circle-fill';
+  if (s === 'return_requested') return 'bi-arrow-return-left';
+  if (s === 'pending') return 'bi-hourglass-split';
   return 'bi-info-circle-fill';
 };
 
@@ -650,7 +667,7 @@ onMounted(() => {
 .bg-light-soft { background-color: #f8f9fa !important; }
 .bg-orange { background-color: #fd7e14 !important; }
 
-/* === LÀM MÀU MÈ ĐẶC SẮC (GRADIENT BADGES) THEO YÊU CẦU === */
+/* === LÀM MÀU MÈ ĐẶC SẮC (GRADIENT BADGES) BÁM THEO CHUẨN API === */
 .badge-gradient-success { background: linear-gradient(135deg, #2EC4B6, #009981); color: white; box-shadow: 0 4px 10px rgba(0,153,129,0.2); }
 .badge-gradient-warning { background: linear-gradient(135deg, #FFB75E, #ED8F03); color: white; box-shadow: 0 4px 10px rgba(237,143,3,0.2); }
 .badge-gradient-info { background: linear-gradient(135deg, #4CC9F0, #4361EE); color: white; box-shadow: 0 4px 10px rgba(67,97,238,0.2); }
