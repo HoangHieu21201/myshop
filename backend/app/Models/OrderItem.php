@@ -26,11 +26,11 @@ class OrderItem extends Model
         'combo_selections'
     ];
 
-   protected function casts(): array
+    protected function casts(): array
     {
         return [
-            'variant_attributes' => 'array', 
-            'combo_selections'   => 'array', 
+            'variant_attributes' => 'array',
+            'combo_selections'   => 'array',
             'price'              => 'decimal:2',
             'total_price'        => 'decimal:2',
         ];
@@ -45,5 +45,8 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
-    
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
 }

@@ -71,7 +71,7 @@ return [
         'module_code' => 'admin_inventory',
         'default_level' => 2
     ],
-     [
+    [
         'module_name' => 'admin_contacts',
         'module_code' => 'admin_contacts',
         'default_level' => 2
@@ -84,6 +84,16 @@ return [
     [
         'module_name' => 'admin_news',
         'module_code' => 'admin_news',
+        'default_level' => 2
+    ],
+    [
+        'module_name' => 'admin_chat',
+        'module_code' => 'admin_chat',
+        'default_level' => 2
+    ],
+    [
+        'module_name' => 'admin_chatbot',
+        'module_code' => 'admin_chatbot',
         'default_level' => 2
     ],
 ];

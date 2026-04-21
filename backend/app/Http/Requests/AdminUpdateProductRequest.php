@@ -66,7 +66,7 @@ class AdminUpdateProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'slug.unique' => 'Đường dẫn (slug) này đã tồn tại trên một sản phẩm khác.',
+            'slug.unique' => 'Sản phẩm (slug) này đã tồn tại trên một sản phẩm khác.',
             'parsed_variants.*.sku.distinct' => 'Có mã SKU bị trùng lặp bên trong lưới biến thể đang gửi.',
             'parsed_variants.*.promotional_price.lte' => 'Giá khuyến mãi không được lớn hơn Giá bán.',
             'parsed_variants.*.image_file.required_without' => 'Vui lòng chọn ảnh cho biến thể mới thêm.',

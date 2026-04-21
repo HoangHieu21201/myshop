@@ -47,8 +47,8 @@ class AdminUpdateCategoryRequest extends FormRequest
         return [
             'name.required' => 'Tên danh mục không được để trống.',
             'name.max' => 'Tên danh mục không được vượt quá 255 ký tự.',
-            'slug.required' => 'Đường dẫn (Slug) không được để trống.',
-            'slug.unique' => 'Đường dẫn này đã trùng với một danh mục khác trên hệ thống.',
+            'slug.required' => 'Danh mục (Slug) không được để trống.',
+            'slug.unique' => 'Danh mục này đã trùng với một danh mục khác trên hệ thống.',
             'parent_id.exists' => 'Danh mục cha không hợp lệ hoặc đã bị xóa.',
             'parent_id.not_in' => 'Danh mục cha KHÔNG THỂ là chính nó (Gây lỗi vòng lặp hệ thống).',
             'status.required' => 'Vui lòng chọn trạng thái.',

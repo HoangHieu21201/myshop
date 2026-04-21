@@ -129,7 +129,7 @@ class ClientCheckoutController extends Controller
                     }
                 }
 
-                $variants = ProductVariant::whereIn('id', array_unique($variantIdsToLock))
+                $variants = ProductVariant::with('product')->whereIn('id', array_unique($variantIdsToLock))
                     ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
                 $subTotal = 0;
@@ -463,7 +463,7 @@ class ClientCheckoutController extends Controller
     {
         try {
             // Mặc định gọi danh sách tỉnh thành
-            $apiPath = $request->query('api_path', 'p/'); 
+            $apiPath = $request->query('api_path', 'p/');
             $depth = $request->query('depth', 1);
 
             $response = Http::get("https://provinces.open-api.vn/api/{$apiPath}", [

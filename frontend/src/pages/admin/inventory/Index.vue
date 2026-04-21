@@ -63,7 +63,6 @@
       </div>
 
       <div class="d-flex flex-wrap gap-3 mb-4 align-items-center">
-
         <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm"
           v-if="['all_variants', 'low_stock'].includes(activeTab)">
           <span class="text-muted small fw-semibold me-2"><i class="bi bi-bell-fill text-warning"></i> Cảnh báo mức tồn
@@ -116,18 +115,18 @@
                   <th class="py-3 px-4 text-secondary border-0" style="width: 8%;">Ảnh</th>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 35%;">Thông tin Phân loại (Biến thể)</th>
                   <th class="py-3 px-4 text-secondary border-0 text-end" style="width: 15%;">Giá niêm yết</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 25%;">Kiểm kê Tồn kho</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 25%;">Nhập thêm Tồn kho</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 17%;">Trạng thái SP</th>
                 </tr>
               </thead>
               <tbody :class="{ 'pe-none': isSilentLoading }">
-                <tr v-if="displayVariants.length === 0 && !isSilentLoading">
+                <tr v-if="filteredVariants.length === 0 && !isSilentLoading">
                   <td colspan="5" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu tồn kho.
                   </td>
                 </tr>
 
-                <tr v-else v-for="variant in displayVariants" :key="variant.id"
+                <tr v-else v-for="variant in paginatedVariants" :key="variant.id"
                   :class="{ 'bg-danger bg-opacity-10': variant.stock_quantity <= lowStockThreshold }">
                   <td class="px-4 py-3">
                     <img :src="getThumbnail(variant.image_url || variant.product_thumbnail)" @error="handleImageError"
@@ -156,35 +155,51 @@
                     <div class="fw-bold text-success">{{ formatCurrency(variant.promotional_price || variant.price) }}
                     </div>
                   </td>
+                  
                   <td class="px-4">
                     <div class="d-flex align-items-center justify-content-center">
-                      <div class="d-flex align-items-center position-relative" style="width: max-content;">
-                        <input type="number" class="form-control form-control-sm text-center fw-bold shadow-sm"
-                          style="width: 100px; border-color: #ced4da !important; font-size: 0.85rem;"
-                          :class="{ 'text-danger border-danger': variant.localStock <= lowStockThreshold, 'text-dark': variant.localStock > lowStockThreshold }"
-                          v-model.number="variant.localStock" @input="checkVariantStockChange(variant)"
-                          :disabled="variant.isUpdating" min="0">
+                      <div class="text-center me-3 border-end pe-3">
+                        <span class="d-block small text-muted mb-1">Hiện tại</span>
+                        <span class="fw-bold fs-6" :class="{ 'text-danger': variant.stock_quantity <= lowStockThreshold }">{{ variant.stock_quantity }}</span>
+                      </div>
+                      
+                      <!-- Giao diện nhập kho mới -->
+                      <div class="d-flex flex-column">
+                        <div class="d-flex align-items-center position-relative" style="width: max-content;">
+                          <input type="number" class="form-control form-control-sm text-center fw-bold shadow-sm"
+                            style="width: 85px; font-size: 0.85rem;"
+                            :style="variant.stockAdjustment < 0 ? 'border-color: #dc3545 !important;' : 'border-color: #ced4da !important;'"
+                            :class="variant.stockAdjustment < 0 ? 'text-danger' : 'text-success'"
+                            placeholder="+ Thêm"
+                            v-model.number="variant.stockAdjustment" @input="checkVariantStockChange(variant)"
+                            :disabled="variant.isUpdating" min="1">
 
-                        <div class="position-absolute start-100 ms-2 d-flex align-items-center" style="width: 60px;">
-                          <div v-if="variant.isUpdating" class="spinner-border text-brand"
-                            style="width: 1.25rem; height: 1.25rem; border-width: 0.15em;"></div>
+                          <div class="position-absolute start-100 ms-2 d-flex align-items-center" style="width: 60px;">
+                            <div v-if="variant.isUpdating" class="spinner-border text-brand"
+                              style="width: 1.25rem; height: 1.25rem; border-width: 0.15em;"></div>
 
-                          <template v-else-if="variant.isChanged">
-                            <button @click="saveVariantStock(variant)"
-                              class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                              style="width: 24px; height: 24px; padding: 0;" title="Lưu">
-                              <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
-                            </button>
-                            <button @click="cancelVariantStockChange(variant)"
-                              class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1"
-                              style="width: 24px; height: 24px; padding: 0;" title="Hủy">
-                              <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
-                            </button>
-                          </template>
+                            <template v-else-if="variant.isChanged">
+                              <button @click="promptSaveVariantStock(variant)"
+                                class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                style="width: 24px; height: 24px; padding: 0;" title="Nhập kho">
+                                <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
+                              </button>
+                              <button @click="cancelVariantStockChange(variant)"
+                                class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1"
+                                style="width: 24px; height: 24px; padding: 0;" title="Hủy">
+                                <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
+                              </button>
+                            </template>
+                          </div>
+                        </div>
+                        <div class="text-center mt-1" style="min-height: 18px;">
+                           <small class="text-success fw-bold" v-if="variant.stockAdjustment > 0">Dự kiến: {{ variant.stock_quantity + variant.stockAdjustment }}</small>
+                           <small class="text-danger fw-bold" v-else-if="variant.stockAdjustment < 0">&gt; 0</small>
                         </div>
                       </div>
                     </div>
                   </td>
+
                   <td class="px-4 text-center">
                     <span class="badge" :class="getStatusBadgeClass(variant.product_status)">{{
                       getStatusText(variant.product_status)
@@ -208,13 +223,13 @@
                 </tr>
               </thead>
               <tbody :class="{ 'pe-none': isSilentLoading }">
-                <tr v-if="displayCombos.length === 0 && !isSilentLoading">
+                <tr v-if="filteredCombos.length === 0 && !isSilentLoading">
                   <td colspan="6" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu gói ưu đãi.
                   </td>
                 </tr>
 
-                <tr v-else v-for="combo in displayCombos" :key="combo.id"
+                <tr v-else v-for="combo in paginatedCombos" :key="combo.id"
                   :class="{ 'bg-light opacity-75': isComboExpired(combo) }">
                   <td class="px-4 py-3">
                     <img :src="getThumbnail(combo.thumbnail_image)" @error="handleImageError"
@@ -274,6 +289,24 @@
               </tbody>
             </table>
           </div>
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4" v-if="totalPages > 1">
+            <span class="text-muted small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, ['all_variants', 'low_stock'].includes(activeTab) ? filteredVariants.length : filteredCombos.length) }}</span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0 shadow-sm">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <button class="page-link text-brand" @click="currentPage = Math.max(1, currentPage - 1)"><i class="bi bi-chevron-left"></i></button>
+                </li>
+                <li class="page-item" v-for="(page, idx) in visiblePages" :key="idx" :class="{ active: currentPage === page, disabled: page === '...' }">
+                  <button class="page-link" :class="currentPage === page ? 'bg-brand border-brand text-white' : 'text-dark'" @click="page !== '...' && (currentPage = page)">{{ page }}</button>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <button class="page-link text-brand" @click="currentPage = Math.min(totalPages, currentPage + 1)"><i class="bi bi-chevron-right"></i></button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
         </div>
       </div>
     </div>
@@ -285,6 +318,8 @@ import { ref, onMounted, computed, watch } from 'vue';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
+
+const apiBase = import.meta.env.VITE_API_BASE_URL;
 
 const isFirstLoad = ref(true);
 const isSilentLoading = ref(false);
@@ -298,6 +333,9 @@ const filters = ref({ product_status: 'all' });
 const allVariantsData = ref([]);
 const allCombosData = ref([]);
 
+const currentPage = ref(1);
+const itemsPerPage = 10;
+
 const counts = ref({ all_variants: 0, low_stock: 0, active_combos: 0, expired_combos: 0 });
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
@@ -308,7 +346,12 @@ const formatDateTime = (dateString) => {
   const d = new Date(dateString);
   return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
 };
-const getThumbnail = (url) => url ? `http://127.0.0.1:8000/storage/${url}` : defaultPlaceholder;
+
+const getThumbnail = (url) => {
+  if (!url) return defaultPlaceholder;
+  const storageBaseUrl = apiBase.replace(/\/api\/?$/, '');
+  return `${storageBaseUrl}/storage/${url}`;
+};
 
 const handleImageError = (e) => {
   e.target.src = defaultPlaceholder;
@@ -354,8 +397,20 @@ const isComboExpired = (combo) => {
   return end < new Date().getTime();
 };
 
-const checkVariantStockChange = (variant) => { variant.isChanged = variant.localStock !== variant.stock_quantity; };
-const cancelVariantStockChange = (variant) => { variant.localStock = variant.stock_quantity; variant.isChanged = false; };
+const checkVariantStockChange = (variant) => {
+  const adj = parseInt(variant.stockAdjustment);
+  // Chỉ cho phép nhập số DƯƠNG lớn hơn 0
+  if (!isNaN(adj) && adj > 0) {
+    variant.isChanged = true;
+  } else {
+    variant.isChanged = false;
+  }
+};
+
+const cancelVariantStockChange = (variant) => { 
+  variant.stockAdjustment = ''; 
+  variant.isChanged = false; 
+};
 
 const checkComboLimitChange = (combo) => {
   const currentVal = combo.usage_limit === null ? '' : combo.usage_limit;
@@ -370,28 +425,69 @@ watch(lowStockThreshold, () => {
   updateCounts();
 });
 
-const saveVariantStock = async (variant) => {
+watch([activeTab, searchQuery, filters], () => {
+  currentPage.value = 1;
+});
+
+// Hàm hiển thị Popup hỏi lý do trước khi Lưu
+const promptSaveVariantStock = async (variant) => {
+  const quantity = parseInt(variant.stockAdjustment);
+  if (isNaN(quantity) || quantity <= 0) {
+    Swal.fire({ icon: 'warning', title: 'Không hợp lệ', text: 'Chỉ được phép nhập số lượng cộng thêm (lớn hơn 0).' });
+    return;
+  }
+
+  const { value: note } = await Swal.fire({
+    title: 'Xác nhận nhập kho',
+    html: `Bạn đang thêm <b>${quantity}</b> sản phẩm vào kho.<br><br>Vui lòng nhập <b>Mã phiếu nhập</b> hoặc <b>Lý do</b> để lưu vết (bắt buộc):`,
+    input: 'text',
+    inputPlaceholder: 'VD: PN-012023 hoặc Hàng trả bảo hành',
+    showCancelButton: true,
+    confirmButtonText: 'Xác nhận nhập kho',
+    cancelButtonText: 'Hủy',
+    confirmButtonColor: '#009981',
+    inputValidator: (value) => {
+      if (!value || value.trim().length === 0) {
+        return 'Lý do nhập kho không được để trống!';
+      }
+    }
+  });
+
+  if (note) {
+    executeSaveVariantStock(variant, quantity, note.trim());
+  }
+};
+
+// Hàm gửi API thực sự sau khi có Lý do
+const executeSaveVariantStock = async (variant, quantity, note) => {
   variant.isUpdating = true;
   try {
     const payload = {
-      stock_quantity: variant.localStock
+      action: 'add',
+      quantity: quantity,
+      note: note
     };
 
-    await axios.put(`http://127.0.0.1:8000/api/admin/inventory/variants/${variant.id}/stock`, payload, { headers: getHeaders() });
+    await axios.put(`${apiBase}/admin/inventory/variants/${variant.id}/stock`, payload, { headers: getHeaders() });
 
-    variant.stock_quantity = variant.localStock;
+    variant.stock_quantity += quantity;
+    variant.stockAdjustment = '';
     variant.isChanged = false;
     updateCounts();
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật tồn kho thành công', showConfirmButton: false, timer: 1500 });
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Nhập kho thành công', showConfirmButton: false, timer: 1500 });
   } catch (error) {
     cancelVariantStockChange(variant);
 
     let errorMsg = 'Không thể lưu thay đổi';
-    if (error.response?.data?.errors?.stock_quantity) {
-      errorMsg = error.response.data.errors.stock_quantity[0];
+    if (error.response?.data?.message) {
+      errorMsg = error.response.data.message;
+    } else if (error.response?.data?.errors?.note) {
+      errorMsg = error.response.data.errors.note[0];
+    } else if (error.response?.data?.errors?.quantity) {
+      errorMsg = error.response.data.errors.quantity[0];
     }
 
-    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: errorMsg, showConfirmButton: false, timer: 2000 });
+    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: errorMsg, showConfirmButton: false, timer: 3000 });
   } finally {
     variant.isUpdating = false;
   }
@@ -404,7 +500,7 @@ const saveComboLimit = async (combo) => {
       usage_limit: combo.localLimit === '' ? null : combo.localLimit
     };
 
-    await axios.put(`http://127.0.0.1:8000/api/admin/inventory/combos/${combo.id}/limit`, payload, { headers: getHeaders() });
+    await axios.put(`${apiBase}/admin/inventory/combos/${combo.id}/limit`, payload, { headers: getHeaders() });
 
     combo.usage_limit = combo.localLimit === '' ? null : combo.localLimit;
     combo.isChanged = false;
@@ -429,9 +525,9 @@ const fetchData = async (silent = false) => {
 
   try {
     const [resVariants, resCombos, resModules] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/admin/inventory/variants', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/admin/combos?per_page=1000', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+      axios.get(`${apiBase}/admin/inventory/variants`, { headers: getHeaders() }),
+      axios.get(`${apiBase}/admin/combos?per_page=1000`, { headers: getHeaders() }),
+      axios.get(`${apiBase}/admin/modules`, { headers: getHeaders() })
     ]);
 
     const sysModules = resModules.data.data;
@@ -453,7 +549,7 @@ const fetchData = async (silent = false) => {
           product_status: v.product.status,
           product_thumbnail: v.product.thumbnail_image,
           category_name: v.product.category?.name || 'Uncategorized',
-          localStock: v.stock_quantity,
+          stockAdjustment: '',
           attributes: v.formatted_attributes,
           isChanged: false,
           isUpdating: false
@@ -506,7 +602,7 @@ const tableTitle = computed(() => {
   return map[activeTab.value] || '';
 });
 
-const displayVariants = computed(() => {
+const filteredVariants = computed(() => {
   let result = allVariantsData.value;
 
   if (activeTab.value === 'low_stock') {
@@ -527,7 +623,13 @@ const displayVariants = computed(() => {
   return result;
 });
 
-const displayCombos = computed(() => {
+const paginatedVariants = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredVariants.value.slice(start, end);
+});
+
+const filteredCombos = computed(() => {
   let result = allCombosData.value;
 
   if (activeTab.value === 'expired_combos') {
@@ -544,6 +646,34 @@ const displayCombos = computed(() => {
     );
   }
   return result;
+});
+
+const paginatedCombos = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredCombos.value.slice(start, end);
+});
+
+const totalPages = computed(() => {
+  const data = ['all_variants', 'low_stock'].includes(activeTab.value) ? filteredVariants.value : filteredCombos.value;
+  return Math.ceil(data.length / itemsPerPage);
+});
+
+const visiblePages = computed(() => {
+  const current = currentPage.value;
+  const total = totalPages.value;
+  
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  if (current <= 3) {
+    return [1, 2, 3, 4, '...', total];
+  } else if (current >= total - 2) {
+    return [1, '...', total - 3, total - 2, total - 1, total];
+  } else {
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  }
 });
 
 onMounted(() => {
