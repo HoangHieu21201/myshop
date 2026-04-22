@@ -4,14 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-// LƯU Ý QUAN TRỌNG: 
-// Bạn phải đổi tên file từ "NewModel.php" thành "News.php" (chữ N hoa)
-// Nếu không Laravel sẽ không tìm thấy class này và văng lỗi 500.
+use Illuminate\Database\Eloquent\SoftDeletes; // 1. Import SoftDeletes
 
 class News extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // 2. Thêm SoftDeletes vào đây
 
     protected $table = 'news';
 

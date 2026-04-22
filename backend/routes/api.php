@@ -333,6 +333,10 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['check.module:admin_news'])->group(function () {
             Route::controller(AdminNewController::class)->prefix('news')->group(function () {
                 Route::get('/', 'index');
+                
+        
+                Route::post('/{id}/restore', 'restore'); 
+
                 Route::get('/{id}', 'show');
                 Route::post('/', 'store');
                 Route::put('/{id}', 'update');

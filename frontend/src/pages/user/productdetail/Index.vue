@@ -207,38 +207,63 @@
           </div>
         </div>
       </main>
+<section class="featured-lines-section">
+  <h2 class="section-title text-center">✨ Dòng hàng nổi bật</h2>
 
-      <section class="featured-lines-section">
-        <h2 class="section-title text-center">Dòng hàng nổi bật</h2>
-        <div class="featured-lines-container">
-          <div class="featured-banner">
-            <img src="https://bazaarvietnam.vn/wp-content/uploads/2015/05/co-nen-cat-toc-ngan-02-lisa-blackpink-bvlgari.jpg" alt="Kim cương tinh tuyển">
-          </div>
-          
-          <div class="featured-content">
-            <div class="featured-tags">
-              <button 
-                v-for="brand in shopBrands" 
-                :key="brand.id" 
-                class="f-tag-btn"
-                @click="goToShopWithBrand(brand.id)"
-              >
-                {{ brand.name }}
-              </button>
-              <button v-if="shopBrands.length === 0" class="f-tag-btn">Đang tải thương hiệu...</button>
-            </div>
-            
-            <div class="featured-desc">
-              <p>
-                <strong>Sora – Tỏa sáng vẻ đẹp tinh tế</strong> với những thiết kế trang sức nổi bật được chế tác tỉ mỉ trong từng chi tiết. Lấy cảm hứng từ nét đẹp hiện đại pha lẫn sự thanh lịch, mỗi sản phẩm mang đến dấu ấn riêng, giúp bạn tự tin thể hiện phong cách cá nhân.
-              </p>
-              <p>
-                Từ những mẫu tối giản đến thiết kế cầu kỳ, <em>bộ sưu tập nổi bật của Sora</em> không chỉ là trang sức mà còn là biểu tượng của sự sang trọng và đẳng cấp. Sora đồng hành cùng bạn trong mọi khoảnh khắc – từ thường ngày đến những dịp đặc biệt.
-              </p>
-            </div>
-          </div>
+  <div class="featured-lines-container">
+    
+    <!-- Banner -->
+    <div class="featured-banner">
+      <img src="https://bazaarvietnam.vn/wp-content/uploads/2015/05/co-nen-cat-toc-ngan-02-lisa-blackpink-bvlgari.jpg" alt="SORA Banner">
+      
+      <!-- Badge khuyến mãi -->
+      <div class="promo-badge">
+        🔥 Giảm đến 30%
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="featured-content">
+
+      <!-- Brand filter -->
+      <div class="featured-tags">
+         <h1>SORA ✨</h1>
+        <button 
+          v-for="brand in shopBrands" 
+          :key="brand.id" 
+          class="f-tag-btn"
+          @click="goToShopWithBrand(brand.id)"
+        >
+          💎 
+        </button>
+      </div>
+
+      <!-- Nội dung -->
+      <div class="featured-desc">
+       
+
+        <p>
+          <strong>💎 Sora – Tỏa sáng vẻ đẹp tinh tế</strong> với những thiết kế trang sức cao cấp, chế tác tỉ mỉ đến từng chi tiết.
+        </p>
+
+        <p>
+          ✨ Từ phong cách tối giản đến sang trọng, mỗi sản phẩm là một dấu ấn riêng giúp bạn nổi bật mọi lúc.
+        </p>
+
+        <!-- Ưu đãi -->
+        <div class="featured-benefits">
+          <div>🚚 Miễn phí vận chuyển</div>
+          <div>🎁 Tặng hộp quà cao cấp</div>
+          <div>💳 Ưu đãi thành viên</div>
         </div>
-      </section>
+
+        
+      </div>
+
+    </div>
+  </div>
+</section>
+
 
       <!-- CÓ THỂ BẠN SẼ THÍCH SECTION -->
       <section class="recommendations-section">
@@ -331,6 +356,53 @@
       <section class="product-description-section">
         <h2 class="section-title">MÔ TẢ SẢN PHẨM</h2>
         <div class="description-content" v-html="product.description"></div>
+      </section>
+
+      <!-- PRODUCT REVIEWS SECTION -->
+      <section class="product-reviews-section">
+        <h2 class="section-title">ĐÁNH GIÁ SẢN PHẨM</h2>
+        
+        <div class="reviews-overview" v-if="product.reviews && product.reviews.length > 0">
+          <div class="rating-summary">
+            <div class="rating-score">{{ Number(product.rating_avg).toFixed(1) }}<span>/5</span></div>
+            <div class="rating-stars">
+              <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="{'active': n <= Math.round(product.rating_avg)}"></i>
+            </div>
+            <div class="rating-count">{{ product.reviews.length }} đánh giá</div>
+          </div>
+        </div>
+
+        <div class="reviews-list" v-if="product.reviews && product.reviews.length > 0">
+          <div class="review-item" v-for="review in product.reviews" :key="review.id">
+            <div class="review-header">
+              <div class="review-avatar">
+                <img :src="review.user?.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="Avatar">
+              </div>
+              <div class="review-user-info">
+                <div class="review-username">{{ review.user?.fullName || 'Khách hàng' }}</div>
+                <div class="review-rating">
+                  <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="{'active': n <= review.rating}"></i>
+                </div>
+                <div class="review-date">{{ new Date(review.created_at).toLocaleDateString('vi-VN') }}</div>
+              </div>
+            </div>
+            <div class="review-content">
+              <p>{{ review.comment }}</p>
+            </div>
+            <div class="review-images" v-if="review.images && review.images.length > 0">
+              <img v-for="(img, index) in review.images" :key="index" :src="img" alt="Review Image" @error="handleImageError">
+            </div>
+            <div class="review-admin-reply" v-if="review.admin_reply">
+              <div class="reply-title"><i class="fa-solid fa-store"></i> Phản hồi từ SORA JEWELRY:</div>
+              <p>{{ review.admin_reply }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="no-reviews" v-else>
+          <i class="fa-regular fa-comment-dots"></i>
+          <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+        </div>
       </section>
 
     </template>
@@ -1157,7 +1229,7 @@ input[type=number] { -moz-appearance: textfield; }
 .featured-tags { display: flex; flex-wrap: wrap; gap: 12px; }
 .f-tag-btn { background: transparent; border: 1px solid #ccc; color: #555; padding: 10px 20px; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s ease; border-radius: 50px; }
 .f-tag-btn:hover, .f-tag-btn:first-child { background: #333; color: #fff; border-color: #333; }
-.featured-desc p { font-size: 14px; line-height: 1.8; color: #555; margin-bottom: 15px; text-align: justify; }
+
 
 .recommendations-section { padding-top: 40px; border-top: 1px solid #eee;}
 .recommendations-header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; margin-bottom: 20px; }
@@ -1325,6 +1397,39 @@ input[type=number] { -moz-appearance: textfield; }
 .section-title { font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
 .description-content { line-height: 1.8; color: #555; font-size: 15px; }
 
+/* REVIEWS SECTION */
+.product-reviews-section { padding-top: 40px; border-top: 1px solid #eee; margin-top: 20px; max-width: 1300px; margin-left: auto; margin-right: auto; background: #fff; padding-bottom: 50px; padding-left: 20px; padding-right: 20px; }
+.reviews-overview { display: flex; align-items: center; justify-content: center; margin-bottom: 30px; background: #fcfcfc; padding: 25px; border-radius: 12px; border: 1px solid #f0f0f0; }
+.rating-summary { text-align: center; }
+.rating-score { font-size: 42px; font-weight: 700; color: rgb(159,39,59); line-height: 1; }
+.rating-score span { font-size: 20px; color: #888; font-weight: 500; }
+.rating-stars { margin: 10px 0; color: #e4e4e4; font-size: 18px; }
+.rating-stars i.active { color: #f5a623; }
+.rating-count { font-size: 14px; color: #666; }
+
+.reviews-list { display: flex; flex-direction: column; gap: 20px; }
+.review-item { padding: 25px; border: 1px solid #f0f0f0; border-radius: 12px; background: #fff; transition: box-shadow 0.3s; }
+.review-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+.review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+.review-avatar { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #eee; }
+.review-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.review-user-info { display: flex; flex-direction: column; }
+.review-username { font-weight: 600; font-size: 14px; color: #333; }
+.review-rating { color: #e4e4e4; font-size: 12px; margin: 3px 0; }
+.review-rating i.active { color: #f5a623; }
+.review-date { font-size: 12px; color: #999; }
+.review-content { font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 15px; }
+.review-images { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+.review-images img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; cursor: pointer; transition: transform 0.2s; }
+.review-images img:hover { transform: scale(1.05); }
+.review-admin-reply { background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 3px solid rgb(159,39,59); }
+.reply-title { font-weight: 600; font-size: 13px; color: rgb(159,39,59); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.review-admin-reply p { font-size: 13px; color: #555; margin: 0; line-height: 1.5; }
+
+.no-reviews { text-align: center; padding: 50px 20px; background: #fcfcfc; border-radius: 12px; border: 1px dashed #ddd; color: #888; }
+.no-reviews i { font-size: 40px; color: #ccc; margin-bottom: 15px; }
+.no-reviews p { font-size: 15px; margin: 0; }
+
 @media (max-width: 1024px) {
   .product-grid { flex-wrap: wrap; }
   .product-gallery { width: 100%; }
@@ -1405,4 +1510,89 @@ input[type=number] { -moz-appearance: textfield; }
   .header-search-wrap { width: 100%; justify-content: space-between; }
   .modal-search-input { max-width: none; flex: 1; margin-right: 15px;}
 }
+.featured-lines-section {
+  padding: 50px 20px;
+  background: #f9f9f9;
+}
+
+.featured-lines-container {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.featured-banner {
+  position: relative;
+  flex: 1;
+}
+
+.featured-banner img {
+  width: 100%;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+
+.featured-banner img:hover {
+  transform: scale(1.05);
+}
+
+/* Badge */
+.promo-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: red;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+/* Content */
+.featured-content {
+  flex: 1;
+}
+
+.featured-tags {
+  margin-bottom: 15px;
+}
+
+.f-tag-btn {
+  margin: 5px;
+  padding: 6px 12px;
+  border: none;
+  background: #eee;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.f-tag-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* Benefit */
+.featured-benefits {
+  margin: 15px 0;
+  display: flex;
+  gap: 15px;
+  font-size: 18px;
+}
+
+/* Button */
+.btn-shop-now {
+  padding: 10px 20px;
+  border: none;
+  background: #000;
+  color: #fff;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-shop-now:hover {
+  background: #444;
+}
+
 </style>

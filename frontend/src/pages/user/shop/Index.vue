@@ -13,28 +13,22 @@
     <!-- LỰA CHỌN LÝ TƯỞNG (DANH MỤC) -->
     <section class="ideal-choices-section py-2 border-bottom sora-border-light" style="background-color: rgb(159,39,59);">
       <div class="container-fluid px-3 py-1 py-md-2">
-        
-        <!-- Header -->
         <div class="d-flex flex-column align-items-center text-center mb-2">
           <h2 class="text-white fw-bold mb-1 font-serif" style="font-size: clamp(1.4rem, 2.5vw, 1.8rem); letter-spacing: 0.02em;">Lựa chọn lý tưởng</h2>
           <div class="d-flex align-items-center justify-content-center mb-3">
             <svg width="120" height="15" viewBox="0 0 150 20" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.8;">
-              <!-- Ornamental divider -->
               <path d="M10 10h40m50 0h40M65 10c0-3 4-5 10-5s10 2 10 5-4 5-10 5-10-2-10-5z" stroke="white" stroke-width="1.5" fill="none"/>
             </svg>
           </div>
         </div>
 
-        <!-- Skeleton/Spinner cho Categories -->
         <div v-if="isLoadingCategories" class="d-flex justify-content-center py-4">
           <div class="spinner-border text-white" style="width: 2rem; height: 2rem; border-width: 0.1em;" role="status"></div>
         </div>
 
-        <!-- 5 Danh Mục Tròn (Co giãn Responsive - Đã thu nhỏ gọn hơn) -->
         <div v-else class="row justify-content-center row-cols-2 row-cols-sm-3 row-cols-md-5 g-2 g-md-3 mb-3 pb-2 mx-auto" style="max-width: 900px;">
           <div class="col" v-for="cat in categories.slice(0, 5)" :key="cat.id">
             <div class="category-circle-item text-center cursor-pointer group d-flex flex-column align-items-center" @click="filterByCategory(cat.slug)">
-              <!-- Cố định kích thước ảnh tròn nhỏ lại khoảng 85px -->
               <div class="circle-img-wrapper rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center mb-2 transition-transform duration-400 group-hover-scale" style="width: 85px; height: 85px; padding: 2px;">
                 <img :src="getImageUrl(cat.thumbnail)" loading="lazy" :alt="cat.name" @error="handleImageError" class="w-100 h-100 object-fit-contain rounded-circle transition-transform duration-500 group-hover-scale-img">
               </div>
@@ -44,36 +38,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Banners Co giãn (Luôn hiển thị ít nhất 2 sản phẩm) -->
-        <div class="row justify-content-center g-2 g-md-3 mx-auto" style="max-width: 1000px;" v-if="promoProducts.length > 0">
-          <div class="col-12 col-md-6" v-for="(prod, idx) in promoProducts" :key="'promo-' + prod.id">
-            <div class="promo-banner bg-white p-2 p-md-3 d-flex align-items-center justify-content-between h-100 cursor-pointer shadow-sm transition-all duration-300 hover-translate-y" style="border-radius: 4px;" @click="goToProductDetail(prod.slug)">
-              <div class="promo-content pe-2">
-                <p class="text-uppercase text-muted mb-1 font-oswald" style="font-size: 0.65rem; letter-spacing: 1px;">
-                  {{ prod.category?.name || 'BỘ SƯU TẬP' }}
-                </p>
-                <h4 class="text-dark playfair-font fw-bold mb-1" style="font-size: clamp(0.9rem, 1.5vw, 1.1rem); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                  {{ prod.name }}
-                </h4>
-                
-                <!-- Tính toán phần trăm giảm giá tự động -->
-                <p class="text-dark mb-1 mb-md-2 fw-medium font-oswald" style="font-size: 0.8rem;" v-if="prod.promotional_price && prod.base_price > prod.promotional_price">
-                  Giảm {{ Math.round(((prod.base_price - prod.promotional_price) / prod.base_price) * 100) }}%
-                </p>
-                <p class="text-dark mb-1 mb-md-2 fw-medium font-oswald" style="font-size: 0.8rem;" v-else>
-                  Mới Ra Mắt
-                </p>
-
-                <span class="text-uppercase border-bottom border-dark pb-0 text-dark d-inline-block font-oswald" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 1px;">Mua ngay</span>
-              </div>
-              <div class="promo-img-wrapper flex-shrink-0" style="width: clamp(70px, 15vw, 100px); aspect-ratio: 1/1;">
-                <img :src="getImageUrl(prod.thumbnail_image)" loading="lazy" :alt="prod.name" class="w-100 h-100 object-fit-contain" @error="handleImageError">
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
 
@@ -84,6 +48,7 @@
         <!-- SIDEBAR BỘ LỌC (LEFT) -->
         <div class="col-lg-2 col-md-3 d-none d-md-block sidebar-filter pe-4 border-end sora-border-light pt-2">
           
+          <!-- BỘ LỌC DANH MỤC -->
           <div class="filter-widget mb-5">
             <h5 class="filter-title playfair-font mb-4 fs-5 fw-normal text-dark border-bottom pb-3">Danh mục</h5>
             <ul class="list-unstyled mb-0 filter-list">
@@ -96,19 +61,43 @@
             </ul>
           </div>
 
-          <div class="filter-widget mb-5" v-for="(group, index) in filterGroups" :key="index">
-            <template v-if="group.key !== 'categories'">
-              <h5 class="filter-title playfair-font mb-4 fs-5 fw-normal text-dark border-bottom pb-3">{{ group.title }}</h5>
-              <ul class="list-unstyled mb-0 filter-list">
-                <li v-for="(option, optIdx) in group.options" :key="optIdx" class="mb-3">
-                  <div class="custom-checkbox d-flex align-items-center cursor-pointer" @click="toggleFilter(group.key, option.value)">
-                    <div class="checkmark transition-all duration-300 shadow-sm" :class="{'checked': filters[group.key] === option.value}"></div>
-                    <span class="label-text ms-3 transition-colors" :class="filters[group.key] === option.value ? 'text-dark fw-bold' : 'text-muted'">{{ option.label }}</span>
-                  </div>
-                </li>
-              </ul>
-            </template>
+          <!-- BỘ LỌC MÀU SẮC (Trích xuất từ Biến thể) -->
+          <div v-if="colorOptions.length > 0" class="filter-widget mb-5">
+            <h5 class="filter-title playfair-font mb-4 fs-5 fw-normal text-dark border-bottom pb-3">Màu sắc</h5>
+            <div class="d-flex flex-wrap gap-2">
+              <div 
+                v-for="(color, index) in colorOptions" :key="index"
+                class="color-filter-circle cursor-pointer position-relative shadow-sm"
+                :class="{'selected': selectedColors.includes(color)}"
+                :style="{ backgroundColor: getColorCode(color) }"
+                @click="toggleColor(color)"
+                :title="color"
+              >
+                <i v-if="selectedColors.includes(color)" class="bi bi-check position-absolute text-white" style="top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);"></i>
+              </div>
+            </div>
           </div>
+
+          <!-- BỘ LỌC THUỘC TÍNH ĐỘNG KHÁC (Chỉ lấy Chất liệu) -->
+          <div v-if="isLoadingAttributes" class="d-flex justify-content-center mb-5">
+             <div class="spinner-grow spinner-grow-sm text-secondary" role="status"></div>
+          </div>
+          <template v-else>
+            <div class="filter-widget mb-5" v-for="attr in dynamicAttributes" :key="attr.id">
+              <template v-if="!isColorAttribute(attr.name)">
+                <h5 class="filter-title playfair-font mb-4 fs-5 fw-normal text-dark border-bottom pb-3">{{ attr.name }}</h5>
+                <ul class="list-unstyled mb-0 filter-list d-flex flex-wrap gap-2">
+                  <li v-for="val in attr.values" :key="val.id" class="mb-2 w-100">
+                    <div class="custom-checkbox d-flex align-items-center cursor-pointer" @click="toggleAttribute(val.value)">
+                      <div class="checkmark transition-all duration-300 shadow-sm" :class="{'checked': selectedAttributes.includes(val.value)}"></div>
+                      <span class="label-text ms-3 transition-colors" :class="selectedAttributes.includes(val.value) ? 'text-dark fw-bold' : 'text-muted'">{{ val.value }}</span>
+                    </div>
+                  </li>
+                </ul>
+              </template>
+            </div>
+          </template>
+
         </div>
 
         <!-- MAIN PRODUCT GRID (RIGHT) -->
@@ -146,38 +135,19 @@
                           <span v-if="product.is_new" class="sora-badge">MỚI</span>
                           <span v-if="product.promotional_price" class="sora-badge sale-badge">SALE</span>
                       </div>
-
-                      <button class="sora-wishlist-btn" :class="{ 'active': isFavourited(product.id) }" @click.stop="toggleFavourite(product)" :disabled="isTogglingFav === product.id">
-                          <span v-if="isTogglingFav === product.id" class="spinner-border spinner-border-sm text-danger" style="width: 1rem; height: 1rem;"></span>
-                          <i v-else :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
-                      </button>
-
                       <img :src="getImageUrl(product.thumbnail_image)" loading="lazy" :alt="product.name" class="sora-main-img" @error="handleImageError">
-                      
-                      <img v-if="hasHoverImage(product)"
-                           :src="getImageUrl(product.hover_image)" 
-                           loading="lazy"
-                           :alt="product.name + ' hover'" 
-                           class="sora-hover-img" 
-                           @error="handleImageError">
+                      <img v-if="hasHoverImage(product)" :src="getImageUrl(product.hover_image)" loading="lazy" :alt="product.name + ' hover'" class="sora-hover-img" @error="handleImageError">
                   </div>
 
                   <div class="sora-card-info">
                       <h3 class="sora-card-title" :title="product.name">{{ product.name }}</h3>
                       <p class="sora-card-category">{{ product.category?.name || 'Trang sức SORA' }}</p>
                       
-                      <!-- SỬA LẠI HIỂN THỊ GIÁ VÀ % GIẢM GIÁ Ở ĐÂY -->
                       <div class="sora-card-price d-flex align-items-center justify-content-center flex-wrap gap-1">
                           <span v-if="product.promotional_price" class="sora-card-price-old">
                             {{ formatPrice(product.base_price) }}
                           </span>
                           <span>{{ formatPrice(product.promotional_price || product.base_price) }}</span>
-                          
-                          <!-- Tag % Giảm giá -->
-                          <span v-if="product.promotional_price && product.base_price && product.base_price > product.promotional_price" 
-                                class="sora-discount-tag">
-                              -{{ Math.round(((product.base_price - product.promotional_price) / product.base_price) * 100) }}%
-                          </span>
                       </div>
                   </div>
 
@@ -198,51 +168,33 @@
             <button @click="resetFilters" class="btn text-uppercase ls-widest px-5 py-3 transition-colors sora-btn-primary" style="font-size: 0.8rem; border-radius: 8px;">Xóa Bộ Lọc</button>
           </div>
 
-          <!-- PAGINATION -->
-          <div v-if="pagination.last_page > 1" class="d-flex justify-content-center align-items-center gap-4 mt-5 pt-5 border-top sora-border-light">
-            <button @click="changePage(pagination.current_page - 1)" :disabled="pagination.current_page === 1" class="btn rounded-0 px-4 py-2 text-uppercase fw-medium ls-wider transition-colors sora-btn-outline" style="font-size: 0.75rem;">
-              <i class="bi bi-chevron-left me-2"></i> Trước
-            </button>
-            <span class="px-3 playfair-font fs-5 text-dark">
-              <span class="fw-bold">{{ pagination.current_page }}</span> 
-              <span class="text-muted mx-2 fw-light">/</span> 
-              <span class="text-muted fw-light">{{ pagination.last_page }}</span>
-            </span>
-            <button @click="changePage(pagination.current_page + 1)" :disabled="pagination.current_page === pagination.last_page" class="btn rounded-0 px-4 py-2 text-uppercase fw-medium ls-wider transition-colors sora-btn-outline" style="font-size: 0.75rem;">
-              Sau <i class="bi bi-chevron-right ms-2"></i>
-            </button>
+          <!-- PHÂN TRANG -->
+          <div v-if="pagination.last_page > 1" class="d-flex justify-content-center align-items-center mt-5 pt-5 border-top sora-border-light">
+            <nav aria-label="Page navigation">
+              <ul class="pagination sora-custom-pagination gap-2 mb-0">
+                <li class="page-item" :class="{ 'disabled': Number(pagination.current_page) === 1 }">
+                  <button class="page-link shadow-sm" @click="changePage(Number(pagination.current_page) - 1)" :disabled="Number(pagination.current_page) === 1">
+                    <i class="bi bi-chevron-left"></i>
+                  </button>
+                </li>
+                
+                <li class="page-item" v-for="(page, index) in visiblePages" :key="index" :class="{ 'active': page !== '...' && Number(page) === Number(pagination.current_page), 'disabled': page === '...' }">
+                  <span v-if="page === '...'" class="page-link border-0 text-muted bg-transparent px-2">...</span>
+                  <button v-else class="page-link shadow-sm font-serif fw-bold" @click="changePage(page)">{{ page }}</button>
+                </li>
+
+                <li class="page-item" :class="{ 'disabled': Number(pagination.current_page) === Number(pagination.last_page) }">
+                  <button class="page-link shadow-sm" @click="changePage(Number(pagination.current_page) + 1)" :disabled="Number(pagination.current_page) === Number(pagination.last_page)">
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
 
         </div>
       </div>
     </div>
-    
-    <!-- CHÂN DUNG SORA (MARQUEE SECTION) -->
-    <section class="portrait-section py-5 mt-4 overflow-hidden border-top sora-border-light">
-      <div class="text-center mb-5 px-3">
-        <p class="text-uppercase text-gold mb-2" style="font-size: 0.75rem; letter-spacing: 0.2em; color: var(--sora-secondary); font-weight: 600;">SORA In Real Life</p>
-        <h2 class="playfair-font text-dark fw-normal mb-3" style="font-size: 2.5rem; letter-spacing: 0.02em;">Chân Dung SORA</h2>
-        <div class="divider-gold mb-4"></div>
-      </div>
-
-      <div class="sora-marquee-wrapper">
-        <div class="sora-marquee-container">
-          <div class="sora-marquee-track">
-            <template v-for="loop in 2" :key="loop">
-              <div class="sora-marquee-item" v-for="(img, idx) in portraitImages" :key="`img-${loop}-${idx}`">
-                <img :src="img" loading="lazy" alt="SORA Portrait" class="w-100 h-100 object-fit-cover">
-                <div class="overlay-hover position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center opacity-0 transition-all duration-400">
-                  <div class="overlay-content text-center">
-                    <i class="bi bi-instagram text-white d-block mb-3" style="font-size: 2.2rem;"></i>
-                    <span class="text-white font-oswald text-uppercase fw-medium" style="letter-spacing: 2px; font-size: 0.85rem;">Chi Tiết</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- MODAL QUICK ADD -->
     <div v-if="quickAddModal.isOpen" class="modal-overlay position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" @click.self="closeQuickAdd" style="z-index: 9999 !important; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px);">
@@ -280,7 +232,7 @@
               <button 
                 v-for="opt in options" :key="opt"
                 @click="quickAddModal.selectedOptions[attrName] = opt"
-                class="btn variant-select-btn px-4 py-2 fw-medium"
+                class="btn variant-select-btn px-4 py-2 fw-medium border"
                 :class="{'selected': quickAddModal.selectedOptions[attrName] === opt}"
               >
                 {{ opt }}
@@ -332,43 +284,6 @@ const router = useRouter();
 const shopSlug = ref(route.params.shop_slug || 'aurora-jewelry');
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
-const isLoadingCategories = ref(true);
-const isLoadingProducts = ref(true);
-const isPageLoading = ref(true); // Đã thêm biến này để tránh lỗi JS
-const categories = shallowRef([]);
-const allProducts = shallowRef([]);
-const defaultProducts = shallowRef([]); // Lưu danh sách mặc định làm fallback
-const pagination = ref({ current_page: 1, last_page: 1, total: 0 });
-
-// Computed property để luôn lấy ra ít nhất 2 sản phẩm cho phần banner "Lựa chọn lý tưởng"
-const promoProducts = computed(() => {
-  let items = allProducts.value.slice(0, 2);
-  if (items.length < 2) {
-    const needed = 2 - items.length;
-    // Bù thêm từ danh sách mặc định nếu không đủ 2 sản phẩm
-    const fallback = defaultProducts.value.filter(dp => !items.some(item => item.id === dp.id)).slice(0, needed);
-    items = [...items, ...fallback];
-  }
-  return items;
-});
-
-const portraitImages = [
-  'https://placehold.co/400x500/e7ce7d/ffffff?text=Chân+Dung+1',
-  'https://placehold.co/400x500/9f273b/ffffff?text=Chân+Dung+2',
-  'https://placehold.co/400x500/fcfcfc/000000?text=Chân+Dung+3',
-  'https://placehold.co/400x500/2c2c2c/ffffff?text=Chân+Dung+4',
-  'https://placehold.co/400x500/e7ce7d/ffffff?text=Chân+Dung+5',
-  'https://placehold.co/400x500/9f273b/ffffff?text=Chân+Dung+6',
-];
-
-const fallbackJewelryImages = [
-  'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=500&q=80',
-  'https://images.unsplash.com/photo-1599643478524-fb66f70d00f0?w=500&q=80',
-  'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&q=80',
-  'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=500&q=80',
-  'https://images.unsplash.com/photo-1588444650733-d0767b753cb8?w=500&q=80'
-];
-
 const soraAlert = Swal.mixin({
   buttonsStyling: true,
   confirmButtonColor: '#9f273b',
@@ -381,24 +296,23 @@ const Toast = Swal.mixin({
   didOpen: (toast) => { if (toast.parentElement) toast.parentElement.style.zIndex = '10005'; }
 });
 
-const formatPrice = (price) => {
-  if (!price || isNaN(price)) return 'Liên Hệ';
-  return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
-};
+const isLoadingCategories = ref(true);
+const isLoadingProducts = ref(true);
+const isLoadingAttributes = ref(true);
+const isPageLoading = ref(true);
 
-const getImageUrl = (path) => path ? (path.startsWith('http') ? path : `${API_BASE_URL}/storage/${path}`) : fallbackJewelryImages[0];
+const categories = shallowRef([]);
+const dynamicAttributes = ref([]); // Đổi thành ref để cập nhật trực tiếp từ biến thể
+const allProducts = shallowRef([]);
+const pagination = ref({ current_page: 1, last_page: 1, total: 0 });
 
-const handleImageError = (e) => {
-  e.target.onerror = null; 
-  const randomIndex = Math.floor(Math.random() * fallbackJewelryImages.length);
-  e.target.src = fallbackJewelryImages[randomIndex];
-};
-
-const hasHoverImage = (product) => product.hover_image && product.hover_image !== product.thumbnail_image;
+const selectedAttributes = ref([]); 
+const colorOptions = ref([]); // State lưu các màu hiện có lấy từ biến thể
+const selectedColors = ref([]); // State lưu các màu đang chọn
+const filters = reactive({ sort: 'recommended', categories: '' });
 
 const getToken = () => {
   const possibleKeys = ['access_token', 'token', 'auth_token', 'userToken', 'user_token', 'user'];
-  
   for (const k of possibleKeys) {
     const rawVal = localStorage.getItem(k) || sessionStorage.getItem(k);
     if (!rawVal) continue;
@@ -416,73 +330,109 @@ const getToken = () => {
   return '';
 };
 
-const favourites = ref([]);
-const isTogglingFav = ref(null);
+const formatPrice = (price) => {
+  if (!price || isNaN(price)) return 'Liên Hệ';
+  return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
+};
+const getImageUrl = (path) => path ? (path.startsWith('http') ? path : `${API_BASE_URL}/storage/${path}`) : 'https://placehold.co/500x500/f5f5f5/cccccc?text=No+Image';
+const handleImageError = (e) => { e.target.src = 'https://placehold.co/500x500/f5f5f5/cccccc?text=No+Image'; };
+const hasHoverImage = (product) => product.hover_image && product.hover_image !== product.thumbnail_image;
 
-const loadFavourites = async () => {
-  const token = getToken();
-  if (!token) return; 
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-    });
-    const data = await response.json();
-    if (data.status) favourites.value = data.data.map(fav => fav.product_id);
-  } catch (e) {
-    console.error('Lỗi tải danh sách yêu thích:', e);
-  }
+const isColorAttribute = (attrName) => {
+  const name = attrName.toLowerCase();
+  return name.includes('màu') || name.includes('color');
 };
 
-const isFavourited = (productId) => favourites.value.includes(productId);
+const isMaterialAttribute = (attrName) => {
+  const name = attrName.toLowerCase();
+  return name.includes('chất liệu') || name.includes('material');
+};
 
-const toggleFavourite = async (product) => {
-  const token = getToken();
-  if (!token) {
-    return soraAlert.fire({
-      icon: 'warning', title: 'Bạn chưa đăng nhập!',
-      text: 'Vui lòng đăng nhập để lưu trữ bộ sưu tập yêu thích của mình.',
-      confirmButtonText: 'Đăng Nhập Ngay', showCancelButton: true, cancelButtonText: 'Đóng'
-    }).then((result) => { if (result.isConfirmed) router.push('/login'); });
-  }
+const getColorCode = (colorName) => {
+  const map = {
+    'đỏ': '#cc1e2e', 'red': '#cc1e2e',
+    'xanh': '#2e5b9f', 'blue': '#2e5b9f', 'xanh dương': '#2e5b9f',
+    'vàng': '#e7ce7d', 'gold': '#e7ce7d', 'vàng 18k': '#d4af37',
+    'trắng': '#fcfcfc', 'white': '#fcfcfc', 'vàng trắng': '#f4f4f4',
+    'đen': '#2c2c2c', 'black': '#2c2c2c',
+    'hồng': '#f4a4b4', 'pink': '#f4a4b4', 'vàng hồng': '#b76e79',
+    'bạc': '#c0c0c0', 'silver': '#c0c0c0'
+  };
+  return map[colorName.toLowerCase().trim()] || '#e0e0e0'; 
+};
 
-  isTogglingFav.value = product.id; 
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/client/favourites/toggle`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-      body: JSON.stringify({ product_id: product.id })
-    });
-    
-    const data = await response.json();
-    if (data.status) {
-      if (data.action === 'added') {
-        favourites.value.push(product.id);
-        Toast.fire({ icon: 'success', title: 'Đã thêm vào yêu thích', color: '#9f273b', iconColor: '#9f273b' });
-      } else if (data.action === 'removed') {
-        favourites.value = favourites.value.filter(id => id !== product.id);
-        Toast.fire({ icon: 'info', title: 'Đã bỏ yêu thích' });
-      }
+// Hàm trích xuất Màu sắc và Thuộc tính TRỰC TIẾP TỪ BIẾN THỂ (Variants)
+const extractFiltersFromVariants = (products) => {
+  const attrsMap = {};
+  const colorsSet = new Set(colorOptions.value); // Giữ lại các màu đã load để tránh mất filter
+
+  products.forEach(product => {
+    if (product.variants && Array.isArray(product.variants)) {
+      product.variants.forEach(variant => {
+        // Hỗ trợ cả 2 dạng JSON return attribute_values hoặc attributeValues
+        const attrVals = variant.attribute_values || variant.attributeValues || [];
+        attrVals.forEach(av => {
+          if (av.attribute && av.attribute.name) {
+            const attrName = av.attribute.name;
+            const attrValue = av.value;
+
+            if (isColorAttribute(attrName)) {
+              colorsSet.add(attrValue);
+            } else if (isMaterialAttribute(attrName)) { // CHỈ LẤY THÊM CHẤT LIỆU
+              if (!attrsMap[attrName]) {
+                attrsMap[attrName] = { id: av.attribute.id, name: attrName, values: new Set() };
+              }
+              attrsMap[attrName].values.add(attrValue);
+            }
+          }
+        });
+      });
     }
-  } catch (error) {
-    Toast.fire({ icon: 'error', title: 'Có lỗi xảy ra, thử lại sau' });
-  } finally {
-    isTogglingFav.value = null; 
-  }
+  });
+
+  // Cập nhật mảng màu sắc hiển thị
+  colorOptions.value = Array.from(colorsSet);
+
+  // Cập nhật mảng thuộc tính động khác hiển thị (lúc này chỉ có chất liệu)
+  Object.values(attrsMap).forEach(attr => {
+    const existingAttr = dynamicAttributes.value.find(a => a.name === attr.name);
+    if (existingAttr) {
+      attr.values.forEach(val => {
+        if (!existingAttr.values.some(v => v.value === val)) {
+          existingAttr.values.push({ id: Math.random().toString(), value: val });
+        }
+      });
+    } else {
+      dynamicAttributes.value.push({
+        id: attr.id,
+        name: attr.name,
+        values: Array.from(attr.values).map(val => ({ id: Math.random().toString(), value: val }))
+      });
+    }
+  });
+
+  isLoadingAttributes.value = false;
 };
 
-const filters = reactive({ sort: 'recommended', categories: '', collections: '', metals: '' });
-const filterGroups = ref([
-  { title: 'Danh Mục', key: 'categories', isOpen: true, options: [] },
-  { title: 'Bộ Sưu Tập', key: 'collections', isOpen: true, options: [
-      { label: 'Solitaire Classic', value: 'solitaire' },
-      { label: 'Halo Brilliance', value: 'halo' }
-    ]
+// Hàm bật/tắt bộ lọc màu sắc
+const toggleColor = (color) => {
+  const index = selectedColors.value.indexOf(color);
+  if (index > -1) {
+    selectedColors.value.splice(index, 1);
+  } else {
+    selectedColors.value.push(color);
   }
-]);
+  applyFilters();
+};
 
-const toggleFilter = (key, value) => { 
-  filters[key] = filters[key] === value ? '' : value; 
-  applyFilters(); 
+const toggleAttribute = (val) => {
+  const index = selectedAttributes.value.indexOf(val);
+  if (index > -1) {
+    selectedAttributes.value.splice(index, 1); 
+  } else {
+    selectedAttributes.value.push(val); 
+  }
+  applyFilters();
 };
 
 const fetchCategories = async () => {
@@ -490,28 +440,26 @@ const fetchCategories = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/shop/${shopSlug.value}/categories`);
     const data = await response.json();
-    if(data?.success) {
-      categories.value = data.data; 
-      const idx = filterGroups.value.findIndex(g => g.key === 'categories');
-      if (idx !== -1) {
-        filterGroups.value[idx].options = data.data.map(cat => ({ label: cat.name, value: cat.slug }));
-      }
-    }
-  } catch (e) {
-    console.error(e);
-  } finally { 
-    isLoadingCategories.value = false; 
-  }
+    if(data?.success) categories.value = data.data; 
+  } catch (e) {} finally { isLoadingCategories.value = false; }
 };
 
 const fetchProducts = async (page = 1) => {
   isLoadingProducts.value = true;
   try {
     const queryPayload = { page, sort: filters.sort };
-    Object.entries(filters).forEach(([key, val]) => {
-      if (key !== 'sort' && val) queryPayload[key] = val;
-    });
+    if (filters.categories) queryPayload.categories = filters.categories;
     
+    // Gửi tham số màu sắc
+    if (selectedColors.value.length > 0) {
+      queryPayload.color = selectedColors.value.join(',');
+    }
+
+    // Gửi tham số thuộc tính
+    if (selectedAttributes.value.length > 0) {
+      queryPayload.attribute_values = selectedAttributes.value.join(',');
+    }
+
     const params = new URLSearchParams(queryPayload);
     const response = await fetch(`${API_BASE_URL}/api/shop/${shopSlug.value}/products?${params.toString()}`);
     const data = await response.json();
@@ -520,15 +468,11 @@ const fetchProducts = async (page = 1) => {
       allProducts.value = data.data.data; 
       pagination.value = { current_page: data.data.current_page, last_page: data.data.last_page, total: data.data.total };
       
-      // Lưu lại danh sách sản phẩm lúc mới load trang (không có bộ lọc) để dự phòng cho banner
-      if (defaultProducts.value.length === 0 && data.data.data.length > 0) {
-        defaultProducts.value = data.data.data;
-      }
-    } else {
-      allProducts.value = [];
+      // GỌI HÀM TRÍCH XUẤT SAU KHI CÓ DỮ LIỆU SẢN PHẨM MỚI
+      extractFiltersFromVariants(allProducts.value);
     }
-  } catch (e) { 
-    allProducts.value = []; 
+  } catch (e) {
+    console.error(e);
   } finally { 
     isLoadingProducts.value = false; 
   }
@@ -536,17 +480,34 @@ const fetchProducts = async (page = 1) => {
 
 const filterByCategory = (categorySlug) => {
   filters.categories = filters.categories === categorySlug ? '' : categorySlug; 
-  filters.collections = ''; 
   applyFilters();
 };
 
 const applyFilters = () => fetchProducts(1);
 const resetFilters = () => { 
-  Object.keys(filters).forEach(k => filters[k] = k === 'sort' ? 'recommended' : ''); 
+  filters.categories = ''; 
+  filters.sort = 'recommended';
+  selectedAttributes.value = []; 
+  selectedColors.value = []; 
   applyFilters(); 
 };
 
-// Đã sửa lại lỗi cuộn màn hình khi chuyển trang
+const visiblePages = computed(() => {
+  const current = Number(pagination.value.current_page) || 1;
+  const last = Number(pagination.value.last_page) || 1;
+  const delta = 1; 
+  let pages = [];
+
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || (i >= current - delta && i <= current + delta)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...');
+    }
+  }
+  return pages;
+});
+
 const changePage = (page) => { 
   if(page >= 1 && page <= pagination.value.last_page) { 
     fetchProducts(page); 
@@ -574,7 +535,8 @@ const openQuickAdd = (productSummary) => {
   
   const attrs = {};
   productSummary.variants?.forEach(variant => {
-    variant.attribute_values?.forEach(av => {
+    const attrVals = variant.attribute_values || variant.attributeValues || [];
+    attrVals.forEach(av => {
       const attrName = av.attribute?.name;
       if (attrName) {
         if (!attrs[attrName]) attrs[attrName] = new Set();
@@ -610,9 +572,9 @@ const currentVariant = computed(() => {
   if (!isAllAttributesSelected.value) return null;
 
   return variants.find(v => {
-    if (!v.attribute_values) return false;
+    const attrVals = v.attribute_values || v.attributeValues || [];
     return Object.entries(quickAddModal.selectedOptions).every(([attrName, selectedVal]) => {
-      return v.attribute_values.some(av => 
+      return attrVals.some(av => 
         av.attribute?.name === attrName && String(av.value) === String(selectedVal)
       );
     });
@@ -721,203 +683,115 @@ const confirmAddToCart = async () => {
 };
 
 onMounted(() => { 
-  // Gọi đồng thời 3 hàm: Tải Danh mục, Tải Sản phẩm, Tải Tủ đồ Yêu thích (Nếu đã login)
-  Promise.all([fetchCategories(), fetchProducts(1), loadFavourites()]).then(() => isPageLoading.value = false); 
+  // Loại bỏ fetch API rời, tập trung render từ dữ liệu variant
+  Promise.all([fetchCategories(), fetchProducts(1)]).then(() => isPageLoading.value = false); 
 });
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Oswald:wght@400;500;600;700&display=swap');
 
-:root {
+.shop-page {
   --sora-primary: #9f273b;
   --sora-secondary: #e7ce7d;
   --sora-accent: #cc1e2e;
   --sora-text: #2c2c2c;
   --sora-border: #eaeaea;
+  font-family: 'Inter', sans-serif; 
+  color: var(--sora-text);
 }
 
-.shop-page { font-family: 'Inter', sans-serif; color: var(--sora-text); }
 .playfair-font { font-family: 'Playfair Display', serif; }
 .font-oswald { font-family: 'Oswald', sans-serif; }
 .font-serif { font-family: 'Playfair Display', serif; }
-.ls-widest { letter-spacing: 0.15em; }
-.ls-wider { letter-spacing: 0.08em; }
-.tracking-widest { letter-spacing: 2px; }
-.tracking-wider { letter-spacing: 1px; }
-.fw-light { font-weight: 300; }
-.fw-medium { font-weight: 500; }
-
-.z-index-2 { z-index: 2; }
 .cursor-pointer { cursor: pointer; }
-.transition-all { transition: all 0.3s ease; }
 .transition-colors { transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease; }
-.transition-transform { transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.duration-300 { transition-duration: 0.3s; }
-.duration-400 { transition-duration: 0.4s; }
-.duration-500 { transition-duration: 0.5s; }
-.duration-700 { transition-duration: 0.7s; }
-
-.rotate-180 { transform: rotate(180deg); }
-.opacity-0 { opacity: 0 !important; }
-.opacity-100 { opacity: 1 !important; }
-.pointer-events-none { pointer-events: none; }
-.text-shadow-sm { text-shadow: 0 2px 15px rgba(0,0,0,0.4); }
 
 .sora-border-light { border-color: var(--sora-border) !important; }
-.hover-text-dark:hover { color: #000 !important; }
-.hover-text-gold:hover { color: var(--sora-secondary) !important; }
-.hover-text-primary:hover { color: var(--sora-primary) !important; }
-.divider-gold { width: 40px; height: 1px; background-color: var(--sora-secondary); margin: 0 auto; }
-
 .sora-btn-primary { background-color: var(--sora-primary); color: #fff; border: 1px solid var(--sora-primary); }
 .sora-btn-primary:hover { background-color: #831f30; border-color: #831f30; color: #fff; }
-.sora-btn-outline { background-color: transparent; color: var(--sora-primary); border: 1px solid var(--sora-primary); }
-.sora-btn-outline:hover { background-color: var(--sora-primary); color: var(--sora-secondary); }
-.sora-link-explore:hover { border-bottom-color: var(--sora-secondary) !important; }
 
-/* Các hiệu ứng Hover mới */
-.hover-translate-y:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important; }
-.object-fit-contain { object-fit: contain !important; }
-.group:hover .group-hover-scale { transform: scale(1.05); }
-
-/* Gạch chân màu vàng khi hover Danh mục */
-.category-name::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--sora-secondary);
-  transition: width 0.3s ease;
-}
-.group:hover .category-name::after {
-  width: 100%;
-}
-
-/* THAY ĐỔI: CUSTOM CHECKBOX -> RADIO STYLE CAO CẤP */
 .custom-checkbox .checkmark {
-  position: relative; 
-  width: 18px; 
-  height: 18px; 
-  background-color: #fff; 
-  border: 1px solid #999; /* Viền nhạt hơn mặc định */
-  border-radius: 50%; /* Tròn thay vì vuông */
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  flex-shrink: 0;
+  position: relative; width: 18px; height: 18px; background-color: #fff; border: 1px solid #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .custom-checkbox:hover .checkmark { border-color: #111; }
-/* Trạng thái được chọn */
-.custom-checkbox .checkmark.checked { 
-  background-color: #fff; 
-  border-color: #111; 
-}
-/* Dấu chấm đen ở giữa */
-.custom-checkbox .checkmark::after { 
-  content: ""; 
-  position: absolute; 
-  display: none; 
-  width: 10px; 
-  height: 10px; 
-  background-color: #111; 
-  border-radius: 50%; 
-  top: 50%; 
-  left: 50%; 
-  transform: translate(-50%, -50%); 
-  border: none; 
-  margin: 0; 
-}
+.custom-checkbox .checkmark.checked { background-color: #fff; border-color: #111; }
+.custom-checkbox .checkmark::after { content: ""; position: absolute; display: none; width: 10px; height: 10px; background-color: #111; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 .custom-checkbox .checkmark.checked::after { display: block; }
-.filter-list .label-text { font-size: 0.95rem; }
 
-.bg-primary-custom { background-color: var(--sora-primary) !important; }
-.border-primary-custom { border: 1px solid var(--sora-primary) !important; }
-.text-primary-custom { color: var(--sora-primary) !important; }
-.border-muted { border: 1px solid #ced4da !important; }
-
-/* SORA LUXURY PRODUCT CARD STANDARDIZED - Tối ưu tự động co giãn bằng minmax() */
-.product-grid { 
-  display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
-  gap: 2.5rem 1.5rem; 
+.color-filter-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.color-filter-circle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+.color-filter-circle.selected {
+  border: 2px solid #111;
+  transform: scale(1.1);
 }
 
-/* THAY ĐỔI: SORA LUXURY CARD BO GÓC ÍT HƠN (Luxury style) */
-.sora-luxury-card {
-    background: #ffffff; 
-    border: 1px solid #f0f0f0; 
-    border-radius: 2px; /* GIẢM BO GÓC TỪ 12px XUỐNG 2px ĐỂ TRÔNG CỨNG CÁP, CAO CẤP HƠN */
-    position: relative; 
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; 
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
-    cursor: pointer; 
-    height: 100%;
+.sora-custom-pagination .page-link {
+  color: var(--sora-text);
+  border-radius: 4px;
+  margin: 0 2px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background-color: #fff;
+  transition: all 0.3s;
 }
+.sora-custom-pagination .page-link:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #ddd;
+  color: var(--sora-primary);
+}
+.sora-custom-pagination .page-item.active .page-link {
+  background-color: var(--sora-primary) !important;
+  border-color: var(--sora-primary) !important;
+  color: #fff !important;
+}
+.sora-custom-pagination .page-item.disabled .page-link {
+  color: #ccc;
+  background-color: transparent;
+  box-shadow: none !important;
+}
+
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2.5rem 1.5rem; }
+.sora-luxury-card { background: #ffffff; border: 1px solid #f0f0f0; border-radius: 2px; position: relative; display: flex; flex-direction: column; overflow: hidden; transition: all 0.4s; cursor: pointer; height: 100%; }
 .sora-luxury-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #e5e5e5; transform: translateY(-5px); }
-
 .sora-card-image { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background-color: #f9f9f9; }
 .sora-card-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: opacity 0.6s ease; }
-
 .sora-main-img { z-index: 1; }
 .sora-hover-img { position: absolute; top:0; left:0; z-index: 2; opacity: 0; }
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-main-img { opacity: 0; }
 .sora-luxury-card:hover .sora-card-image.has-hover-image .sora-hover-img { opacity: 1; }
-
 .sora-card-badges { position: absolute; top: 15px; left: 15px; z-index: 10; display: flex; flex-direction: column; gap: 8px; }
 .sora-badge { background: #ffffff; color: #222; font-family: 'Oswald', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; border-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .sale-badge { background-color: #9f273b !important; color: white !important; }
-
-.sora-wishlist-btn { position: absolute; top: 15px; right: 15px; width: 38px; height: 38px; background: #ffffff; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); z-index: 10; cursor: pointer; transition: all 0.3s ease; color: #6c757d; }
-.sora-wishlist-btn:hover:not(:disabled) { transform: scale(1.1); color: #cc1e2e; }
-.sora-wishlist-btn.active { color: #dc3545; }
-.sora-wishlist-btn.active i { color: #dc3545 !important; }
-.sora-wishlist-btn i { font-size: 1.15rem; margin-top: 2px; }
-
 .sora-card-info { padding: 20px 15px 70px 15px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
 .sora-card-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sora-card-category { font-family: 'Playfair Display', serif; font-style: italic; color: #666; font-size: 0.95rem; margin-bottom: 15px; }
 .sora-card-price { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: #9f273b; margin-top: auto; }
 .sora-card-price-old { font-size: 0.95rem; color: #999; text-decoration: line-through; margin-right: 10px; font-weight: 400; }
-
-.sora-card-action { position: absolute; bottom: 0; left: 0; width: 100%; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); z-index: 10; }
+.sora-card-action { position: absolute; bottom: 0; left: 0; width: 100%; transform: translateY(100%); transition: transform 0.4s; z-index: 10; }
 .sora-luxury-card:hover .sora-card-action { transform: translateY(0); }
 .sora-action-btn { width: 100%; padding: 14px 0; background: #731621; color: #ffffff; border: none; font-family: 'Oswald', sans-serif; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 0.3s ease; }
 .sora-action-btn:hover { background: #500f17; color: #fff;}
 
+/* CSS QUICK ADD MODAL */
+@keyframes slideUp { from { transform: translateY(30px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 .variant-select-btn:hover { border-color: #9f273b; color: #9f273b; }
 .variant-select-btn.selected { border-color: #9f273b; color: #9f273b; font-weight: 700; background-color: #fdf5f6; box-shadow: inset 0 0 0 1px #9f273b; }
-
-/* SORA MARQUEE */
-.portrait-section { background: linear-gradient(to bottom, #ffffff, #faf9f7); }
-.sora-marquee-wrapper { width: 100%; padding: 20px 0; -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
-.sora-marquee-container { width: 100%; overflow: hidden; position: relative; padding: 20px 0; }
-.sora-marquee-track { display: flex; width: max-content; align-items: center; animation: sora-marquee 40s linear infinite; }
-.sora-marquee-container:hover .sora-marquee-track { animation-play-state: paused; }
-/* THAY ĐỔI: SORA MARQUEE ITEM BO GÓC ÍT HƠN (Đồng bộ với Card) */
-.sora-marquee-item { position: relative; width: 280px; height: 380px; margin-right: 24px; flex-shrink: 0; overflow: hidden; cursor: pointer; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: all 0.4s ease; }
-.sora-marquee-item:nth-child(even) { margin-top: 40px; }
-.sora-marquee-item img { transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.sora-marquee-item:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.12); z-index: 10; }
-.sora-marquee-item:hover img { transform: scale(1.1); }
-
-.overlay-hover { background: rgba(159, 39, 59, 0.7); backdrop-filter: blur(3px); }
-.overlay-content { transform: translateY(20px); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
-.sora-marquee-item:hover .overlay-hover { opacity: 1 !important; }
-.sora-marquee-item:hover .overlay-content { transform: translateY(0); }
-
-@keyframes sora-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-@keyframes slideUp { from { transform: translateY(30px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-
-@media (max-width: 768px) { 
-  .sora-marquee-wrapper { -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); }
-  .sora-marquee-item { width: 220px; height: 300px; margin-right: 16px; }
-  .sora-marquee-item:nth-child(even) { margin-top: 20px; }
-  .sora-marquee-track { animation-duration: 25s; } 
-}
+.sora-discount-tag { background-color: #cc1e2e; color: white; font-weight: bold; border-radius: 2px; }
 </style>
