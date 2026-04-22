@@ -5,24 +5,20 @@ namespace App\Http\Controllers\Api\admin;
 use App\Http\Controllers\Controller;
 use App\Models\ProductVariant;
 use App\Models\Combo;
-use App\Http\Requests\AdminUpdateVariantStockRequest;
-use App\Http\Requests\AdminUpdateComboLimitRequest;
+use App\Http\Requests\AdminUpdateInventoryRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminInventoryController extends Controller
 {
-    /**
-     * API Lấy danh sách Biến thể (Kèm thông tin Sản phẩm & Thuộc tính)
-     */
     public function getVariants()
     {
-        // Chỉ lấy các biến thể mà Sản phẩm gốc chưa bị xóa
         $variants = ProductVariant::whereHas('product')->with([
             'product:id,name,slug,category_id,base_price,status,thumbnail_image',
             'product.category:id,name',
             'attributeValues.attribute:id,name'
         ])->orderBy('id', 'desc')->get();
 
-        // Map lại dữ liệu Attributes thành dạng {"Màu Sắc": "Đỏ", "Size": "10"} cho dễ dùng ở Frontend
         $variants->transform(function ($variant) {
             $attrMap = [];
             foreach ($variant->attributeValues as $val) {
@@ -38,27 +34,54 @@ class AdminInventoryController extends Controller
         return response()->json(['success' => true, 'data' => $variants]);
     }
 
-    /**
-     * API Tối ưu: Chỉ cập nhật tồn kho, được bảo vệ bằng Request chặt chẽ
-     */
-    public function updateVariantStock(AdminUpdateVariantStockRequest $request, $id)
+    public function updateVariantStock(AdminUpdateInventoryRequest $request, $id)
     {
         $variant = ProductVariant::findOrFail($id);
-        $variant->update(['stock_quantity' => $request->stock_quantity]);
+        
+        DB::beginTransaction();
+        try {
+            $oldStock = $variant->stock_quantity;
+            $action = $request->input('action');
+            $quantity = $request->input('quantity');
+            $note = $request->input('note');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Cập nhật tồn kho thành công'
-        ]);
+            if ($action !== 'add') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hệ thống không cho phép trừ tồn kho thủ công để đảm bảo an ninh và minh bạch tài sản. Nếu có sai sót, vui lòng lập phiếu xuất/hủy kho.'
+                ], 403);
+            }
+
+            $variant->stock_quantity += $quantity;
+
+            $variant->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nhập thêm tồn kho thành công',
+                'data' => [
+                    'old_stock' => $oldStock,
+                    'new_stock' => $variant->stock_quantity
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi cập nhật tồn kho: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Đã xảy ra lỗi hệ thống khi cập nhật tồn kho.'
+            ], 500);
+        }
     }
 
-    /**
-     * API Tối ưu: Cập nhật giới hạn bán của Combo, được bảo vệ bằng Request
-     */
-    public function updateComboLimit(AdminUpdateComboLimitRequest $request, $id)
+    public function updateComboLimit(AdminUpdateInventoryRequest $request, $id)
     {
         $combo = Combo::findOrFail($id);
-        $combo->update(['usage_limit' => $request->usage_limit]);
+        
+        $combo->update(['usage_limit' => $request->input('usage_limit')]);
 
         return response()->json([
             'success' => true,

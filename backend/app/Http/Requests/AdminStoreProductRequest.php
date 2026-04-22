@@ -52,7 +52,7 @@ class AdminStoreProductRequest extends FormRequest
         return [
             'category_id.required' => 'Vui lòng chọn danh mục sản phẩm.',
             'name.required' => 'Tên sản phẩm không được để trống.',
-            'slug.unique' => 'Đường dẫn (slug) này đã tồn tại, vui lòng chọn tên khác.',
+            'slug.unique' => 'Sản phẩm (slug) này đã tồn tại, vui lòng chọn tên khác.',
             'thumbnail_image.required' => 'Vui lòng tải lên ảnh đại diện chính của sản phẩm.',
             'thumbnail_image.max' => 'Ảnh đại diện chính vượt quá 15MB.',
             'parsed_variants.required' => 'Sản phẩm phải có ít nhất 1 biến thể.',

@@ -52,7 +52,7 @@ class AdminStoreComboRequest extends FormRequest
     {
         return [
             'name.required'                  => 'Vui lòng nhập tên Combo.',
-            'slug.unique'                    => 'Đường dẫn (Slug) này đã tồn tại, vui lòng chọn tên khác.',
+            'slug.unique'                    => 'Combo (Slug) này đã tồn tại, vui lòng chọn tên khác.',
             'thumbnail_image.required'       => 'Vui lòng tải lên ảnh đại diện cho Combo.',
             'thumbnail_image.image'          => 'Tệp tải lên phải là định dạng hình ảnh.',
             'thumbnail_image.max'            => 'Kích thước ảnh không được vượt quá 5MB.',

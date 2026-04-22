@@ -53,7 +53,7 @@ class AdminUpdateComboRequest extends FormRequest
     {
         return [
             'name.required'                  => 'Vui lòng nhập tên Combo.',
-            'slug.unique'                    => 'Đường dẫn (Slug) này đã được sử dụng cho Combo khác.',
+            'slug.unique'                    => 'Combo (Slug) này đã được sử dụng cho Combo khác.',
             'thumbnail_image.image'          => 'Tệp tải lên phải là định dạng hình ảnh.',
             'thumbnail_image.max'            => 'Kích thước ảnh không được vượt quá 5MB.',
             'discount_value.max'             => 'Mức giảm giá theo phần trăm không được vượt quá 100%.',

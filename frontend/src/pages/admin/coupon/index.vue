@@ -339,8 +339,8 @@ const fetchData = async () => {
   if (!isFirstLoad.value) isLoading.value = true;
   try {
     const [resCoupons, resModules] = await Promise.all([
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/coupons`, { headers: getHeaders() }),
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/modules`, { headers: getHeaders() })
+      axios.get(`http://127.0.0.1:8000/api/admin/coupons`, { headers: getHeaders() }),
+      axios.get(`http://127.0.0.1:8000/api/admin/modules`, { headers: getHeaders() })
     ]);
 
     if (resCoupons.data) {
@@ -385,7 +385,7 @@ const saveCouponStatus = async (coupon) => {
 
   try {
     // FIXED lỗi no-unused-vars bằng cách bỏ khởi tạo biến const res =
-    await axios.put(`http://127.0.0.1:8000/api/v1/admin/coupons/${coupon.id}`, payload, {
+    await axios.put(`http://127.0.0.1:8000/api/admin/coupons/${coupon.id}`, payload, {
         headers: getHeaders()
     });
     
@@ -438,7 +438,7 @@ const confirmDelete = (id, code) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/coupons/${id}`, { headers: getHeaders() });
+        await axios.delete(`http://127.0.0.1:8000/api/admin/coupons/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData();
       } catch (err) {

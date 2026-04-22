@@ -260,13 +260,24 @@ const admin = [
       {
         path: 'contacts',
         name: 'admin-contacts',
-        component: () => import('../pages/admin/contact/index.vue')
+        component: () => import('../pages/admin/contact/index.vue'),
+        meta: { moduleCode: 'admin_contacts' },
       },
+      
+      // ROUTE QUẢN LÝ CHATBOT
+      {
+        path: 'chatbot',
+        name: 'admin-chatbot',
+        component: () => import('../pages/admin/chatbot/Index.vue'),
+        meta: { moduleCode: 'admin_chatbot' },
+      },
+
       // ROUTE CHAT
       {
         path: 'chat',
         name: 'admin-chat',
-        component: () => import('../pages/admin/AdminChat.vue')
+        component: () => import('../pages/admin/AdminChat.vue'),
+        meta: { moduleCode: 'admin_chat' },
       },
       // tin tứcccc
        {

@@ -41,8 +41,8 @@ class AdminStoreCategoryRequest extends FormRequest
         return [
             'name.required' => 'Tên danh mục không được để trống.',
             'name.max' => 'Tên danh mục không được vượt quá 255 ký tự.',
-            'slug.required' => 'Đường dẫn (Slug) không được để trống.',
-            'slug.unique' => 'Đường dẫn này đã tồn tại trên hệ thống. Vui lòng chọn tên khác.',
+            'slug.required' => 'Danh mục (Slug) không được để trống.',
+            'slug.unique' => 'Danh mục này đã tồn tại trên hệ thống. Vui lòng chọn tên khác.',
             'parent_id.exists' => 'Danh mục cha không hợp lệ hoặc đã bị xóa.',
             'status.required' => 'Vui lòng chọn trạng thái.',
             'status.in' => 'Trạng thái không hợp lệ.',

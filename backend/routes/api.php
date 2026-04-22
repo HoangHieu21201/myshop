@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
 use App\Http\Controllers\Api\client\ShopController;
 use App\Http\Controllers\Api\admin\AdminCouponController;
 use App\Http\Controllers\Api\admin\AdminAccountController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Api\admin\AdminAttributeValueController;
 use App\Http\Controllers\Api\admin\AdminBrandController;
 use App\Http\Controllers\Api\admin\AdminOrderController;
 use App\Http\Controllers\Api\admin\AdminBannerController;
+use App\Http\Controllers\Api\admin\OrderSimulationController;
 use App\Http\Controllers\Api\admin\AdminMembershipTierController;
 use App\Http\Controllers\Api\admin\AdminComboController;
 use App\Http\Controllers\Api\admin\AdminCustomerGalleryController;
@@ -31,9 +33,9 @@ use App\Http\Controllers\Api\admin\AdminReviewController;
 use App\Http\Controllers\Api\admin\AdminInventoryController;
 use App\Http\Controllers\Api\admin\AdminDashboardController;
 use App\Http\Controllers\Api\admin\AdminContactController;
-
-
 use App\Http\Controllers\Api\admin\AdminNewController;
+use App\Http\Controllers\Api\admin\AdminChatbotController; 
+
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
 use App\Http\Controllers\Api\client\ClientCartController;
@@ -48,8 +50,6 @@ use App\Http\Controllers\Api\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\client\ClientFavouriteController;
 use App\Http\Controllers\Api\client\ClientProfileController;
 use App\Http\Controllers\Api\client\ChatbotController;
-
-
 use App\Http\Controllers\Api\client\ClientNewController;
 
 Route::prefix('news')->group(function () {
@@ -71,11 +71,9 @@ Route::prefix('client')->group(function () {
     Route::get('search', [ClientHeaderController::class, 'search']);
     Route::get('/home-data', [ClientHomeController::class, 'index']);
 
-
     // API Lấy Bảng Giá Vàng (Thêm mới)
     Route::get('/gold-prices', [ClientHomeController::class, 'goldPrices']);
 
-    // API CHATBOT AI (GEMINI)
     Route::post('/chatbot', [ChatbotController::class, 'chat']);
 
     Route::post('/contact', [ClientContactController::class, 'store']);
@@ -88,8 +86,7 @@ Route::prefix('client')->group(function () {
 
         Route::get('/', 'index');
         Route::post('/', 'store');
-
-        // CÁC ROUTE ĐỘNG ĐẶT Ở DƯỚI CÙNG
+        
         Route::put('/{cartItem}', 'update');
         Route::delete('/{cartItem}', 'destroy');
     });
@@ -100,9 +97,9 @@ Route::prefix('client')->group(function () {
         Route::post('/toggle', [ClientFavouriteController::class, 'toggle']);
         Route::get('/check/{productId}', [ClientFavouriteController::class, 'check']);
     });
+
     // Hồ Sơ Cá Nhân (Profile)
     Route::prefix('profile')->group(function () {
-        // Thông tin cá nhân & Mật khẩu
         Route::get('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'show']);
         Route::post('/', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'update']);
         Route::post('/password', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'updatePassword']);
@@ -115,18 +112,15 @@ Route::prefix('client')->group(function () {
         Route::put('/addresses/{id}/default', [\App\Http\Controllers\Api\client\ClientProfileController::class, 'setDefaultAddress']);
     });
 
-
-
     // MODULE ĐƠN HÀNG (Orders)
     Route::controller(ClientOrderController::class)->prefix('orders')->group(function () {
         Route::get('/', 'index');
         Route::post('/', 'store');
         Route::get('/{order_code}', 'show');
         Route::put('/{order_code}', 'update');
-        // SỬA LẠI 2 ĐƯỜNG DẪN DƯỚI ĐÂY (chỉ cần /{order_code}/...)
-        Route::post('/{order_code}/review', 'review'); // Đánh giá
-        Route::post('/{order_code}/reorder', 'reorder'); // Mua lại
-        Route::post('/{order_code}/return', 'requestReturn');   // ← THÊM DÒNG NÀY
+        Route::post('/{order_code}/review', 'review');
+        Route::post('/{order_code}/reorder', 'reorder');
+        Route::post('/{order_code}/return', 'requestReturn');
     });
 
     Route::controller(\App\Http\Controllers\Api\client\ClientComboController::class)->prefix('combos')->group(function () {
@@ -144,7 +138,6 @@ Route::prefix('client')->group(function () {
     Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
         ->name('client.orders.invoice');
 
-    // BỔ SUNG ROUTE REAL-TIME CHAT CHO CLIENT
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/messages', [\App\Http\Controllers\Api\MessageController::class, 'history']);
         Route::post('/messages', [\App\Http\Controllers\Api\MessageController::class, 'store']);
@@ -157,10 +150,7 @@ Route::prefix('shop/{shop_slug}')->group(function () {
     Route::get('/products', [ShopController::class, 'index']);
     Route::get('/products/featured', [ShopController::class, 'featured']);
 
-
     Route::get('/products/{slug}', [ProductDetailController::class, 'show']);
-
-    // Đã chuyển Route Compare vào đúng Group
     Route::post('/compare', [ClientCompareController::class, 'getCompareData']);
 });
 Route::get('shop/{shop_slug}/categories', [App\Http\Controllers\Api\client\ShopController::class, 'categories']);
@@ -290,6 +280,7 @@ Route::prefix('admin')->group(function () {
                 Route::put('orders/{id}/status', 'updateStatus');
                 Route::delete('orders/{id}', 'destroy');
                 Route::post('orders/{id}/refund-process', 'processRefundAction');
+                Route::get('orders/{id}/simulation', [OrderSimulationController::class, 'getSimulationData']);
             });
         });
 
@@ -326,20 +317,14 @@ Route::prefix('admin')->group(function () {
             Route::put('/variants/{id}/stock', 'updateVariantStock');
             Route::put('/combos/{id}/limit', 'updateComboLimit');
         });
-        // ==================================================
+
         // QUẢN LÝ LIÊN HỆ DÀNH CHO ADMIN
-        // ==================================================
         Route::middleware(['check.module:admin_contacts'])->group(function () {
             Route::controller(AdminContactController::class)->prefix('contacts')->group(function () {
                 Route::get('/', 'index');
-
-                // 1. Route xóa hàng loạt (Phải đặt trên các route có /{id} để tránh bị nhầm lẫn)
                 Route::post('/bulk-delete', 'bulkDelete');
-
                 Route::put('/{id}/status', 'updateStatus');
                 Route::delete('/{id}', 'destroy');
-
-                // 2. Route trả lời Email
                 Route::post('/{id}/reply', 'replyEmail');
             });
         });
@@ -358,6 +343,11 @@ Route::prefix('admin')->group(function () {
                 Route::delete('/{id}', 'destroy');
                 Route::patch('/{id}', 'updateStatus');
             });
+        });
+        
+        // QUẢN LÝ CHATBOT
+        Route::middleware(['check.module:admin_chatbot'])->group(function () {
+            Route::apiResource('chatbot', AdminChatbotController::class)->except(['create', 'edit']);
         });
 
         // BỔ SUNG ROUTE REAL-TIME CHAT CHO ADMIN
