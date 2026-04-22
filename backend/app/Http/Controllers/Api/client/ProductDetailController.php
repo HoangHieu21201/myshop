@@ -118,7 +118,15 @@ class ProductDetailController extends Controller
                     'specifications' => is_array($product->specifications) ? $product->specifications : json_decode($product->specifications, true),
                     'attributes' => $groupedAttributes, 
                     'variants' => $mappedVariants,
-                    'images' => $formattedImages
+                    'images' => $formattedImages,
+                    'reviews' => \App\Models\Review::with('user:id,fullName,avatar_url')->where('product_id', $product->id)->orderBy('created_at', 'desc')->get()->map(function($review) {
+                        if ($review->images) {
+                            $review->images = array_map(function($img) {
+                                return asset('storage/' . $img);
+                            }, $review->images);
+                        }
+                        return $review;
+                    })
                 ]
             ]);
             
