@@ -73,7 +73,6 @@
 
       <!-- BẢNG DỮ LIỆU -->
       <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <!-- ĐÃ FIX: Chuyển flex-md-row và gap-3 cho Responsive Header -->
         <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3">
           <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
             <i class="bi bi-arrow-return-left text-danger me-2"></i>Danh sách Đơn hoàn trả
@@ -87,7 +86,6 @@
         </div>
         
         <div class="card-body p-0 mt-2">
-          <!-- ĐÃ FIX: Thêm class .responsive-table và border-0 -->
           <div class="table-responsive border-0">
             <table class="table table-hover align-middle mb-0 responsive-table w-100">
               <thead class="bg-light">
@@ -107,7 +105,6 @@
                 </tr>
                 <tr v-else v-for="order in displayedOrders" :key="order.id" class="bg-light">
                   
-                  <!-- ĐÃ FIX: Thêm data-label cho từng cột -->
                   <td data-label="Mã Đơn / Cập nhật" class="px-2 px-md-3 py-3 text-nowrap">
                     <div class="fw-bold text-danger fs-6 mb-1 font-monospace cursor-pointer" @click="openQuickView(order.id)">{{ order.order_code }}</div>
                     <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ formatDateTime(order.updated_at) }}</div>
@@ -156,7 +153,6 @@
         </div>
       </div>
 
-      <!-- ĐÃ FIX: Chỉnh phân trang mượt mà trên mobile -->
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top gap-3" v-if="pagination.lastPage > 1 && !isTableLoading">
         <span class="text-muted small text-center">Hiển thị trang {{ pagination.currentPage }} / {{ pagination.lastPage }} (Tổng: {{ pagination.total }} đơn)</span>
         <nav>
@@ -242,10 +238,20 @@
                       <div class="row justify-content-end">
                           <div class="col-md-7">
                               <div class="bg-danger bg-opacity-10 p-3 rounded border border-danger border-opacity-25">
-                                  <div class="d-flex justify-content-between mb-2 small"><span class="text-muted">Tạm tính hàng:</span> <strong class="text-dark">{{ formatCurrency(selectedOrder.sub_total) }}</strong></div>
-                                  <div class="d-flex justify-content-between mb-2 small"><span class="text-muted">Phí giao hàng:</span> <strong class="text-dark">{{ formatCurrency(selectedOrder.shipping_fee) }}</strong></div>
-                                  <div class="d-flex justify-content-between mb-2 small text-success"><span class="text-muted">Giảm giá <span v-if="selectedOrder.coupon_code">({{ selectedOrder.coupon_code }})</span>:</span> <strong>- {{ formatCurrency(selectedOrder.discount_amount) }}</strong></div>
-                                  <div class="d-flex justify-content-between mt-3 pt-2 border-top border-danger border-opacity-25"><span class="fw-bold text-dark">SỐ TIỀN GỐC CỦA ĐƠN:</span> <strong class="fs-5 text-danger">{{ formatCurrency(selectedOrder.total_amount) }}</strong></div>
+                                  <div class="d-flex justify-content-between mb-2 small"><span class="text-muted fw-medium">Tạm tính hàng:</span> <strong class="text-dark">{{ formatCurrency(selectedOrder.sub_total) }}</strong></div>
+                                  <div class="d-flex justify-content-between mb-2 small"><span class="text-muted fw-medium">Phí giao hàng:</span> <strong class="text-dark">{{ formatCurrency(selectedOrder.shipping_fee) }}</strong></div>
+                                  
+                                  <div class="d-flex justify-content-between mb-2 small text-danger" v-if="selectedOrder.discount_amount > 0">
+                                      <span class="text-muted fw-medium">Giảm giá Coupon <span v-if="selectedOrder.coupon_code">({{ selectedOrder.coupon_code }})</span>:</span> 
+                                      <strong>- {{ formatCurrency(selectedOrder.discount_amount) }}</strong>
+                                  </div>
+                                  
+                                  <div class="d-flex justify-content-between mb-2 small text-success" v-if="selectedOrder.tier_discount_amount > 0">
+                                      <span class="text-muted fw-medium"><i class="bi bi-star-fill text-warning me-1"></i>Ưu đãi Hạng TV:</span> 
+                                      <strong>- {{ formatCurrency(selectedOrder.tier_discount_amount) }}</strong>
+                                  </div>
+
+                                  <div class="d-flex justify-content-between mt-3 pt-2 border-top border-danger border-opacity-25 align-items-center"><span class="fw-bold text-dark tracking-wide">SỐ TIỀN GỐC CỦA ĐƠN:</span> <strong class="fs-5 text-danger font-oswald">{{ formatCurrency(selectedOrder.total_amount) }}</strong></div>
                                   
                                   <div class="mt-3 pt-3 border-top border-danger border-opacity-25" v-if="selectedOrder.refund_amount !== null">
                                     <div class="d-flex justify-content-between align-items-center mb-1">

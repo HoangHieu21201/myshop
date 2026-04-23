@@ -14,6 +14,7 @@ class MembershipTier extends Model
         'min_spent',
         'min_orders',
         'discount_percent',
+        'yearly_discount_quota',
         'yearly_service_quota',
         'icon',
     ];
@@ -22,6 +23,7 @@ class MembershipTier extends Model
         'min_spent' => 'decimal:2',
         'discount_percent' => 'decimal:2',
         'min_orders' => 'integer',
+        'yearly_discount_quota' => 'integer', 
         'yearly_service_quota' => 'integer',
     ];
 

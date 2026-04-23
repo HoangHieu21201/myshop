@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\admin\AdminContactController;
 use App\Http\Controllers\Api\admin\AdminNewController;
 use App\Http\Controllers\Api\admin\AdminChatbotController; 
 
+
 // Controllers Client
 use App\Http\Controllers\Api\client\ProductDetailController;
 use App\Http\Controllers\Api\client\ClientCartController;
@@ -126,6 +127,7 @@ Route::prefix('client')->group(function () {
         Route::get('/{order_code}', 'show');
         Route::put('/{order_code}', 'update');
         Route::post('/{order_code}/review', 'review');
+        Route::get('/{order_code}/review', 'getReview');
         Route::post('/{order_code}/reorder', 'reorder');
         Route::post('/{order_code}/return', 'requestReturn');
     });
@@ -142,10 +144,18 @@ Route::prefix('client')->group(function () {
         Route::get('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
         Route::post('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
     });
-    // Trang chủ
-    Route::get('/home-data', [ClientHomeController::class, 'index']);
-    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
-         ->name('client.orders.invoice');
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
+        ->name('client.orders.invoice');
+
+    // THÊM VÀO ĐÂY (trước hoặc sau các route khác đều được)
+    Route::middleware('auth:sanctum')->prefix('messages')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MessageController::class, 'history']);
+        Route::post('/', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+    });// THÊM VÀO ĐÂY (trước hoặc sau các route khác đều được)
+    Route::middleware('auth:sanctum')->prefix('messages')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MessageController::class, 'history']);
+        Route::post('/', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+    });
 });
 
 // ROUTE SHOP CLIENT

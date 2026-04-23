@@ -388,6 +388,31 @@ class ClientOrderController extends Controller
     }
 
     /**
+     * Lấy đánh giá của một đơn hàng
+     */
+    public function getReview(string $order_code)
+    {
+        $user = auth('sanctum')->user();
+        $order = Order::where('order_code', $order_code)->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        if ($order->user_id && (!$user || $user->id !== $order->user_id)) {
+            return response()->json(['success' => false, 'message' => 'Bạn không có quyền xem đánh giá này'], 403);
+        }
+
+        $reviews = Review::where('order_id', $order->id)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $reviews,
+            'count' => $reviews->count()
+        ]);
+    }
+
+    /**
      * Chức năng Mua lại (Thêm toàn bộ sản phẩm của đơn hàng cũ vào giỏ)
      */
     public function reorder(Request $request, string $order_code)

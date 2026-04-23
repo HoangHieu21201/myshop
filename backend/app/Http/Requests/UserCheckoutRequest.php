@@ -14,20 +14,15 @@ class UserCheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Nếu có ID địa chỉ thì phải tồn tại trong DB của bảng user_addresses
             'user_address_id'  => 'nullable|exists:user_addresses,id',
-            
-            // Các trường này chỉ bắt buộc khi KHÔNG dùng địa chỉ có sẵn (user_address_id bị null)
             'customer_name'    => 'required_without:user_address_id|string|max:255|nullable',
             'customer_phone'   => 'required_without:user_address_id|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|max:15|nullable',
             'customer_address' => 'required_without:user_address_id|string|max:1000|nullable',
-            
-            // Email và các thông tin khác luôn bắt buộc vì cần gửi hóa đơn
             'customer_email'   => 'required|email|max:255',
             'order_note'       => 'nullable|string|max:1000',
             'payment_method'   => 'required|in:cod,vnpay,momo,bank_transfer',
             'coupon_code'      => 'nullable|string|exists:coupons,code',
-            'shipping_fee'     => 'required|integer|min:0|max:200000', // phí ship phải là số nguyên, ≥ 0
+            'shipping_fee'     => 'required|integer|min:0|max:200000',
         ];
     }
 
@@ -50,11 +45,13 @@ class UserCheckoutRequest extends FormRequest
             
             'payment_method.required'           => 'Vui lòng chọn phương thức thanh toán.',
             'payment_method.in'                 => 'Phương thức thanh toán không được hỗ trợ.',
-            // ==================== THÊM MỚI ====================
-            'shipping_fee.required' => 'Phí vận chuyển không được để trống.',
-            'shipping_fee.integer'  => 'Phí vận chuyển phải là số nguyên.',
-            'shipping_fee.min'      => 'Phí vận chuyển không được âm.',
-            'shipping_fee.max'      => 'Phí vận chuyển không được vượt quá 200.000đ.',
+            
+            'coupon_code.exists'                => 'Mã giảm giá không tồn tại trên hệ thống.',
+            
+            'shipping_fee.required'             => 'Phí vận chuyển không được để trống.',
+            'shipping_fee.integer'              => 'Phí vận chuyển phải là số nguyên.',
+            'shipping_fee.min'                  => 'Phí vận chuyển không được âm.',
+            'shipping_fee.max'                  => 'Phí vận chuyển không được vượt quá 200.000đ.',
         ];
     }
 }

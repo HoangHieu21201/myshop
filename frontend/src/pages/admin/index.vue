@@ -145,12 +145,12 @@
 
                 <div class="bg-white rounded-pill shadow-sm border border-light d-flex align-items-center px-2 py-1 transition-all filter-group">
                   <i class="bi bi-clock-history text-brand ms-2"></i>
-                  <select v-model="selectedTimeRange" class="form-select form-select-sm border-0 bg-transparent shadow-none cursor-pointer fw-semibold text-dark ps-2 pe-4 py-1" style="min-width: 145px;">
-                    <option value="custom">Tùy chọn ngày</option>
-                    <option value="7">7 ngày qua</option>
-                    <option value="15">15 ngày qua</option>
-                    <option value="30">30 ngày qua</option>
-                    <option value="this_month">Tháng này</option>
+                  <select v-model="selectedTimeRange" class="form-select form-select-sm border-0 bg-transparent shadow-none cursor-pointer fw-semibold text-dark ps-2 pe-4 py-1" style="min-width: 145px; color: #2b2c40 !important; background-color: transparent !important;">
+                    <option value="custom" style="color: #2b2c40;">Tùy chọn ngày</option>
+                    <option value="7" style="color: #2b2c40;">7 ngày qua</option>
+                    <option value="15" style="color: #2b2c40;">15 ngày qua</option>
+                    <option value="30" style="color: #2b2c40;">30 ngày qua</option>
+                    <option value="this_month" style="color: #2b2c40;">Tháng này</option>
                   </select>
                 </div>
 
@@ -689,4 +689,16 @@ onMounted(() => {
 .custom-date-input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
 select:focus, input:focus, button:focus { outline: none; box-shadow: none !important; }
+
+/* Fix dropdown text visibility */
+select.form-select, select.form-select-sm {
+  color: #2b2c40 !important;
+  background-color: transparent !important;
+}
+
+select.form-select option, select.form-select-sm option {
+  color: #2b2c40 !important;
+  background-color: #fff !important;
+  padding: 8px;
+}
 </style>

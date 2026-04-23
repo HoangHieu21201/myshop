@@ -10,26 +10,24 @@ use App\Models\Combo;
 use App\Models\User;
 use App\Models\MembershipTier;
 use App\Models\TierHistory;
+use App\Models\TierServiceUsage;
 use App\Http\Requests\AdminUpdateOrderRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderRefundDealMail;
-use Illuminate\Support\Facades\Http; // Thêm Http để gọi sang Node.js
-use Illuminate\Support\Facades\Log;  // Thêm Log để ghi nhận lỗi nếu trạm tắt
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AdminOrderController extends Controller
 {
-    /**
-     * Hàm dùng chung để phát sóng Socket cho toàn bộ Controller Đơn hàng
-     */
     private function broadcastUpdate($message = 'Có cập nhật mới về đơn hàng!')
     {
         try {
             Http::post('http://localhost:3000/api/admin-refresh', [
-                'module'  => 'orders', // Báo cho Frontend biết là bảng 'orders' vừa thay đổi
-                'message' => $message, // Truyền kèm lời nhắn đích danh mã đơn hàng
+                'module'  => 'orders',
+                'message' => $message,
                 'time'    => now()->toDateTimeString()
             ]);
         } catch (\Exception $e) {
@@ -114,7 +112,6 @@ class AdminOrderController extends Controller
             if ($request->filled('status') && $request->status !== 'all') {
                 $baseQuery->where('status', $request->status);
             } else {
-                // Khi ở Tab "Tất cả", loại trừ hẳn 2 trạng thái thuộc về phần Hoàn Trả
                 $baseQuery->whereNotIn('status', ['returned', 'return_requested']);
             }
         }
@@ -142,6 +139,45 @@ class AdminOrderController extends Controller
         return response()->json(['success' => true, 'data' => $order]);
     }
 
+    /**
+     * Hàm dùng chung để Hoàn lại Tồn kho và Hoàn lượt dùng Hạng TV
+     */
+    private function restoreOrderResources(Order $order)
+    {
+        // 1. HOÀN LẠI LƯỢT DÙNG ĐẶC QUYỀN HẠNG THÀNH VIÊN
+        TierServiceUsage::where('order_id', $order->id)
+            ->where('service_type', 'tier_discount')
+            ->delete();
+
+        // 2. HOÀN LẠI TỒN KHO SẢN PHẨM & LƯỢT DÙNG COMBO
+        foreach ($order->items as $item) {
+            if ($item->product_variant_id) {
+                ProductVariant::where('id', $item->product_variant_id)->increment('stock_quantity', $item->quantity);
+            } elseif ($item->combo_id) {
+                Combo::where('id', $item->combo_id)->whereNotNull('usage_limit')->increment('usage_limit', $item->quantity);
+
+                if (is_array($item->combo_selections)) {
+                    foreach ($item->combo_selections as $selection) {
+                        $vId = $selection['selected_variant_id'] ?? null;
+                        if ($vId) {
+                            ProductVariant::where('id', $vId)->increment('stock_quantity', $item->quantity);
+                        }
+                    }
+                }
+
+                $combo = Combo::with('items')->find($item->combo_id);
+                if ($combo) {
+                    foreach ($combo->items as $cItem) {
+                        if ($cItem->product_variant_id) {
+                            $totalQtyToRestore = $item->quantity * $cItem->quantity;
+                            ProductVariant::where('id', $cItem->product_variant_id)->increment('stock_quantity', $totalQtyToRestore);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function updateStatus(AdminUpdateOrderRequest $request, $id)
     {
         DB::beginTransaction();
@@ -165,33 +201,10 @@ class AdminOrderController extends Controller
                     'changed_by_type' => 'admin'
                 ]);
 
-                if (in_array($newStatus, ['cancelled', 'returned'])) {
-                    foreach ($order->items as $item) {
-                        if ($item->product_variant_id) {
-                            ProductVariant::where('id', $item->product_variant_id)->increment('stock_quantity', $item->quantity);
-                        } elseif ($item->combo_id) {
-                            Combo::where('id', $item->combo_id)->whereNotNull('usage_limit')->increment('usage_limit', $item->quantity);
-
-                            if (is_array($item->combo_selections)) {
-                                foreach ($item->combo_selections as $selection) {
-                                    $vId = $selection['selected_variant_id'] ?? null;
-                                    if ($vId) {
-                                        ProductVariant::where('id', $vId)->increment('stock_quantity', $item->quantity);
-                                    }
-                                }
-                            }
-
-                            $combo = Combo::with('items')->find($item->combo_id);
-                            if ($combo) {
-                                foreach ($combo->items as $cItem) {
-                                    if ($cItem->product_variant_id) {
-                                        $totalQtyToRestore = $item->quantity * $cItem->quantity;
-                                        ProductVariant::where('id', $cItem->product_variant_id)->increment('stock_quantity', $totalQtyToRestore);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                // KHI ADMIN CHUYỂN SANG TRẠNG THÁI HỦY HOẶC HOÀN TRẢ
+                // Thêm điều kiện: Chỉ restore nếu trạng thái cũ chưa phải là Hủy/Hoàn trả
+                if (in_array($newStatus, ['cancelled', 'returned']) && !in_array($oldStatus, ['cancelled', 'returned'])) {
+                    $this->restoreOrderResources($order);
                 }
             }
 
@@ -224,7 +237,6 @@ class AdminOrderController extends Controller
         $request->validate([
             'action' => 'required|in:propose,reject,refunded',
             'refund_amount' => 'required|numeric|min:0',
-            // FIX LỖI 422: Cho phép rỗng (nullable) khi Kế toán chỉ xác nhận chuyển khoản
             'refund_note' => 'nullable|string' 
         ]);
 
@@ -232,14 +244,19 @@ class AdminOrderController extends Controller
         try {
             $order = Order::findOrFail($id);
             
-            // Ép refund_amount về 0 nếu TỪ CHỐI, làm cờ (flag) nhận biết trạng thái
             $order->refund_amount = $request->action === 'reject' ? 0 : $request->refund_amount;
             $order->refund_note = $request->refund_note;
 
             if ($request->action === 'refunded') {
                 $order->payment_status = 'refunded';
                 if ($order->status !== 'returned') {
-                    $order->status = 'returned'; // Chốt chặn an toàn
+                    $oldStatus = $order->status;
+                    $order->status = 'returned'; 
+                    
+                    // FIX LỖI: Khi Kế toán ép trạng thái sang Hoàn trả, phải gọi hàm Hoàn lại lượt dùng Hạng & Tồn kho
+                    if (!in_array($oldStatus, ['cancelled', 'returned'])) {
+                        $this->restoreOrderResources($order);
+                    }
                 }
 
                 OrderStatusHistory::create([
@@ -252,7 +269,7 @@ class AdminOrderController extends Controller
                     try {
                         Mail::to($order->customer_email)->send(new OrderRefundDealMail($order, $request->action));
                     } catch (\Exception $e) {
-                        // Bỏ qua lỗi kết nối Mail cục bộ để không làm đứt luồng test
+                        // Bỏ qua lỗi kết nối Mail cục bộ
                     }
                 }
                 
@@ -295,7 +312,6 @@ class AdminOrderController extends Controller
         return response()->json(['success' => true, 'message' => 'Đã đưa đơn hàng vào thùng rác']);
     }
 
-    // ktra nâng hạng tự động sau khi cập nhật đơn hàng
     protected function checkAndUpgradeUserTier($userId)
     {
         $user = User::find($userId);
@@ -307,16 +323,16 @@ class AdminOrderController extends Controller
                            ->sum('total_amount');
 
         $totalOrders = Order::where('user_id', $userId)
-                           ->where('status', 'delivered')
-                           ->where('payment_status', 'paid')
-                           ->count();
+                            ->where('status', 'delivered')
+                            ->where('payment_status', 'paid')
+                            ->count();
 
         $user->accumulated_spent = $totalSpent;
         $user->accumulated_orders = $totalOrders;
 
         $newTier = MembershipTier::where('min_spent', '<=', $totalSpent)
-                             ->orderBy('min_spent', 'desc')
-                             ->first();
+                              ->orderBy('min_spent', 'desc')
+                              ->first();
 
         if ($newTier && $user->tier_id !== $newTier->id) {
             $oldTierId = $user->tier_id;

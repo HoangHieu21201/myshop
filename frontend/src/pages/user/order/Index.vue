@@ -146,7 +146,12 @@
                     <button v-if="order.status === 'delivered' && (!order.reviews || order.reviews.length === 0)"
                       v-on:click="openReview(order)"
                       class="btn btn-outline-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
-                      Đánh giá
+                      <i class="bi bi-star-fill me-1"></i> Đánh giá
+                    </button>
+                    <button v-if="order.status === 'delivered' && order.reviews && order.reviews.length > 0"
+                      v-on:click="openViewReview(order)"
+                      class="btn btn-outline-info rounded-0 py-2 px-4 small fw-bold text-uppercase w-100">
+                      <i class="bi bi-eye-fill me-1"></i> Xem đánh giá
                     </button>
                     <button v-on:click="handleReorder(order)"
                       class="btn btn-primary-custom rounded-0 py-2 px-4 small fw-bold text-uppercase w-100 mt-2">
@@ -195,6 +200,8 @@
 
     <ReviewModal :is-open="isReviewModalOpen" :order="selectedOrderForReview" v-on:close="closeReviewModal"
       v-on:review-success="fetchOrders(pagination.current_page)" />
+
+    <ViewReviewModal :is-open="isViewReviewModalOpen" :order="selectedOrderForViewReview" v-on:close="closeViewReviewModal" />
   </div>
 </template>
 
@@ -203,9 +210,10 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 import OrderDetailModal from './OrderDetailModal.vue';
-import ReviewModal from './ReviewModal.vue'; 
+import ReviewModal from './ReviewModal.vue';
+import ViewReviewModal from './ViewReviewModal.vue';
+import defaultPlaceholder from '@/assets/images/defaults/placeholder.png'; 
 
 const router = useRouter();
 const isLoading = ref(true);
@@ -344,6 +352,22 @@ const openReview = (order) => {
 const closeReviewModal = () => {
   isReviewModalOpen.value = false;
   selectedOrderForReview.value = null;
+  document.body.style.overflow = 'auto';
+};
+
+const isViewReviewModalOpen = ref(false);
+const selectedOrderForViewReview = ref(null);
+
+const openViewReview = (order) => {
+  selectedOrderForViewReview.value = order;
+  isViewReviewModalOpen.value = true;
+  if (isModalOpen.value) closeModal();
+  document.body.style.overflow = 'hidden';
+};
+
+const closeViewReviewModal = () => {
+  isViewReviewModalOpen.value = false;
+  selectedOrderForViewReview.value = null;
   document.body.style.overflow = 'auto';
 };
 

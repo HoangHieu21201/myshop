@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MembershipTier;
-use Illuminate\Http\Request;
+use App\Http\Requests\AdminStoreMembershipTierRequest;
+use App\Http\Requests\AdminUpdateMembershipTierRequest;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 
 class AdminMembershipTierController extends Controller
 {
@@ -22,22 +22,10 @@ class AdminMembershipTierController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(AdminStoreMembershipTierRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:membership_tiers,name',
-            'min_spent' => 'required|numeric|min:0',
-            'min_orders' => 'required|integer|min:0',
-            'discount_percent' => 'required|numeric|min:0|max:100',
-            'yearly_service_quota' => 'required|integer|min:0',
-            'icon' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
-        }
-
-        $data = $request->except('icon');
+        $data = $request->validated();
+        unset($data['icon']);
 
         if ($request->hasFile('icon')) {
             $path = $request->file('icon')->store('tiers', 'public');
@@ -66,30 +54,17 @@ class AdminMembershipTierController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(AdminUpdateMembershipTierRequest $request, $id)
     {
         $tier = MembershipTier::find($id);
         if (!$tier) {
             return response()->json(['status' => 'error', 'message' => 'Không tìm thấy hạng này'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:membership_tiers,name,' . $id,
-            'min_spent' => 'required|numeric|min:0',
-            'min_orders' => 'required|integer|min:0',
-            'discount_percent' => 'required|numeric|min:0|max:100',
-            'yearly_service_quota' => 'required|integer|min:0',
-            'icon' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
-        }
-
-        $data = $request->except('icon', '_method');
+        $data = $request->validated();
+        unset($data['icon']);
 
         if ($request->hasFile('icon')) {
-            // Xóa icon cũ nếu có
             if ($tier->icon && Storage::disk('public')->exists($tier->icon)) {
                 Storage::disk('public')->delete($tier->icon);
             }

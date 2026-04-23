@@ -12,7 +12,34 @@
       </div>
 
       <div class="modal-body p-4 overflow-auto bg-light" style="max-height: 70vh;">
-        <div v-if="order?.items?.length > 0">
+        <!-- Skeleton Loading -->
+        <div v-if="isLoading" class="skeleton-container">
+          <div class="skeleton-text mb-4"></div>
+          
+          <div v-for="n in 3" :key="n" class="skeleton-review-item mb-4">
+            <div class="skeleton-product-info d-flex align-items-center gap-3 border-bottom pb-3 mb-3">
+              <div class="skeleton-img"></div>
+              <div class="flex-grow-1">
+                <div class="skeleton-title mb-2"></div>
+                <div class="skeleton-badge"></div>
+              </div>
+            </div>
+            
+            <div class="skeleton-stars text-center mb-3">
+              <div class="d-flex justify-content-center gap-2 mb-2">
+                <div v-for="star in 5" :key="star" class="skeleton-star"></div>
+              </div>
+              <div class="skeleton-rating-label"></div>
+            </div>
+            
+            <div class="skeleton-comment mb-3"></div>
+            
+            <div class="skeleton-upload-btn"></div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div v-else-if="order?.items?.length > 0">
           <p class="text-muted mb-4 fst-italic">Vui lòng chia sẻ cảm nhận của bạn về từng sản phẩm. Đánh giá của bạn giúp chúng tôi phục vụ tốt hơn!</p>
           
           <!-- Lặp qua từng sản phẩm trong đơn -->
@@ -102,6 +129,7 @@ const emit = defineEmits(['close', 'review-success']);
 
 const reviewForms = ref([]);
 const isSubmitting = ref(false);
+const isLoading = ref(false);
 const API_BASE_URL = 'http://127.0.0.1:8000/api/client/orders';
 
 const ratingLabels = {
@@ -114,8 +142,13 @@ const ratingLabels = {
 };
 
 // Khởi tạo mảng form dựa trên các sản phẩm trong đơn hàng
-watch(() => props.isOpen, (newVal) => {
+watch(() => props.isOpen, async (newVal) => {
   if (newVal && props.order) {
+    isLoading.value = true;
+    
+    // Simulate loading time for better UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     reviewForms.value = props.order.items.map(item => ({
       product_id: item.product_id,
       combo_id: item.combo_id,
@@ -126,8 +159,11 @@ watch(() => props.isOpen, (newVal) => {
       files: [],     // File thực tế để gửi lên server
       previews: []   // Base64 hiển thị cho người dùng
     }));
+    
+    isLoading.value = false;
   } else {
     reviewForms.value = [];
+    isLoading.value = false;
   }
 });
 
