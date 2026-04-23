@@ -22,21 +22,65 @@
         <div class="col-lg-3">
           <div class="bg-white p-4 shadow-sm border border-light text-center mb-4 rounded-3">
             
-            <!-- Avatar (Có thể click để đổi ảnh) -->
-            <div class="avatar-wrapper mx-auto mb-4 position-relative rounded-circle overflow-hidden bg-light" 
-                 style="width: 130px; height: 130px; cursor: pointer; border: 4px solid #fff; box-shadow: 0 0 0 2px #e7ce7d, 0 8px 16px rgba(0,0,0,0.1);" 
-                 @click="triggerFileInput" title="Click để thay đổi ảnh đại diện">
+            <!-- SVG Gradient Definitions (hidden, dùng chung cho toàn trang) -->
+            <svg width="0" height="0" style="position:absolute">
+              <defs>
+                <linearGradient id="grad-default" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#bdbdbd" />
+                  <stop offset="100%" style="stop-color:#9e9e9e" />
+                </linearGradient>
+                <linearGradient id="grad-silver" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#e0e0e0" />
+                  <stop offset="50%" style="stop-color:#b0b0b0" />
+                  <stop offset="100%" style="stop-color:#c8c8c8" />
+                </linearGradient>
+                <linearGradient id="grad-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#ffd700" />
+                  <stop offset="50%" style="stop-color:#f5a623" />
+                  <stop offset="100%" style="stop-color:#ffec8b" />
+                </linearGradient>
+                <linearGradient id="grad-diamond" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#76d7f5" />
+                  <stop offset="50%" style="stop-color:#4dd0e1" />
+                  <stop offset="100%" style="stop-color:#a8e6f0" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            <!-- Avatar + Huy Hiệu Tier (Shopee-style) -->
+            <div class="avatar-tier-container mx-auto mb-4 position-relative" style="width: 140px; height: 155px;">
               
-              <img :src="previewAvatar || getImageUrl(form.avatar_url) || 'https://ui-avatars.com/api/?name=' + form.fullName + '&background=9f273b&color=fff'" 
-                   alt="Avatar" class="w-100 h-100 object-fit-cover" style="object-position: center;">
-              
-              <!-- Lớp phủ khi hover -->
-              <div class="avatar-upload-overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="small mt-1 fw-medium" style="font-size: 0.75rem; letter-spacing: 0.5px;">Đổi ảnh</span>
+              <!-- HUY HIỆU TIER phía trên avatar -->
+              <div class="tier-badge-crown" :class="tierBadgeClass" v-if="currentTierInfo.name">
+                <div class="tier-badge-inner">
+                  <span class="tier-badge-svg" v-html="tierSvgIcon"></span>
+                  <span class="tier-badge-label">{{ currentTierInfo.name }}</span>
+                </div>
+              </div>
+              <div class="tier-badge-crown tier-default" v-else>
+                <div class="tier-badge-inner">
+                  <span class="tier-badge-svg" v-html="tierSvgDefault"></span>
+                  <span class="tier-badge-label">Thành viên</span>
+                </div>
+              </div>
+
+              <!-- Avatar -->
+              <div class="avatar-wrapper mx-auto position-relative rounded-circle overflow-hidden bg-light" 
+                   style="width: 120px; height: 120px; cursor: pointer; border: 4px solid #fff; box-shadow: 0 0 0 3px var(--tier-border-color, #e7ce7d), 0 8px 16px rgba(0,0,0,0.1);" 
+                   :style="{ '--tier-border-color': tierBorderColor }"
+                   @click="triggerFileInput" title="Click để thay đổi ảnh đại diện">
+                
+                <img :src="previewAvatar || getImageUrl(form.avatar_url) || 'https://ui-avatars.com/api/?name=' + form.fullName + '&background=9f273b&color=fff'" 
+                     alt="Avatar" class="w-100 h-100 object-fit-cover" style="object-position: center;">
+                
+                <!-- Lớp phủ khi hover -->
+                <div class="avatar-upload-overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span class="small mt-1 fw-medium" style="font-size: 0.75rem; letter-spacing: 0.5px;">Đổi ảnh</span>
+                </div>
               </div>
             </div>
             
@@ -79,6 +123,89 @@
 
         <!-- CÁC FORM CẬP NHẬT BÊN PHẢI -->
         <div class="col-lg-9">
+
+          <!-- ====== CARD HẠNG THÀNH VIÊN ====== -->
+          <div class="tier-card mb-4 rounded-3 overflow-hidden shadow-sm" :class="tierCardClass">
+            <div class="tier-card-bg">
+              <div class="tier-card-body p-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                  <!-- Thông tin hạng hiện tại -->
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="tier-card-icon-wrap" :class="tierBadgeClass">
+                      <span class="tier-card-svg" v-html="tierSvgIconLg"></span>
+                    </div>
+                    <div>
+                      <div class="tier-card-rank-label">Hạng thành viên</div>
+                      <div class="tier-card-rank-name">{{ currentTierInfo.name || 'Thành viên mới' }}</div>
+                    </div>
+                  </div>
+                  <!-- Quyền lợi -->
+                  <div class="d-flex gap-4 flex-wrap">
+                    <div class="tier-benefit-item" v-if="currentTierInfo.discount">
+                      <span class="tier-benefit-value">{{ currentTierInfo.discount }}%</span>
+                      <span class="tier-benefit-label">Giảm giá</span>
+                    </div>
+                    <div class="tier-benefit-item" v-if="currentTierInfo.serviceQuota">
+                      <span class="tier-benefit-value">{{ currentTierInfo.serviceQuota }}</span>
+                      <span class="tier-benefit-label">Dịch vụ/năm</span>
+                    </div>
+                    <div class="tier-benefit-item">
+                      <span class="tier-benefit-value">{{ formatCurrency(form.accumulated_spent || 0) }}</span>
+                      <span class="tier-benefit-label">Đã chi tiêu</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Thanh tiến trình đến hạng tiếp theo -->
+                <div v-if="nextTierInfo" class="tier-progress-section mt-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="tier-progress-label">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#9f273b" style="vertical-align: -2px; margin-right: 4px;"><circle cx="12" cy="12" r="10" fill="none" stroke="#9f273b" stroke-width="2"/><path d="M12 8v4l3 3" fill="none" stroke="#9f273b" stroke-width="2" stroke-linecap="round"/></svg>
+                      Hạng tiếp theo: <strong>{{ nextTierInfo.name }}</strong>
+                    </span>
+                    <span class="tier-progress-label">
+                      {{ formatCurrency(form.accumulated_spent || 0) }} / {{ formatCurrency(nextTierInfo.min_spent) }}
+                    </span>
+                  </div>
+                  <div class="tier-progress-bar">
+                    <div class="tier-progress-fill" :style="{ width: tierProgressPercent + '%' }"></div>
+                  </div>
+                  <div class="tier-progress-hint mt-2">
+                    Còn <strong>{{ formatCurrency(amountToNextTier) }}</strong> nữa để lên hạng {{ nextTierInfo.name }}
+                  </div>
+                </div>
+                <div v-else class="tier-progress-section mt-3">
+                  <div class="tier-progress-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#ffd700" style="vertical-align: -2px; margin-right: 3px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Chúc mừng! Bạn đã đạt hạng thành viên <strong>cao nhất</strong>.
+                  </div>
+                </div>
+
+                <!-- Roadmap các hạng -->
+                <div class="tier-roadmap mt-4" v-if="allTiers.length > 0">
+                  <div class="tier-roadmap-track">
+                    <div class="tier-roadmap-line"></div>
+                    <!-- Mốc mặc định (0đ) -->
+                    <div class="tier-roadmap-point" :class="{ 'achieved': true }">
+                      <div class="tier-roadmap-dot"></div>
+                      <div class="tier-roadmap-info">
+                        <span class="tier-roadmap-name">Thành viên</span>
+                      </div>
+                    </div>
+                    <div v-for="tier in allTiers" :key="tier.id" class="tier-roadmap-point"
+                         :class="{ 'achieved': isTierAchieved(tier) }">
+                      <div class="tier-roadmap-dot"></div>
+                      <div class="tier-roadmap-info">
+                        <span class="tier-roadmap-name">{{ tier.name }}</span>
+                        <span class="tier-roadmap-spent">{{ formatCurrencyShort(tier.min_spent) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="bg-white p-4 p-md-5 shadow-sm border border-light mb-4 rounded-3">
             
             <!-- FORM 1: THÔNG TIN CÁ NHÂN & ĐỊA CHỈ -->
@@ -470,7 +597,8 @@ const defaultAddress = computed(() => {
 });
 
 const form = ref({
-  fullName: '', email: '', phone: '', gender: '', birthday: '', avatar_url: ''
+  fullName: '', email: '', phone: '', gender: '', birthday: '', avatar_url: '',
+  tier_id: null, accumulated_spent: 0, accumulated_orders: 0, tier: null, all_tiers: []
 });
 
 const passwordForm = ref({
@@ -659,7 +787,12 @@ const fetchProfile = async () => {
         phone: userData.phone || '',
         gender: userData.gender || '',
         birthday: userData.birthday || '',
-        avatar_url: userData.avatar_url || ''
+        avatar_url: userData.avatar_url || '',
+        tier_id: userData.tier_id || null,
+        accumulated_spent: parseFloat(userData.accumulated_spent) || 0,
+        accumulated_orders: parseInt(userData.accumulated_orders) || 0,
+        tier: userData.tier || null,
+        all_tiers: userData.all_tiers || []
       };
     }
   } catch (error) {
@@ -774,6 +907,109 @@ onMounted(() => {
     isLoading.value = false;
   }
 });
+
+// ===== TÍNH TOÁN THÔNG TIN HẠNG THÀNH VIÊN =====
+const allTiers = computed(() => form.value.all_tiers || []);
+
+const currentTierInfo = computed(() => {
+  if (form.value.tier) {
+    return {
+      name: form.value.tier.name,
+      discount: parseFloat(form.value.tier.discount_percent) || 0,
+      serviceQuota: form.value.tier.yearly_service_quota || 0,
+      minSpent: parseFloat(form.value.tier.min_spent) || 0,
+      iconUrl: form.value.tier.icon_url || null,
+    };
+  }
+  return { name: '', discount: 0, serviceQuota: 0, minSpent: 0, iconUrl: null };
+});
+
+const nextTierInfo = computed(() => {
+  const tiers = allTiers.value;
+  if (!tiers.length) return null;
+  const spent = form.value.accumulated_spent || 0;
+  // Tìm tier tiếp theo mà user chưa đạt
+  return tiers.find(t => parseFloat(t.min_spent) > spent) || null;
+});
+
+const tierProgressPercent = computed(() => {
+  if (!nextTierInfo.value) return 100;
+  const spent = form.value.accumulated_spent || 0;
+  const target = parseFloat(nextTierInfo.value.min_spent);
+  if (target <= 0) return 100;
+  return Math.min(Math.round((spent / target) * 100), 100);
+});
+
+const amountToNextTier = computed(() => {
+  if (!nextTierInfo.value) return 0;
+  const spent = form.value.accumulated_spent || 0;
+  return Math.max(parseFloat(nextTierInfo.value.min_spent) - spent, 0);
+});
+
+const isTierAchieved = (tier) => {
+  return (form.value.accumulated_spent || 0) >= parseFloat(tier.min_spent);
+};
+
+// Hàm xác định kiểu huy hiệu dựa trên tên tier
+const tierBadgeClass = computed(() => {
+  const name = (currentTierInfo.value.name || '').toLowerCase();
+  if (name.includes('diamond') || name.includes('kim cương')) return 'tier-diamond';
+  if (name.includes('vàng') || name.includes('gold')) return 'tier-gold';
+  if (name.includes('bạc') || name.includes('silver')) return 'tier-silver';
+  return 'tier-default';
+});
+
+// --- SVG ICON TEMPLATES (thay vì dùng emoji) ---
+const svgStar = (size, gradId) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="url(#${gradId})"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+const svgShield = (size, gradId) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="url(#${gradId})"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+const svgCrown = (size, gradId) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="url(#${gradId})"><path d="M2 20h20v2H2zM4 17l2-10 4 4 2-6 2 6 4-4 2 10H4z"/></svg>`;
+const svgDiamond = (size, gradId) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="url(#${gradId})"><path d="M19 3H5L2 9l10 12L22 9l-3-6zM12 17.5L5.5 9h13L12 17.5z"/></svg>`;
+
+const tierSvgDefault = svgStar(15, 'grad-default');
+
+const tierSvgIcon = computed(() => {
+  const name = (currentTierInfo.value.name || '').toLowerCase();
+  if (name.includes('diamond') || name.includes('kim cương')) return svgDiamond(15, 'grad-diamond');
+  if (name.includes('vàng') || name.includes('gold')) return svgCrown(15, 'grad-gold');
+  if (name.includes('bạc') || name.includes('silver')) return svgShield(15, 'grad-silver');
+  return svgStar(15, 'grad-default');
+});
+
+const tierSvgIconLg = computed(() => {
+  const name = (currentTierInfo.value.name || '').toLowerCase();
+  if (name.includes('diamond') || name.includes('kim cương')) return svgDiamond(28, 'grad-diamond');
+  if (name.includes('vàng') || name.includes('gold')) return svgCrown(28, 'grad-gold');
+  if (name.includes('bạc') || name.includes('silver')) return svgShield(28, 'grad-silver');
+  return svgStar(28, 'grad-default');
+});
+
+const tierBorderColor = computed(() => {
+  const name = (currentTierInfo.value.name || '').toLowerCase();
+  if (name.includes('diamond') || name.includes('kim cương')) return '#b9f2ff';
+  if (name.includes('vàng') || name.includes('gold')) return '#ffd700';
+  if (name.includes('bạc') || name.includes('silver')) return '#c0c0c0';
+  return '#e7ce7d';
+});
+
+const tierCardClass = computed(() => {
+  const name = (currentTierInfo.value.name || '').toLowerCase();
+  if (name.includes('diamond') || name.includes('kim cương')) return 'tier-card-diamond';
+  if (name.includes('vàng') || name.includes('gold')) return 'tier-card-gold';
+  if (name.includes('bạc') || name.includes('silver')) return 'tier-card-silver';
+  return 'tier-card-default';
+});
+
+const formatCurrency = (val) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+};
+
+const formatCurrencyShort = (val) => {
+  const num = parseFloat(val);
+  if (num >= 1000000000) return (num / 1000000000).toFixed(1) + ' tỷ';
+  if (num >= 1000000) return (num / 1000000).toFixed(0) + ' tr';
+  if (num >= 1000) return (num / 1000).toFixed(0) + 'k';
+  return num.toString();
+};
 </script>
 
 <style scoped>
@@ -791,6 +1027,301 @@ onMounted(() => {
 .object-fit-cover { object-fit: cover !important; }
 .tracking-wide { letter-spacing: 0.1em; }
 .tracking-widest { letter-spacing: 2px; }
+
+/* ==================================== */
+/* HUY HIỆU TIER TRÊN AVATAR           */
+/* ==================================== */
+.avatar-tier-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tier-badge-crown {
+  display: flex;
+  justify-content: center;
+  margin-bottom: -8px;
+  z-index: 2;
+  position: relative;
+  animation: badgeFloat 3s ease-in-out infinite;
+}
+
+@keyframes badgeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.tier-badge-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.tier-badge-svg { display: flex; align-items: center; line-height: 0; }
+.tier-badge-label { text-transform: uppercase; }
+
+.tier-default .tier-badge-inner {
+  background: #f5f5f5;
+  color: #757575;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.tier-silver .tier-badge-inner {
+  background: linear-gradient(135deg, #f5f5f5 0%, #d6d6d6 50%, #ececec 100%);
+  color: #5a5a5a;
+  border: 1px solid #c0c0c0;
+  box-shadow: 0 2px 10px rgba(150,150,150,0.25), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.tier-gold .tier-badge-inner {
+  background: linear-gradient(135deg, #fceabb 0%, #f8b500 50%, #fce38a 100%);
+  color: #7a5800;
+  border: 1px solid #e6a800;
+  box-shadow: 0 2px 12px rgba(245,166,35,0.35), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.tier-diamond .tier-badge-inner {
+  background: linear-gradient(135deg, #e0f7fa 0%, #80deea 40%, #b2ebf2 70%, #e0f7fa 100%);
+  color: #00838f;
+  border: 1px solid #4dd0e1;
+  box-shadow: 0 2px 14px rgba(77,208,225,0.35), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* ==================================== */
+/* CARD HẠNG THÀNH VIÊN               */
+/* ==================================== */
+.tier-card {
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.tier-card-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.tier-card-bg::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.tier-card-default {
+  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+  border-color: #e0e0e0;
+}
+.tier-card-default .tier-card-bg::before { background: #888; }
+
+.tier-card-silver {
+  background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+  border-color: #c0c0c0;
+}
+.tier-card-silver .tier-card-bg::before { background: #aaa; }
+
+.tier-card-gold {
+  background: linear-gradient(135deg, #fffdf5 0%, #fff8e1 100%);
+  border-color: #ffd54f;
+}
+.tier-card-gold .tier-card-bg::before { background: #ffd700; }
+
+.tier-card-diamond {
+  background: linear-gradient(135deg, #f0fcff 0%, #e0f7fa 100%);
+  border-color: #80deea;
+}
+.tier-card-diamond .tier-card-bg::before { background: #26c6da; }
+
+.tier-card-body { position: relative; z-index: 1; }
+
+.tier-card-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.tier-card-icon-wrap.tier-default { background: #f5f5f5; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.tier-card-icon-wrap.tier-silver { background: linear-gradient(135deg, #f0f0f0, #dcdcdc); box-shadow: 0 2px 10px rgba(150,150,150,0.2); }
+.tier-card-icon-wrap.tier-gold { background: linear-gradient(135deg, #fff8e1, #fce38a); box-shadow: 0 3px 14px rgba(245,166,35,0.25); }
+.tier-card-icon-wrap.tier-diamond { background: linear-gradient(135deg, #e0f7fa, #b2ebf2); box-shadow: 0 3px 14px rgba(77,208,225,0.25); }
+
+.tier-card-svg { display: flex; align-items: center; line-height: 0; }
+
+.tier-card-rank-label {
+  font-size: 0.72rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+
+.tier-card-rank-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-family: "Playfair Display", serif;
+  color: #333;
+  line-height: 1.2;
+}
+
+.tier-benefit-item {
+  text-align: center;
+  min-width: 70px;
+}
+
+.tier-benefit-value {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #9f273b;
+  line-height: 1.2;
+}
+
+.tier-benefit-label {
+  display: block;
+  font-size: 0.68rem;
+  color: #888;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Progress bar */
+.tier-progress-section {
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.tier-progress-label {
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.tier-progress-emoji { font-size: 0.85rem; }
+
+.tier-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0,0,0,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tier-progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #9f273b, #e7ce7d);
+  transition: width 1s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+}
+
+.tier-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: progressShine 2s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.tier-progress-hint {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+/* Tier Roadmap */
+.tier-roadmap {
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.tier-roadmap-track {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 12px;
+}
+
+.tier-roadmap-line {
+  position: absolute;
+  top: 10px;
+  left: 24px;
+  right: 24px;
+  height: 3px;
+  background: #e0e0e0;
+  z-index: 0;
+  border-radius: 2px;
+}
+
+.tier-roadmap-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  min-width: 55px;
+}
+
+.tier-roadmap-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  margin-bottom: 6px;
+  transition: all 0.3s;
+}
+
+.tier-roadmap-point.achieved .tier-roadmap-dot {
+  background: linear-gradient(135deg, #9f273b, #e7ce7d);
+  box-shadow: 0 2px 8px rgba(159,39,59,0.35);
+}
+
+.tier-roadmap-info {
+  text-align: center;
+}
+
+.tier-roadmap-name {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.tier-roadmap-point.achieved .tier-roadmap-name {
+  color: #9f273b;
+}
+
+.tier-roadmap-spent {
+  display: block;
+  font-size: 0.62rem;
+  color: #aaa;
+  margin-top: 1px;
+}
 
 /* Menu Sidebar */
 .profile-menu a {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\client;
 use App\Http\Controllers\Controller;
 use App\Models\User; 
 use App\Models\UserAddress; // BẮT BUỘC IMPORT MODEL NÀY
+use App\Models\MembershipTier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,13 +19,25 @@ class ClientProfileController extends Controller
 
     public function show()
     {
-        $user = User::find(Auth::guard('sanctum')->id());
+        $user = User::with('tier')->find(Auth::guard('sanctum')->id());
         if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
         
         $userData = $user->toArray();
         if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
             $userData['avatar_url'] = url('storage/' . $user->avatar_url);
         }
+
+        // Đính kèm URL đầy đủ cho icon tier (nếu có)
+        if ($user->tier && $user->tier->icon) {
+            $userData['tier']['icon_url'] = url('storage/' . $user->tier->icon);
+        }
+
+        // Trả thêm danh sách toàn bộ hạng thành viên (để hiển thị progress)
+        $allTiers = MembershipTier::orderBy('min_spent', 'asc')->get()->map(function ($t) {
+            $t->icon_url = $t->icon ? url('storage/' . $t->icon) : null;
+            return $t;
+        });
+        $userData['all_tiers'] = $allTiers;
 
         return response()->json(['status' => true, 'data' => $userData]);
     }

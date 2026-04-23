@@ -16,6 +16,10 @@ class Message extends Model
         'receiver_id',
         'content',
         'is_read',
+        'message_type', // text | file | image
+        'file_url',
+        'file_name',
+        'file_size',
     ];
 
     // Người gửi là ai?

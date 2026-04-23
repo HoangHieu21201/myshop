@@ -359,6 +359,8 @@ Route::prefix('admin')->group(function () {
             Route::get('/conversations', [\App\Http\Controllers\Api\MessageController::class, 'getConversations']);
             Route::get('/', [\App\Http\Controllers\Api\MessageController::class, 'history']);
             Route::post('/', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+            // Xóa toàn bộ cuộc trò chuyện với user
+            Route::delete('/conversations/{userId}', [\App\Http\Controllers\Api\MessageController::class, 'deleteConversation']);
         });
     });
 });
