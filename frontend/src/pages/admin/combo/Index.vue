@@ -110,7 +110,7 @@
                   </td>
                   
                   <td class="px-4 text-center">
-                    <span class="badge bg-brand bg-opacity-10 text-brand border border-brand px-3 py-2">
+                    <span class="badge bg-opacity-10 text-brand border border-brand px-3 py-2">
                       <i class="bi bi-box-seam me-1"></i> {{ combo.items_count || 0 }} món
                     </span>
                   </td>

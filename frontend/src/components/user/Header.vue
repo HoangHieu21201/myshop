@@ -138,7 +138,7 @@
             </li>
 
             <router-link :to="{ name: 'client-combos' }" class="nav-item-link">BỘ SƯU TẬP</router-link>
-            <li><a href="#" class="nav-item-link">QUÀ TẶNG</a></li>
+            <!-- <li><a href="#" class="nav-item-link">QUÀ TẶNG</a></li> -->
             <li><router-link :to="{ name: 'news'}" class="nav-item-link">TIN TỨC</router-link></li>
           </ul>
         </nav>

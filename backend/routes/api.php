@@ -67,6 +67,13 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 // CLIENT API ROUTES
 Route::prefix('client')->group(function () {
 
+
+    // THÊM VÀO ĐÂY (trước hoặc sau các route khác đều được)
+    Route::middleware('auth:sanctum')->prefix('messages')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MessageController::class, 'history']);
+        Route::post('/', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+    });
+    
     Route::get('header-data', [ClientHeaderController::class, 'getMegaMenuData']);
     Route::get('search', [ClientHeaderController::class, 'search']);
     Route::get('/home-data', [ClientHomeController::class, 'index']);
@@ -135,13 +142,10 @@ Route::prefix('client')->group(function () {
         Route::get('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
         Route::post('/momo-return', [\App\Http\Controllers\Api\client\ClientCheckoutController::class, 'momoReturn']);
     });
-    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\client\ClientOrderController::class, 'invoice'])
-        ->name('client.orders.invoice');
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/messages', [\App\Http\Controllers\Api\MessageController::class, 'history']);
-        Route::post('/messages', [\App\Http\Controllers\Api\MessageController::class, 'store']);
-    });
+    // Trang chủ
+    Route::get('/home-data', [ClientHomeController::class, 'index']);
+    Route::get('orders/{order_code}/invoice', [App\Http\Controllers\Api\Client\ClientOrderController::class, 'invoice'])
+         ->name('client.orders.invoice');
 });
 
 // ROUTE SHOP CLIENT
