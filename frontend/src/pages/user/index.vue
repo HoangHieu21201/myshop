@@ -177,7 +177,6 @@
         </div>
 
         <div class="container-fluid px-0 pb-2 position-relative">
-          <!-- ĐÃ FIX: Chuyển loop sang false để không bị nhảy ngược lại trang đầu -->
           <swiper
             :key="data.combos.length"
             :modules="swiperModules"
@@ -235,7 +234,6 @@
             </swiper-slide>
           </swiper>
 
-          <!-- ĐÃ FIX: Gắn thuộc tính :disabled cho các nút, áp dụng css mờ -->
           <div class="d-flex justify-content-center align-items-center gap-3 mt-2 pb-2">
             <button @click="prevCombo" :disabled="isComboBeginning" class="btn bg-white rounded-circle shadow-sm border border-light-subtle d-flex justify-content-center align-items-center custom-nav-btn" style="width: 48px; height: 48px;">
               <i class="bi bi-chevron-left fs-5"></i>
@@ -259,7 +257,6 @@
         <div class="container-fluid px-0 overflow-hidden">
           <div class="sora-marquee-wrapper">
             <div class="sora-marquee-track">
-              <!-- Nhóm ảnh 1 -->
               <div class="sora-marquee-group">
                 <div v-for="(img, index) in displayGalleries" :key="'g1-' + index" class="gallery-slide-item">
                   <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
@@ -270,7 +267,6 @@
                   </div>
                 </div>
               </div>
-              <!-- Nhóm ảnh 2 (Nhân bản để tạo vòng lặp mượt mà không nháy) -->
               <div class="sora-marquee-group">
                 <div v-for="(img, index) in displayGalleries" :key="'g2-' + index" class="gallery-slide-item">
                   <div class="gallery-img-wrapper position-relative group cursor-pointer bg-light">
@@ -293,19 +289,26 @@
             <h3 class="font-serif fw-bold text-dark mb-3 display-6">Kiến Thức Trang Sức</h3>
             <div class="divider-gold mx-auto"></div>
           </div>
-          <div class="row g-4">
-            <div class="col-md-4" v-for="i in 3" :key="i">
-              <div class="blog-card group cursor-pointer bg-white p-3 shadow-sm border border-light">
+          
+          <div class="row g-4" v-if="data.news && data.news.length > 0">
+            <div class="col-md-4" v-for="article in data.news.slice(0, 3)" :key="article.id">
+              <div class="blog-card group cursor-pointer bg-white p-3 shadow-sm border border-light h-100 d-flex flex-column" @click="router.push(`/tin-tuc/${article.slug}`)">
                 <div class="ratio ratio-4x3 overflow-hidden mb-3">
-                  <img src="https://eropi.com/media/wysiwyg/bo-trang-suc-3/bo-trang-suc-bac-ruby-circle_3_.JPG" loading="lazy" class="object-fit-cover transition-transform duration-700 group-hover-scale" alt="Blog">
+                  <img :src="getImageUrl(article.image_url)" loading="lazy" class="object-fit-cover transition-transform duration-700 group-hover-scale" :alt="article.title" @error="handleImageError">
                 </div>
-                <small class="text-gold tracking-widest text-uppercase fw-bold">Tư Vấn</small>
-                <h5 class="font-serif fw-bold text-primary-luxury mt-2 group-hover-text-accent transition-colors">
-                  {{ ['Bí Quyết Chọn Nhẫn Cầu Hôn Kim Cương Hoàn Hảo', 'Cách Bảo Quản Trang Sức Vàng 18K Sáng Bóng Trọn Đời', 'Xu Hướng Trang Sức Ngọc Trai Lên Ngôi Năm Nay'][i-1] }}
-                </h5>
-                <p class="text-dark fw-light mt-2 mb-0" style="font-size: 0.9rem;">Khám phá những bí quyết độc quyền từ chuyên gia kim hoàn SORA để...</p>
+                <small class="text-gold tracking-widest text-uppercase fw-bold" style="font-style: italic;">{{ article.category || 'Mới Nhất' }}</small>
+                <h4 class="font-serif fw-bold text-primary-luxury mt-2 group-hover-text-accent transition-colors" style="line-height: 1.4;">
+                  {{ article.title }}
+                </h4>
+                <p class="text-dark fw-light mt-2 mb-0 text-truncate-3" style="font-size: 0.9rem;">
+                  {{ article.excerpt || (article.content ? article.content.replace(/(<([^>]+)>)/gi, "").substring(0, 100) + '...' : 'Khám phá những bí quyết độc quyền từ chuyên gia kim hoàn SORA...') }}
+                </p>
               </div>
             </div>
+          </div>
+
+          <div v-else class="text-center text-muted fst-italic">
+            Chưa có bài viết nào được xuất bản.
           </div>
         </div>
       </section>
@@ -353,9 +356,6 @@ const swiperModules = [Pagination, Navigation, Autoplay];
 const isLoading = ref(true);
 const router = useRouter();
 
-// ==========================================
-// ĐIỀU KHIỂN SWIPER COMBO & BẮT SỰ KIỆN NÚT BẤM
-// ==========================================
 const comboSwiperRef = ref(null);
 const isComboBeginning = ref(true);
 const isComboEnd = ref(false);
@@ -388,7 +388,8 @@ const data = reactive({
   products: [],
   combos: [],
   tiers: [],
-  galleries: [] 
+  galleries: [],
+  news: [] 
 });
 
 const dummyGalleries = [
@@ -414,12 +415,23 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api
 
 const soraPlaceholder = '/Sora-placeholder.png';
 
+// ĐÃ SỬA: Hàm getImageUrl dùng Regex cạo sạch url rác
 const getImageUrl = (path) => {
   if (!path) return soraPlaceholder;
   if (path.startsWith('http')) return path;
-  
-  const baseUrl = API_BASE.replace('/api', '');
-  return `${baseUrl}/storage/${path}`;
+
+  // 1. Dọn dẹp URL Backend (Cắt bỏ /api)
+  const baseUrl = API_BASE.replace(/\/api\/?$/, '');
+
+  // 2. Cạo sạch các phần thừa ở đầu chuỗi (Dấu /, chữ public, chữ storage)
+  let cleanPath = path;
+  cleanPath = cleanPath.replace(/^\/+/, '');         // Xóa mọi dấu / ở đầu
+  cleanPath = cleanPath.replace(/^public\//, '');    // Xóa chữ public/ nếu có
+  cleanPath = cleanPath.replace(/^storage\//, '');   // Xóa chữ storage/ nếu có
+  cleanPath = cleanPath.replace(/^\/+/, '');         // Xóa dấu / một lần nữa cho chắc ăn
+
+  // 3. Nối lại thành 1 đường link hoàn hảo duy nhất
+  return `${baseUrl}/storage/${cleanPath}`;
 };
 
 const handleImageError = (e) => { 
@@ -474,6 +486,8 @@ const fetchHomepageData = async () => {
       data.combos = result.data.combos || [];
       data.tiers = result.data.tiers || [];
       if(result.data.galleries) data.galleries = result.data.galleries;
+
+      data.news = result.data.news || [];
     }
   } catch (error) {
     console.error("Lỗi tải trang chủ:", error);
@@ -600,7 +614,7 @@ onMounted(() => {
 .text-danger { color: var(--color-accent) !important; }
 
 /* ========================================== */
-/* BỘ SƯU TẬP GIỚI HẠN (ĐÃ UPDATE CHUẨN FIGMA)*/
+/* BỘ SƯU TẬP GIỚI HẠN                        */
 /* ========================================== */
 .combo-section { background-color: #fbf9f6; }
 .combo-swiper-luxury { padding: 40px 0 60px 0; overflow: hidden; } 
@@ -635,7 +649,6 @@ onMounted(() => {
 .combo-img-wrapper { z-index: 2; }
 .combo-content-container { z-index: 3; position: relative; }
 
-/* ĐÃ FIX: Định dạng nút điều hướng (Custom Navigation Buttons) */
 .custom-nav-btn {
   color: #333;
   transition: all 0.3s ease;
@@ -647,7 +660,6 @@ onMounted(() => {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(159, 39, 59, 0.2) !important;
 }
-/* Trạng thái chạm đáy (Bị mù màu / Vô hiệu hóa) */
 .custom-nav-btn:disabled {
   opacity: 0.35 !important;
   cursor: not-allowed;
@@ -658,7 +670,7 @@ onMounted(() => {
 }
 
 /* ========================================== */
-/* CHÂN DUNG SORA (CSS MARQUEE CHUẨN VÔ CỰC)  */
+/* CHÂN DUNG SORA                             */
 /* ========================================== */
 .sora-marquee-wrapper {
   display: flex;

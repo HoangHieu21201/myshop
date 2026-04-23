@@ -24,13 +24,13 @@ class ClientHomeController extends Controller
                 'products' => [],
                 'combos' => [],
                 'tiers' => [],
-                'galleries' => []
+                'galleries' => [],
+                'news' => [] // ĐÃ THÊM MẢNG NEWS
             ];
 
             // 1. Lấy Banners
             if (Schema::hasTable('banners')) {
                 $query = DB::table('banners')->where('status', 'active');
-                // LOGIC: Chỉ hiện nếu deleted_at = null
                 if (Schema::hasColumn('banners', 'deleted_at')) {
                     $query->whereNull('deleted_at');
                 }
@@ -45,7 +45,6 @@ class ClientHomeController extends Controller
                         $q->whereNull('expires_at')
                             ->orWhere('expires_at', '>=', now());
                     });
-                // LOGIC: Chỉ hiện nếu deleted_at = null
                 if (Schema::hasColumn('coupons', 'deleted_at')) {
                     $query->whereNull('deleted_at');
                 }
@@ -90,12 +89,10 @@ class ClientHomeController extends Controller
             if (Schema::hasTable('combos') && Schema::hasTable('combo_items')) {
                 $query = DB::table('combos')->where('status', 'active');
 
-                // LOGIC: Chỉ hiện nếu deleted_at = null
                 if (Schema::hasColumn('combos', 'deleted_at')) {
                     $query->whereNull('deleted_at');
                 }
 
-                // LOGIC: Kiểm tra thời hạn (còn hạn hoặc không có hạn)
                 $yesterday = Carbon::now()->subDay();
                 $query->where(function($q) use ($yesterday) {
                     $q->whereNull('end_date')
@@ -150,24 +147,33 @@ class ClientHomeController extends Controller
             // 6. Lấy Hạng hội viên
             if (Schema::hasTable('membership_tiers')) {
                 $query = DB::table('membership_tiers')->where('min_spent', '>', 0);
-                
-                // LOGIC: Chỉ hiện nếu deleted_at = null
                 if (Schema::hasColumn('membership_tiers', 'deleted_at')) {
                     $query->whereNull('deleted_at');
                 }
-
                 $data['tiers'] = $query->orderBy('min_spent', 'asc')->take(3)->get();
             }
 
-            // 7. LẤY CHÂN DUNG SORA (TRỰC TIẾP KHÔNG QUA CACHE)
+            // 7. LẤY CHÂN DUNG SORA
             try {
                 $data['galleries'] = \App\Models\CustomerGallery::where('is_active', 1)
                     ->orderBy('sort_order', 'asc')
                     ->orderBy('created_at', 'desc')
                     ->get(['image_path']);
             } catch (\Exception $e) {
-                // Nếu bảng bị lỗi thì mảng rỗng, không làm sập web
                 $data['galleries'] = []; 
+            }
+
+            // 8. Lấy tin tức
+            if (Schema::hasTable('news')) {
+                try {
+                    $data['news'] = DB::table('news')
+                        ->where('status', 'published')
+                        ->orderBy('created_at', 'desc')
+                        ->take(3)
+                        ->get(['id', 'title', 'slug', 'excerpt', 'content', 'image_url', 'category']);
+                } catch (\Exception $e) {
+                    $data['news'] = [];
+                }
             }
 
             return response()->json([
