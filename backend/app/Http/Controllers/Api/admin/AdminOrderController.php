@@ -7,6 +7,9 @@ use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\ProductVariant;
 use App\Models\Combo;
+use App\Models\User;
+use App\Models\MembershipTier;
+use App\Models\TierHistory;
 use App\Http\Requests\AdminUpdateOrderRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -203,7 +206,10 @@ class AdminOrderController extends Controller
 
             DB::commit();
             
-            // BẮN SÓNG REALTIME: Vừa sửa trạng thái hoặc thanh toán kèm thông điệp cụ thể
+            if ($order->user_id) {
+                $this->checkAndUpgradeUserTier($order->user_id);
+            }
+            
             $this->broadcastUpdate("Trạng thái đơn hàng #{$order->order_code} vừa được cập nhật!");
 
             return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái đơn hàng thành công']);
@@ -261,7 +267,10 @@ class AdminOrderController extends Controller
             $order->save();
             DB::commit();
 
-            // BẮN SÓNG REALTIME: Vừa xử lý hoàn tiền
+            if ($order->user_id) {
+                $this->checkAndUpgradeUserTier($order->user_id);
+            }
+
             $this->broadcastUpdate("Đơn hàng #{$order->order_code} vừa được xử lý hoàn trả/hoàn tiền!");
 
             return response()->json(['success' => true, 'message' => 'Xử lý thành công']);
@@ -284,5 +293,44 @@ class AdminOrderController extends Controller
         $this->broadcastUpdate("Đơn hàng #{$orderCode} đã bị đưa vào thùng rác!");
 
         return response()->json(['success' => true, 'message' => 'Đã đưa đơn hàng vào thùng rác']);
+    }
+
+    // ktra nâng hạng tự động sau khi cập nhật đơn hàng
+    protected function checkAndUpgradeUserTier($userId)
+    {
+        $user = User::find($userId);
+        if (!$user) return;
+
+        $totalSpent = Order::where('user_id', $userId)
+                           ->where('status', 'delivered')
+                           ->where('payment_status', 'paid')
+                           ->sum('total_amount');
+
+        $totalOrders = Order::where('user_id', $userId)
+                           ->where('status', 'delivered')
+                           ->where('payment_status', 'paid')
+                           ->count();
+
+        $user->accumulated_spent = $totalSpent;
+        $user->accumulated_orders = $totalOrders;
+
+        $newTier = MembershipTier::where('min_spent', '<=', $totalSpent)
+                             ->orderBy('min_spent', 'desc')
+                             ->first();
+
+        if ($newTier && $user->tier_id !== $newTier->id) {
+            $oldTierId = $user->tier_id;
+            $user->tier_id = $newTier->id;
+
+            TierHistory::create([
+                'user_id'     => $user->id,
+                'old_tier_id' => $oldTierId,
+                'new_tier_id' => $newTier->id,
+                'reason'      => 'Hệ thống tự động xét duyệt do tổng chi tiêu đạt ' . number_format($totalSpent) . ' VNĐ',
+                'created_at'  => now()
+            ]);
+        }
+        
+        $user->save();
     }
 }

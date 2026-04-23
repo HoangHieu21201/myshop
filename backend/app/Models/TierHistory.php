@@ -9,6 +9,8 @@ class TierHistory extends Model
 {
     use HasFactory;
 
+    protected $table = 'tier_history';
+
     const UPDATED_AT = null;
 
     protected $fillable = [
