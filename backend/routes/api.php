@@ -291,6 +291,7 @@ Route::prefix('admin')->group(function () {
             Route::controller(AdminOrderController::class)->group(function () {
                 Route::get('orders', 'index');
                 Route::get('orders/{id}', 'show');
+                Route::get('orders/{id}/invoice', 'invoice');
                 Route::put('orders/{id}/status', 'updateStatus');
                 Route::delete('orders/{id}', 'destroy');
                 Route::post('orders/{id}/refund-process', 'processRefundAction');

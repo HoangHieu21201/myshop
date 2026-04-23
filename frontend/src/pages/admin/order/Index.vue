@@ -412,13 +412,13 @@ const canTransitionTo = (currentStatus, targetStatus) => allowedTransitions[curr
 
 const getOrderRowClass = (status) => {
   const classes = {
-    'pending': 'bg-warning bg-opacity-10',
-    'confirmed': 'bg-info bg-opacity-10',
-    'processing': 'bg-primary bg-opacity-10',
-    'shipping': 'bg-primary bg-opacity-10',
-    'delivered': 'bg-success bg-opacity-10',
-    'cancelled': 'bg-danger bg-opacity-10',
-    'returned': 'bg-secondary bg-opacity-10'
+    'pending': 'bg-warning bg-opacity-20',
+    'confirmed': 'bg-info bg-opacity-20',
+    'processing': 'bg-primary bg-opacity-20',
+    'shipping': 'bg-primary bg-opacity-20',
+    'delivered': 'bg-success bg-opacity-20',
+    'cancelled': 'bg-danger bg-opacity-20',
+    'returned': 'bg-secondary bg-opacity-20'
   };
   return classes[status] || '';
 };

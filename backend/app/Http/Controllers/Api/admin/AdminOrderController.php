@@ -13,6 +13,7 @@ use App\Models\TierHistory;
 use App\Models\TierServiceUsage;
 use App\Http\Requests\AdminUpdateOrderRequest;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -137,6 +138,21 @@ class AdminOrderController extends Controller
         ])->findOrFail($id);
 
         return response()->json(['success' => true, 'data' => $order]);
+    }
+
+    public function invoice($id)
+    {
+        $order = Order::with(['items'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('invoices.order', compact('order'));
+        $pdf->setPaper('A4');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'defaultFont'          => 'DejaVu Sans',
+        ]);
+
+        return $pdf->download("hoa-don-{$order->order_code}.pdf");
     }
 
     /**

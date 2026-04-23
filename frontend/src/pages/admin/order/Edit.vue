@@ -40,7 +40,7 @@
            <button class="btn btn-light border shadow-sm fw-bold px-4" @click="fetchOrderData(false)">
              <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
            </button>
-           <button class="btn btn-outline-dark fw-bold px-4 bg-white" @click="printOrder">
+           <button class="btn btn-dark text-white fw-bold px-4 action-btn-hover" @click="printOrder">
              <i class="bi bi-printer me-1"></i> In Đơn
            </button>
         </div>
@@ -294,6 +294,7 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import TrackingMapModal from '@/components/admin/TrackingMapModal.vue';
+import { downloadAdminInvoice } from '@/utils/adminInvoice.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -480,7 +481,10 @@ const openTrackingModal = () => {
     }
 };
 
-const printOrder = () => Swal.fire({icon: 'info', title: 'Đang phát triển', text: 'Chức năng In sẽ ra mắt sớm.'});
+const printOrder = () => {
+    if (!order.value?.id) return;
+    downloadAdminInvoice({ orderId: order.value.id, orderCode: order.value.order_code });
+};
 
 // Hàm cho bản đồ inline
 const loadLeafletScript = () => {

@@ -2,8 +2,8 @@
   <div class="modal fade" id="quickViewOrderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;" ref="modalRef">
     <div class="modal-dialog modal-dialog-centered modal-xl">
       <div id="invoice-printable" class="modal-content rounded-4 border-0 shadow">
-        <div class="modal-header border-bottom pb-3 bg-light rounded-top-4">
-          <h5 class="fw-bold text-dark mb-0"><i class="bi bi-receipt text-brand me-2"></i>Đơn Hàng <span class="text-brand font-monospace">{{ order?.order_code }}</span></h5>
+        <div class="modal-header border-bottom pb-3 bg-light rounded-top-4 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold text-dark mb-0 flex-grow-1"><i class="bi bi-receipt text-brand me-2"></i>Đơn Hàng <span class="text-brand font-monospace">{{ order?.order_code }}</span></h5>
           
           <div class="d-flex align-items-center gap-2 gap-md-3 no-print">
              <!-- ĐÃ FIX: Nút này luôn luôn hiện dù đơn bị hủy -->
@@ -23,8 +23,11 @@
                      @click="triggerTracking">
                 <i class="bi bi-geo-alt-fill me-2"></i> Tracking Bản Đồ
              </button>
-             <button type="button" class="btn-close action-btn-hover" @click="hide"></button>
           </div>
+
+          <button type="button" class="btn btn-sm btn-danger text-white rounded action-btn-hover ms-2 no-print d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" @click="hide" title="Đóng">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
         
         <div class="modal-body p-4 bg-white" v-if="order">
@@ -158,6 +161,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { downloadAdminInvoice } from '@/utils/adminInvoice.js';
 
 const props = defineProps({
     order: {
@@ -214,7 +218,7 @@ const triggerTracking = () => {
 
 const printInvoice = () => {
     if (!props.order) return;
-    window.print();
+    downloadAdminInvoice({ orderId: props.order.id, orderCode: props.order.order_code });
 };
 
 const formatCurrency = (val) => {
