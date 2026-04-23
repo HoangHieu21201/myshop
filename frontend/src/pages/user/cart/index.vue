@@ -107,7 +107,7 @@
             <!-- Tổng và Xóa (Desktop) -->
             <!-- FIX BLIND SPOT: Đổi col-2 thành col-3, thêm text-nowrap để giá tiền lớn không bị đè lên nút + -->
             <div class="col-3 d-none d-md-flex justify-content-end align-items-center gap-3">
-              <span class="fs-5 fw-bold text-primary-custom text-nowrap" style="font-family: 'Playfair Display', serif;">
+              <span class="fs-5 fw-bold text-primary-custom text-nowrap" >
                 {{ formatPrice(item.quantity * getItemPrice(item)) }}
               </span>
               <button @click="removeItem(item.id)" :disabled="item.isUpdating" class="btn-remove-item flex-shrink-0" title="Xóa khỏi giỏ">
@@ -134,14 +134,14 @@
               </div>
               <div class="d-flex justify-content-between align-items-center mb-3 text-light text-opacity-75">
                 <span>Phí vận chuyển</span>
-                <span class="badge bg-gold text-dark fw-bold px-2 py-1 rounded-pill shadow-sm">MIỄN PHÍ</span>
+                <span class="badge bg-gold text-white fw-bold px-2 py-1 rounded-pill shadow-sm">MIỄN PHÍ</span>
               </div>
             </div>
 
             <div class="border-top border-light border-opacity-25 pt-4 mb-4">
               <div class="d-flex justify-content-between align-items-end mb-1">
                 <span class="text-white text-uppercase small fw-bold" style="letter-spacing: 1px;">Tổng cộng</span>
-                <span class="fs-2 fw-bold text-gold" style="font-family: 'Playfair Display', serif;">{{ formatPrice(summary.subtotal) }}</span>
+                <span class="fs-2 fw-bold text-gold" >{{ formatPrice(summary.subtotal) }}</span>
               </div>
               <p class="text-end small text-light text-opacity-50 mb-0">Giá đã bao gồm thuế VAT</p>
             </div>

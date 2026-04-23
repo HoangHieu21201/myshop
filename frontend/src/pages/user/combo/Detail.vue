@@ -162,15 +162,16 @@
                   <span class="text-muted font-oswald text-uppercase tracking-wide">Giá Trị Gốc</span>
                   <span class="text-muted text-decoration-line-through fs-5 font-serif">{{ formatCurrency(originalTotal) }}</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <span class="fw-bold text-dark font-oswald text-uppercase tracking-wide fs-5">Mức Giá Ưu Đãi</span>
-                  <span class="fw-bold text-sora-primary display-5 font-serif">{{ formatCurrency(finalPrice) }}</span>
-                </div>
                 <div class="text-end">
-                  <span class="font-oswald text-gold tracking-widest text-uppercase small fw-bold">
-                    Tiết Kiệm Lên Đến {{ savingsPercentage }}%
+                  <span class="font-oswald text-warning tracking-widest text-uppercase small fw-bold" >
+                    Tiết Kiệm Lên Đến <span class="text-danger" style="font-size:1.5rem;">{{ savingsPercentage }}%</span>
                   </span>
                 </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="fw-bold text-dark font-oswald text-uppercase tracking-wide fs-5">Mức Giá Ưu Đãi</span>
+                  <span class="fw-bold text-sora-primary display-5 ">{{ formatCurrency(finalPrice) }}</span>
+                </div>
+                
             </div>
 
             <div v-if="!canBuyCombo" class="text-center py-4 bg-light border">
