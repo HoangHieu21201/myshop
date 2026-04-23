@@ -236,6 +236,11 @@ const itemsPerPage = 8;
 const selectedGallery = ref(null);
 let quickViewModalInstance = null;
 
+// SỬ DỤNG .ENV CHO API BASE URL NHƯ BẠN YÊU CẦU
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+// Lấy đường dẫn base (không có /api) để trỏ vào thư mục storage ảnh
+const BASE_URL = API_URL.replace('/api', '');
+
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
 const formatDate = (dateString) => {
@@ -270,9 +275,10 @@ const handleImageError = (e) => {
 const fetchData = async () => {
   if (!isFirstLoad.value) isLoading.value = true;
   try {
+    // ĐÃ FIX LỖI Ở DÒNG DƯỚI ĐÂY: Thay http://127.0.0.1:8000 bằng endpoint API chính xác
     const [resGalleries, resModules] = await Promise.all([
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/galleries`, { headers: getHeaders() }),
-      axios.get(`http://127.0.0.1:8000/api/admin/modules`, { headers: getHeaders() })
+      axios.get(`${API_URL}/admin/galleries`, { headers: getHeaders() }),
+      axios.get(`${API_URL}/admin/modules`, { headers: getHeaders() })
     ]);
 
     if (resGalleries.data) {
@@ -283,11 +289,10 @@ const fetchData = async () => {
           // MAP 1: Lấy cột title mới tạo, nếu rỗng thì hiện ID cho đỡ trống
           const mappedTitle = g.title || `Ảnh chân dung #${g.id}`;
           
-          // MAP 2: Lấy đúng cột image_path của Backend
+          // MAP 2: Xử lý đường dẫn ảnh (áp dụng BASE_URL)
           let mappedImageUrl = g.image_path || '';
           if (mappedImageUrl && !mappedImageUrl.startsWith('http') && !mappedImageUrl.startsWith('data:image')) {
-             const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
-             mappedImageUrl = `${baseUrl}/storage/${mappedImageUrl}`;
+              mappedImageUrl = `${BASE_URL}/storage/${mappedImageUrl}`;
           }
 
           // MAP 3: Bắt đúng cột is_active của Backend
@@ -338,7 +343,8 @@ const saveGalleryStatus = async (item) => {
   };
 
   try {
-    await axios.put(`http://127.0.0.1:8000/api/v1/admin/galleries/${item.id}`, payload, { headers: getHeaders() });
+    // Đã thay thế bằng API_URL
+    await axios.put(`${API_URL}/admin/galleries/${item.id}`, payload, { headers: getHeaders() });
     
     item.mappedStatus = item.localStatus; 
     item.isStatusChanged = false;
@@ -395,7 +401,8 @@ const confirmDelete = (id, title) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/galleries/${id}`, { headers: getHeaders() });
+        // Đã thay thế bằng API_URL
+        await axios.delete(`${API_URL}/admin/galleries/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData();
       } catch (err) {

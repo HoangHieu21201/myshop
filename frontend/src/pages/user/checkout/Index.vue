@@ -303,7 +303,7 @@
               
               <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-2 border-dark">
                 <span class="text-dark font-oswald tracking-widest text-uppercase fw-bold">Tổng Thanh Toán:</span>
-                <span class="fs-3 fw-bold text-sora-primary font-serif">{{ formatPrice(totalAmount) }}</span>
+                <span class="fs-3 fw-bold text-sora-primary ">{{ formatPrice(totalAmount) }}</span>
               </div>
             </div>
 

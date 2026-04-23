@@ -267,7 +267,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -302,20 +302,18 @@ const isMegaMenuOpen = ref(false);
 let megaMenuTimer = null;
 
 const openMegaMenu = () => {
-    // Nếu vừa rời khỏi mà lia chuột quay lại kịp trong 200ms -> Hủy lệnh đóng
     if (megaMenuTimer) clearTimeout(megaMenuTimer);
     isMegaMenuOpen.value = true;
 };
 
 const closeMegaMenu = () => {
-    // Đợi 200ms (0.2s) mới bắt đầu đóng menu, để có thời gian rê chuột xuống an toàn
     megaMenuTimer = setTimeout(() => {
         isMegaMenuOpen.value = false;
     }, 200); 
 };
 
 // ==========================================
-// THUẬT TOÁN SMART STICKY HEADER (THU NHỎ KHI CUỘN)
+// THUẬT TOÁN SMART STICKY HEADER
 // ==========================================
 const isScrolled = ref(false);
 const isHidden = ref(false);
@@ -486,6 +484,27 @@ const handleLogout = () => {
   });
 };
 
+// ==========================================
+// XỬ LÝ SỰ KIỆN CẬP NHẬT GIỎ HÀNG THÔNG MINH
+// ==========================================
+const handleCartUpdateEvent = (e) => {
+  // Nếu tín hiệu có gửi kèm con số chính xác -> Cập nhật luôn, khỏi gọi API đỡ lag
+  if (e && e.detail && e.detail.cart_count !== undefined) {
+    cartItemCount.value = parseInt(e.detail.cart_count) || 0;
+  } else {
+    // Nếu chỉ báo hiệu (không có số) -> Tải lại dữ liệu từ server
+    fetchHeaderData();
+  }
+};
+
+// Theo dõi chuyển hướng trang (SPA Router) - Tự động tải lại số lượng giỏ hàng khi người dùng chuyển qua lại các trang
+watch(
+  () => route.fullPath,
+  () => {
+    fetchHeaderData();
+  }
+);
+
 onMounted(() => {
   fetchHeaderData();
   const userData = localStorage.getItem('userData');
@@ -496,13 +515,13 @@ onMounted(() => {
   
   document.addEventListener('click', handleClickOutside);
   window.addEventListener('scroll', handleScroll, { passive: true });
-  window.addEventListener('update-cart-count', fetchHeaderData);
+  window.addEventListener('update-cart-count', handleCartUpdateEvent);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
   window.removeEventListener('scroll', handleScroll);
-  window.removeEventListener('update-cart-count', fetchHeaderData);
+  window.removeEventListener('update-cart-count', handleCartUpdateEvent);
 });
 </script>
 
@@ -649,7 +668,6 @@ onUnmounted(() => {
   z-index: 1050;
 }
 
-/* ĐÃ FIX: Tăng không gian "Cây cầu vô hình" lên 30px để bảo kê chuột an toàn tuyệt đối */
 .mega-menu-wrapper::before {
   content: '';
   position: absolute;
