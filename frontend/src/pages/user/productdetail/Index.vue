@@ -81,12 +81,22 @@
 
             <div class="product-variants">
               <div v-for="(options, attrName) in product.attributes" :key="attrName" class="variant-group">
-                <h3 class="variant-label">
-                  {{ attrName }}
-                  <span v-if="selectedAttributes[attrName]" style="color: #333; font-weight: 600; text-transform: none; font-size: 15px;">
-                    : {{ getOptionName(attrName, selectedAttributes[attrName]) }}
-                  </span>
-                </h3>
+                <div class="variant-label-wrapper">
+                  <h3 class="variant-label">
+                    {{ attrName }}
+                    <span v-if="selectedAttributes[attrName]" style="color: #333; font-weight: 600; text-transform: none; font-size: 15px;">
+                      : {{ getOptionName(attrName, selectedAttributes[attrName]) }}
+                    </span>
+                  </h3>
+                  <button
+                    v-if="isSizeAttribute(attrName)"
+                    @click="openSizeGuide"
+                    class="size-guide-btn"
+                    title="Xem hướng dẫn kích cỡ"
+                  >
+                    <i class="fa-solid fa-ruler-combined"></i> Hướng dẫn size
+                  </button>
+                </div>
                 
                 <div v-if="isColorAttribute(attrName)" class="variant-options color-options">
                   <button 
@@ -407,12 +417,83 @@
 
     </template>
     
-    <div v-else class="error-container">
-      <h2>Không tìm thấy sản phẩm!</h2>
-      <p>Sản phẩm này có thể đã bị xóa hoặc không tồn tại.</p>
-    </div>
+    <!-- MODAL HƯỚNG DẪN SIZE -->
+    <transition name="fade">
+      <div v-if="showSizeGuideModal" class="size-guide-modal-overlay" @click.self="closeSizeGuide">
+        <div class="size-guide-modal">
+          <div class="size-guide-modal-header">
+            <h3>Hướng Dẫn Kích Cỡ</h3>
+            <button class="close-btn" @click="closeSizeGuide">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
 
-    <!-- THANH SO SÁNH (BOTTOM BAR) -->
+          <div class="size-guide-modal-body">
+            <div class="size-chart-section">
+              <h4 class="section-title">Bảng Kích Cỡ Tiêu Chuẩn</h4>
+              <p class="section-desc">Những kích cỡ bên dưới là những thông số tiêu chuẩn cho nhẫn nữ. Kích cỡ có thể thay đổi tùy theo yêu cầu riêng của từng khách hàng.</p>
+
+              <div class="size-table">
+                <div class="table-header">
+                  <div class="table-cell">Kích Cỡ Nhẫn</div>
+                  <div class="table-cell">Đường Kính (mm)</div>
+                  <div class="table-cell">Chu Vi (mm)</div>
+                </div>
+                <div v-for="size in sizeGuideData" :key="size.size" class="table-row">
+                  <div class="table-cell">{{ size.size }}</div>
+                  <div class="table-cell">{{ size.diameter }} mm</div>
+                  <div class="table-cell">{{ size.circumference }} mm</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="measurement-guide-section mt-5">
+              <h4 class="section-title">Cách Đo Kích Cỡ Nhẫn</h4>
+              <ul class="measurement-steps">
+                <li>
+                  <span class="step-number">1</span>
+                  <div class="step-content">
+                    <strong>Sử dụng một sợi dây mềm hoặc giấy</strong> - Quấn xung quanh ngón tay của bạn, vị trí mà bạn sẽ đeo nhẫn
+                  </div>
+                </li>
+                <li>
+                  <span class="step-number">2</span>
+                  <div class="step-content">
+                    <strong>Đánh dấu vị trí giao nhau</strong> - Ghi dấu ở điểm hai đầu sợi dây/giấy gặp nhau
+                  </div>
+                </li>
+                <li>
+                  <span class="step-number">3</span>
+                  <div class="step-content">
+                    <strong>Đo chu vi</strong> - Dùng thước đo chu vi của sợi dây từ điểm đầu đến điểm cuối (tính bằng mm)
+                  </div>
+                </li>
+                <li>
+                  <span class="step-number">4</span>
+                  <div class="step-content">
+                    <strong>Đối chiếu với bảng</strong> - Tìm chu vi gần nhất trong bảng kích cỡ phía trên để xác định size nhẫn của bạn
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="tips-section mt-5 p-4" style="background-color: #f8f9fa; border-left: 4px solid rgb(159,39,59); border-radius: 4px;">
+              <h4 class="section-title mb-3" style="margin-top: 0;">💡 Lưu Ý Quan Trọng</h4>
+              <ul class="tips-list">
+                <li>Đo kích cỡ khi tay bạn ở nhiệt độ bình thường (không lạnh)</li>
+                <li>Đeo nhẫn vào ngón tay ít nhất 30 phút trước khi mua để chắc chắn kích cỡ phù hợp</li>
+                <li>Nếu bạn không chắc chắn, hãy liên hệ với đội hỗ trợ của chúng tôi để được tư vấn</li>
+                <li>Sau khi mua, bạn có thể thay đổi kích cỡ nhẫn miễn phí trong 30 ngày đầu</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="size-guide-modal-footer">
+            <button class="btn-close-guide" @click="closeSizeGuide">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </transition>
     <transition name="slide-up">
       <div v-if="compareList.length > 0" class="compare-bottom-bar">
         <div class="compare-inner">
@@ -522,6 +603,21 @@ const mainImage = ref('');
 const selectedAttributes = ref({});
 const selectedQuantity = ref(1);
 const isLoading = ref(true);
+const showSizeGuideModal = ref(false);
+
+const sizeGuideData = [
+  { size: '5', diameter: 15.7, circumference: 50 },
+  { size: '6', diameter: 16.5, circumference: 52 },
+  { size: '7', diameter: 17.4, circumference: 54 },
+  { size: '8', diameter: 18.3, circumference: 57 },
+  { size: '9', diameter: 19.1, circumference: 60 },
+  { size: '10', diameter: 20.0, circumference: 62.5 },
+  { size: '11', diameter: 20.9, circumference: 65 },
+  { size: '12', diameter: 21.8, circumference: 68 },
+  { size: '13', diameter: 22.6, circumference: 71 },
+  { size: '14', diameter: 23.5, circumference: 74 },
+  { size: '15', diameter: 24.4, circumference: 76.5 },
+];
 
 const API_BASE_URL = 'http://127.0.0.1:8000'; 
 const shopSlug = route.params.shop_slug || 'aurora';
@@ -529,6 +625,11 @@ const shopSlug = route.params.shop_slug || 'aurora';
 const isColorAttribute = (name) => {
   const lowerName = name.toLowerCase();
   return lowerName.includes('màu') || lowerName.includes('color');
+};
+
+const isSizeAttribute = (name) => {
+  const lowerName = name.toLowerCase();
+  return lowerName.includes('size') || lowerName.includes('kích cỡ') || lowerName.includes('cỡ') || lowerName.includes('ni tay');
 };
 
 const getColorCode = (name) => {
@@ -816,6 +917,9 @@ const openComparePopup = async () => {
   if (compareSuggestions.value.length === 0) await fetchCompareSuggestions();
 };
 const closeComparePopup = () => showComparePopup.value = false;
+
+const openSizeGuide = () => showSizeGuideModal.value = true;
+const closeSizeGuide = () => showSizeGuideModal.value = false;
 
 const fetchFavouritesForCompare = async () => {
   comparePopupTab.value = 'favourites';

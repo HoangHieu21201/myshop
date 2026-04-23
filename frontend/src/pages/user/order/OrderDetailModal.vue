@@ -197,38 +197,30 @@
         </div>
       </div>
 
-      <!-- FOOTER THÔNG MINH (THÊM NÚT HỦY ĐƠN) -->
-      <div
-        class="modal-footer-luxury p-3 px-md-4 border-top bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div class="d-flex gap-2">
-          <template v-if="order?.status === 'delivered' && (!order?.reviews || order?.reviews.length === 0)">
-            <button v-on:click="$emit('open-review', order)"
-              class="btn btn-outline-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-              <i class="bi bi-star-fill me-1"></i> Đánh giá
-            </button>
-          </template>
-
-          <!-- NÚT MUA LẠI: Đã xóa v-if để hiển thị ở mọi trạng thái -->
-          <button v-on:click="$emit('reorder', order)"
-            class="btn btn-primary-custom rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-            <i class="bi bi-cart-plus me-1"></i> Mua lại
-          </button>
-
-          <!-- NÚT HỦY XUẤT HIỆN Ở ĐÂY NẾU TRẠNG THÁI LÀ PENDING -->
-          <template v-if="order?.status === 'pending'">
-            <button v-on:click="$emit('cancel-order', order)"
-              class="btn btn-outline-danger rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-              <i class="bi bi-x-circle me-1"></i> Hủy Đơn Hàng
-            </button>
-          </template>
-          <button v-on:click="exportInvoice"
-            class="btn btn-outline-success rounded-0 px-3 px-md-4 fw-bold text-uppercase small">
-            <i class="bi bi-file-earmark-pdf me-1"></i> Xuất Hóa Đơn PDF
-          </button>
-        </div>
-        <button v-on:click="$emit('close')"
-          class="btn btn-dark rounded-0 px-4 px-md-5 fw-bold text-uppercase small flex-shrink-0">
-          Đóng cửa sổ
+      <!-- FOOTER: NÚT ACTION TINH GỌN, SANG TRỌNG -->
+      <div class="p-3 border-top bg-white rounded-bottom-4 d-flex flex-wrap justify-content-center justify-content-md-end gap-2 flex-shrink-0">
+        <button v-if="order?.status === 'delivered' && (!order?.reviews || order?.reviews.length === 0)" @click="handleReview" class="btn btn-outline-dark btn-sm fw-bold px-3 font-oswald tracking-wide text-uppercase">
+            <i class="bi bi-star-fill me-1"></i> Đánh Giá
+        </button>
+        
+        <button v-if="order?.status === 'delivered' && order?.reviews && order?.reviews.length > 0" @click="$emit('open-review', order)" class="btn btn-outline-info btn-sm fw-bold px-3 font-oswald tracking-wide text-uppercase">
+            <i class="bi bi-eye-fill me-1"></i> Xem Đánh Giá
+        </button>
+        
+        <button v-if="order?.status === 'delivered'" @click="handleReturn" class="btn btn-outline-warning text-dark border-warning btn-sm fw-bold px-3 font-oswald tracking-wide text-uppercase hover-warning">
+            <i class="bi bi-arrow-return-left me-1"></i> Hoàn Trả
+        </button>
+        
+        <button v-if="order?.id" @click="handleDownloadInvoice" class="btn btn-outline-success btn-sm fw-bold px-3 font-oswald tracking-wide text-uppercase">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Xuất PDF
+        </button>
+        
+        <button v-if="['delivered', 'cancelled', 'returned', 'return_requested'].includes(order?.status)" @click="handleReorder" class="btn btn-sora-primary btn-sm fw-bold px-4 font-oswald tracking-wide text-uppercase shadow-sm">
+            <i class="bi bi-cart-plus me-1"></i> Mua Lại
+        </button>
+        
+        <button @click="$emit('close')" class="btn btn-secondary btn-sm fw-bold px-4 ms-md-2 font-oswald tracking-wide text-uppercase">
+            Đóng
         </button>
       </div>
 
@@ -242,12 +234,14 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import defaultPlaceholder from '@/assets/images/defaults/placeholder.png';
 
+const router = useRouter();
+
 const props = defineProps({
   isOpen: Boolean,
   order: Object
 });
 
-const emit = defineEmits(['close', 'refresh']);
+const emit = defineEmits(['close', 'refresh', 'open-review']);
 
 const orderSteps = [
   { value: 'pending', label: 'Chờ xác nhận', icon: 'bi-receipt' },
@@ -357,95 +351,178 @@ const getPaymentStatusClass = (status) => {
   return 'bg-warning-subtle text-warning-emphasis border-warning-subtle'; 
 };
 
-const getPaymentStatusIcon = (status) => {
-  if (status === 'paid') return 'bi-check-circle-fill';
-  if (status === 'refunded') return 'bi-arrow-counterclockwise';
-  return 'bi-hourglass-split';
-};
-// === HÀM XUẤT HÓA ĐƠN ĐÃ SỬA ===
-const exportInvoice = async () => {
-  if (!props.order?.order_code) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi',
-      text: 'Không tìm thấy mã đơn hàng',
-    });
+// ================= CÁC HÀM XỬ LÝ NÚT BẤM =================
+
+const handleReview = () => {
+  if (!props.order?.items?.length) {
+    Swal.fire({ icon: 'info', title: 'Không có sản phẩm để đánh giá' });
     return;
   }
+  emit('open-review', props.order);
+};
 
-  const token = localStorage.getItem('auth_token');
+const handleReturn = async () => {
+    const quickNotes = [
+        'Sản phẩm bị lỗi, trầy xước từ trước',
+        'Giao sai sản phẩm / sai phân loại',
+        'Sản phẩm không giống như mô tả',
+        'Thiếu phụ kiện, hộp, quà tặng',
+        'Tôi đổi ý, không muốn mua nữa'
+    ];
+    
+    // ĐÃ FIX: Danh sách Checkbox tròn (Radio buttons) xịn xò
+    let radiosHtml = '<div class="text-start custom-radio-list px-2 px-md-4 mt-3">';
+    quickNotes.forEach((n, idx) => {
+        radiosHtml += `
+            <label class="d-flex align-items-center mb-3 cursor-pointer">
+                <input type="radio" name="return_reason_radio" value="${n}" class="form-check-input me-3 mt-0" style="width: 1.25rem; height: 1.25rem; cursor: pointer; flex-shrink: 0;">
+                <span class="text-dark" style="font-size: 0.95rem;">${n}</span>
+            </label>
+        `;
+    });
+    
+    radiosHtml += `
+            <label class="d-flex align-items-center mb-2 cursor-pointer">
+                <input type="radio" name="return_reason_radio" value="other" id="radio_other_reason" class="form-check-input me-3 mt-0" style="width: 1.25rem; height: 1.25rem; cursor: pointer; flex-shrink: 0;">
+                <span class="text-dark" style="font-size: 0.95rem;">Lý do khác...</span>
+            </label>
+            <div id="other_reason_container" style="display: none; padding-left: 2.2rem; margin-top: 10px;">
+                <textarea id="swal-return-note" class="form-control shadow-sm rounded-3 p-3" rows="3" placeholder="Nhập chi tiết lý do hoàn trả của bạn vào đây..." style="font-size: 0.9rem;"></textarea>
+            </div>
+        </div>
+    `;
 
-  try {
-    const res = await axios.get(
-      `http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/invoice`,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-          Accept: 'application/pdf',
+    const { value: noteText, isDismissed } = await Swal.fire({
+        title: 'Yêu cầu Hoàn trả',
+        html: `
+            <p class="mb-2 text-muted font-serif fs-6">Đơn hàng <strong class="text-sora-primary font-monospace">#${props.order.order_code}</strong></p>
+            ${radiosHtml}
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#9f273b',
+        cancelButtonColor: '#212529',
+        confirmButtonText: 'Gửi yêu cầu',
+        cancelButtonText: 'Hủy bỏ',
+        customClass: {
+            confirmButton: 'rounded-0 px-4 py-2 fw-bold text-uppercase font-oswald tracking-widest',
+            cancelButton: 'rounded-0 px-4 py-2 fw-bold text-uppercase font-oswald tracking-widest'
         },
-        responseType: 'blob',
-      }
-    );
+        didOpen: () => {
+            const radios = document.querySelectorAll('input[name="return_reason_radio"]');
+            const otherContainer = document.getElementById('other_reason_container');
+            const textarea = document.getElementById('swal-return-note');
 
-    // Tạo link tải file
-    const blobUrl = window.URL.createObjectURL(res.data);
+            // Xử lý ẩn/hiện textarea khi chọn "Khác"
+            radios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'other') {
+                        otherContainer.style.display = 'block';
+                        textarea.focus();
+                    } else {
+                        otherContainer.style.display = 'none';
+                        textarea.value = ''; 
+                    }
+                });
+            });
+        },
+        preConfirm: () => {
+            const selectedRadio = document.querySelector('input[name="return_reason_radio"]:checked');
+            if (!selectedRadio) {
+                Swal.showValidationMessage('Vui lòng chọn một lý do hoàn trả!');
+                return false;
+            }
+
+            let reason = selectedRadio.value;
+            // Nếu chọn "Khác" thì phải điền text
+            if (reason === 'other') {
+                const val = document.getElementById('swal-return-note').value;
+                if (!val.trim() || val.trim().length < 5) {
+                    Swal.showValidationMessage('Vui lòng nhập lý do cụ thể hơn (ít nhất 5 ký tự)!');
+                    return false;
+                }
+                reason = val.trim();
+            }
+            return reason;
+        }
+    });
+
+    if (isDismissed || !noteText) return;
+
+    Swal.fire({ title: 'Đang gửi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+        await axios.post(`http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/return`, {
+            return_reason: noteText
+        }, { headers: getHeaders() });
+        
+        Swal.fire({ 
+            icon: 'success', title: 'Thành công', 
+            text: 'Đã gửi yêu cầu. SORA sẽ liên hệ trong 24h!', confirmButtonColor: '#9f273b' 
+        });
+        emit('refresh'); 
+        emit('close');   
+    } catch (e) {
+        Swal.fire('Lỗi', e.response?.data?.message || 'Không thể gửi yêu cầu lúc này.', 'error');
+    }
+};
+
+const handleReorder = async () => {
+  Swal.fire({ title: 'Đang xử lý...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  try {
+    await axios.post(`http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/reorder`, {}, { headers: getHeaders() });
+    Swal.fire({ 
+        icon: 'success', title: 'Thành công', text: 'Sản phẩm đã được thêm vào Giỏ hàng!', 
+        confirmButtonColor: '#9f273b', timer: 2000, showConfirmButton: false 
+    }).then(() => {
+        emit('close');
+        router.push('/cart');
+    });
+  } catch(e) {
+    Swal.fire('Lỗi', e.response?.data?.message || 'Sản phẩm đã ngừng kinh doanh.', 'error');
+  }
+};
+
+const handleDownloadInvoice = async () => {
+  Swal.fire({ title: 'Đang xuất PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  try {
+    const res = await axios.get(`http://127.0.0.1:8000/api/client/orders/${props.order.order_code}/invoice`, { 
+      headers: getHeaders(), responseType: 'blob' 
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([res.data]));
     const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = `hoa-don-${props.order.order_code}.pdf`;
+    link.href = url;
+    link.setAttribute('download', `Hoa_Don_${props.order.order_code}.pdf`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobUrl);
-
-  } catch (err) {
-    console.error(err);
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi',
-      text: err.response?.data?.message || 'Không thể tải hóa đơn. Vui lòng thử lại.',
-    });
+    Swal.close();
+  } catch(e) {
+    Swal.fire({icon: 'error', title: 'Lỗi', text: 'Chưa thể xuất hóa đơn lúc này.', confirmButtonColor: '#9f273b'});
   }
 };
 </script>
 
 <style scoped>
-.text-primary-custom {
-  color: #9f273b !important;
-}
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
-.font-serif {
-  font-family: 'Playfair Display', serif;
-}
+.text-primary-custom, .text-sora-primary { color: #9f273b !important; }
+.bg-sora-primary { background-color: #9f273b !important; }
+.text-gold { color: #e7ce7d !important; }
 
-.tracking-wider {
-  letter-spacing: 0.1em;
-}
+.font-serif { font-family: 'Playfair Display', serif; }
+.font-oswald { font-family: 'Oswald', sans-serif; }
+.tracking-wide { letter-spacing: 1px; }
+.tracking-widest { letter-spacing: 2px; }
 
-.btn-primary-custom {
-  background: #9f273b;
-  border: 1px solid #9f273b;
-  color: white;
-  transition: 0.3s;
-}
+/* Nút Bootstrap chuẩn SORA */
+.btn-sora-primary { background-color: #9f273b; color: white; border: none; }
+.btn-sora-primary:hover { background-color: #7a1c2d; color: white; }
+.btn-outline-dark:hover { background-color: #212529; color: white; }
+.hover-warning:hover { background-color: #ffc107 !important; color: #212529 !important; }
+.hover-scale:hover { transform: scale(1.1); transition: 0.2s; }
 
-.btn-primary-custom:hover {
-  background: #cc1e2e;
-  border-color: #cc1e2e;
-  color: white;
-}
-
-.btn-outline-primary-custom {
-  color: #9f273b;
-  border: 1px solid #9f273b;
-  background: transparent;
-  transition: 0.3s;
-}
-
-.btn-outline-primary-custom:hover {
-  background: #9f273b;
-  color: white;
-}
-
+/* MODAL BOX CHUẨN */
 .custom-modal-backdrop {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px);

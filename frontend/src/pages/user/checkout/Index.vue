@@ -114,7 +114,6 @@
                                 <input type="tel" class="form-control luxury-input" v-model="form.customer_phone" placeholder="SĐT liên hệ" :required="useNewAddress || addresses.length === 0">
                             </div>
 
-                            <!-- PHẦN CHỌN ĐỊA CHỈ MỚI -->
                             <div class="col-md-4">
                                 <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Tỉnh/Thành phố <span class="text-danger">*</span></label>
                                 <select class="form-select luxury-input" v-model="selectedProvinceCode" @change="fetchDistricts" :required="useNewAddress || addresses.length === 0">
@@ -140,7 +139,6 @@
                                 <label class="form-label font-oswald text-muted text-uppercase tracking-wide small fw-bold">Số nhà, Tên đường <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control luxury-input" v-model="specificAddress" placeholder="VD: 123 Đường Lê Lợi" :required="useNewAddress || addresses.length === 0">
                             </div>
-                            <!-- KẾT THÚC PHẦN CHỌN ĐỊA CHỈ -->
 
                         </div>
                     </div>
@@ -189,12 +187,12 @@
           </div>
         </div>
 
-        <!-- CỘT BÊN PHẢI: GIỎ HÀNG & MÃ GIẢM GIÁ -->
+        <!-- CỘT BÊN PHẢI: GIỎ HÀNG & ƯU ĐÃI -->
         <div class="col-lg-5">
           <div class="bg-white shadow-sm border border-light-subtle sticky-top" style="top: 100px;">
             <div class="p-4 bg-light border-bottom">
               <h4 class="font-serif fw-bold text-dark mb-0 d-flex align-items-center justify-content-between">
-                <span>Tóm Tắt Đơn Hàng</span>
+                <span>Tổng Quan Đơn Hàng</span>
                 <span class="badge bg-sora-primary rounded-pill font-oswald fs-6">{{ totalQuantity }} Món</span>
               </h4>
             </div>
@@ -238,6 +236,7 @@
               </div>
             </div>
 
+            <!-- PHẦN CHỌN MÃ GIẢM GIÁ COUPON -->
             <div class="p-4 bg-light border-top border-bottom border-light-subtle">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -254,27 +253,52 @@
                 </div>
             </div>
 
+            <!-- THÔNG TIN ĐẶC QUYỀN HẠNG THÀNH VIÊN -->
+            <div class="p-4 bg-light border-bottom border-light-subtle" v-if="tierDiscountInfo">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="font-oswald tracking-wide text-uppercase mb-1 fw-bold text-dark">
+                            <i class="bi bi-star-fill text-gold me-2"></i>Đặc Quyền Hạng {{ tierDiscountInfo.tier_name }}
+                        </h6>
+                        <small class="text-muted" v-if="tierDiscountInfo.remaining_quota > 0">
+                            Giảm {{ tierDiscountInfo.discount_percent }}% tổng đơn hàng (Còn {{ tierDiscountInfo.remaining_quota }}/{{ tierDiscountInfo.yearly_quota }} lượt)
+                        </small>
+                        <small class="text-danger fw-bold text-uppercase tracking-wide" v-else>
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> Đã hết lượt giảm giá năm nay ({{ tierDiscountInfo.yearly_quota }}/{{ tierDiscountInfo.yearly_quota }})
+                        </small>
+                    </div>
+                    <span class="badge bg-gold text-dark border rounded-pill font-oswald px-3 py-2" v-if="tierDiscountInfo.remaining_quota > 0">
+                        TỰ ĐỘNG ÁP DỤNG
+                    </span>
+                </div>
+            </div>
+
             <div class="p-4 bg-white">
               <div class="d-flex justify-content-between mb-3 text-dark font-oswald tracking-wide text-uppercase small">
                 <span class="text-muted">Tạm tính:</span>
                 <span class="fw-bold">{{ formatPrice(subTotal) }}</span>
               </div>
+              
               <div class="d-flex justify-content-between mb-3 text-dark font-oswald tracking-wide text-uppercase small">
-    <span class="text-muted">Phí giao hàng:</span>
-    <span class="fw-bold" :class="shippingFee === 0 ? 'text-success' : ''">
-        {{ shippingFee === 0 ? 'Miễn phí' : formatPrice(shippingFee) }}
-    </span>
-</div>
-<small class="text-muted d-block mt-1" style="font-size: 0.78rem; line-height: 1.3;">
-    {{ shippingNote }}
-</small>
-              <!-- THÔNG BÁO CÁCH TÍNH PHÍ SHIP -->
-              <small class="text-muted d-block mt-1" style="font-size: 0.75rem; line-height: 1.3;">
-                <i class="bi bi-info-circle me-1"></i> Phí vận chuyển tính theo khoảng cách thực tế từ Buôn Ma Thuột, Đắk Lắk (dùng Google Maps &amp; OpenStreetMap).
+                  <span class="text-muted">Phí giao hàng:</span>
+                  <span class="fw-bold" :class="shippingFee === 0 ? 'text-success' : ''">
+                      {{ shippingFee === 0 ? 'Miễn phí' : formatPrice(shippingFee) }}
+                  </span>
+              </div>
+              
+              <small class="text-muted d-block mt-1 mb-3 pb-3 border-bottom" style="font-size: 0.78rem; line-height: 1.3;">
+                  {{ shippingNote }}<br>
+                  <span style="font-size: 0.75rem;"><i class="bi bi-info-circle me-1"></i> Phí tính theo khoảng cách thực tế từ Buôn Ma Thuột.</span>
               </small>
+
               <div v-if="discountAmount > 0" class="d-flex justify-content-between mb-3 text-success font-oswald tracking-wide text-uppercase small fw-bold">
-                <span>Ưu đãi áp dụng:</span>
+                <span>Ưu đãi Voucher:</span>
                 <span>- {{ formatPrice(discountAmount) }}</span>
+              </div>
+
+              <div v-if="tierDiscountAmount > 0" class="d-flex justify-content-between mb-3 text-success font-oswald tracking-wide text-uppercase small fw-bold">
+                <span>Ưu đãi hạng {{ tierDiscountInfo?.tier_name }}:</span>
+                <span>- {{ formatPrice(tierDiscountAmount) }}</span>
               </div>
               
               <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-2 border-dark">
@@ -361,6 +385,7 @@ const isUpdatingCart = ref(false);
 const cartItems = ref([]);
 const addresses = ref([]);
 const availableCoupons = ref([]);
+const tierDiscountInfo = ref(null); // Biến lưu thông tin Hạng thành viên
 
 const selectedAddressId = ref(null);
 const useNewAddress = ref(false);
@@ -376,13 +401,13 @@ const wards = ref([]);
 const selectedProvinceCode = ref('');
 const selectedDistrictCode = ref('');
 const selectedWardCode = ref('');
-const specificAddress = ref(''); // Số nhà, tên đường
+const specificAddress = ref(''); 
 
 const form = ref({
     customer_name: '',
     customer_phone: '',
     customer_email: '',
-    customer_address: '', // Trường này sẽ được gộp lại khi submit
+    customer_address: '', 
     order_note: '',
     payment_method: 'cod'
 });
@@ -412,7 +437,6 @@ const getHeaders = () => {
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const apiBaseUrl = rawBaseUrl.replace(/\/api\/?$/, '');
 
-// ==================== SỬ DỤNG FETCH NATIVE THAY VÌ AXIOS ĐỂ TRÁNH LỖI X-REQUESTED-WITH ====================
 const fetchProvinces = async () => {
     try {
         const response = await fetch('https://esgoo.net/api-tinhthanh/1/0.htm');
@@ -456,12 +480,10 @@ const fetchWards = async () => {
         console.error("Lỗi lấy danh sách phường xã", error);
     }
 };
-// ====================================================================================================
 
-// ==================== PHÍ SHIP THEO KHOẢNG CÁCH (ĐÃ SỬA HOÀN CHỈNH) ====================
 const SHOP_LAT = 12.6675;
 const SHOP_LNG = 108.0378;
-const DAKLAK_PROVINCE_CODE = '66';   // Mã tỉnh Đắk Lắk trên esgoo là "66"
+const DAKLAK_PROVINCE_CODE = '66';
 
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
@@ -474,7 +496,6 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
     return R * c;
 };
 
-// Sử dụng fetch thay vì axios để tránh gửi X-Requested-With
 const getLatLongFromAddress = async (fullAddress) => {
     if (!fullAddress || fullAddress.length < 10) return null;
 
@@ -581,8 +602,6 @@ watch(
     { immediate: true }
 );
 
-const totalAmount = computed(() => Math.max(subTotal.value - discountAmount.value + shippingFee.value, 0));
-
 // --- LOGIC GIAO DIỆN & TÍNH TOÁN ---
 const getItemName = (item) => {
     if (item.combo_id && item.combo) return item.combo.name;
@@ -628,6 +647,16 @@ const discountAmount = computed(() => {
     return subTotal.value * (parseFloat(selectedCoupon.value.value) / 100);
 });
 
+// THÊM: Tính số tiền giảm giá của hạng thành viên
+const tierDiscountAmount = computed(() => {
+    if (!tierDiscountInfo.value) return 0;
+    if (tierDiscountInfo.value.remaining_quota <= 0) return 0; // Đã hết lượt dùng thì bằng 0
+    return subTotal.value * (parseFloat(tierDiscountInfo.value.discount_percent) / 100);
+});
+
+// CẬP NHẬT: Trừ đi cả phần tiền giảm hạng thành viên
+const totalAmount = computed(() => Math.max(subTotal.value - discountAmount.value - tierDiscountAmount.value + shippingFee.value, 0));
+
 const fetchInitData = async () => {
     try {
         const res = await axios.get(`${apiBaseUrl}/api/client/checkout/init`, { headers: getHeaders() });
@@ -635,6 +664,7 @@ const fetchInitData = async () => {
             cartItems.value = res.data.cart_items || [];
             addresses.value = res.data.addresses || [];
             availableCoupons.value = res.data.coupons || [];
+            tierDiscountInfo.value = res.data.tier_discount || null; // Nhận thông tin Hạng từ Backend
 
             if (res.data.user) {
                 form.value.customer_email = res.data.user.email || '';
@@ -796,7 +826,6 @@ const submitOrder = async () => {
         return;
     }
 
-    // XỬ LÝ GỘP ĐỊA CHỈ NẾU CHỌN ĐỊA CHỈ MỚI
     if (useNewAddress.value || addresses.value.length === 0) {
         if (!selectedProvinceCode.value || !selectedDistrictCode.value || !selectedWardCode.value || !specificAddress.value) {
             soraAlert.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng chọn đầy đủ Tỉnh/Huyện/Xã và nhập số nhà!' });
@@ -857,7 +886,6 @@ const submitOrder = async () => {
 };
 
 onMounted(async () => {
-    // Kiểm tra đăng nhập ngay lập tức ở phía Client
     const token = getSafeStorage('auth_token');
     if (!token) {
          soraAlert.fire({
@@ -867,9 +895,9 @@ onMounted(async () => {
             confirmButtonText: 'Đăng nhập ngay',
             allowOutsideClick: false
         }).then(() => {
-            router.push({ name: 'login' }); // Chuyển hướng sang trang đăng nhập
+            router.push({ name: 'login' }); 
         });
-        return; // Dừng lại không load dữ liệu nữa
+        return; 
     }
 
     isInitializing.value = true;
@@ -887,7 +915,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Giữ nguyên toàn bộ style cũ */
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
 .bg-light-custom { background-color: #faf9f6; }

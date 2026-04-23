@@ -22,33 +22,41 @@
                 <div class="row g-3">
                   <div class="col-md-12">
                     <label class="form-label fw-bold">Tên hạng (Bạc, Vàng, Kim Cương...) <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" v-model="form.name" required placeholder="Nhập tên hạng...">
+                    <input type="text" class="form-control" v-model="form.name" maxlength="50" required placeholder="Nhập tên hạng...">
                   </div>
                   
                   <div class="col-md-6">
                     <label class="form-label fw-bold">Chi tiêu tối thiểu (VNĐ) <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" v-model="form.min_spent" min="0" required>
+                    <input type="number" class="form-control" v-model="form.min_spent" min="0" max="99999999999" required>
                     <small class="text-muted fst-italic">Nhập 0 nếu là hạng mặc định</small>
                   </div>
 
                   <div class="col-md-6">
                     <label class="form-label fw-bold">Số đơn tối thiểu <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" v-model="form.min_orders" min="0" required>
+                    <input type="number" class="form-control" v-model="form.min_orders" min="0" max="1000000" required>
                     <small class="text-muted fst-italic">Hoặc đạt số đơn này để thăng hạng</small>
                   </div>
 
-                  <div class="col-md-6 mt-4">
+                  <div class="col-md-4 mt-4">
                     <label class="form-label fw-bold text-success"><i class="bi bi-tags-fill me-1"></i>% Giảm giá mặc định <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <input type="number" class="form-control" v-model="form.discount_percent" min="0" max="100" step="0.1" required>
                       <span class="input-group-text bg-white">%</span>
                     </div>
                   </div>
-                  
-                  <div class="col-md-6 mt-4">
-                    <label class="form-label fw-bold text-brand"><i class="bi bi-magic me-1"></i>Vệ sinh/Đánh bóng miễn phí <span class="text-danger">*</span></label>
+
+                  <div class="col-md-4 mt-4">
+                    <label class="form-label fw-bold text-warning" style="color: #fd7e14 !important;"><i class="bi bi-ticket-perforated-fill me-1"></i>Số lượt giảm <span class="text-danger">*</span></label>
                     <div class="input-group">
-                      <input type="number" class="form-control" v-model="form.yearly_service_quota" min="0" required>
+                      <input type="number" class="form-control" v-model="form.yearly_discount_quota" min="0" max="100000" required>
+                      <span class="input-group-text bg-white">Lần/Năm</span>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4 mt-4">
+                    <label class="form-label fw-bold text-brand"><i class="bi bi-magic me-1"></i>Vệ sinh/Đánh bóng <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <input type="number" class="form-control" v-model="form.yearly_service_quota" min="0" max="10000" required>
                       <span class="input-group-text bg-white">Lần/Năm</span>
                     </div>
                   </div>
@@ -95,6 +103,7 @@ const form = ref({
   min_spent: 0,
   min_orders: 0,
   discount_percent: 0,
+  yearly_discount_quota: 0,
   yearly_service_quota: 0
 });
 
@@ -106,9 +115,8 @@ const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bear
 const handleUpload = (e) => {
   const f = e.target.files[0];
   if(f) { 
-    if(f.size > 15 * 1024 * 1024) return Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); 
+    if(f.size > 2 * 1024 * 1024) return Swal.fire('Lỗi', 'Ảnh tối đa 2MB', 'error'); 
     
-    // Dọn rác bộ nhớ trình duyệt
     if (previewIcon.value) URL.revokeObjectURL(previewIcon.value);
     fileIcon.value = f; 
     previewIcon.value = URL.createObjectURL(f); 
@@ -122,6 +130,7 @@ const submitTier = async () => {
   fd.append('min_spent', form.value.min_spent);
   fd.append('min_orders', form.value.min_orders);
   fd.append('discount_percent', form.value.discount_percent);
+  fd.append('yearly_discount_quota', form.value.yearly_discount_quota);
   fd.append('yearly_service_quota', form.value.yearly_service_quota);
   
   if(fileIcon.value) fd.append('icon', fileIcon.value);

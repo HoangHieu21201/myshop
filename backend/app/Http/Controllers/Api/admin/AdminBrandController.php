@@ -9,6 +9,7 @@ use App\Http\Requests\AdminUpdateBrandRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Database\QueryException;
 
 class AdminBrandController extends Controller
 {
@@ -60,26 +61,38 @@ class AdminBrandController extends Controller
 
     public function update(AdminUpdateBrandRequest $request, $id)
     {
-        $brand = Brand::findOrFail($id);
-        $data = $request->validated();
+        try {
+            $brand = Brand::findOrFail($id);
+            $data = $request->validated();
 
-        if ($brand->status !== $data['status']) {
-            if ($data['status'] === 'active') {
-                $data['sort_order'] = $this->getNextSortOrder();
-            } else {
-                $data['sort_order'] = null;
+            if ($brand->status !== $data['status']) {
+                if ($data['status'] === 'active') {
+                    $data['sort_order'] = $this->getNextSortOrder();
+                } else {
+                    $data['sort_order'] = null;
+                }
             }
-        }
 
-        if ($request->hasFile('logo')) {
-            $file = $request->file('logo');
-            $fileName = 'brand_' . Str::slug($data['name']) . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $data['logo'] = $file->storeAs('brands', $fileName, 'public');
-            if ($brand->logo) Storage::disk('public')->delete($brand->logo);
-        }
+            if ($request->hasFile('logo')) {
+                $file = $request->file('logo');
+                $fileName = 'brand_' . Str::slug($data['name']) . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $data['logo'] = $file->storeAs('brands', $fileName, 'public');
+                if ($brand->logo) Storage::disk('public')->delete($brand->logo);
+            }
 
-        $brand->update($data);
-        return response()->json(['success' => true, 'message' => 'Cập nhật thành công', 'data' => $brand]);
+            $brand->update($data);
+            return response()->json(['success' => true, 'message' => 'Cập nhật thành công', 'data' => $brand]);
+        } catch (QueryException $e) {
+            if ($e->getCode() == 23000) {
+                // Duplicate entry error
+                $message = 'Tên hoặc slug này đã bị trùng với thương hiệu khác.';
+                return response()->json(
+                    ['success' => false, 'message' => $message, 'errors' => ['duplicate' => [$message]]],
+                    422
+                );
+            }
+            throw $e;
+        }
     }
 
     public function destroy($id)

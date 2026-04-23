@@ -25,7 +25,7 @@
                 <tr>
                   <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Hạng Thành Viên</th>
                   <th class="py-3 px-4 text-secondary border-0 text-end" style="width: 20%;">Chi tiêu tối thiểu</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Giảm giá</th>
+                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Giảm giá & Lượt dùng</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Số lần Vệ sinh/năm</th>
                   <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 15%;">Số Khách hàng</th>
                   <th class="py-3 px-4 text-secondary text-center border-0" style="width: 10%;">Thao tác</th>
@@ -55,8 +55,10 @@
                     <div class="text-muted small fw-normal mt-1" v-if="tier.min_orders > 0">hoặc {{ tier.min_orders }} đơn hàng</div>
                   </td>
 
+                  <!-- Đã Gộp cột hiển thị % Giảm Giá và Số lượt/Năm -->
                   <td class="px-4 text-center">
                     <span class="badge bg-success fs-6">{{ tier.discount_percent }}%</span>
+                    <div class="text-muted small mt-1 fw-bold text-warning" style="color: #fd7e14 !important;">{{ tier.yearly_discount_quota }} lần/năm</div>
                   </td>
 
                   <td class="px-4 text-center fw-bold text-brand">
@@ -100,9 +102,8 @@ const isLoading = ref(true);
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : ''; 
-const handleImageError = (e) => { e.target.style.display = 'none'; }; // Ẩn ảnh nếu lỗi
+const handleImageError = (e) => { e.target.style.display = 'none'; }; 
 
-// Hàm format tiền tệ (Giải quyết Blind spot 1)
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 };
@@ -137,7 +138,7 @@ const confirmDelete = (id) => {
         
         if (response.ok) {
           Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: data.message, showConfirmButton: false, timer: 1500 });
-          fetchData(); // Load lại danh sách
+          fetchData(); 
         } else {
           Swal.fire('Lỗi', data.message, 'error');
         }
@@ -156,4 +157,4 @@ onMounted(() => fetchData());
 .text-brand { color: #009981 !important; }
 .btn-brand { background-color: #009981; border: none; color: white; transition: 0.2s; } 
 .btn-brand:hover { background-color: #007a67; color: white; }
-</style>
+</style>  

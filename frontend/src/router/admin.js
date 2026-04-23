@@ -179,8 +179,14 @@ const admin = [
       {
         path: 'orders',
         name: 'admin-orders',
-        component: () => import('../pages/admin/order/Index.vue'),
-        meta: { moduleCode: 'admin_orders' },
+        component: () => import('@/pages/admin/order/Index.vue'),
+        meta: { title: 'Quản lý đơn hàng', moduleCode: 'admin_orders' }
+      },
+      {
+        path: 'orders/:id/edit',
+        name: 'admin-orders-edit',
+        component: () => import('@/pages/admin/order/Edit.vue'),
+        meta: { title: 'Xử lý đơn hàng', moduleCode: 'admin_orders' }
       },
       {
         path: 'orders/returns',
@@ -188,6 +194,8 @@ const admin = [
         component: () => import('../pages/admin/order/Returns.vue'),
         meta: { moduleCode: 'admin_orders' },
       },
+
+
       {
         path: 'coupons',
         name: 'admin-coupons',
@@ -263,7 +271,7 @@ const admin = [
         component: () => import('../pages/admin/contact/index.vue'),
         meta: { moduleCode: 'admin_contacts' },
       },
-      
+
       // ROUTE QUẢN LÝ CHATBOT
       {
         path: 'chatbot',
@@ -280,22 +288,22 @@ const admin = [
         meta: { moduleCode: 'admin_chat' },
       },
       // tin tứcccc
-       {
+      {
         path: 'news',
         name: 'admin-news',
-        component: () => import('../pages/admin/news/Index.vue'), 
+        component: () => import('../pages/admin/news/Index.vue'),
         meta: { moduleCode: 'admin_news' },
       },
-       {
+      {
         path: 'news/create',
         name: 'admin-news-create',
-        component: () => import('../pages/admin/news/Create.vue'), 
+        component: () => import('../pages/admin/news/Create.vue'),
         meta: { moduleCode: 'admin_news' },
       },
-       {
-       path: 'news/edit/:id',
+      {
+        path: 'news/edit/:id',
         name: 'admin-news-edit',
-        component: () => import('../pages/admin/news/Edit.vue'), 
+        component: () => import('../pages/admin/news/Edit.vue'),
         meta: { moduleCode: 'admin_news' },
       },
 

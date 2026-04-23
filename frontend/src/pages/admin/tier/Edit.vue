@@ -22,32 +22,40 @@
                 <div class="row g-3">
                   <div class="col-md-12">
                     <label class="form-label fw-bold">Tên hạng <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" v-model="form.name" required>
+                    <input type="text" class="form-control" v-model="form.name" maxlength="50" required>
                   </div>
                   
                   <div class="col-md-6">
                     <label class="form-label fw-bold">Chi tiêu tối thiểu (VNĐ) <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" v-model="form.min_spent" min="0" required :readonly="isDefaultTier">
+                    <input type="number" class="form-control" v-model="form.min_spent" min="0" max="99999999999" required :readonly="isDefaultTier">
                     <small class="text-muted fst-italic" v-if="isDefaultTier">Hạng mặc định không thể sửa mức chi tiêu.</small>
                   </div>
 
                   <div class="col-md-6">
                     <label class="form-label fw-bold">Số đơn tối thiểu <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" v-model="form.min_orders" min="0" required>
+                    <input type="number" class="form-control" v-model="form.min_orders" min="0" max="1000000" required>
                   </div>
 
-                  <div class="col-md-6 mt-4">
+                  <div class="col-md-4 mt-4">
                     <label class="form-label fw-bold text-success"><i class="bi bi-tags-fill me-1"></i>% Giảm giá mặc định <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <input type="number" class="form-control" v-model="form.discount_percent" min="0" max="100" step="0.1" required>
                       <span class="input-group-text bg-white">%</span>
                     </div>
                   </div>
-                  
-                  <div class="col-md-6 mt-4">
-                    <label class="form-label fw-bold text-brand"><i class="bi bi-magic me-1"></i>Vệ sinh/Đánh bóng miễn phí <span class="text-danger">*</span></label>
+
+                  <div class="col-md-4 mt-4">
+                    <label class="form-label fw-bold text-warning" style="color: #fd7e14 !important;"><i class="bi bi-ticket-perforated-fill me-1"></i>Số lượt giảm <span class="text-danger">*</span></label>
                     <div class="input-group">
-                      <input type="number" class="form-control" v-model="form.yearly_service_quota" min="0" required>
+                      <input type="number" class="form-control" v-model="form.yearly_discount_quota" min="0" max="100000" required>
+                      <span class="input-group-text bg-white">Lần/Năm</span>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4 mt-4">
+                    <label class="form-label fw-bold text-brand"><i class="bi bi-magic me-1"></i>Vệ sinh/Đánh bóng <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <input type="number" class="form-control" v-model="form.yearly_service_quota" min="0" max="10000" required>
                       <span class="input-group-text bg-white">Lần/Năm</span>
                     </div>
                   </div>
@@ -95,7 +103,12 @@ const isSaving = ref(false);
 const isDefaultTier = ref(false);
 
 const form = ref({
-  name: '', min_spent: 0, min_orders: 0, discount_percent: 0, yearly_service_quota: 0
+  name: '', 
+  min_spent: 0, 
+  min_orders: 0, 
+  discount_percent: 0, 
+  yearly_discount_quota: 0, 
+  yearly_service_quota: 0
 });
 
 const fileIcon = ref(null); 
@@ -123,9 +136,9 @@ onMounted(async () => {
       form.value.min_spent = data.min_spent;
       form.value.min_orders = data.min_orders;
       form.value.discount_percent = data.discount_percent;
+      form.value.yearly_discount_quota = data.yearly_discount_quota || 0;
       form.value.yearly_service_quota = data.yearly_service_quota;
       
-      // Chặn không cho sửa chi tiêu nếu là hạng mặc định
       if (data.min_spent == 0) isDefaultTier.value = true;
       
       if(data.icon) previewIcon.value = getImageUrl(data.icon);
@@ -144,19 +157,18 @@ const updateTier = async () => {
   isSaving.value = true;
   const fd = new FormData();
   
-  // Trick để Laravel nhận method PUT qua FormData
   fd.append('_method', 'PUT');
   
   fd.append('name', form.value.name);
   fd.append('min_spent', form.value.min_spent);
   fd.append('min_orders', form.value.min_orders);
   fd.append('discount_percent', form.value.discount_percent);
+  fd.append('yearly_discount_quota', form.value.yearly_discount_quota);
   fd.append('yearly_service_quota', form.value.yearly_service_quota);
   
   if(fileIcon.value) fd.append('icon', fileIcon.value);
 
   try {
-    // Vẫn dùng method POST vì đã kèm _method=PUT ở trên
     const res = await fetch(`http://127.0.0.1:8000/api/admin/tiers/${tierId}`, { method: 'POST', headers: getHeaders(), body: fd });
     const data = await res.json();
     if (res.ok) {

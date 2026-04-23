@@ -12,6 +12,8 @@ use App\Models\UserAddress;
 use App\Models\Coupon;
 use App\Models\Combo;
 use App\Models\Admin;
+use App\Models\TierServiceUsage;
+use App\Models\MembershipTier;
 use App\Http\Requests\UserCheckoutRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +34,7 @@ class ClientCheckoutController extends Controller
 
         $addresses = [];
         $userData = null;
+        $tierDiscountInfo = null;
 
         $user = auth('sanctum')->user();
         if ($user) {
@@ -42,6 +45,26 @@ class ClientCheckoutController extends Controller
                 'email' => $user->email ?? '',
                 'phone' => $user->phone ?? ''
             ];
+
+            if ($user->tier_id) {
+                $tier = MembershipTier::find($user->tier_id);
+                if ($tier && $tier->discount_percent > 0) {
+                    $usedCount = TierServiceUsage::where('user_id', $user->id)
+                        ->where('service_type', 'tier_discount')
+                        ->whereYear('used_at', now()->year)
+                        ->count();
+                    
+                    $maxLimit = $tier->yearly_discount_quota ?? 0;
+                    
+                    $tierDiscountInfo = [
+                        'tier_name' => $tier->name,
+                        'discount_percent' => $tier->discount_percent,
+                        'yearly_quota' => $maxLimit,
+                        'used_count' => $usedCount,
+                        'remaining_quota' => max(0, $maxLimit - $usedCount)
+                    ];
+                }
+            }
         }
 
         $coupons = Coupon::where('status', 'active')
@@ -54,11 +77,12 @@ class ClientCheckoutController extends Controller
             ->get();
 
         return response()->json([
-            'success'    => true,
-            'cart_items' => $cartItems,
-            'addresses'  => $addresses,
-            'coupons'    => $coupons,
-            'user'       => $userData
+            'success'          => true,
+            'cart_items'       => $cartItems,
+            'addresses'        => $addresses,
+            'coupons'          => $coupons,
+            'user'             => $userData,
+            'tier_discount'    => $tierDiscountInfo
         ]);
     }
 
@@ -226,10 +250,13 @@ class ClientCheckoutController extends Controller
                 if ($request->coupon_code) {
                     $coupon = Coupon::where('code', $request->coupon_code)->lockForUpdate()->first();
                     if (!$coupon || $coupon->status !== 'active') {
-                        throw new \Exception("Mã giảm giá không hợp lệ hoặc đã hết hạn.");
+                        throw new \Exception("Mã giảm giá không hợp lệ hoặc đã tạm ngưng sử dụng.");
+                    }
+                    if ($coupon->usage_limit !== null && $coupon->usage_count >= $coupon->usage_limit) {
+                        throw new \Exception("Mã giảm giá đã hết lượt sử dụng.");
                     }
                     if ($subTotal < $coupon->min_spend) {
-                        throw new \Exception("Chưa đạt giá trị đơn hàng tối thiểu để dùng mã này.");
+                        throw new \Exception("Đơn hàng chưa đạt giá trị tối thiểu (" . number_format($coupon->min_spend, 0, ',', '.') . "đ) để áp dụng mã giảm giá này.");
                     }
 
                     $discountAmount = ($coupon->type === 'fixed') ? $coupon->value : ($subTotal * ($coupon->value / 100));
@@ -237,34 +264,69 @@ class ClientCheckoutController extends Controller
                     $coupon->increment('usage_count');
                 }
 
-                // ==================== PHÍ SHIP MỚI (LẤY TỪ FRONTEND) ====================
-                $shippingFee = (int) $request->shipping_fee;   // frontend đã tính theo km
-                // ========================================================================
+                $tierDiscountAmount = 0;
+                $isTierDiscountApplied = false;
+                $appliedTier = null;
 
-                $totalAmount = max($subTotal - $discountAmount + $shippingFee, 0);
+                if ($user->tier_id) {
+                    $tier = MembershipTier::find($user->tier_id);
+                    if ($tier && $tier->discount_percent > 0) {
+                        $usedCount = TierServiceUsage::where('user_id', $user->id)
+                            ->where('service_type', 'tier_discount')
+                            ->whereYear('used_at', now()->year)
+                            ->count();
+
+                        $maxLimit = $tier->yearly_discount_quota ?? 0;
+
+                        if ($usedCount < $maxLimit) {
+                            $tierDiscountAmount = $subTotal * ($tier->discount_percent / 100);
+                            $isTierDiscountApplied = true;
+                            $appliedTier = $tier;
+                        } elseif ($usedCount >= $maxLimit && $maxLimit > 0) {
+                            // Tuỳ chọn: Báo lỗi nếu user cố tình ép gửi request xài quá lượt (hoặc có thể bỏ qua và áp mức giảm = 0)
+                            // throw new \Exception("Bạn đã sử dụng hết lượt giảm giá của Hạng thành viên trong năm nay.");
+                        }
+                    }
+                }
+
+                $shippingFee = (int) $request->shipping_fee;
+
+                $totalAmount = max($subTotal - $discountAmount - $tierDiscountAmount + $shippingFee, 0);
 
                 $order = Order::create([
-                    'order_code'       => 'SORA' . strtoupper(Str::random(8)),
-                    'user_id'          => $user->id ?? null,
-                    'customer_name'    => $customerName,
-                    'customer_phone'   => $customerPhone,
-                    'customer_email'   => $request->customer_email,
-                    'customer_address' => $customerAddress,
-                    'order_note'       => $request->order_note,
-                    'sub_total'        => $subTotal,
-                    'shipping_fee'     => $shippingFee,
-                    'discount_amount'  => $discountAmount,
-                    'total_amount'     => $totalAmount,
-                    'coupon_id'        => $couponId,
-                    'coupon_code'      => $request->coupon_code,
-                    'payment_method'   => $request->payment_method,
-                    'payment_status'   => 'unpaid',
-                    'status'           => 'pending',
+                    'order_code'           => 'SORA' . strtoupper(Str::random(8)),
+                    'user_id'              => $user->id ?? null,
+                    'customer_name'        => $customerName,
+                    'customer_phone'       => $customerPhone,
+                    'customer_email'       => $request->customer_email,
+                    'customer_address'     => $customerAddress,
+                    'order_note'           => $request->order_note,
+                    'sub_total'            => $subTotal,
+                    'shipping_fee'         => $shippingFee,
+                    'discount_amount'      => $discountAmount,
+                    'tier_discount_amount' => $tierDiscountAmount,
+                    'total_amount'         => $totalAmount,
+                    'coupon_id'            => $couponId,
+                    'coupon_code'          => $request->coupon_code,
+                    'payment_method'       => $request->payment_method,
+                    'payment_status'       => 'unpaid',
+                    'status'               => 'pending',
                 ]);
 
                 foreach ($orderItemsData as $itemData) {
                     $itemData['order_id'] = $order->id;
+                    $itemData['total_price'] = $itemData['price'] * $itemData['quantity'];
                     OrderItem::create($itemData);
+                }
+
+                if ($isTierDiscountApplied && $appliedTier) {
+                    TierServiceUsage::create([
+                        'user_id' => $user->id,
+                        'order_id' => $order->id,
+                        'service_type' => 'tier_discount',
+                        'used_at' => now(),
+                        'notes' => "Áp dụng giảm {$appliedTier->discount_percent}% hạng {$appliedTier->name} cho đơn hàng {$order->order_code}",
+                    ]);
                 }
 
                 OrderStatusHistory::create([
@@ -275,9 +337,6 @@ class ClientCheckoutController extends Controller
                     'changed_by_type' => $user ? 'user' : 'guest',
                 ]);
 
-                // ========================================================
-                // ĐÂY CHÍNH LÀ NƠI LARAVEL GỌI NODE.JS ĐỂ BÁO CÓ ĐƠN
-                // ========================================================
                 try {
                     Http::post('http://localhost:3000/api/emit-order', [
                         'orderCode' => $order->order_code,
@@ -425,6 +484,10 @@ class ClientCheckoutController extends Controller
         if ($order && $order->status === 'pending' && $order->payment_status === 'unpaid') {
             $order->update(['status' => 'cancelled', 'payment_status' => 'failed']);
 
+            TierServiceUsage::where('order_id', $order->id)
+                ->where('service_type', 'tier_discount')
+                ->delete();
+
             foreach ($order->items as $item) {
                 if ($item->product_variant_id) {
                     ProductVariant::where('id', $item->product_variant_id)->increment('stock_quantity', $item->quantity);
@@ -456,13 +519,9 @@ class ClientCheckoutController extends Controller
         }
     }
 
-    /**
-     * API TRUNG GIAN (PROXY) ĐỂ LẤY TỈNH/THÀNH VÀ TRÁNH LỖI CORS
-     */
     public function getLocations(Request $request)
     {
         try {
-            // Mặc định gọi danh sách tỉnh thành
             $apiPath = $request->query('api_path', 'p/');
             $depth = $request->query('depth', 1);
 

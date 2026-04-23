@@ -13,6 +13,7 @@ class TierServiceUsage extends Model
 
     protected $fillable = [
         'user_id',
+        'order_id',
         'service_type',
         'product_code',
         'used_at',
@@ -26,5 +27,10 @@ class TierServiceUsage extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id');
     }
 }

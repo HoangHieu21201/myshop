@@ -22,6 +22,7 @@ class Order extends Model
         'order_note',
         'sub_total',
         'discount_amount',
+        'tier_discount_amount',
         'shipping_fee',
         'total_amount',
         'coupon_id',
@@ -38,6 +39,7 @@ class Order extends Model
             'discount_amount' => 'decimal:2',
             'shipping_fee' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'tier_discount_amount' => 'decimal:2',
         ];
     }
 
@@ -60,4 +62,5 @@ class Order extends Model
     {
         return $this->hasMany(Review::class);
     }
+    
 }
