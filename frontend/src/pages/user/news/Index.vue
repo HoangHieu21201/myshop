@@ -3,13 +3,11 @@ import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 
 // --- CONFIG ---
-// Lấy Base URL cho API (Mặc định: http://127.0.0.1:8000/api)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
-// Lấy URL gốc cho hình ảnh bằng cách cắt đuôi /api (VD: http://127.0.0.1:8000)
 const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 
-const ITEMS_PER_PAGE = 4; 
-const SITE_NAME = 'ThinkHub Blog'; 
+const ITEMS_PER_PAGE = 6;
+const SITE_NAME = 'SORA Jewelry';
 
 // DANH SÁCH CATEGORY 
 const CATEGORIES = [
@@ -21,14 +19,16 @@ const CATEGORIES = [
 
 // --- STATE ---
 const posts = ref([]);
-const popularPosts = ref([]); 
+const popularPosts = ref([]);
 const isLoading = ref(true);
-const searchQuery = ref(''); 
-const authorQuery = ref(''); 
-const categoryQuery = ref(''); 
+const searchQuery = ref('');
+const authorQuery = ref('');
+const categoryQuery = ref('');
 const currentPage = ref(1);
 
 // --- HELPER METHODS ---
+const soraPlaceholder = '/Sora-placeholder.png';
+
 const toSlug = (str) => {
     if (!str) return '';
     str = str.toLowerCase();
@@ -54,10 +54,10 @@ const formatViews = (count) => {
 };
 
 const updateListingSeo = () => {
-    document.title = `Tin tức Công Nghệ & Thủ Thuật - ${SITE_NAME}`;
-    const desc = "Cập nhật xu hướng công nghệ mới nhất, đánh giá sản phẩm, thủ thuật và mẹo hay từ đội ngũ chuyên gia.";
+    document.title = `Tin tức & Xu hướng trang sức - ${SITE_NAME}`;
+    const desc = "Cập nhật xu hướng trang sức mới nhất, bí quyết làm đẹp, kiến thức đá quý và mẹo hay từ đội ngũ chuyên gia SORA.";
     const url = window.location.href;
-    const image = 'https://placehold.co/1200x630?text=News+Page'; 
+    const image = 'https://placehold.co/1200x630?text=SORA+News';
 
     const setMetaName = (name, content) => {
         let element = document.querySelector(`meta[name="${name}"]`);
@@ -93,11 +93,6 @@ const updateListingSeo = () => {
     setMetaProperty('og:image', image);
     setMetaProperty('og:url', url);
     setMetaProperty('og:type', 'website');
-
-    setMetaName('twitter:card', 'summary_large_image');
-    setMetaName('twitter:title', document.title);
-    setMetaName('twitter:description', desc);
-    setMetaName('twitter:image', image);
 };
 
 let debounceTimer = null;
@@ -111,10 +106,14 @@ const debounce = (func, delay) => {
 };
 
 const getFullImage = (path) => {
-    if (!path) return 'https://placehold.co/800x450?text=No+Image';
-    if (path.startsWith('http')) return path;
+    if (!path) return soraPlaceholder;
+    if (path.startsWith('http') || path.startsWith('data:image')) return path;
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     return `${BACKEND_URL}/${cleanPath}`;
+};
+
+const handleImageError = (e) => {
+    e.target.src = soraPlaceholder;
 };
 
 const formatDate = (dateString) => {
@@ -145,20 +144,16 @@ const paginatedPosts = computed(() => {
 });
 
 // --- METHODS ---
-
-// Cập nhật lại logic fetchPosts gọi trực tiếp Axios
 const fetchPosts = async (query = '', author = '', category = '') => {
     isLoading.value = true;
     try {
-        // Build tham số truyền lên API
         const params = {};
         if (query) params.q = query;
         if (author) params.author = author;
         if (category) params.category = category;
 
         const response = await axios.get(`${API_BASE_URL}/news`, { params });
-        
-        // Backend trả về: { status: 'success', data: [...] }
+
         const responseData = response.data.data ? response.data.data : response.data;
         posts.value = Array.isArray(responseData) ? responseData : [];
         currentPage.value = 1;
@@ -169,15 +164,13 @@ const fetchPosts = async (query = '', author = '', category = '') => {
     } finally {
         setTimeout(() => {
             isLoading.value = false;
-        }, 500); // Giảm time timeout để user đỡ chờ lâu
+        }, 500);
     }
 };
 
-// Cập nhật lại logic fetchPopularPosts gọi trực tiếp Axios
 const fetchPopularPosts = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/news/popular`);
-        // Lấy đúng mảng data từ API
         popularPosts.value = response.data.data ? response.data.data : response.data || [];
     } catch (error) {
         console.error("Lỗi tải bài viết phổ biến:", error);
@@ -190,8 +183,8 @@ const triggerSearch = () => {
 };
 
 const searchByAuthor = (authorName) => {
-    searchQuery.value = ''; categoryQuery.value = ''; authorQuery.value = authorName; 
-    triggerSearch(); 
+    searchQuery.value = ''; categoryQuery.value = ''; authorQuery.value = authorName;
+    triggerSearch();
 };
 
 const searchByCategory = (catName) => {
@@ -215,7 +208,7 @@ const changePage = (page) => {
 onMounted(() => {
     triggerSearch();
     fetchPopularPosts();
-    updateListingSeo(); 
+    updateListingSeo();
 });
 
 watch(searchQuery, debounce((newQuery) => {
@@ -234,14 +227,16 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
         <!-- Hero Section -->
         <header class="page-hero">
             <div class="hero-inner">
-                <p class="hero-title" style="color: rgb(159,39,59); font-style: italic;">
-  SORA - Chạm đến sự hoàn mỹ
-</p>
-                <h1 v-if="searchQuery">Tìm kiếm: "{{ searchQuery }}"</h1>
-                <h1 v-else-if="authorQuery">Tác giả: "{{ authorQuery }}"</h1>
-                <h1 v-else-if="categoryQuery">Danh mục: "{{ categoryQuery }}"</h1>
-                <h1 v-else>SORA</h1>
-                <p class="hero-subtitle">
+                <p class="hero-title text-main fst-italic tracking-wide fw-bold mb-2">
+                    SORA - Chạm đến sự hoàn mỹ
+                </p>
+                <h1 class="text-main font-oswald text-uppercase" v-if="searchQuery">Tìm kiếm: "{{ searchQuery }}"</h1>
+                <h1 class="text-main font-oswald text-uppercase" v-else-if="authorQuery">Tác giả: "{{ authorQuery }}"
+                </h1>
+                <h1 class="text-main font-oswald text-uppercase" v-else-if="categoryQuery">Danh mục: "{{ categoryQuery
+                    }}"</h1>
+                <h1 class="text-main font-oswald text-uppercase" v-else>SORA BLOG</h1>
+                <p class="hero-subtitle text-muted mt-3">
                     Khám phá xu hướng trang sức & bí quyết làm đẹp tinh tế mỗi ngày.
                 </p>
             </div>
@@ -254,7 +249,7 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
                     <div class="featured-heading skeleton-box skeleton-text w-50 mb-4 shimmer"></div>
                     <div class="featured-post card-style skeleton-card">
                         <div class="featured-image-wrap skeleton-box img-box shimmer">
-                            <span class="skeleton-placeholder-text-large">ThinkHub</span>
+                            <span class="skeleton-placeholder-text-large">SORA</span>
                         </div>
                         <div class="featured-body">
                             <div class="skeleton-box skeleton-text w-25 mb-3 shimmer"></div>
@@ -271,7 +266,8 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
                         <div class="skeleton-box skeleton-text w-25 mb-4 shimmer"></div>
                         <div class="latest-posts-grid">
                             <div v-for="n in 4" :key="n" class="post-card card-style skeleton-card">
-                                <div class="card-img-top skeleton-box img-box shimmer" style="aspect-ratio: 16/9;"></div>
+                                <div class="card-img-top skeleton-box img-box shimmer" style="aspect-ratio: 16/9;">
+                                </div>
                                 <div class="card-body">
                                     <div class="skeleton-box skeleton-text w-50 mb-3 shimmer"></div>
                                     <div class="skeleton-box skeleton-title mb-3 shimmer"></div>
@@ -299,51 +295,66 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
                     <!-- Trạng thái trống -->
                     <div v-if="posts.length === 0" class="empty-state card-style">
                         <i class="bi bi-newspaper display-4 text-muted mb-3"></i>
-                        <h3 v-if="searchQuery">Không tìm thấy kết quả cho "{{ searchQuery }}"</h3>
-                        <h3 v-else-if="authorQuery">Không tìm thấy bài viết của "{{ authorQuery }}"</h3>
-                        <h3 v-else-if="categoryQuery">Chưa có bài viết trong "{{ categoryQuery }}"</h3>
-                        <h3 v-else>Chưa có tin tức nào</h3>
+                        <h3 class="text-main" v-if="searchQuery">Không tìm thấy kết quả cho "{{ searchQuery }}"</h3>
+                        <h3 class="text-main" v-else-if="authorQuery">Không tìm thấy bài viết của "{{ authorQuery }}"
+                        </h3>
+                        <h3 class="text-main" v-else-if="categoryQuery">Chưa có bài viết trong "{{ categoryQuery }}"
+                        </h3>
+                        <h3 class="text-main" v-else>Chưa có tin tức nào</h3>
                         <p class="text-muted">Vui lòng thử lại với từ khóa khác hoặc quay lại sau.</p>
-                        <button v-if="isSearching" @click="handleSearch" class="btn btn-outline-primary mt-3">Xem tất cả bài viết</button>
+                        <button v-if="isSearching" @click="handleSearch"
+                            class="btn btn-outline-main rounded-pill px-4 py-2 mt-3 fw-bold">Xem tất cả bài
+                            viết</button>
                     </div>
 
                     <template v-else>
-                        <h3 class="featured-heading">
-                            <i class="bi bi-bullseye me-2 icon-color"></i>
+                        <h3 class="featured-heading text-main font-serif">
+                            <i class="bi bi-bullseye me-2 text-accent"></i>
                             {{ isSearching ? 'Kết quả lọc' : 'Tin tức nổi bật' }}
                         </h3>
 
                         <!-- Bài viết nổi bật (Mới nhất) -->
-                        <article v-if="featuredPost" class="featured-post card-style">
-                            <div class="featured-image-wrap">
-                                <router-link :to="{ name: 'PostDetailt', params: { slug: featuredPost.slug || toSlug(featuredPost.title) } }" class="full-link">
-                                    <div class="featured-image" :style="{ backgroundImage: `url(${getFullImage(featuredPost.image_url)})` }">
-                                        <div class="cat-badge" v-if="featuredPost.category">{{ featuredPost.category }}</div>
+                        <article v-if="featuredPost" class="featured-post card-style product-card">
+                            <div class="featured-image-wrap img-zoom-wrapper">
+                                <router-link
+                                    :to="{ name: 'PostDetailt', params: { slug: featuredPost.slug || toSlug(featuredPost.title) } }"
+                                    class="full-link">
+                                    <div class="featured-image"
+                                        :style="{ backgroundImage: `url(${getFullImage(featuredPost.image_url)})` }">
+                                        <div class="cat-badge" v-if="featuredPost.category">{{ featuredPost.category }}
+                                        </div>
                                     </div>
                                 </router-link>
                             </div>
-                            <div class="featured-body">
+                            <div class="featured-body bg-white">
                                 <div class="d-flex align-items-center mb-3">
                                     <span class="badge-custom me-2" v-if="isSearching">KẾT QUẢ TÌM KIẾM</span>
                                     <span class="badge-custom me-2" v-else>MỚI NHẤT</span>
-                                    <span class="date-meta"><i class="bi bi-calendar3 icon-color"></i> {{ formatDate(featuredPost.created_at) }}</span>
+                                    <span class="date-meta fw-medium"><i class="bi bi-calendar3 text-accent me-1"></i>
+                                        {{ formatDate(featuredPost.created_at) }}</span>
                                 </div>
 
-                                <h2 class="featured-title">
-                                    <router-link :to="{ name: 'PostDetailt', params: { slug: featuredPost.slug || toSlug(featuredPost.title) } }" class="text-reset">
+                                <h2 class="featured-title font-serif">
+                                    <router-link
+                                        :to="{ name: 'PostDetailt', params: { slug: featuredPost.slug || toSlug(featuredPost.title) } }"
+                                        class="text-reset">
                                         {{ featuredPost.title }}
                                     </router-link>
                                 </h2>
                                 <p class="excerpt">{{ getExcerpt(featuredPost, 180) }}</p>
 
                                 <div class="post-footer">
-                                    <span class="author">
-                                        <i class="bi bi-person-fill icon-color"></i>
-                                        <a href="#" @click.prevent="searchByAuthor(featuredPost.author_name || 'Admin')" class="author-link">
-                                            {{ featuredPost.author_name || 'Admin' }}
+                                    <span class="author fw-medium">
+                                        <i class="bi bi-person-circle text-accent me-1"></i>
+                                        <a href="#"
+                                            @click.prevent="searchByAuthor(featuredPost.author_name || 'SORA Admin')"
+                                            class="author-link">
+                                            {{ featuredPost.author_name || 'SORA Admin' }}
                                         </a>
                                     </span>
-                                    <router-link :to="{ name: 'PostDetailt', params: { slug: featuredPost.slug || toSlug(featuredPost.title) } }" class="read-more-btn">
+                                    <router-link
+                                        :to="{ name: 'PostDetailt', params: { slug: featuredPost.slug || toSlug(featuredPost.title) } }"
+                                        class="read-more-btn">
                                         Đọc tiếp <i class="bi bi-arrow-right ms-1"></i>
                                     </router-link>
                                 </div>
@@ -352,31 +363,42 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
 
                         <!-- Lưới bài viết khác -->
                         <div v-if="allLatestPosts.length > 0" class="latest-section" id="latest-news-section">
-                            <h3 class="section-heading">
-                                <i class="bi bi-grid-fill me-2"></i> {{ isSearching ? 'Các kết quả khác' : 'Tin cũ hơn' }}
+                            <h3 class="section-heading text-main font-serif">
+                                <i class="bi bi-grid-fill me-2 text-accent"></i> {{ isSearching ? 'Các kết quả khác' :
+                                'Tin mới cập nhật' }}
                             </h3>
 
                             <div class="latest-posts-grid">
-                                <article v-for="post in paginatedPosts" :key="post.id" class="post-card card-style">
-                                    <div class="card-img-top">
-                                        <router-link :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }" class="full-link">
-                                            <div class="img-bg" :style="{ backgroundImage: `url(${getFullImage(post.image_url)})` }">
-                                                <div class="cat-badge-small" v-if="post.category">{{ post.category }}</div>
+                                <article v-for="post in paginatedPosts" :key="post.id"
+                                    class="post-card card-style product-card">
+                                    <div class="card-img-top img-zoom-wrapper">
+                                        <router-link
+                                            :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }"
+                                            class="full-link">
+                                            <div class="img-bg"
+                                                :style="{ backgroundImage: `url(${getFullImage(post.image_url)})` }">
+                                                <div class="cat-badge-small" v-if="post.category">{{ post.category }}
+                                                </div>
                                             </div>
                                         </router-link>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="card-meta">
-                                            <span class="date"><i class="bi bi-calendar-event icon-color"></i> {{ formatDate(post.created_at) }}</span>
+                                    <div class="card-body bg-white">
+                                        <div class="card-meta fw-medium">
+                                            <span class="date"><i class="bi bi-calendar-event text-accent me-1"></i> {{
+                                                formatDate(post.created_at) }}</span>
                                         </div>
-                                        <h4 class="card-title">
-                                            <router-link :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }" class="text-reset">
+                                        <h4 class="card-title product-title-link">
+                                            <router-link
+                                                :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }"
+                                                class="text-reset product-title">
                                                 {{ post.title }}
                                             </router-link>
                                         </h4>
                                         <p class="card-excerpt">{{ getExcerpt(post, 90) }}</p>
                                         <div class="card-footer-custom">
-                                            <router-link :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }" class="card-link">
+                                            <router-link
+                                                :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }"
+                                                class="card-link">
                                                 Xem chi tiết <i class="bi bi-chevron-right small-icon"></i>
                                             </router-link>
                                         </div>
@@ -386,16 +408,18 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
 
                             <!-- Pagination -->
                             <div v-if="totalPages > 1" class="pagination-wrapper">
-                                <button class="page-btn prev" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
+                                <button class="page-btn prev" :disabled="currentPage === 1"
+                                    @click="changePage(currentPage - 1)">
                                     <i class="bi bi-chevron-left"></i>
                                 </button>
                                 <div class="page-numbers">
-                                    <button v-for="page in totalPages" :key="page" class="page-btn"
+                                    <button v-for="page in totalPages" :key="page" class="page-btn fw-bold"
                                         :class="{ active: currentPage === page }" @click="changePage(page)">
                                         {{ page }}
                                     </button>
                                 </div>
-                                <button class="page-btn next" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">
+                                <button class="page-btn next" :disabled="currentPage === totalPages"
+                                    @click="changePage(currentPage + 1)">
                                     <i class="bi bi-chevron-right"></i>
                                 </button>
                             </div>
@@ -403,200 +427,751 @@ watch(categoryQuery, (newCat) => { if (newCat === '') triggerSearch(); });
                     </template>
                 </section>
 
+                <!-- Sidebar -->
                 <aside class="sidebar-column">
                     <!-- Widget Tìm kiếm -->
-                    <div class="sidebar-widget search-widget">
-                        <h4><i class="bi bi-search me-2"></i> Tìm kiếm</h4>
+                    <div class="sidebar-widget search-widget border-light-subtle shadow-sm bg-white">
+                        <h4 class="font-serif text-main"><i class="bi bi-search me-2 text-accent"></i> Tìm kiếm</h4>
                         <div class="search-box">
-                            <input type="text" v-model="searchQuery" placeholder="Nhập từ khóa...">
-                            <button @click="handleSearch"><i class="bi bi-search"></i></button>
+                            <input type="text" v-model="searchQuery" placeholder="Nhập từ khóa..." class="font-inter">
+                            <button @click="handleSearch" class="bg-main"><i class="bi bi-search"></i></button>
                         </div>
-                        
-                        <div v-if="authorQuery" class="alert alert-info mt-3 py-2 px-3 d-flex justify-content-between align-items-center small">
-                            <span>Tác giả: <strong>{{ authorQuery }}</strong></span>
+
+                        <div v-if="authorQuery"
+                            class="alert bg-light-custom border border-main text-main mt-3 py-2 px-3 d-flex justify-content-between align-items-center small rounded">
+                            <span>Tác giả: <strong class="font-serif">{{ authorQuery }}</strong></span>
                             <button @click="authorQuery = ''" class="btn-close ms-2" aria-label="Close"></button>
                         </div>
-                        <div v-if="categoryQuery" class="alert alert-info mt-3 py-2 px-3 d-flex justify-content-between align-items-center small">
-                            <span>Danh mục: <strong>{{ categoryQuery }}</strong></span>
+                        <div v-if="categoryQuery"
+                            class="alert bg-light-custom border border-main text-main mt-3 py-2 px-3 d-flex justify-content-between align-items-center small rounded">
+                            <span>Danh mục: <strong class="font-serif">{{ categoryQuery }}</strong></span>
                             <button @click="categoryQuery = ''" class="btn-close ms-2" aria-label="Close"></button>
                         </div>
                     </div>
 
                     <!-- Widget Danh mục -->
-                    <div class="sidebar-widget category-widget">
-                        <h4><i class="bi bi-tags-fill me-2"></i> Danh mục</h4>
+                    <div class="sidebar-widget category-widget border-light-subtle shadow-sm bg-white">
+                        <h4 class="font-serif text-main"><i class="bi bi-tags-fill me-2 text-accent"></i> Danh mục</h4>
                         <ul>
                             <li v-for="cat in CATEGORIES" :key="cat.name">
-                                <a href="#" @click.prevent="searchByCategory(cat.name)" :class="{ 'active-cat': categoryQuery === cat.name }">
-                                    <i class="bi me-2" :class="cat.icon || 'bi-caret-right-fill'"></i> {{ cat.name }}
+                                <a href="#" @click.prevent="searchByCategory(cat.name)"
+                                    :class="{ 'active-cat': categoryQuery === cat.name }">
+                                    <i class="bi me-2 text-accent" :class="cat.icon || 'bi-caret-right-fill'"></i> {{
+                                    cat.name }}
                                 </a>
                             </li>
                         </ul>
                     </div>
 
                     <!-- Widget Phổ biến -->
-                    <div class="sidebar-widget popular-widget">
-                        <h4><i class="bi bi-star-fill me-2"></i> Phổ biến</h4>
-                        
+                    <div class="sidebar-widget popular-widget border-light-subtle shadow-sm bg-white">
+                        <h4 class="font-serif text-main"><i class="bi bi-star-fill me-2 text-accent"></i> Phổ biến nhất
+                        </h4>
+
                         <div v-if="popularPosts.length === 0" class="text-center py-3 text-muted small">
                             Chưa có dữ liệu nổi bật
                         </div>
 
-                        <div v-for="(post, index) in popularPosts" :key="post.id" class="popular-post-item">
-                            <div class="pop-number">{{ index + 1 }}</div>
-                            <div class="flex-grow-1">
-                                <router-link :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }" class="text-reset text-decoration-none">
-                                    <p>{{ post.title }}</p>
+                        <div v-for="(post, index) in popularPosts" :key="post.id"
+                            class="popular-post-item product-card p-2 rounded">
+                            <!-- Đã cố định khung ảnh thumbnail -->
+                            <div class="flex-shrink-0 img-zoom-wrapper rounded border"
+                                style="width: 70px; height: 60px;">
+                                <img :src="getFullImage(post.image_url)" @error="handleImageError"
+                                    class="w-100 h-100 object-fit-cover bg-light">
+                            </div>
+
+                            <div class="flex-grow-1 ms-3">
+                                <router-link
+                                    :to="{ name: 'PostDetailt', params: { slug: post.slug || toSlug(post.title) } }"
+                                    class="text-reset text-decoration-none product-title-link">
+                                    <p class="product-title m-0">{{ post.title }}</p>
                                 </router-link>
-                                <span class="post-meta-small">
-                                    <i class="bi bi-eye"></i> {{ formatViews(post.views) }} lượt xem
+                                <span class="post-meta-small d-block mt-1">
+                                    <i class="bi bi-eye text-accent"></i> {{ formatViews(post.views) }} lượt xem
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Widget Đăng ký -->
-                    <div class="sidebar-widget support-box mt-4">
-                        <div class="email-primary d-flex align-items-center mb-3">
-                            <i class="bi bi-envelope-paper-fill fs-3 me-3"></i>
-                            <div>
-                                <h6 class="mb-0 fw-bold">Đăng ký nhận tin</h6>
-                                <small class="text-muted">Nhận bài viết mới qua email</small>
-                            </div>
-                        </div>
-                        <button class="btn btn-email-primary w-100 btn-sm fw-bold">Đăng ký ngay</button>
+                    <div
+                        class="sidebar-widget support-box mt-4 border-light-subtle shadow-sm bg-light-custom text-center">
+                        <i class="bi bi-envelope-paper-fill fs-1 text-main mb-2 d-block"></i>
+                        <h5 class="fw-bold font-serif text-main mb-2">Đăng ký nhận tin</h5>
+                        <p class="text-muted small mb-3">Đừng bỏ lỡ các kiến thức và ưu đãi trang sức mới nhất từ SORA.
+                        </p>
+                        <button class="btn btn-main w-100 rounded-pill fw-bold">Đăng ký ngay</button>
                     </div>
                 </aside>
             </div>
         </main>
     </section>
 </template>
-
-<style scoped>
-/* Màu chủ đạo (có thể chỉnh lại theo theme) */
+<style>
 :root {
-    --primary: #9F273B;
-    --primary-dark: #007a67;
-    --accent: #00483D;
-    --text-dark: #2c3e50;
-    --text-gray: #636e72;
-    --bg-light: #F8F9FA;
-    --white: #FFFFFF;
+    --primary: #9f273b;
+    --primary-dark: #cc1e2e;
+    --accent: #e7ce7d;
+    --text-dark: #2c2c2c;
+    --bg-light: #faf9f8;
+}
+</style>
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap');
+
+
+
+.bg-light-custom {
+    background-color: var(--bg-light) !important;
 }
 
-.email-primary { color: var(--primary); }
-.btn-email-primary { background-color: var(--primary); color: white; }
-.btn-email-primary:hover { background-color: var(--primary-dark); }
+.bg-main {
+    background-color: var(--primary) !important;
+}
 
-.full-link { display: block; width: 100%; height: 100%; text-decoration: none; position: relative; }
+.text-main {
+    color: var(--primary) !important;
+}
 
-.cat-badge { position: absolute; top: 20px; left: 20px; background: rgba(0, 153, 129, 0.9); color: white; padding: 5px 15px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; z-index: 2; }
-.cat-badge-small { position: absolute; top: 10px; left: 10px; background: rgba(0, 153, 129, 0.9); color: white; padding: 3px 10px; font-size: 0.7rem; font-weight: 700; border-radius: 3px; z-index: 2; }
+.text-accent {
+    color: var(--accent) !important;
+}
 
-.author-link { color: var(--text-dark); text-decoration: underline; font-weight: 600; cursor: pointer; transition: color 0.2s; }
-.author-link:hover { color: var(--primary); }
+.border-main {
+    border-color: var(--primary) !important;
+}
 
-.alert-info { background-color: #e0f7fa; color: #004d40; border: 1px solid #b2ebf2; border-radius: 8px; }
-.btn-close { opacity: 0.8; padding: 0.2em; font-size: 0.75rem; }
-.btn-close:hover { opacity: 1; }
+/* Các thành phần cơ bản */
+.btn-main {
+    background-color: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+    transition: all 0.3s ease;
+}
 
-.blog-page { font-family: 'Inter', system-ui, sans-serif; background-color: #F8F9FA; min-height: 100vh; color: #2c3e50; display: flex; flex-direction: column; }
-.text-reset { text-decoration: none; color: inherit; transition: color 0.2s; }
-.text-reset:hover { color: #9F273B; }
-.icon-color { color: #9F273B; margin-right: 5px; }
+.btn-main:hover {
+    background-color: var(--primary-dark);
+    color: white;
+}
 
-.page-hero { background: linear-gradient(135deg, #e0f2f1 0%, #ffffff 100%); padding: 60px 20px; text-align: center; border-bottom: 1px solid #e0e0e0; }
-.hero-inner { max-width: 800px; margin: 0 auto; }
-.hero-pre-title { color: #9F273B; font-weight: 700; letter-spacing: 2px; font-size: 0.85rem; margin-bottom: 10px; }
-.page-hero h1 { font-size: 2.5rem; font-weight: 800; color: #00483D; margin-bottom: 15px; }
-.hero-subtitle { color: #636e72; font-size: 1.1rem; line-height: 1.6; }
+.btn-outline-main {
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    background: transparent;
+    transition: all 0.2s ease;
+}
 
-.page-container { margin: 50px auto; flex-grow: 1; }
-.page-layout { display: grid; grid-template-columns: 1fr 320px; gap: 48px; align-items: start; position: relative; }
-.card-style { background: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.03); overflow: hidden; }
-.empty-state { padding: 60px 0; text-align: center; grid-column: 1 / -1; }
+.btn-outline-main:hover {
+    background-color: var(--primary);
+    color: white;
+}
 
-.featured-heading { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; color: #00483D; display: flex; align-items: center; padding-bottom: 10px; border-bottom: 2px solid #eee; }
-.featured-post { display: flex; flex-direction: row; min-height: 400px; margin-bottom: 50px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-.featured-post:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
-.featured-image-wrap { width: 60%; position: relative; overflow: hidden; display: flex; }
-.featured-image { width: 100%; height: 100%; background-size: cover; background-position: center; transition: transform 0.5s ease; min-height: 100%; }
-.featured-post:hover .featured-image { transform: scale(1.05); }
-.featured-body { width: 40%; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+.full-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    position: relative;
+}
 
-.badge-custom { background-color: #9F273B; color: white; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-.date-meta { font-size: 0.85rem; color: #999; }
-.featured-title { font-size: 1.8rem; font-weight: 700; line-height: 1.3; margin-bottom: 15px; }
-.excerpt { color: #636e72; margin-bottom: 25px; line-height: 1.6; font-size: 1rem; }
-.post-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
-.read-more-btn { color: #9F273B; font-weight: 700; text-decoration: none; font-size: 1rem; display: flex; align-items: center; transition: padding-left 0.2s; }
-.read-more-btn:hover { color: #00483D; padding-left: 5px; }
+.object-fit-cover {
+    object-fit: cover !important;
+}
 
-.section-heading { font-size: 1.5rem; font-weight: 700; margin-bottom: 25px; color: #00483D; display: flex; align-items: center; }
-.latest-posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
-.post-card { display: flex; flex-direction: column; height: 100%; transition: transform 0.3s, box-shadow 0.3s; }
-.post-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08); }
-.card-img-top { width: 100%; aspect-ratio: 16/9; overflow: hidden; position: relative; }
-.img-bg { width: 100%; height: 100%; background-size: cover; background-position: center; transition: transform 0.5s; }
-.post-card:hover .img-bg { transform: scale(1.1); }
-.card-body { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
-.card-meta { font-size: 0.8rem; color: #aaa; margin-bottom: 12px; }
-.card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.card-excerpt { font-size: 0.95rem; color: #636e72; margin-bottom: 20px; flex-grow: 1; line-height: 1.5; }
-.card-footer-custom { border-top: 1px solid #eee; padding-top: 15px; }
-.card-link { font-size: 0.9rem; color: #9F273B; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 5px; }
-.card-link:hover { color: #00483D; }
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
 
-.sidebar-column { display: flex; flex-direction: column; gap: 30px; position: sticky; top: 20px; }
-.sidebar-widget { background: #FFFFFF; padding: 25px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.03); }
-.sidebar-widget h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #007a67; border-bottom: 1px dashed #eee; padding-bottom: 15px; display: flex; align-items: center; }
-.search-box { display: flex; gap: 8px; }
-.search-box input { flex-grow: 1; padding: 10px 15px; border: 1px solid #eee; border-radius: 8px; outline: none; background: #fdfdfd; transition: border 0.2s; }
-.search-box input:focus { border-color: #9F273B; background: #fff; }
-.search-box button { background: #9F273B; color: white; border: none; width: 45px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
-.search-box button:hover { background: #00483D; }
+.font-serif {
+    font-family: "Playfair Display", serif !important;
+}
 
-.category-widget ul { list-style: none; padding: 0; margin: 0; }
-.category-widget li { margin-bottom: 8px; }
-.category-widget a { text-decoration: none; color: #2c3e50; font-weight: 500; padding: 8px 10px; border-radius: 6px; display: flex; align-items: center; transition: all 0.2s; }
-.category-widget a:hover, .category-widget a.active-cat { background-color: rgba(0, 153, 129, 0.08); color: #9F273B; padding-left: 15px; }
+.font-oswald {
+    font-family: "Oswald", sans-serif !important;
+}
 
-.popular-post-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
-.popular-post-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.pop-number { font-size: 1.2rem; font-weight: 900; color: #eee; line-height: 1; min-width: 20px; }
-.popular-post-item:hover .pop-number { color: #9F273B; }
-.popular-post-item p { font-weight: 600; font-size: 0.95rem; margin-bottom: 5px; transition: color 0.2s; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.popular-post-item:hover p { color: #9F273B; }
-.post-meta-small { font-size: 0.8rem; color: #999; }
+.tracking-wide {
+    letter-spacing: 0.1em;
+}
 
-.pagination-wrapper { display: flex; justify-content: center; align-items: center; margin-top: 40px; gap: 15px; }
-.page-numbers { display: flex; gap: 8px; }
-.page-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; background: #FFFFFF; border-radius: 8px; color: #2c3e50; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-.page-btn:hover:not(:disabled) { border-color: #9F273B; color: #9F273B; }
-.page-btn.active { background: #9F273B; color: white; border-color: #9F273B; }
-.page-btn:disabled { background: #f8f9fa; color: #ccc; cursor: not-allowed; border-color: #eee; }
+/* Badge hiển thị trên ảnh */
+.cat-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(159, 39, 59, 0.9);
+    color: white;
+    padding: 5px 15px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 4px;
+    z-index: 2;
+}
 
+.cat-badge-small {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(159, 39, 59, 0.9);
+    color: white;
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 3px;
+    z-index: 2;
+}
+
+/* Link tác giả */
+.author-link {
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.author-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* Giao diện Page */
+.blog-page {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    min-height: 100vh;
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+.text-reset {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+.text-reset:hover {
+    color: var(--primary);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* Hero Banner */
+.page-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #faf9f8 100%);
+    padding: 60px 20px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+.hero-inner {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 1rem;
+}
+
+/* Layout Grid */
+.page-container {
+    margin: 50px auto;
+    flex-grow: 1;
+}
+
+.page-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 48px;
+    align-items: start;
+    position: relative;
+}
+
+.card-style {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.empty-state {
+    padding: 60px 0;
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
+/* Bài nổi bật (Featured Post) */
+.featured-heading {
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+}
+
+.featured-post {
+    display: flex;
+    flex-direction: row;
+    min-height: 400px;
+    margin-bottom: 50px;
+}
+
+.featured-image-wrap {
+    width: 60%;
+    position: relative;
+    display: flex;
+    border-radius: 12px 0 0 12px;
+}
+
+.featured-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    min-height: 100%;
+}
+
+.featured-body {
+    width: 40%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.badge-custom {
+    background-color: var(--primary);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.date-meta {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.featured-title {
+    font-size: 1.8rem;
+    line-height: 1.3;
+    margin-bottom: 15px;
+}
+
+.excerpt {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.read-more-btn {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.read-more-btn:hover {
+    transform: translateX(5px);
+}
+
+/* Các bài mới cập nhật (Lưới) */
+.section-heading {
+    font-size: 1.4rem;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+}
+
+.latest-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.post-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-img-top {
+    width: 100%;
+    aspect-ratio: 16/9;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+}
+
+.img-bg {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+.card-body {
+    padding: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0 0 12px 12px;
+}
+
+.card-meta {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.card-excerpt {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 20px;
+    flex-grow: 1;
+    line-height: 1.5;
+}
+
+.card-footer-custom {
+    border-top: 1px dashed #eee;
+    padding-top: 15px;
+}
+
+.card-link {
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* ==================================
+   Hiệu ứng Hover SORA Brand
+================================== */
+.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-bottom: 2px solid transparent !important;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .08) !important;
+    border-bottom: 2px solid var(--accent) !important;
+}
+
+.img-zoom-wrapper {
+    overflow: hidden;
+    display: block;
+}
+
+.img-zoom-wrapper .featured-image,
+.img-zoom-wrapper .img-bg,
+.img-zoom-wrapper img {
+    transition: transform 0.8s ease;
+}
+
+.product-card:hover .img-zoom-wrapper .featured-image,
+.product-card:hover .img-zoom-wrapper .img-bg,
+.product-card:hover .img-zoom-wrapper img {
+    transform: scale(1.08);
+}
+
+.product-title {
+    font-size: 1.15rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.product-title-link {
+    transition: color 0.3s ease;
+}
+
+.product-card:hover .product-title,
+.product-title-link:hover .product-title {
+    color: var(--primary) !important;
+}
+
+/* Sidebar Widgets */
+.sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    position: sticky;
+    top: 100px;
+}
+
+.sidebar-widget {
+    padding: 25px;
+    border-radius: 12px;
+}
+
+.sidebar-widget h4 {
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.search-box {
+    display: flex;
+    gap: 8px;
+}
+
+.search-box input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    background: #fff;
+    transition: border 0.2s;
+}
+
+.search-box input:focus {
+    border-color: var(--primary);
+}
+
+.search-box button {
+    color: white;
+    border: none;
+    width: 45px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-box button:hover {
+    background: var(--primary-dark);
+}
+
+.category-widget ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.category-widget li {
+    margin-bottom: 8px;
+}
+
+.category-widget a {
+    text-decoration: none;
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: 8px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.category-widget a:hover,
+.category-widget a.active-cat {
+    background-color: rgba(159, 39, 59, 0.08);
+    color: var(--primary);
+    padding-left: 15px;
+}
+
+/* Popular Posts */
+.popular-post-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.popular-post-item:last-child {
+    margin-bottom: 0;
+}
+
+.post-meta-small {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* Pagination */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+    gap: 15px;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 8px;
+}
+
+.page-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    background: #FFFFFF;
+    border-radius: 8px;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.page-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.page-btn:disabled {
+    background: var(--bg-light);
+    color: #ccc;
+    cursor: not-allowed;
+    border-color: #eee;
+}
+
+/* Responsive */
 @media (max-width: 992px) {
-    .page-layout { grid-template-columns: 1fr; gap: 40px; }
-    .featured-post { flex-direction: column; min-height: auto; }
-    .featured-image-wrap { width: 100%; height: 250px; }
-    .featured-body { width: 100%; padding: 25px; }
-    .featured-title { font-size: 1.5rem; }
-    .sidebar-column { order: 1; }
+    .page-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .featured-post {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .featured-image-wrap {
+        width: 100%;
+        height: 250px;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .featured-body {
+        width: 100%;
+        padding: 25px;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .featured-title {
+        font-size: 1.5rem;
+    }
+
+    .sidebar-column {
+        order: 1;
+    }
 }
 
-.fade-in { animation: fadeIn 0.3s ease-in; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fade-in {
+    animation: fadeIn 0.4s ease-in;
+}
 
-.shimmer { background: #f6f7f8; background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); background-repeat: no-repeat; background-size: 800px 100%; animation: placeholderShimmer 1.5s linear infinite forwards; }
-@keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
 
-.skeleton-box { background-color: #eee; border-radius: 4px; }
-.skeleton-text { height: 14px; border-radius: 4px; }
-.skeleton-title { height: 24px; border-radius: 4px; }
-.skeleton-input { border-radius: 8px; }
-.skeleton-card { border: 1px solid #eee; pointer-events: none; }
-.skeleton-box.img-box { background-color: #ddd; display: flex; align-items: center; justify-content: center; }
-.skeleton-placeholder-text-large { font-size: 3rem; font-weight: 900; color: #e5e7eb; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-.skeleton-placeholder-text-small { font-size: 1.5rem; font-weight: 900; color: #e5e7eb; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+    to {
+        opacity: 1;
+    }
+}
+
+.shimmer {
+    background: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation: placeholderShimmer 1.5s linear infinite forwards;
+}
+
+@keyframes placeholderShimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+.skeleton-box {
+    background-color: #eee;
+    border-radius: 4px;
+}
+
+.skeleton-text {
+    height: 14px;
+    border-radius: 4px;
+}
+
+.skeleton-title {
+    height: 24px;
+    border-radius: 4px;
+}
+
+.skeleton-input {
+    border-radius: 8px;
+}
+
+.skeleton-card {
+    border: 1px solid #eee;
+    pointer-events: none;
+}
+
+.skeleton-box.img-box {
+    background-color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.skeleton-placeholder-text-large {
+    font-family: 'Oswald', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: #e5e7eb;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.8;
+}
 </style>

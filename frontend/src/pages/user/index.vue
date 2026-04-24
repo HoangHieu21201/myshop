@@ -511,7 +511,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style>
 :root {
   --color-primary: #9f273b; 
   --color-gold: #e7ce7d;    
@@ -520,6 +520,9 @@ onMounted(() => {
   --sora-secondary: #e7ce7d;
   --sora-accent: #cc1e2e;
 }
+</style>
+<style scoped>
+
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
 

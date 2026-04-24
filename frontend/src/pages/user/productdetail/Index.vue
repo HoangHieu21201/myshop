@@ -1,22 +1,71 @@
 <template>
   <div class="product-page">
     
-    <!-- LOADING STATE -->
-    <div v-if="isLoading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Đang tải chi tiết sản phẩm...</p>
+    <!-- LOADING STATE SKELETON (ĐÃ ĐƯỢC NÂNG CẤP) -->
+    <div v-if="isLoading" class="container py-4 fade-in" style="max-width: 1300px; margin: 0 auto;">
+       <!-- Breadcrumb Skeleton -->
+       <div class="skeleton-box skeleton-text w-25 mb-4 shimmer py-2"></div>
+       
+       <div class="product-grid">
+           <!-- Product Gallery Skeleton -->
+           <div class="product-gallery">
+               <div class="thumbnails-list">
+                   <div v-for="i in 4" :key="i" class="skeleton-box shimmer rounded mb-2" style="width: 75px; height: 75px;"></div>
+               </div>
+               <div class="main-image-wrapper">
+                   <div class="skeleton-box shimmer rounded w-100 h-100"></div>
+               </div>
+           </div>
+
+           <!-- Product Info Skeleton -->
+           <div class="product-info">
+               <div class="skeleton-box skeleton-text w-25 mb-3 shimmer"></div>
+               <div class="skeleton-box skeleton-title w-75 mb-4 shimmer" style="height: 36px;"></div>
+               <div class="skeleton-box skeleton-title w-50 mb-4 shimmer" style="height: 30px;"></div>
+               
+               <div class="skeleton-box w-100 mb-4 shimmer rounded border border-light" style="height: 60px;"></div>
+               
+               <div class="mb-4">
+                   <div class="skeleton-box skeleton-text w-25 mb-2 shimmer"></div>
+                   <div class="d-flex gap-2 mb-3">
+                       <div v-for="i in 4" :key="i" class="skeleton-box shimmer rounded-circle" style="width: 36px; height: 36px;"></div>
+                   </div>
+                   <div class="skeleton-box skeleton-text w-25 mb-2 shimmer"></div>
+                   <div class="d-flex gap-2">
+                       <div v-for="i in 3" :key="i" class="skeleton-box shimmer rounded" style="width: 60px; height: 36px;"></div>
+                   </div>
+               </div>
+               
+               <div class="action-area mb-4 d-flex gap-3">
+                   <div class="skeleton-box shimmer rounded" style="width: 130px; height: 48px;"></div>
+                   <div class="action-buttons d-flex gap-3" style="flex: 1;">
+                       <div class="skeleton-box shimmer rounded" style="flex: 1; height: 48px;"></div>
+                       <div class="skeleton-box shimmer rounded" style="flex: 1; height: 48px;"></div>
+                   </div>
+               </div>
+
+               <div class="d-flex gap-3 mb-4">
+                  <div class="skeleton-box shimmer rounded" style="flex: 1; height: 48px;"></div>
+                  <div class="skeleton-box shimmer rounded-circle" style="width: 48px; height: 48px;"></div>
+               </div>
+               
+               <div class="skeleton-box skeleton-text w-100 mb-2 shimmer mt-4"></div>
+               <div class="skeleton-box skeleton-text w-100 mb-2 shimmer"></div>
+               <div class="skeleton-box skeleton-text w-75 shimmer"></div>
+           </div>
+       </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <template v-else-if="product">
       <!-- Breadcrumb -->
-      <div class="breadcrumb">
+      <div class="breadcrumb fade-in">
         <span>Trang chủ</span> <span class="separator">/</span>
         <span>Sản phẩm</span> <span class="separator">/</span>
         <span class="current">{{ product.name }}</span>
       </div>
 
-      <main class="product-container">
+      <main class="product-container fade-in">
         <div class="product-grid">
           
           <div class="product-gallery">
@@ -38,7 +87,7 @@
                   <span v-if="isTogglingFav === product.id" class="spinner-border spinner-border-sm text-danger" style="width: 1rem; height: 1rem;"></span>
                   <i v-else :class="isFavourited(product.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
               </button>
-              <img :src="mainImage" :alt="product.name" class="main-img">
+              <img :src="mainImage" :alt="product.name" class="main-img" @error="handleImageError">
             </div>
           </div>
 
@@ -94,7 +143,7 @@
                     class="size-guide-btn"
                     title="Xem hướng dẫn kích cỡ"
                   >
-                    <i class="fa-solid fa-ruler-combined"></i> Hướng dẫn size
+                    <i class="bi bi-rulers"></i> Hướng dẫn size
                   </button>
                 </div>
                 
@@ -103,11 +152,12 @@
                     v-for="option in options" 
                     :key="option.id"
                     @click="selectAttribute(attrName, option.id)"
-                    class="color-swatch-btn"
+                    class="color-swatch-btn d-flex justify-content-center align-items-center"
                     :class="{ 'active': selectedAttributes[attrName] === option.id }"
                     :title="option.name"
                     :style="{ backgroundColor: getColorCode(option.name) }"
                   >
+                    <i v-if="selectedAttributes[attrName] === option.id" class="bi bi-check fw-bold" :class="isLightColor(option.name) ? 'text-dark' : 'text-white'" style="font-size: 1.3rem;"></i>
                   </button>
                 </div>
                 
@@ -143,7 +193,7 @@
 
                 <div v-else class="stock-status-luxury">
                   <span :class="currentStock > 0 ? 'in-stock' : 'out-of-stock'">
-                    <i class="fa-solid" :class="currentStock > 0 ? 'fa-box-open' : 'fa-box'"></i> 
+                    <i class="bi" :class="currentStock > 0 ? 'bi-box-seam-fill' : 'bi-box-seam'"></i> 
                     {{ currentStock > 0 ? `Còn ${currentStock} sản phẩm` : 'Pre-Order (Đặt trước / Hết hàng)' }}
                   </span>
                 </div>
@@ -151,7 +201,7 @@
               
               <template v-else>
                 <span class="text-muted fst-italic" style="font-size: 0.9rem; color: #888;">
-                  <i class="fa-solid fa-circle-info me-1"></i> Vui lòng chọn đầy đủ phân loại để xem số lượng
+                  <i class="bi bi-info-circle-fill me-1"></i> Vui lòng chọn đầy đủ phân loại để xem số lượng
                 </span>
               </template>
             </div>
@@ -178,7 +228,6 @@
             </div>
 
             <!-- CỤM NÚT SO SÁNH & YÊU THÍCH -->
-            <!-- ĐÃ FIX: Điều chỉnh Flexbox để 2 nút canh giữa chiều dọc và đồng bộ giao diện tròn -->
             <div class="d-flex flex-row gap-3 mt-4 align-items-center">
               <button 
                 class="btn-action-sub" 
@@ -186,7 +235,7 @@
                 @click="toggleCompare({ id: product.id, name: product.name, image: mainImage })"
                 :class="{ 'active': isInCompare(product.id) }"
               >
-                <i class="fa-solid fa-code-compare"></i>
+                <i class="bi bi-arrow-left-right me-1"></i>
                 {{ isInCompare(product.id) ? 'Bỏ so sánh' : 'Thêm so sánh' }}
               </button>
 
@@ -217,70 +266,69 @@
           </div>
         </div>
       </main>
-<section class="featured-lines-section">
-  <h2 class="section-title text-center">✨ Dòng hàng nổi bật</h2>
 
-  <div class="featured-lines-container">
-    
-    <!-- Banner -->
-    <div class="featured-banner">
-      <img src="https://bazaarvietnam.vn/wp-content/uploads/2015/05/co-nen-cat-toc-ngan-02-lisa-blackpink-bvlgari.jpg" alt="SORA Banner">
-      
-      <!-- Badge khuyến mãi -->
-      <div class="promo-badge">
-        🔥 Giảm đến 30%
-      </div>
-    </div>
+      <section class="featured-lines-section fade-in">
+        <h2 class="section-title text-center font-serif text-sora-primary"><i class="bi bi-stars text-gold me-2"></i> Dòng hàng nổi bật</h2>
 
-    <!-- Content -->
-    <div class="featured-content">
+        <div class="featured-lines-container">
+          
+          <!-- Banner -->
+          <div class="featured-banner">
+            <img src="https://bazaarvietnam.vn/wp-content/uploads/2015/05/co-nen-cat-toc-ngan-02-lisa-blackpink-bvlgari.jpg" alt="SORA Banner">
+            
+            <!-- Badge khuyến mãi -->
+            <div class="promo-badge bg-sora-primary shadow-sm border border-light">
+              <i class="bi bi-fire me-1"></i> Giảm đến 30%
+            </div>
+          </div>
 
-      <!-- Brand filter -->
-      <div class="featured-tags">
-         <h1>SORA ✨</h1>
-        <button 
-          v-for="brand in shopBrands" 
-          :key="brand.id" 
-          class="f-tag-btn"
-          @click="goToShopWithBrand(brand.id)"
-        >
-          💎 
-        </button>
-      </div>
+          <!-- Content -->
+          <div class="featured-content">
 
-      <!-- Nội dung -->
-      <div class="featured-desc">
-       
+            <!-- Brand filter -->
+            <div class="featured-tags">
+               <h1 class="font-serif text-sora-primary mb-3">SORA <i class="bi bi-brightness-high fs-4 text-gold"></i></h1>
+               <div class="d-flex flex-wrap gap-2">
+                  <button 
+                    v-for="brand in shopBrands" 
+                    :key="brand.id" 
+                    class="f-tag-btn"
+                    @click="goToShopWithBrand(brand.id)"
+                  >
+                    <i class="bi bi-gem text-sora-primary me-1"></i> {{ brand.name || 'Thương hiệu' }} 
+                  </button>
+               </div>
+            </div>
 
-        <p>
-          <strong>💎 Sora – Tỏa sáng vẻ đẹp tinh tế</strong> với những thiết kế trang sức cao cấp, chế tác tỉ mỉ đến từng chi tiết.
-        </p>
+            <!-- Nội dung -->
+            <div class="featured-desc text-muted">
+              <p>
+                <i class="bi bi-gem text-sora-primary me-2"></i><strong>Sora – Tỏa sáng vẻ đẹp tinh tế</strong> với những thiết kế trang sức cao cấp, chế tác tỉ mỉ đến từng chi tiết.
+              </p>
 
-        <p>
-          ✨ Từ phong cách tối giản đến sang trọng, mỗi sản phẩm là một dấu ấn riêng giúp bạn nổi bật mọi lúc.
-        </p>
+              <p>
+                <i class="bi bi-stars text-gold me-2"></i>Từ phong cách tối giản đến sang trọng, mỗi sản phẩm là một dấu ấn riêng giúp bạn nổi bật mọi lúc.
+              </p>
 
-        <!-- Ưu đãi -->
-        <div class="featured-benefits">
-          <div>🚚 Miễn phí vận chuyển</div>
-          <div>🎁 Tặng hộp quà cao cấp</div>
-          <div>💳 Ưu đãi thành viên</div>
+              <!-- Ưu đãi -->
+              <div class="featured-benefits mt-4">
+                <div class="benefit-item"><i class="bi bi-truck fs-2 text-sora-primary mb-2"></i><span>Miễn phí<br>vận chuyển</span></div>
+                <div class="benefit-item"><i class="bi bi-box2-heart fs-2 text-sora-primary mb-2"></i><span>Tặng hộp quà<br>cao cấp</span></div>
+                <div class="benefit-item"><i class="bi bi-person-vcard fs-2 text-sora-primary mb-2"></i><span>Ưu đãi<br>thành viên</span></div>
+              </div>
+
+            </div>
+
+          </div>
         </div>
-
-        
-      </div>
-
-    </div>
-  </div>
-</section>
-
+      </section>
 
       <!-- CÓ THỂ BẠN SẼ THÍCH SECTION -->
-      <section class="recommendations-section">
+      <section class="recommendations-section fade-in">
         <div class="recommendations-header">
           <div class="rec-title-wrap">
-            <h2 class="rec-title">CÓ THỂ BẠN SẼ THÍCH</h2>
-            <p class="rec-subtitle">Khám phá thêm các sản phẩm chất lượng khác</p>
+            <h2 class="rec-title font-serif text-sora-primary mb-0"><i class="bi bi-bag-heart-fill text-gold me-2"></i> CÓ THỂ BẠN SẼ THÍCH</h2>
+            <p class="rec-subtitle ms-4 ps-2">Khám phá thêm các sản phẩm chất lượng khác</p>
           </div>
           
           <div class="rec-controls">
@@ -292,10 +340,10 @@
             
             <div class="rec-arrows">
               <button @click="scrollRecSlider('left')" class="arrow-btn" aria-label="Previous">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                <i class="bi bi-chevron-left"></i>
               </button>
               <button @click="scrollRecSlider('right')" class="arrow-btn" aria-label="Next">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                <i class="bi bi-chevron-right"></i>
               </button>
             </div>
           </div>
@@ -319,7 +367,7 @@
                     :class="{ 'active': isInCompare(item.id) }"
                     title="So sánh" 
                     @click.stop="toggleCompare({ id: item.id, name: item.name, image: getImageUrl(item.thumbnail_image) })">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+              <i class="bi bi-arrow-left-right"></i>
             </button>
 
             <!-- Vùng hình ảnh -->
@@ -328,7 +376,6 @@
                     <!-- <span v-if="item.is_new" class="sora-badge">MỚI</span> -->
                 </div>
 
-                <!-- ĐÃ FIX: Trái tim yêu thích thẻ slider đồng bộ với trang chủ -->
                 <button class="sora-wishlist-btn" :class="{ 'active': isFavourited(item.id) }" @click.stop="toggleFavourite(item)" :title="isFavourited(item.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" :disabled="isTogglingFav === item.id">
                     <span v-if="isTogglingFav === item.id" class="spinner-border spinner-border-sm text-danger" style="width: 1rem; height: 1rem;"></span>
                     <i v-else :class="isFavourited(item.id) ? 'bi bi-suit-heart-fill text-danger' : 'bi bi-suit-heart'"></i>
@@ -352,66 +399,84 @@
             <!-- Vùng nút hover hiện lên -->
             <div class="sora-card-action">
                 <button class="sora-action-btn" @click.stop="goToProduct(item.slug || item.id)">
-                    <i class="fa-regular fa-eye"></i> XEM CHI TIẾT
+                    <i class="bi bi-eye me-1"></i> XEM CHI TIẾT
                 </button>
             </div>
           </div>
           
           <div v-if="recommendedProducts.length === 0" class="rec-empty">
-            Chưa có sản phẩm nào.
+            Chưa có sản phẩm nào để hiển thị ở mục này.
           </div>
         </div>
       </section>
 
-      <section class="product-description-section">
-        <h2 class="section-title">MÔ TẢ SẢN PHẨM</h2>
+      <section class="product-description-section fade-in">
+        <h2 class="section-title text-center font-serif text-sora-primary mb-5"><i class="bi bi-journal-text text-gold me-2"></i>MÔ TẢ SẢN PHẨM</h2>
         <div class="description-content" v-html="product.description"></div>
       </section>
 
-      <!-- PRODUCT REVIEWS SECTION -->
-      <section class="product-reviews-section">
-        <h2 class="section-title">ĐÁNH GIÁ SẢN PHẨM</h2>
+      <!-- PRODUCT REVIEWS SECTION (ĐÃ NÂNG CẤP GIAO DIỆN XỊN XÒ VÀ HIỂN THỊ ĐÚNG ẢNH/SỐ SAO) -->
+      <section class="product-reviews-section fade-in">
+        <h2 class="section-title text-center font-serif text-sora-primary mb-5"><i class="bi bi-star-fill text-gold me-2"></i>ĐÁNH GIÁ SẢN PHẨM</h2>
         
-        <div class="reviews-overview" v-if="product.reviews && product.reviews.length > 0">
-          <div class="rating-summary">
-            <div class="rating-score">{{ Number(product.rating_avg).toFixed(1) }}<span>/5</span></div>
-            <div class="rating-stars">
-              <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="{'active': n <= Math.round(product.rating_avg)}"></i>
-            </div>
-            <div class="rating-count">{{ product.reviews.length }} đánh giá</div>
+        <div class="reviews-overview shadow-sm border border-light-subtle" v-if="product.reviews && product.reviews.length > 0">
+          <div class="row align-items-center w-100 m-0">
+             <div class="col-md-5 text-center border-end border-light-subtle py-4">
+               <div class="rating-score display-2 font-oswald fw-bold text-sora-primary lh-1 mb-2">{{ Number(product.rating_avg).toFixed(1) }}<span class="fs-4 text-muted">/5</span></div>
+               <div class="rating-stars fs-4 text-gold mb-2">
+                 <i v-for="n in 5" :key="n" class="bi" :class="n <= Math.round(product.rating_avg) ? 'bi-star-fill' : 'bi-star'"></i>
+               </div>
+               <div class="rating-count text-muted fw-medium font-oswald text-uppercase tracking-widest">{{ product.reviews.length }} nhận xét</div>
+             </div>
+             <div class="col-md-7 px-md-5 py-4 text-center text-md-start">
+               <p class="font-serif fst-italic text-secondary fs-5 mb-0 lh-lg">"Những chia sẻ chân thực từ khách hàng đã trải nghiệm sự hoàn mỹ tại SORA."</p>
+             </div>
           </div>
         </div>
 
-        <div class="reviews-list" v-if="product.reviews && product.reviews.length > 0">
-          <div class="review-item" v-for="review in product.reviews" :key="review.id">
-            <div class="review-header">
-              <div class="review-avatar">
-                <img :src="review.user?.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="Avatar">
-              </div>
-              <div class="review-user-info">
-                <div class="review-username">{{ review.user?.fullName || 'Khách hàng' }}</div>
-                <div class="review-rating">
-                  <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="{'active': n <= review.rating}"></i>
+        <div class="reviews-list mt-5" v-if="product.reviews && product.reviews.length > 0">
+          <div class="review-item bg-white p-4 p-md-5 rounded-4 shadow-sm border border-light-subtle mb-4" v-for="review in product.reviews" :key="review.id">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="review-avatar">
+                  <img :src="review.user?.avatar_url || 'https://ui-avatars.com/api/?name=' + (review.user?.fullName || 'Guest') + '&background=9f273b&color=fff'" alt="Avatar" class="rounded-circle object-fit-cover shadow-sm border border-2 border-white" width="55" height="55">
                 </div>
-                <div class="review-date">{{ new Date(review.created_at).toLocaleDateString('vi-VN') }}</div>
+                <div class="review-user-info">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="review-username fw-bold text-dark fs-6 font-serif">{{ review.user?.fullName || 'Khách hàng' }}</span>
+                      <span class="badge bg-success bg-opacity-10 text-success fw-medium px-2 py-1" style="font-size: 0.65rem;"><i class="bi bi-check-circle-fill me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <div class="review-rating text-gold" style="font-size: 0.9rem;">
+                    <i v-for="n in 5" :key="n" class="bi" :class="n <= review.rating ? 'bi-star-fill' : 'bi-star'"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="review-date text-muted small fw-medium font-oswald tracking-widest text-uppercase"><i class="bi bi-calendar-event me-1"></i>{{ new Date(review.created_at).toLocaleDateString('vi-VN') }}</div>
+            </div>
+            
+            <div class="review-content text-dark mb-4" style="line-height: 1.8; font-size: 1.05rem;">
+              <p class="mb-0">{{ review.comment }}</p>
+            </div>
+            
+            <div class="review-images d-flex gap-3 flex-wrap mb-4" v-if="review.images && review.images.length > 0">
+              <div v-for="(img, index) in review.images" :key="index" class="cursor-zoom-in rounded-3 overflow-hidden border border-light-subtle shadow-sm" style="width: 90px; height: 90px;" @click="viewFullImage(img)">
+                <img :src="img" alt="Review Image" class="w-100 h-100 object-fit-cover transition-all img-zoom-hover" @error="handleImageError">
               </div>
             </div>
-            <div class="review-content">
-              <p>{{ review.comment }}</p>
-            </div>
-            <div class="review-images" v-if="review.images && review.images.length > 0">
-              <img v-for="(img, index) in review.images" :key="index" :src="img" alt="Review Image" @error="handleImageError">
-            </div>
-            <div class="review-admin-reply" v-if="review.admin_reply">
-              <div class="reply-title"><i class="fa-solid fa-store"></i> Phản hồi từ SORA JEWELRY:</div>
-              <p>{{ review.admin_reply }}</p>
+            
+            <div class="review-admin-reply bg-light-custom p-4 rounded-3 border-start border-4 border-main mt-2" v-if="review.admin_reply">
+              <div class="reply-title fw-bold text-sora-primary mb-2 d-flex align-items-center font-serif fs-6">
+                  <i class="bi bi-stars me-2 text-gold"></i> Phản hồi từ SORA JEWELRY
+              </div>
+              <p class="mb-0 text-secondary" style="line-height: 1.6; font-size: 0.95rem;">{{ review.admin_reply }}</p>
             </div>
           </div>
         </div>
         
-        <div class="no-reviews" v-else>
-          <i class="fa-regular fa-comment-dots"></i>
-          <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+        <div class="no-reviews py-5 text-center bg-light-custom rounded-4 border border-light-subtle mt-4" v-else>
+          <i class="bi bi-chat-heart text-gold opacity-50 display-1 mb-3 d-block"></i>
+          <h5 class="font-serif text-dark mb-2 fw-bold">Chưa có đánh giá nào</h5>
+          <p class="text-muted">Hãy là người đầu tiên sở hữu và đánh giá kiệt tác này.</p>
         </div>
       </section>
 
@@ -478,7 +543,7 @@
             </div>
 
             <div class="tips-section mt-5 p-4" style="background-color: #f8f9fa; border-left: 4px solid rgb(159,39,59); border-radius: 4px;">
-              <h4 class="section-title mb-3" style="margin-top: 0;">💡 Lưu Ý Quan Trọng</h4>
+              <h4 class="section-title mb-3" style="margin-top: 0;"><i class="bi bi-lightbulb-fill text-warning me-2"></i> Lưu Ý Quan Trọng</h4>
               <ul class="tips-list">
                 <li>Đo kích cỡ khi tay bạn ở nhiệt độ bình thường (không lạnh)</li>
                 <li>Đeo nhẫn vào ngón tay ít nhất 30 phút trước khi mua để chắc chắn kích cỡ phù hợp</li>
@@ -619,8 +684,11 @@ const sizeGuideData = [
   { size: '15', diameter: 24.4, circumference: 76.5 },
 ];
 
-const API_BASE_URL = 'http://127.0.0.1:8000'; 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 const shopSlug = route.params.shop_slug || 'aurora';
+
+const soraPlaceholder = '/Sora-placeholder.png'; 
 
 const isColorAttribute = (name) => {
   const lowerName = name.toLowerCase();
@@ -632,15 +700,24 @@ const isSizeAttribute = (name) => {
   return lowerName.includes('size') || lowerName.includes('kích cỡ') || lowerName.includes('cỡ') || lowerName.includes('ni tay');
 };
 
-const getColorCode = (name) => {
-  const colorMap = {
-    'vàng': '#F1C40F', 'vàng hồng': '#E0BFB8', 'bạc': '#C0C0C0', 'trắng': '#F8F9FA',
-    'đen': '#212529', 'đỏ': '#E74C3C', 'xanh dương': '#3498DB', 'xanh lá': '#2ECC71',
-    'hồng': '#FFC0CB', 'tím': '#4A2F4A', 'cam': '#D2691E', 'purple': '#4A2F4A',
-    'navy': '#323E6E', 'brown': '#B86536'
+const getColorCode = (colorName) => {
+  if(!colorName) return '#e0e0e0';
+  const map = {
+    'đỏ': '#cc1e2e', 'red': '#cc1e2e', 'đỏ đô': '#8b0000', 'đỏ mận': '#800000', 'đỏ tươi': '#ff0000', 'ruby': '#e0115f',
+    'xanh': '#2e5b9f', 'blue': '#2e5b9f', 'xanh dương': '#007bff', 'xanh biển': '#1e90ff', 'xanh ngọc': '#009981', 'xanh lá': '#28a745', 'green': '#28a745', 'xanh lục': '#228b22', 'emerald': '#50c878',
+    'vàng': '#e7ce7d', 'gold': '#e7ce7d', 'vàng 18k': '#d4af37', 'vàng 24k': '#ffd700', 'vàng chanh': '#fada5e', 'vàng kem': '#fdfd96',
+    'trắng': '#ffffff', 'white': '#ffffff', 'vàng trắng': '#f4f4f4', 'bạch kim': '#e5e4e2', 'bạc': '#c0c0c0', 'silver': '#c0c0c0', 'trong suốt': '#f0f8ff',
+    'đen': '#2c2c2c', 'black': '#2c2c2c', 'xám': '#808080', 'gray': '#808080', 'ghi': '#808080',
+    'hồng': '#f4a4b4', 'pink': '#f4a4b4', 'vàng hồng': '#b76e79', 'rose gold': '#b76e79', 'tím': '#800080', 'purple': '#800080', 'thạch anh tím': '#9966cc',
+    'nâu': '#8b4513', 'brown': '#8b4513', 'cam': '#fd7e14', 'orange': '#fd7e14'
   };
-  const normalized = name.toLowerCase().trim();
-  return colorMap[normalized] || name; 
+  return map[colorName.toLowerCase().trim()] || '#e0e0e0'; 
+};
+
+const isLightColor = (colorName) => {
+  const code = getColorCode(colorName);
+  const lightCodes = ['#ffffff', '#fcfcfc', '#f4f4f4', '#e5e4e2', '#c0c0c0', '#e0e0e0', '#fada5e', '#fdfd96', '#f0f8ff', '#ffb6c1', '#f4a4b4'];
+  return lightCodes.includes(code);
 };
 
 const getOptionName = (attrName, optionId) => {
@@ -724,7 +801,7 @@ const fetchFavorites = async () => {
   const token = getToken();
   if (!token) return;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
+    const response = await fetch(`${API_BASE_URL}/client/favourites`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
     });
     const data = await response.json();
@@ -762,7 +839,7 @@ const toggleFavourite = async (prod) => {
   isTogglingFav.value = prod.id; 
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/client/favourites/toggle`, {
+    const response = await fetch(`${API_BASE_URL}/client/favourites/toggle`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -870,7 +947,7 @@ const filteredFavourites = computed(() => {
 const fetchCompareSuggestions = async (query = '') => {
   isLoadingCompareSuggestions.value = true;
   try {
-    let url = new URL(`${API_BASE_URL}/api/shop/${shopSlug}/products`);
+    let url = new URL(`${API_BASE_URL}/shop/${shopSlug}/products`);
     url.searchParams.append('per_page', query ? '20' : '10');
     url.searchParams.append('sort', 'new'); 
     if (product.value?.id) url.searchParams.append('exclude_id', product.value.id);
@@ -927,7 +1004,7 @@ const fetchFavouritesForCompare = async () => {
   isLoadingFavourites.value = true;
   try {
     const token = getToken();
-    const response = await fetch(`${API_BASE_URL}/api/client/favourites`, {
+    const response = await fetch(`${API_BASE_URL}/client/favourites`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
     });
     const result = await response.json();
@@ -946,12 +1023,42 @@ const isAllAttributesSelected = computed(() => {
 const currentVariant = computed(() => {
   if (!product.value || !product.value.variants) return null;
   return product.value.variants.find((variant) => {
+    const attrs = variant.attributes || {};
     for (const [attrName, selectedOptionId] of Object.entries(selectedAttributes.value)) {
-      if (variant.attributes[attrName] !== selectedOptionId) return false;
+      if (String(attrs[attrName]) !== String(selectedOptionId)) return false;
     }
     return true;
   });
 });
+
+// ĐÃ FIX: Hàm xử lý Url Ảnh (tự động nối /storage/ chuẩn)
+const getFullImage = (path) => {
+    if (!path) return soraPlaceholder;
+    if (path.startsWith('http') || path.startsWith('data:image')) return path;
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    if (cleanPath.startsWith('storage/')) return `${BACKEND_URL}/${cleanPath}`;
+    return `${BACKEND_URL}/storage/${cleanPath}`;
+};
+
+const getImageUrl = getFullImage; 
+
+const viewFullImage = (url) => {
+  Swal.fire({
+    imageUrl: url, 
+    imageAlt: 'Product Image', 
+    width: 600, 
+    imageHeight: 600, 
+    padding: 0, 
+    background: 'transparent',
+    backdrop: 'rgba(0,0,0,0.85)', 
+    showConfirmButton: false, 
+    showCloseButton: true,
+    customClass: { 
+        image: 'rounded-3 shadow-lg object-fit-contain bg-white',
+        popup: 'p-0 bg-transparent'
+    }
+  });
+};
 
 const fetchProductData = async () => {
   const productSlug = route.params.slug || route.params.product_slug; 
@@ -959,12 +1066,25 @@ const fetchProductData = async () => {
   
   isLoading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/shop/${shopSlug}/products/${productSlug}`);
+    const response = await fetch(`${API_BASE_URL}/shop/${shopSlug}/products/${productSlug}`);
     const result = await response.json();
 
     if (result.success && result.data) {
       product.value = result.data;
-      if (product.value.images && product.value.images.length > 0) mainImage.value = product.value.images[0];
+      
+      if (product.value.variants) {
+        product.value.variants.forEach(v => {
+          if (typeof v.attributes === 'string') {
+            try { v.attributes = JSON.parse(v.attributes); } catch(e) {}
+          }
+        });
+      }
+
+      if (product.value.images) {
+        product.value.images = product.value.images.map(img => getImageUrl(img));
+        if (product.value.images.length > 0) mainImage.value = product.value.images[0];
+      }
+      
       selectedAttributes.value = {}; selectedQuantity.value = 1;
       
       saveToRecentlyViewed(product.value);
@@ -977,7 +1097,7 @@ const fetchProductData = async () => {
 
 const fetchBrands = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/shop/${shopSlug}/brands`);
+    const response = await fetch(`${API_BASE_URL}/shop/${shopSlug}/brands`);
     const result = await response.json();
     if (result.success && result.data) shopBrands.value = result.data.slice(0, 10);
   } catch (error) { console.error("Lỗi tải thương hiệu:", error); }
@@ -1002,7 +1122,12 @@ const selectAttribute = (attrName, optionId) => {
   if (selectedAttributes.value[attrName] === optionId) delete selectedAttributes.value[attrName];
   else selectedAttributes.value[attrName] = optionId;
   selectedQuantity.value = 1; 
-  if (isAllAttributesSelected.value && currentVariant.value && currentVariant.value.image_url) setMainImage(currentVariant.value.image_url);
+  if (isAllAttributesSelected.value && currentVariant.value) {
+    const variantImage = currentVariant.value.image || currentVariant.value.image_url;
+    if (variantImage) {
+      setMainImage(getImageUrl(variantImage));
+    }
+  }
 };
 
 const updateQuantity = (delta) => {
@@ -1023,7 +1148,7 @@ const validateQuantity = () => {
 };
 
 const getHeaders = () => {
-  const headers = { 'Accept': 'application/json' };
+  const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
   const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
   let sid = localStorage.getItem('cart_session_id');
@@ -1041,7 +1166,7 @@ const addToCart = async () => {
 
   try {
     const payload = { product_variant_id: currentVariant.value.id, quantity: selectedQuantity.value };
-    const response = await axios.post(`${API_BASE_URL}/api/client/cart`, payload, { headers: getHeaders() });
+    const response = await axios.post(`${API_BASE_URL}/client/cart`, payload, { headers: getHeaders() });
 
     if (response.data.success) {
       Toast.fire({ icon: 'success', title: 'Thêm vào giỏ thành công' });
@@ -1092,7 +1217,7 @@ const fetchRecommendations = async (tab) => {
   }
 
   try {
-    let url = new URL(`${API_BASE_URL}/api/shop/${shopSlug}/products`);
+    let url = new URL(`${API_BASE_URL}/shop/${shopSlug}/products`);
     url.searchParams.append('per_page', '8');
     if (product.value?.id) url.searchParams.append('exclude_id', product.value.id);
     if (tab === 'related_category' && product.value?.category?.slug) url.searchParams.append('categories', product.value.category.slug);
@@ -1113,22 +1238,12 @@ const goToProduct = (slug) => {
   router.push({ params: { ...route.params, slug: slug } }).catch(() => window.location.href = `/shop/${shopSlug}/productdetail/${slug}`);
 };
 
-const getImageUrl = (path) => {
-  if (!path) return 'https://via.placeholder.com/300?text=No+Image';
-  if (path.startsWith('http') || path.startsWith('data:')) return path;
-  return `${API_BASE_URL}/storage/${path}`;
-};
 const formatMoney = (amount) => amount ? new Intl.NumberFormat('vi-VN').format(amount) + ' ₫' : '0 ₫';
 const setMainImage = (url) => mainImage.value = url;
-const handleImageError = (e) => e.target.src = 'https://placehold.co/400x400';
+const handleImageError = (e) => e.target.src = soraPlaceholder;
 
 </script>
-
-<style scoped>
-/* =========================================
-   LUXURY UI & PURE CSS LAYOUT 
-   ========================================= */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+<style>
 :root {
   --sora-primary: rgb(159,39,59);
   --sora-primary-hover: #cc1e2e;
@@ -1136,6 +1251,16 @@ const handleImageError = (e) => e.target.src = 'https://placehold.co/400x400';
   --sora-gray: #f8f9fa;
   --sora-border: #eaeaea;
 }
+</style>
+
+<style>
+
+</style>
+<style scoped>
+/* =========================================
+   LUXURY UI & PURE CSS LAYOUT 
+   ========================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 .product-page { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #ffffff; min-height: 100vh; padding: 20px 0; color: var(--sora-text); }
 .loading-container, .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; color: #555; }
@@ -1199,7 +1324,7 @@ const handleImageError = (e) => e.target.src = 'https://placehold.co/400x400';
 .color-swatch-btn.active { border: 2px solid #222; box-shadow: inset 0 0 0 3px #fff; transform: scale(1.1); }
 .variant-btn { background: #f8f9fa; border: 1px solid #e9ecef; color: #6c757d; padding: 10px 18px; cursor: pointer; font-size: 13px; transition: all 0.3s ease; min-width: 60px; text-align: center; border-radius: 6px; }
 .variant-btn:hover { border-color: rgba(159,39,59, 0.5); color: rgb(159,39,59); background-color: #ffffff; }
-.variant-btn.active { background-color: rgb(159,39,59); border-color: rgb(159,39,59); color: #ffffff; box-shadow: 0 4px 10px rgba(159,39,59,0.2); }
+.variant-btn.active { background: rgb(159,39,59); border-color: rgb(159,39,59); color: #ffffff; box-shadow: 0 4px 10px rgba(159,39,59,0.2); }
 
 /* ACTIONS */
 .action-area { display: flex; gap: 15px; margin-bottom: 15px; }
@@ -1240,60 +1365,39 @@ input[type=number] { -moz-appearance: textfield; }
 /* =========================================
    ĐỒNG BỘ NÚT YÊU THÍCH VỚI TRANG CHỦ
    ========================================= */
-
-/* Nút yêu thích ở ảnh Slider & Ảnh Chính */
 .main-wishlist-btn, .sora-wishlist-btn {
     width: 38px;
     height: 38px;
     background: #ffffff;
     border: none;
-    border-radius: 50%; /* Tròn 100% */
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); /* Bóng chuẩn nhẹ như trang chủ */
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
     z-index: 10;
     cursor: pointer;
     transition: all 0.3s ease;
     color: #6c757d; 
 }
-
-.main-wishlist-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
-.sora-wishlist-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-}
+.main-wishlist-btn { position: absolute; top: 20px; right: 20px; }
+.sora-wishlist-btn { position: absolute; top: 15px; right: 15px; }
 
 .main-wishlist-btn:hover, .sora-wishlist-btn:hover {
     transform: scale(1.1);
     color: #cc1e2e;
 }
+.main-wishlist-btn.active, .sora-wishlist-btn.active { color: #dc3545; }
+.main-wishlist-btn.active i, .sora-wishlist-btn.active i { color: #dc3545 !important; }
+.main-wishlist-btn i, .sora-wishlist-btn i { font-size: 1.15rem; margin-top: 2px; }
 
-.main-wishlist-btn.active, .sora-wishlist-btn.active {
-    color: #dc3545;
-}
-.main-wishlist-btn.active i, .sora-wishlist-btn.active i {
-    color: #dc3545 !important;
-}
-.main-wishlist-btn i, .sora-wishlist-btn i {
-    font-size: 1.15rem;
-    margin-top: 2px;
-}
-
-/* Nút yêu thích cạnh nút So Sánh */
 .btn-wishlist-action {
-    width: 48px; /* Chiều cao và ngang bằng với nút Thêm so sánh */
+    width: 48px;
     height: 48px;
     background: #ffffff;
     border: none;
-    border-radius: 50%; /* Tạo thành hình tròn hoàn hảo */
-    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); /* Bóng y hệt trang chủ */
+    border-radius: 50%;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
     color: #6c757d;
     display: flex;
     align-items: center;
@@ -1303,17 +1407,9 @@ input[type=number] { -moz-appearance: textfield; }
     font-size: 1.3rem;
     flex-shrink: 0;
 }
-.btn-wishlist-action:hover {
-    transform: scale(1.1);
-    color: #cc1e2e;
-}
-.btn-wishlist-action.active {
-    color: #dc3545;
-}
-.btn-wishlist-action.active i {
-    color: #dc3545 !important;
-}
-
+.btn-wishlist-action:hover { transform: scale(1.1); color: #cc1e2e; }
+.btn-wishlist-action.active { color: #dc3545; }
+.btn-wishlist-action.active i { color: #dc3545 !important; }
 
 .product-short-desc { border-top: 1px dotted #e5e5e5; padding-top: 25px; font-size: 13px; line-height: 1.6; color: #555; }
 .product-short-desc p { margin-bottom: 20px; }
@@ -1327,13 +1423,23 @@ input[type=number] { -moz-appearance: textfield; }
 .text-center { text-align: center; }
 .featured-lines-section .section-title { font-size: 22px; font-weight: 600; color: #222; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
 .featured-lines-container { display: flex; gap: 40px; align-items: center; }
-.featured-banner { width: 50%; overflow: hidden; aspect-ratio: 4 / 3; display: flex; justify-content: center; align-items: center; border-radius: 8px; }
-.featured-banner img { width: 100%; height: 100%; object-fit: cover; }
-.featured-content { width: 50%; display: flex; flex-direction: column; gap: 25px; }
-.featured-tags { display: flex; flex-wrap: wrap; gap: 12px; }
-.f-tag-btn { background: transparent; border: 1px solid #ccc; color: #555; padding: 10px 20px; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s ease; border-radius: 50px; }
-.f-tag-btn:hover, .f-tag-btn:first-child { background: #333; color: #fff; border-color: #333; }
+.featured-banner { width: 50%; overflow: hidden; aspect-ratio: 4 / 3; display: flex; justify-content: center; align-items: center; border-radius: 8px; position: relative; }
+.featured-banner img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+.featured-banner img:hover { transform: scale(1.05); }
 
+/* Promo Badge Đã Cập Nhật Emojis -> Icons */
+.promo-badge { position: absolute; top: 15px; left: 15px; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; }
+.bg-sora-primary { background-color: var(--sora-primary) !important; }
+.text-sora-primary { color: var(--sora-primary) !important; }
+.text-gold { color: #e7ce7d !important; }
+
+.featured-content { width: 50%; display: flex; flex-direction: column; gap: 25px; }
+.featured-tags { margin-bottom: 15px; }
+.f-tag-btn { background: transparent; border: 1px solid #ccc; color: #555; padding: 10px 20px; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s ease; border-radius: 50px; }
+.f-tag-btn:hover, .f-tag-btn:first-child { background: var(--sora-primary); color: #fff; border-color: var(--sora-primary); }
+
+.featured-benefits { display: flex; gap: 20px; text-align: center; }
+.benefit-item { display: flex; flex-direction: column; align-items: center; font-size: 0.85rem; font-weight: 500; color: #555; }
 
 .recommendations-section { padding-top: 40px; border-top: 1px solid #eee;}
 .recommendations-header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; margin-bottom: 20px; }
@@ -1355,184 +1461,48 @@ input[type=number] { -moz-appearance: textfield; }
 /* =========================================
    SORA LUXURY PRODUCT CARD
    ========================================= */
-.sora-luxury-card {
-    background: #ffffff;
-    border: 1px solid #f0f0f0;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: all 0.4s ease;
-    cursor: pointer;
-    height: 100%;
-}
-
-.sora-luxury-card:hover {
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    border-color: #e5e5e5;
-}
-
-.sora-card-image {
-    position: relative;
-    aspect-ratio: 1/1; 
-    overflow: hidden;
-    background-color: #fcfcfc;
-}
-
-.sora-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.sora-luxury-card:hover .sora-card-image img {
-    transform: scale(1.08); 
-}
-
+.sora-luxury-card { background: #ffffff; border: 1px solid #f0f0f0; position: relative; display: flex; flex-direction: column; overflow: hidden; transition: all 0.4s ease; cursor: pointer; height: 100%; }
+.sora-luxury-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.06); border-color: #e5e5e5; }
+.sora-card-image { position: relative; aspect-ratio: 1/1; overflow: hidden; background-color: #fcfcfc; }
+.sora-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.sora-luxury-card:hover .sora-card-image img { transform: scale(1.08); }
 .compare-float-btn { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.8); border: none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #777; cursor: pointer; z-index: 20; transition: all 0.2s; border-radius: 50%; }
 .compare-float-btn:hover, .compare-float-btn.active { color: #fff; background: rgb(159,39,59); }
-
-.sora-card-badges {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+.sora-card-badges { position: absolute; top: 15px; left: 15px; z-index: 10; display: flex; flex-direction: column; gap: 8px; }
 .compare-float-btn ~ .sora-card-badges { top: 55px; } 
-
-.sora-badge {
-    background: #ffffff;
-    color: #222;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 4px 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-
-.sora-card-info {
-    padding: 20px 15px 70px 15px; 
-    text-align: center;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.sora-card-title {
-    font-family: 'Oswald', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #111;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.sora-card-category {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    color: #666;
-    font-size: 0.95rem;
-    margin-bottom: 15px;
-}
-
-.sora-card-price {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #9f273b;
-    margin-top: auto;
-}
-.sora-card-price-old {
-    font-size: 0.95rem;
-    color: #999;
-    text-decoration: line-through;
-    margin-right: 10px;
-    font-weight: 400;
-}
-
-.sora-card-action {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    z-index: 10;
-}
-
-.sora-luxury-card:hover .sora-card-action {
-    transform: translateY(0);
-}
-
-.sora-action-btn {
-    width: 100%;
-    padding: 14px 0;
-    background: #731621;
-    color: #ffffff;
-    border: none;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
+.sora-badge { background: #ffffff; color: #222; font-family: 'Oswald', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.sora-card-info { padding: 20px 15px 70px 15px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+.sora-card-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sora-card-category { font-family: 'Playfair Display', serif; font-style: italic; color: #666; font-size: 0.95rem; margin-bottom: 15px; }
+.sora-card-price { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: #9f273b; margin-top: auto; }
+.sora-card-price-old { font-size: 0.95rem; color: #999; text-decoration: line-through; margin-right: 10px; font-weight: 400; }
+.sora-card-action { position: absolute; bottom: 0; left: 0; width: 100%; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); z-index: 10; }
+.sora-luxury-card:hover .sora-card-action { transform: translateY(0); }
+.sora-action-btn { width: 100%; padding: 14px 0; background: #731621; color: #ffffff; border: none; font-family: 'Oswald', sans-serif; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 0.3s ease; }
 .sora-action-btn:hover { background: #500f17; }
 
 .product-description-section { padding-top: 40px; border-top: 1px solid #eee; margin-top: 20px;}
 .section-title { font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
 .description-content { line-height: 1.8; color: #555; font-size: 15px; }
 
-/* REVIEWS SECTION */
+/* REVIEWS SECTION - ĐÃ REDESIGN LẠI GIAO DIỆN XỊN XÒ VÀ HIỂN THỊ ĐÚNG SỐ SAO */
+.bg-light-custom { background-color: #faf9f8 !important; }
+.border-main { border-color: #9f273b !important; }
+.font-oswald { font-family: 'Oswald', sans-serif; }
+.font-serif { font-family: "Playfair Display", "Merriweather", serif; }
+.tracking-widest { letter-spacing: 2px; }
+
 .product-reviews-section { padding-top: 40px; border-top: 1px solid #eee; margin-top: 20px; max-width: 1300px; margin-left: auto; margin-right: auto; background: #fff; padding-bottom: 50px; padding-left: 20px; padding-right: 20px; }
-.reviews-overview { display: flex; align-items: center; justify-content: center; margin-bottom: 30px; background: #fcfcfc; padding: 25px; border-radius: 12px; border: 1px solid #f0f0f0; }
-.rating-summary { text-align: center; }
-.rating-score { font-size: 42px; font-weight: 700; color: rgb(159,39,59); line-height: 1; }
-.rating-score span { font-size: 20px; color: #888; font-weight: 500; }
-.rating-stars { margin: 10px 0; color: #e4e4e4; font-size: 18px; }
-.rating-stars i.active { color: #f5a623; }
-.rating-count { font-size: 14px; color: #666; }
+.reviews-overview { border-radius: 12px; background: #fff; }
+.rating-score { color: rgb(159,39,59); }
+.rating-stars { color: #e7ce7d; }
 
 .reviews-list { display: flex; flex-direction: column; gap: 20px; }
-.review-item { padding: 25px; border: 1px solid #f0f0f0; border-radius: 12px; background: #fff; transition: box-shadow 0.3s; }
-.review-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
-.review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-.review-avatar { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #eee; }
-.review-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.review-user-info { display: flex; flex-direction: column; }
-.review-username { font-weight: 600; font-size: 14px; color: #333; }
-.review-rating { color: #e4e4e4; font-size: 12px; margin: 3px 0; }
-.review-rating i.active { color: #f5a623; }
-.review-date { font-size: 12px; color: #999; }
-.review-content { font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 15px; }
-.review-images { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-.review-images img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; cursor: pointer; transition: transform 0.2s; }
-.review-images img:hover { transform: scale(1.05); }
-.review-admin-reply { background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 3px solid rgb(159,39,59); }
-.reply-title { font-weight: 600; font-size: 13px; color: rgb(159,39,59); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-.review-admin-reply p { font-size: 13px; color: #555; margin: 0; line-height: 1.5; }
+.review-item { transition: box-shadow 0.3s; }
+.review-item:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important; }
 
-.no-reviews { text-align: center; padding: 50px 20px; background: #fcfcfc; border-radius: 12px; border: 1px dashed #ddd; color: #888; }
-.no-reviews i { font-size: 40px; color: #ccc; margin-bottom: 15px; }
-.no-reviews p { font-size: 15px; margin: 0; }
+.review-images .cursor-zoom-in { cursor: zoom-in; }
+.group-hover-scale:hover { transform: scale(1.08); }
 
 @media (max-width: 1024px) {
   .product-grid { flex-wrap: wrap; }
@@ -1601,102 +1571,28 @@ input[type=number] { -moz-appearance: textfield; }
 .btn-outline:hover { background: #eee; }
 .btn-primary { background: rgb(159,39,59); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; color: #fff; font-weight: 600; transition: opacity 0.2s; }
 .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ĐÃ THÊM: CSS phục hồi cho Tab Gợi ý & Yêu thích Modal So Sánh */
 .compare-modal-tabs { display: flex; border-bottom: 1px solid #eee; background: #fafafa; }
 .compare-modal-tabs button { flex: 1; padding: 12px 15px; background: transparent; border: none; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s; }
-.compare-modal-tabs button.active { color: rgb(159,39,59); border-bottom-color: rgb(159,39,59); background: #fff; }
+.compare-modal-tabs button.active { color: #9f273b; border-bottom-color: #9f273b; background: #fff; }
 .compare-modal-tabs button:hover:not(.active) { background: #f0f0f0; }
 .not-logged-in-msg, .empty-msg { text-align: center; padding: 40px 20px; color: #888; font-style: italic; }
 
-@media (max-width: 600px) {
-  .compare-modal-header { flex-direction: column; align-items: flex-start; }
-  .header-search-wrap { width: 100%; justify-content: space-between; }
-  .modal-search-input { max-width: none; flex: 1; margin-right: 15px;}
-}
-.featured-lines-section {
-  padding: 50px 20px;
-  background: #f9f9f9;
-}
+/* SKELETON LOADING CSS */
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.featured-lines-container {
-  display: flex;
-  gap: 30px;
-  align-items: center;
+.shimmer {
+    background: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation: placeholderShimmer 1.5s linear infinite forwards;
 }
+@keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
 
-.featured-banner {
-  position: relative;
-  flex: 1;
-}
-
-.featured-banner img {
-  width: 100%;
-  border-radius: 15px;
-  transition: 0.3s;
-}
-
-.featured-banner img:hover {
-  transform: scale(1.05);
-}
-
-/* Badge */
-.promo-badge {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  background: red;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-weight: bold;
-}
-
-/* Content */
-.featured-content {
-  flex: 1;
-}
-
-.featured-tags {
-  margin-bottom: 15px;
-}
-
-.f-tag-btn {
-  margin: 5px;
-  padding: 6px 12px;
-  border: none;
-  background: #eee;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.f-tag-btn:hover {
-  background: #000;
-  color: #fff;
-}
-
-/* Benefit */
-.featured-benefits {
-  margin: 15px 0;
-  display: flex;
-  gap: 15px;
-  font-size: 18px;
-}
-
-/* Button */
-.btn-shop-now {
-  padding: 10px 20px;
-  border: none;
-  background: #000;
-  color: #fff;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.btn-shop-now:hover {
-  background: #444;
-}
-
+.skeleton-box { background-color: #eee; border-radius: 4px; }
+.skeleton-text { height: 16px; border-radius: 4px; }
+.skeleton-title { height: 28px; border-radius: 4px; }
 </style>
