@@ -20,7 +20,67 @@
         </div>
       </div>
 
-      <div class="combo-list-container" v-if="!isLoading">
+      <!-- HIỆU ỨNG SKELETON KHI ĐANG LOAD TRANG -->
+      <div v-if="isLoading" class="combo-list-container fade-in">
+        <div v-for="i in 2" :key="i" class="combo-row-card card border-0 shadow-sm rounded-4 overflow-hidden mb-5 bg-white skeleton-card">
+          <div class="row g-0 h-100">
+            <!-- Cột trái Skeleton -->
+            <div class="col-lg-4 position-relative p-0 border-end border-gold-light d-flex flex-column">
+              <div class="p-4 p-lg-5 position-relative z-index-2 d-flex flex-column h-100 text-center text-md-start">
+                <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
+                  <div class="skeleton-box shimmer" style="width: 80px; height: 38px;"></div>
+                  <div class="skeleton-box shimmer" style="width: 100px; height: 38px;"></div>
+                </div>
+
+                <div class="skeleton-box skeleton-title w-75 mb-3 shimmer mx-auto mx-md-0" style="height: 38px;"></div>
+                <div class="skeleton-box skeleton-text w-100 mb-2 shimmer mx-auto mx-md-0"></div>
+                <div class="skeleton-box skeleton-text w-75 mb-4 shimmer mx-auto mx-md-0"></div>
+
+                <div class="timer-section mb-4 mt-auto">
+                    <div class="skeleton-box skeleton-text w-50 mb-3 shimmer mx-auto mx-md-0" style="height: 20px;"></div>
+                    <div class="d-flex justify-content-center justify-content-md-start gap-2">
+                        <div class="skeleton-box shimmer rounded-3" style="width: 60px; height: 65px;"></div>
+                        <div class="skeleton-box shimmer rounded-3" style="width: 60px; height: 65px;"></div>
+                        <div class="skeleton-box shimmer rounded-3" style="width: 60px; height: 65px;"></div>
+                        <div class="skeleton-box shimmer rounded-3" style="width: 60px; height: 65px;"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-end justify-content-center justify-content-md-between flex-wrap gap-3 mt-2">
+                  <div class="d-flex flex-column gap-2 w-50 align-items-center align-items-md-start">
+                    <div class="skeleton-box skeleton-text w-50 shimmer"></div>
+                    <div class="skeleton-box skeleton-title w-100 shimmer"></div>
+                  </div>
+                  <div class="skeleton-box shimmer" style="width: 140px; height: 40px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cột phải Skeleton (List Items) -->
+            <div class="col-lg-8 p-4 p-lg-5 bg-white position-relative">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="skeleton-box skeleton-title w-25 shimmer"></div>
+                <div class="d-flex gap-2">
+                  <div class="skeleton-box rounded-circle shimmer" style="width: 36px; height: 36px;"></div>
+                  <div class="skeleton-box rounded-circle shimmer" style="width: 36px; height: 36px;"></div>
+                </div>
+              </div>
+
+              <div class="d-flex gap-4 overflow-hidden pb-3">
+                <div class="flex-shrink-0" style="width: 220px;" v-for="j in 3" :key="j">
+                  <div class="skeleton-box shimmer rounded-3 mb-3" style="height: 220px; width: 100%;"></div>
+                  <div class="skeleton-box skeleton-title w-75 mb-2 shimmer"></div>
+                  <div class="skeleton-box skeleton-text w-50 mb-2 shimmer"></div>
+                  <div class="skeleton-box skeleton-text w-50 shimmer"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KẾT QUẢ DANH SÁCH THỰC TẾ -->
+      <div class="combo-list-container fade-in" v-else-if="displayCombos.length > 0">
         <div class="combo-row-card card border-0 shadow-sm rounded-4 overflow-hidden mb-5 bg-white" v-for="combo in displayCombos" :key="combo.id">
           
           <div class="row g-0 h-100">
@@ -112,13 +172,12 @@
         </div>
       </div>
 
-      <div v-else class="text-center py-5 my-5">
-        <div class="spinner-border text-gold" style="width: 3rem; height: 3rem;" role="status"></div>
-      </div>
-      <div v-if="!isLoading && displayCombos.length === 0" class="text-center py-5 my-5">
+      <!-- TRẠNG THÁI KHÔNG TÌM THẤY COMBO -->
+      <div v-else class="text-center py-5 my-5 fade-in">
         <i class="bi bi-box2-heart fs-1 d-block mb-3 text-gold opacity-50"></i>
         <h5 class="font-serif text-muted">Chưa có gói ưu đãi nào trong danh mục này.</h5>
       </div>
+
     </div>
   </div>
 </template>
@@ -349,4 +408,22 @@ onUnmounted(() => {
 
 .item-img-hover { transition: transform 0.5s ease; }
 .combo-item-card:hover .item-img-hover { transform: scale(1.05); }
+
+/* HIỆU ỨNG SKELETON */
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.shimmer { 
+    background: #f6f7f8; 
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); 
+    background-repeat: no-repeat; 
+    background-size: 800px 100%; 
+    animation: placeholderShimmer 1.5s linear infinite forwards; 
+}
+@keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+
+.skeleton-box { background-color: #eee; border-radius: 4px; }
+.skeleton-text { height: 14px; border-radius: 4px; }
+.skeleton-title { height: 24px; border-radius: 4px; }
+.skeleton-card { pointer-events: none; }
 </style>

@@ -1,160 +1,247 @@
 <template>
-  <div class="combo-detail-page bg-light-custom pb-5" v-if="combo">
+  <div class="combo-detail-page bg-light-custom pb-5">
     
-    <div class="bg-transparent pt-4 pb-2">
-      <div class="container">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb mb-0 font-oswald text-uppercase tracking-wide small" style="font-size: 0.75rem;">
-            <li class="breadcrumb-item"><router-link to="/" class="text-muted text-decoration-none hover-primary">Trang chủ</router-link></li>
-            <li class="breadcrumb-item"><router-link :to="{ name: 'client-combos' }" class="text-muted text-decoration-none hover-primary">Bộ sưu tập</router-link></li>
-            <li class="breadcrumb-item active fw-bold text-sora-primary" aria-current="page">{{ combo.name }}</li>
-          </ol>
-        </nav>s
-      </div>
-    </div>
+    <!-- HIỆU ỨNG SKELETON KHI ĐANG TẢI TRANG -->
+    <div v-if="isLoading" class="container pt-4 pb-5 fade-in">
+      <!-- Breadcrumb Skeleton -->
+      <div class="skeleton-box skeleton-text w-25 mb-4 shimmer py-2"></div>
 
-    <div class="container pt-4">
       <div class="row g-0 g-lg-5 mb-5 pb-5 border-bottom border-light-subtle">
-        
+        <!-- Cột Trái (Ảnh) Skeleton -->
         <div class="col-lg-6 mb-4 mb-lg-0">
-          <div class="sticky-top" style="top: 100px; z-index: 1;">
-            <div class="luxury-image-wrapper position-relative overflow-hidden cursor-zoom-in" @click="viewFullImage(getImage(combo.thumbnail_image))">
-              
-              <div class="position-absolute top-0 start-0 z-index-2 mt-4 ms-4">
-                <div class="luxury-badge bg-sora-primary text-white font-oswald tracking-widest px-3 py-2 text-uppercase shadow-sm">
-                  Giảm {{ combo.discount_type === 'percentage' ? combo.discount_value + '%' : formatCurrency(combo.discount_value) }}
-                </div>
-              </div>
-
-              <div v-if="getTimerData(combo).isEnded" class="ended-overlay d-flex align-items-center justify-content-center flex-column text-center p-4">
-                  <h3 class="text-white font-oswald tracking-widest m-0 text-uppercase" style="letter-spacing: 4px;">{{ getTimerData(combo).title }}</h3>
-                  <div class="mt-3 bg-white" style="width: 40px; height: 1px;"></div>
-              </div>
-
-              <img :src="getImage(combo.thumbnail_image)" class="w-100 object-fit-cover img-zoom-hover bg-white" style="height: auto; min-height: 600px; max-height: 80vh;" :class="{'opacity-75 grayscale': getTimerData(combo).isEnded}">
-              
-              <div class="position-absolute bottom-0 end-0 m-4 z-index-2 text-muted small fw-light fst-italic bg-white px-3 py-2 rounded-pill shadow-sm" style="opacity: 0.8; font-size: 0.75rem;">
-                <i class="bi bi-arrows-fullscreen me-1"></i> Nhấp để xem chi tiết
-              </div>
-            </div>
-          </div>
+          <div class="skeleton-box w-100 shimmer rounded" style="min-height: 600px;"></div>
         </div>
 
+        <!-- Cột Phải (Chi tiết) Skeleton -->
         <div class="col-lg-6">
           <div class="ps-lg-4 pt-2">
             
-            <div class="d-flex align-items-center gap-3 mb-3 text-uppercase font-oswald tracking-widest small">
-              <span class="text-gold fw-medium"><i class="bi bi-stars me-1"></i> Bộ Sưu Tập {{ combo.items.length }} Món</span>
-              <span v-if="combo.theme" class="text-muted border-start ps-3 border-secondary-subtle">{{ combo.theme }}</span>
+            <div class="skeleton-box skeleton-text w-50 mb-3 shimmer"></div>
+            <div class="skeleton-box skeleton-title w-100 mb-4 shimmer" style="height: 48px;"></div>
+            
+            <!-- Description Skeleton -->
+            <div class="skeleton-box skeleton-text w-100 mb-2 shimmer"></div>
+            <div class="skeleton-box skeleton-text w-100 mb-2 shimmer"></div>
+            <div class="skeleton-box skeleton-text w-75 mb-5 shimmer"></div>
+
+            <!-- Timer Box Skeleton -->
+            <div class="skeleton-box w-100 mb-5 shimmer rounded border border-light-subtle" style="height: 80px;"></div>
+
+            <!-- Editorial Title Skeleton -->
+            <div class="skeleton-box skeleton-title w-50 mb-4 shimmer"></div>
+
+            <!-- Editorial Items Skeleton -->
+            <div v-for="i in 2" :key="i" class="card border border-light-subtle shadow-sm rounded-0 mb-4 overflow-hidden skeleton-card">
+              <div class="row g-0">
+                <div class="col-4 bg-light p-3">
+                  <div class="skeleton-box w-100 shimmer ratio ratio-1x1"></div>
+                </div>
+                <div class="col-8 p-4">
+                  <div class="skeleton-box skeleton-text w-25 mb-2 shimmer"></div>
+                  <div class="skeleton-box skeleton-title w-75 mb-3 shimmer"></div>
+                  <div class="skeleton-box w-100 mb-2 shimmer" style="height: 40px;"></div>
+                  <div class="skeleton-box w-75 shimmer" style="height: 40px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary Box Skeleton -->
+            <div class="skeleton-box w-100 mb-5 shimmer rounded" style="height: 120px;"></div>
+
+            <!-- Buttons Skeleton -->
+            <div class="row g-3">
+              <div class="col-sm-6"><div class="skeleton-box w-100 shimmer" style="height: 50px;"></div></div>
+              <div class="col-sm-6"><div class="skeleton-box w-100 shimmer" style="height: 50px;"></div></div>
             </div>
             
-            <h1 class="display-4 fw-bold text-dark mb-4 font-serif" style="line-height: 1.15; letter-spacing: -0.5px;">{{ combo.name }}</h1>
-            <p class="text-muted fs-6 mb-5 lh-lg fw-light" style="font-family: 'Arial', sans-serif;">{{ combo.description }}</p>
+            <!-- Benefits Footer Skeleton -->
+            <div class="d-flex justify-content-between mt-5 pt-4 border-top border-light-subtle">
+               <div v-for="j in 4" :key="j" class="skeleton-box w-100 mx-2 shimmer" style="height: 40px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="luxury-timer-section mb-5 py-3 border-top border-bottom border-gold-light" v-if="getTimerData(combo).type !== 'forever'">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="pulsing-dot" :class="getTimerData(combo).type === 'active' ? 'bg-sora-red' : 'bg-warning'" v-if="!getTimerData(combo).isEnded"></div>
-                    <span class="text-muted font-oswald tracking-wide text-uppercase small fw-medium">
-                      {{ getTimerData(combo).title }}
-                    </span>
-                  </div>
-                  
-                  <div v-if="!getTimerData(combo).isEnded" class="d-flex gap-2 align-items-baseline font-oswald text-dark fs-4">
-                      <span>{{ getTimerData(combo).d }}</span><span class="fs-6 text-muted mx-1 fw-light">Ngày</span>
-                      <span class="text-gold fw-light mx-1">:</span>
-                      <span>{{ getTimerData(combo).h }}</span><span class="fs-6 text-muted mx-1 fw-light">Giờ</span>
-                      <span class="text-gold fw-light mx-1">:</span>
-                      <span>{{ getTimerData(combo).m }}</span><span class="fs-6 text-muted mx-1 fw-light">Phút</span>
-                      <span class="text-gold fw-light mx-1">:</span>
-                      <span class="text-sora-red">{{ getTimerData(combo).s }}</span><span class="fs-6 text-sora-red mx-1 fw-light">Giây</span>
+      <!-- Related Section Skeleton -->
+      <div class="text-center mb-5">
+        <div class="skeleton-box skeleton-title w-25 mx-auto mb-3 shimmer" style="height: 36px;"></div>
+        <div class="skeleton-box mx-auto shimmer" style="width: 50px; height: 2px;"></div>
+      </div>
+
+      <div class="row px-md-4">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4" v-for="k in 4" :key="k">
+          <div class="skeleton-box w-100 shimmer mb-3" style="height: 250px;"></div>
+          <div class="skeleton-box skeleton-text w-75 mx-auto mb-2 shimmer"></div>
+          <div class="skeleton-box skeleton-text w-50 mx-auto shimmer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRẠNG THÁI KHÔNG TÌM THẤY LỖI / HẾT HẠN -->
+    <div v-else-if="!combo" class="vh-100 d-flex flex-column justify-content-center align-items-center text-center fade-in">
+        <i class="bi bi-box2-heart fs-1 d-block mb-3 text-gold opacity-50"></i>
+        <h5 class="font-serif text-muted mb-4">Gói ưu đãi này không tồn tại hoặc đã khép lại.</h5>
+        <router-link :to="{ name: 'client-combos' }" class="btn luxury-btn-outline font-oswald px-4 py-2 tracking-widest text-uppercase">Quay lại Bộ sưu tập</router-link>
+    </div>
+
+    <!-- DỮ LIỆU THẬT -->
+    <div v-else class="fade-in">
+      <div class="bg-transparent pt-4 pb-2">
+        <div class="container">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 font-oswald text-uppercase tracking-wide small" style="font-size: 0.75rem;">
+              <li class="breadcrumb-item"><router-link to="/" class="text-muted text-decoration-none hover-primary">Trang chủ</router-link></li>
+              <li class="breadcrumb-item"><router-link :to="{ name: 'client-combos' }" class="text-muted text-decoration-none hover-primary">Bộ sưu tập</router-link></li>
+              <li class="breadcrumb-item active fw-bold text-sora-primary" aria-current="page">{{ combo.name }}</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      <div class="container pt-4">
+        <div class="row g-0 g-lg-5 mb-5 pb-5 border-bottom border-light-subtle">
+          
+          <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="sticky-top" style="top: 100px; z-index: 1;">
+              <div class="luxury-image-wrapper position-relative overflow-hidden cursor-zoom-in" @click="viewFullImage(getImage(combo.thumbnail_image))">
+                
+                <div class="position-absolute top-0 start-0 z-index-2 mt-4 ms-4">
+                  <div class="luxury-badge bg-sora-primary text-white font-oswald tracking-widest px-3 py-2 text-uppercase shadow-sm">
+                    Giảm {{ combo.discount_type === 'percentage' ? combo.discount_value + '%' : formatCurrency(combo.discount_value) }}
                   </div>
                 </div>
+
+                <div v-if="getTimerData(combo).isEnded" class="ended-overlay d-flex align-items-center justify-content-center flex-column text-center p-4">
+                    <h3 class="text-white font-oswald tracking-widest m-0 text-uppercase" style="letter-spacing: 4px;">{{ getTimerData(combo).title }}</h3>
+                    <div class="mt-3 bg-white" style="width: 40px; height: 1px;"></div>
+                </div>
+
+                <img :src="getImage(combo.thumbnail_image)" class="w-100 object-fit-cover img-zoom-hover bg-white" style="height: auto; min-height: 600px; max-height: 80vh;" :class="{'opacity-75 grayscale': getTimerData(combo).isEnded}">
+                
+                <div class="position-absolute bottom-0 end-0 m-4 z-index-2 text-muted small fw-light fst-italic bg-white px-3 py-2 rounded-pill shadow-sm" style="opacity: 0.8; font-size: 0.75rem;">
+                  <i class="bi bi-arrows-fullscreen me-1"></i> Nhấp để xem chi tiết
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div class="combo-items-editorial mb-5">
-              <h5 class="fw-bold text-dark mb-4 font-serif fs-4 d-flex align-items-center">
-                <i class="bi bi-gem text-gold me-2"></i> Định Hình Phong Cách
-              </h5>
+          <div class="col-lg-6">
+            <div class="ps-lg-4 pt-2">
               
-              <div class="editorial-item mb-4" v-for="(item, index) in combo.items" :key="item.id">
-                <div class="card border border-light-subtle shadow-sm rounded-0 luxury-product-card overflow-hidden">
-                  <div class="row g-0">
-                    
-                    <div class="col-md-4 col-lg-4 col-xl-3 bg-light border-end border-light-subtle p-3 d-flex flex-column align-items-center justify-content-center position-relative">
-                       <div class="position-absolute top-0 start-0 m-2 z-index-2">
-                           <span class="badge bg-dark text-gold font-oswald px-2 py-1 shadow-sm">Món {{ index + 1 }}</span>
-                       </div>
-                       <div class="position-relative w-100 ratio ratio-1x1 cursor-zoom-in mt-3" @click="viewFullImage(getDisplayImage(item))">
-                          <img :src="getDisplayImage(item)" class="object-fit-contain mix-blend-multiply transition-all img-zoom-hover drop-shadow">
-                       </div>
+              <div class="d-flex align-items-center gap-3 mb-3 text-uppercase font-oswald tracking-widest small">
+                <span class="text-gold fw-medium"><i class="bi bi-stars me-1"></i> Bộ Sưu Tập {{ combo.items.length }} Món</span>
+                <span v-if="combo.theme" class="text-muted border-start ps-3 border-secondary-subtle">{{ combo.theme }}</span>
+              </div>
+              
+              <h1 class="display-4 fw-bold text-dark mb-4 font-serif" style="line-height: 1.15; letter-spacing: -0.5px;">{{ combo.name }}</h1>
+              <p class="text-muted fs-6 mb-5 lh-lg fw-light" style="font-family: 'Arial', sans-serif;">{{ combo.description }}</p>
+
+              <div class="luxury-timer-section mb-5 py-3 border-top border-bottom border-gold-light" v-if="getTimerData(combo).type !== 'forever'">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="pulsing-dot" :class="getTimerData(combo).type === 'active' ? 'bg-sora-red' : 'bg-warning'" v-if="!getTimerData(combo).isEnded"></div>
+                      <span class="text-muted font-oswald tracking-wide text-uppercase small fw-medium">
+                        {{ getTimerData(combo).title }}
+                      </span>
                     </div>
+                    
+                    <div v-if="!getTimerData(combo).isEnded" class="d-flex gap-2 align-items-baseline font-oswald text-dark fs-4">
+                        <span>{{ getTimerData(combo).d }}</span><span class="fs-6 text-muted mx-1 fw-light">Ngày</span>
+                        <span class="text-gold fw-light mx-1">:</span>
+                        <span>{{ getTimerData(combo).h }}</span><span class="fs-6 text-muted mx-1 fw-light">Giờ</span>
+                        <span class="text-gold fw-light mx-1">:</span>
+                        <span>{{ getTimerData(combo).m }}</span><span class="fs-6 text-muted mx-1 fw-light">Phút</span>
+                        <span class="text-gold fw-light mx-1">:</span>
+                        <span class="text-sora-red">{{ getTimerData(combo).s }}</span><span class="fs-6 text-sora-red mx-1 fw-light">Giây</span>
+                    </div>
+                  </div>
+              </div>
 
-                    <div class="col-md-8 col-lg-8 col-xl-9 p-4 d-flex flex-column">
-                       <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap flex-xl-nowrap">
-                           <div>
-                              <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ item.product?.category?.name || 'Trang Sức Cao Cấp' }}</small>
-                              <h5 class="fw-bold text-dark font-serif mt-1 mb-0 fs-5 lh-base">{{ item.product?.name }}</h5>
-                           </div>
-                           <div class="text-xl-end">
-                              <template v-if="!item.product_variant_id">
-                                  <div v-if="getSelectedVariant(item.id)" class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(getSelectedVariant(item.id).price) }}</div>
-                                  <div v-else class="text-muted fw-bold font-serif fs-6">Từ {{ formatCurrency(item.product?.base_price) }}</div>
-                              </template>
-                              <template v-else>
-                                  <div class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(item.variant?.price) }}</div>
-                              </template>
-                           </div>
-                       </div>
+              <div class="combo-items-editorial mb-5">
+                <h5 class="fw-bold text-dark mb-4 font-serif fs-4 d-flex align-items-center">
+                  <i class="bi bi-gem text-gold me-2"></i> Định Hình Phong Cách
+                </h5>
+                
+                <div class="editorial-item mb-4" v-for="(item, index) in combo.items" :key="item.id">
+                  <div class="card border border-light-subtle shadow-sm rounded-0 luxury-product-card overflow-hidden">
+                    <div class="row g-0">
+                      
+                      <div class="col-md-4 col-lg-4 col-xl-3 bg-light border-end border-light-subtle p-3 d-flex flex-column align-items-center justify-content-center position-relative">
+                         <div class="position-absolute top-0 start-0 m-2 z-index-2">
+                             <span class="badge bg-dark text-gold font-oswald px-2 py-1 shadow-sm">Món {{ index + 1 }}</span>
+                         </div>
+                         <div class="position-relative w-100 ratio ratio-1x1 cursor-zoom-in mt-3" @click="viewFullImage(getDisplayImage(item))">
+                            <img :src="getDisplayImage(item)" class="object-fit-contain mix-blend-multiply transition-all img-zoom-hover drop-shadow">
+                         </div>
+                      </div>
 
-                       <div class="flex-grow-1 border-top border-light-subtle pt-3 mt-1">
-                           
-                           <div v-if="item.product_variant_id" class="bg-light p-3 border rounded small">
-                               <p class="text-muted font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.75rem;"><i class="bi bi-pin-angle-fill text-sora-primary me-1"></i>Phiên bản cấu hình sẵn</p>
-                               <div class="d-flex flex-wrap gap-2">
-                                  <span v-if="item.variant?.formatted_attributes" class="fw-bold text-dark">
-                                    {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
-                                  </span>
-                                  <span v-else class="fw-bold text-dark">{{ item.variant?.sku }}</span>
-                               </div>
-                           </div>
+                      <div class="col-md-8 col-lg-8 col-xl-9 p-4 d-flex flex-column">
+                         <div class="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap flex-xl-nowrap">
+                             <div>
+                                <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ item.product?.category?.name || 'Trang Sức Cao Cấp' }}</small>
+                                <h5 class="fw-bold text-dark font-serif mt-1 mb-0 fs-5 lh-base">{{ item.product?.name }}</h5>
+                             </div>
+                             <div class="text-xl-end">
+                                <template v-if="!item.product_variant_id">
+                                    <div v-if="getSelectedVariant(item.id)" class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(getSelectedVariant(item.id).price) }}</div>
+                                    <div v-else class="text-muted fw-bold font-serif fs-6">Từ {{ formatCurrency(item.product?.base_price) }}</div>
+                                </template>
+                                <template v-else>
+                                    <div class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(item.variant?.price) }}</div>
+                                </template>
+                             </div>
+                         </div>
 
-                           <div v-else>
-                               <div v-if="itemMatrices[item.id]" class="row g-3">
-                                   <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="col-sm-6 col-md-12 col-xl-6">
-                                      <p class="text-dark font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.8rem;">
-                                        {{ attrName }}: <span class="fw-bold text-sora-primary ms-1">{{ userSelections[item.id][attrName] || 'Chưa chọn' }}</span>
-                                      </p>
-                                      <div class="d-flex flex-wrap gap-2">
-                                          <label v-for="val in values" :key="val" 
-                                                 class="attr-chip m-0 cursor-pointer transition-all"
-                                                 :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
-                                            <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
-                                            <div class="chip-inner px-3 py-1 d-flex flex-column align-items-center justify-content-center text-center shadow-sm" style="min-width: 45px;">
-                                              <span class="fw-bold font-oswald tracking-wide" style="font-size: 0.85rem;">{{ val }}</span>
-                                            </div>
-                                          </label>
-                                      </div>
-                                   </div>
-                               </div>
+                         <div class="flex-grow-1 border-top border-light-subtle pt-3 mt-1">
+                             
+                             <div v-if="item.product_variant_id" class="bg-light p-3 border rounded small">
+                                 <p class="text-muted font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.75rem;"><i class="bi bi-pin-angle-fill text-sora-primary me-1"></i>Phiên bản cấu hình sẵn</p>
+                                 <div class="d-flex flex-wrap gap-2">
+                                    <span v-if="item.variant?.formatted_attributes" class="fw-bold text-dark">
+                                      {{ Object.values(item.variant.formatted_attributes).join(' - ') }}
+                                    </span>
+                                    <span v-else class="fw-bold text-dark">{{ item.variant?.sku }}</span>
+                                 </div>
+                             </div>
 
-                               <div class="text-danger small mt-3 fst-italic p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-if="validationErrors[item.id]">
-                                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng hoàn tất tùy chọn thiết kế cho món này.
-                               </div>
-                               <div class="text-danger small mt-3 fst-italic fw-bold p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
-                                 <i class="bi bi-x-circle-fill me-1"></i> Sự kết hợp này hiện đã hết hàng.
-                               </div>
-                           </div>
-                       </div>
+                             <div v-else>
+                                 <div v-if="itemMatrices[item.id]" class="row g-3">
+                                     <div v-for="(values, attrName) in itemMatrices[item.id]" :key="attrName" class="col-sm-6 col-md-12 col-xl-6">
+                                        <p class="text-dark font-oswald tracking-wide text-uppercase mb-2" style="font-size: 0.8rem;">
+                                          {{ attrName }}: <span class="fw-bold text-sora-primary ms-1">{{ userSelections[item.id][attrName] || 'Chưa chọn' }}</span>
+                                        </p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <label v-for="val in values" :key="val" 
+                                                   class="attr-chip m-0 cursor-pointer transition-all"
+                                                   :class="{'selected': userSelections[item.id][attrName] === val, 'error': validationErrors[item.id]}">
+                                              <input type="radio" class="d-none" :name="`attr_${item.id}_${attrName}`" :value="val" v-model="userSelections[item.id][attrName]" @change="validationErrors[item.id] = false">
+                                              <div class="chip-inner px-3 py-1 d-flex flex-column align-items-center justify-content-center text-center shadow-sm" style="min-width: 45px;">
+                                                <span class="fw-bold font-oswald tracking-wide" style="font-size: 0.85rem;">{{ val }}</span>
+                                              </div>
+                                            </label>
+                                        </div>
+                                     </div>
+                                 </div>
 
-                       <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top border-light-subtle">
-                           <span class="text-muted small text-uppercase font-oswald tracking-widest">Số lượng áp dụng:</span>
-                           <span class="badge bg-sora-primary text-white font-oswald px-3 py-1 fs-6 shadow-sm">x{{ item.quantity }}</span>
-                       </div>
+                                 <div class="text-danger small mt-3 fst-italic p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-if="validationErrors[item.id]">
+                                   <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng hoàn tất tùy chọn thiết kế cho món này.
+                                 </div>
+                                 <div class="text-danger small mt-3 fst-italic fw-bold p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded" v-else-if="!getSelectedVariant(item.id) && isAllAttributesSelected(item.id)">
+                                   <i class="bi bi-x-circle-fill me-1"></i> Sự kết hợp này hiện đã hết hàng.
+                                 </div>
+                             </div>
+                         </div>
+
+                         <div class="d-flex align-items-center gap-2 mt-4 pt-3 border-top border-light-subtle">
+                             <span class="text-muted small text-uppercase font-oswald tracking-widest">Số lượng áp dụng:</span>
+                             <span class="badge bg-sora-primary text-white font-oswald px-3 py-1 fs-6 shadow-sm">x{{ item.quantity }}</span>
+                         </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
 
             <div class="luxury-price-summary mb-5 p-4 bg-white border border-gold-light" style="border-radius: 2px;">
@@ -293,64 +380,59 @@
         </div>
       </div>
 
-    </div>
+      <div class="modal fade" id="quickAddModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content rounded-0 border-0 shadow-lg">
+            <div class="modal-header bg-sora-primary text-white rounded-0 border-0 p-4">
+              <h5 class="modal-title font-serif fw-bold tracking-wider">Tùy chọn Sản phẩm</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" v-if="quickAddProduct">
+              
+              <div class="d-flex gap-3 mb-4 pb-4 border-bottom border-light-subtle">
+                 <img :src="quickAddDisplayImage" @error="handleImageError" class="object-fit-cover border shadow-sm" style="width: 80px; height: 80px; border-radius: 4px;">
+                 <div class="d-flex flex-column justify-content-center">
+                    <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ quickAddProduct.category?.name || 'Trang Sức SORA' }}</small>
+                    <h6 class="font-serif fw-bold mb-1 text-dark fs-5">{{ quickAddProduct.name }}</h6>
+                    <span class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(quickAddSelectedPrice) }}</span>
+                 </div>
+              </div>
 
-    <div class="modal fade" id="quickAddModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-0 border-0 shadow-lg">
-          <div class="modal-header bg-sora-primary text-white rounded-0 border-0 p-4">
-            <h5 class="modal-title font-serif fw-bold tracking-wider">Tùy chọn Sản phẩm</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body p-4" v-if="quickAddProduct">
-            
-            <div class="d-flex gap-3 mb-4 pb-4 border-bottom border-light-subtle">
-               <img :src="quickAddDisplayImage" @error="handleImageError" class="object-fit-cover border shadow-sm" style="width: 80px; height: 80px; border-radius: 4px;">
-               <div class="d-flex flex-column justify-content-center">
-                  <small class="text-uppercase font-oswald tracking-widest text-gold fw-bold" style="font-size: 0.7rem;">{{ quickAddProduct.category?.name || 'Trang Sức SORA' }}</small>
-                  <h6 class="font-serif fw-bold mb-1 text-dark fs-5">{{ quickAddProduct.name }}</h6>
-                  <span class="text-sora-primary fw-bold font-serif fs-5">{{ formatCurrency(quickAddSelectedPrice) }}</span>
-               </div>
-            </div>
+              <div v-for="(values, attrName) in quickAddMatrix" :key="attrName" class="mb-4">
+                 <p class="text-dark font-oswald tracking-wide text-uppercase mb-2 small fw-bold">
+                   {{ attrName }}: <span class="fw-normal text-sora-primary ms-1">{{ quickAddSelections[attrName] || '' }}</span>
+                 </p>
+                 <div class="d-flex flex-wrap gap-2">
+                   <label v-for="val in values" :key="val" class="attr-chip m-0 cursor-pointer transition-all" :class="{'selected': String(quickAddSelections[attrName]) === String(val)}">
+                     <input type="radio" class="d-none" :value="val" v-model="quickAddSelections[attrName]" @change="quickAddError = false">
+                     <div class="chip-inner px-3 py-2 d-flex flex-column align-items-center justify-content-center text-center shadow-sm">
+                       <span class="fw-bold font-oswald tracking-wide small">{{ val }}</span>
+                     </div>
+                   </label>
+                 </div>
+              </div>
+              
+              <div class="text-danger small fst-italic mt-2 fw-bold bg-danger bg-opacity-10 p-2 rounded" v-if="quickAddError">
+                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng chọn đầy đủ phân loại.
+              </div>
+              
+              <div class="text-danger small fst-italic mt-2 fw-bold bg-danger bg-opacity-10 p-2 rounded" v-else-if="quickAddMatrix && Object.keys(quickAddMatrix).length > 0 && !quickAddSelectedVariant && isQuickAddAllSelected">
+                 <i class="bi bi-x-circle-fill me-1"></i> Phiên bản này đã hết hàng hoặc không tồn tại.
+              </div>
 
-            <div v-for="(values, attrName) in quickAddMatrix" :key="attrName" class="mb-4">
-               <p class="text-dark font-oswald tracking-wide text-uppercase mb-2 small fw-bold">
-                 {{ attrName }}: <span class="fw-normal text-sora-primary ms-1">{{ quickAddSelections[attrName] || '' }}</span>
-               </p>
-               <div class="d-flex flex-wrap gap-2">
-                 <label v-for="val in values" :key="val" class="attr-chip m-0 cursor-pointer transition-all" :class="{'selected': String(quickAddSelections[attrName]) === String(val)}">
-                   <input type="radio" class="d-none" :value="val" v-model="quickAddSelections[attrName]" @change="quickAddError = false">
-                   <div class="chip-inner px-3 py-2 d-flex flex-column align-items-center justify-content-center text-center shadow-sm">
-                     <span class="fw-bold font-oswald tracking-wide small">{{ val }}</span>
-                   </div>
-                 </label>
-               </div>
+              <button @click="confirmQuickAdd" class="btn luxury-btn-solid w-100 py-3 mt-4 font-oswald tracking-widest text-uppercase fw-bold shadow-sm fs-6">
+                 <i class="bi bi-bag-plus-fill me-2"></i> Xác nhận thêm
+              </button>
             </div>
-            
-            <div class="text-danger small fst-italic mt-2 fw-bold bg-danger bg-opacity-10 p-2 rounded" v-if="quickAddError">
-               <i class="bi bi-exclamation-triangle-fill me-1"></i> Vui lòng chọn đầy đủ phân loại.
+            <div v-else class="p-5 text-center">
+               <div class="spinner-border text-sora-primary" role="status"></div>
+               <p class="mt-3 text-muted font-oswald tracking-widest text-uppercase small">Đang nạp dữ liệu...</p>
             </div>
-            
-            <div class="text-danger small fst-italic mt-2 fw-bold bg-danger bg-opacity-10 p-2 rounded" v-else-if="quickAddMatrix && Object.keys(quickAddMatrix).length > 0 && !quickAddSelectedVariant && isQuickAddAllSelected">
-               <i class="bi bi-x-circle-fill me-1"></i> Phiên bản này đã hết hàng hoặc không tồn tại.
-            </div>
-
-            <button @click="confirmQuickAdd" class="btn luxury-btn-solid w-100 py-3 mt-4 font-oswald tracking-widest text-uppercase fw-bold shadow-sm fs-6">
-               <i class="bi bi-bag-plus-fill me-2"></i> Xác nhận thêm
-            </button>
-          </div>
-          <div v-else class="p-5 text-center">
-             <div class="spinner-border text-sora-primary" role="status"></div>
-             <p class="mt-3 text-muted font-oswald tracking-widest text-uppercase small">Đang nạp dữ liệu...</p>
           </div>
         </div>
       </div>
-    </div>
 
-  </div>
-  
-  <div v-else class="vh-100 d-flex justify-content-center align-items-center bg-light-custom">
-    <div class="spinner-grow text-gold" style="width: 3rem; height: 3rem;" role="status"></div>
+    </div>
   </div>
 </template>
 
@@ -370,6 +452,7 @@ const swiperModules = [Navigation];
 const route = useRoute();
 const router = useRouter();
 const combo = ref(null);
+const isLoading = ref(true);
 
 const itemMatrices = ref({}); 
 const userSelections = ref({}); 
@@ -704,6 +787,7 @@ const fetchRelatedProducts = async () => {
 };
 
 const fetchDetail = async (slug) => {
+  isLoading.value = true;
   combo.value = null; 
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/client/combos/${slug}`);
@@ -748,9 +832,8 @@ const fetchDetail = async (slug) => {
     fetchRelatedProducts();
     
   } catch (error) {
-    Swal.fire({
-      toast: true, position: 'top-end', icon: 'error', title: 'Combo không tồn tại hoặc đã hết hạn!', showConfirmButton: false, timer: 3000
-    }).then(() => router.push({name: 'client-combos'}).catch(()=>{}));
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -1025,4 +1108,22 @@ onUnmounted(() => {
     color: white !important;
     border-color: #9f273b !important;
 }
+
+/* HIỆU ỨNG SKELETON */
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.shimmer { 
+    background: #f6f7f8; 
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); 
+    background-repeat: no-repeat; 
+    background-size: 800px 100%; 
+    animation: placeholderShimmer 1.5s linear infinite forwards; 
+}
+@keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+
+.skeleton-box { background-color: #eee; border-radius: 4px; }
+.skeleton-text { height: 14px; border-radius: 4px; }
+.skeleton-title { height: 24px; border-radius: 4px; }
+.skeleton-card { pointer-events: none; }
 </style>

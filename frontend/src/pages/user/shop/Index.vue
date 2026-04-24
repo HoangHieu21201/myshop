@@ -22,11 +22,17 @@
           </div>
         </div>
 
-        <div v-if="isLoadingCategories" class="d-flex justify-content-center py-4">
-          <div class="spinner-border text-white" style="width: 2rem; height: 2rem; border-width: 0.1em;" role="status"></div>
+        <!-- SKELETON: CATEGORY -->
+        <div v-if="isLoadingCategories" class="row justify-content-center row-cols-2 row-cols-sm-3 row-cols-md-5 g-2 g-md-3 mb-3 pb-2 mx-auto fade-in" style="max-width: 900px;">
+          <div class="col" v-for="i in 5" :key="'cat-skel-'+i">
+            <div class="d-flex flex-column align-items-center">
+              <div class="skeleton-box rounded-circle shimmer mb-2" style="width: 85px; height: 85px; background-color: rgba(255,255,255,0.2);"></div>
+              <div class="skeleton-box skeleton-text shimmer w-75" style="height: 14px; background-color: rgba(255,255,255,0.2);"></div>
+            </div>
+          </div>
         </div>
 
-        <div v-else class="row justify-content-center row-cols-2 row-cols-sm-3 row-cols-md-5 g-2 g-md-3 mb-3 pb-2 mx-auto" style="max-width: 900px;">
+        <div v-else class="row justify-content-center row-cols-2 row-cols-sm-3 row-cols-md-5 g-2 g-md-3 mb-3 pb-2 mx-auto fade-in" style="max-width: 900px;">
           <div class="col" v-for="cat in categories.slice(0, 5)" :key="cat.id">
             <div class="category-circle-item text-center cursor-pointer group d-flex flex-column align-items-center" @click="filterByCategory(cat.slug)">
               <div class="circle-img-wrapper rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center mb-2 transition-transform duration-400 group-hover-scale" style="width: 85px; height: 85px; padding: 2px;">
@@ -67,20 +73,31 @@
             <div class="d-flex flex-wrap gap-2">
               <div 
                 v-for="(color, index) in colorOptions" :key="index"
-                class="color-filter-circle cursor-pointer position-relative shadow-sm"
+                class="color-filter-circle cursor-pointer position-relative shadow-sm border"
                 :class="{'selected': selectedColors.includes(color)}"
                 :style="{ backgroundColor: getColorCode(color) }"
                 @click="toggleColor(color)"
                 :title="color"
               >
-                <i v-if="selectedColors.includes(color)" class="bi bi-check position-absolute text-white" style="top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);"></i>
+                <!-- Đổi màu dấu tick dựa trên độ sáng của nền để dễ nhìn -->
+                <i v-if="selectedColors.includes(color)" class="bi bi-check position-absolute fw-bold" :class="isLightColor(color) ? 'text-dark' : 'text-white'" style="top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.3rem;"></i>
               </div>
             </div>
           </div>
 
-          <!-- BỘ LỌC THUỘC TÍNH ĐỘNG KHÁC (Chỉ lấy Chất liệu) -->
-          <div v-if="isLoadingAttributes" class="d-flex justify-content-center mb-5">
-             <div class="spinner-grow spinner-grow-sm text-secondary" role="status"></div>
+          <!-- BỘ LỌC THUỘC TÍNH ĐỘNG KHÁC (Size, Chất liệu, ...) -->
+          <div v-if="isLoadingAttributes" class="filter-widget mb-5 fade-in">
+            <div v-for="i in 2" :key="'attr-skel-'+i" class="mb-5">
+              <div class="skeleton-box skeleton-text shimmer mb-4 w-75" style="height: 24px;"></div>
+              <ul class="list-unstyled mb-0 filter-list">
+                <li v-for="j in 3" :key="'li-'+j" class="mb-3">
+                  <div class="d-flex align-items-center">
+                    <div class="skeleton-box rounded-circle shimmer me-3" style="width: 18px; height: 18px;"></div>
+                    <div class="skeleton-box skeleton-text shimmer w-50"></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
           <template v-else>
             <div class="filter-widget mb-5" v-for="attr in dynamicAttributes" :key="attr.id">
@@ -106,7 +123,9 @@
           <div class="shop-top-bar d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom sora-border-light">
             <div class="result-count text-muted mb-3 mb-md-0" style="font-size: 1.2rem;">
               <span v-if="!isLoadingProducts">Hiển thị 1–{{ allProducts.length }} của {{ pagination.total }} kết quả</span>
-              <span v-else>Đang tải dữ liệu...</span>
+              <span v-else>
+                 <div class="skeleton-box skeleton-text shimmer" style="width: 200px; height: 18px;"></div>
+              </span>
             </div>
             
             <div class="d-flex align-items-center gap-4">
@@ -123,11 +142,19 @@
           </div>
 
           <!-- LƯỚI SẢN PHẨM -->
-          <div v-if="isLoadingProducts" class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
-            <div class="spinner-border" style="color: var(--sora-primary); width: 2.5rem; height: 2.5rem; border-width: 0.1em;" role="status"></div>
+          <!-- SKELETON: PRODUCTS GRID -->
+          <div v-if="isLoadingProducts" class="product-grid fade-in">
+             <div v-for="i in 8" :key="'prod-skel-'+i" class="sora-luxury-card skeleton-card">
+                <div class="sora-card-image skeleton-box shimmer" style="aspect-ratio: 1/1;"></div>
+                <div class="sora-card-info bg-white d-flex flex-column justify-content-center align-items-center">
+                    <div class="skeleton-box skeleton-title shimmer mb-3" style="width: 80%; height: 20px;"></div>
+                    <div class="skeleton-box skeleton-text shimmer mb-3" style="width: 50%; height: 12px;"></div>
+                    <div class="skeleton-box skeleton-text shimmer mt-auto" style="width: 60%; height: 18px;"></div>
+                </div>
+             </div>
           </div>
 
-          <div v-else class="product-grid">
+          <div v-else class="product-grid fade-in">
             <template v-for="product in allProducts" :key="product.id">
               <div class="sora-luxury-card" @click="goToProductDetail(product.slug)">
                   <div class="sora-card-image sora-img-container" :class="{'has-hover-image': hasHoverImage(product)}">
@@ -161,7 +188,7 @@
           </div>
 
           <!-- Empty State -->
-          <div v-if="allProducts.length === 0 && !isLoadingProducts" class="text-center py-5 my-5 bg-light sora-border-light border" style="border-radius: 12px;">
+          <div v-if="allProducts.length === 0 && !isLoadingProducts" class="text-center py-5 my-5 bg-light sora-border-light border fade-in" style="border-radius: 12px;">
             <i class="bi bi-gem fs-1 mb-3" style="color: var(--sora-secondary);"></i>
             <p class="text-dark playfair-font fs-4 mb-2">Không tìm thấy kiệt tác nào</p>
             <p class="text-muted mb-4 fw-light">Vui lòng thử thay đổi bộ lọc hoặc tìm kiếm khác.</p>
@@ -169,7 +196,7 @@
           </div>
 
           <!-- PHÂN TRANG -->
-          <div v-if="pagination.last_page > 1" class="d-flex justify-content-center align-items-center mt-5 pt-5 border-top sora-border-light">
+          <div v-if="pagination.last_page > 1" class="d-flex justify-content-center align-items-center mt-5 pt-5 border-top sora-border-light fade-in">
             <nav aria-label="Page navigation">
               <ul class="pagination sora-custom-pagination gap-2 mb-0">
                 <li class="page-item" :class="{ 'disabled': Number(pagination.current_page) === 1 }">
@@ -302,13 +329,13 @@ const isLoadingAttributes = ref(true);
 const isPageLoading = ref(true);
 
 const categories = shallowRef([]);
-const dynamicAttributes = ref([]); // Đổi thành ref để cập nhật trực tiếp từ biến thể
+const dynamicAttributes = ref([]); 
 const allProducts = shallowRef([]);
 const pagination = ref({ current_page: 1, last_page: 1, total: 0 });
 
 const selectedAttributes = ref([]); 
-const colorOptions = ref([]); // State lưu các màu hiện có lấy từ biến thể
-const selectedColors = ref([]); // State lưu các màu đang chọn
+const colorOptions = ref([]); 
+const selectedColors = ref([]); 
 const filters = reactive({ sort: 'recommended', categories: '' });
 
 const getToken = () => {
@@ -343,33 +370,43 @@ const isColorAttribute = (attrName) => {
   return name.includes('màu') || name.includes('color');
 };
 
-const isMaterialAttribute = (attrName) => {
-  const name = attrName.toLowerCase();
-  return name.includes('chất liệu') || name.includes('material');
-};
-
+// Cập nhật bộ màu sắc Dictionary siêu khổng lồ bao quát mọi ngôn từ Admin có thể nhập
 const getColorCode = (colorName) => {
+  if(!colorName) return '#e0e0e0';
   const map = {
-    'đỏ': '#cc1e2e', 'red': '#cc1e2e',
-    'xanh': '#2e5b9f', 'blue': '#2e5b9f', 'xanh dương': '#2e5b9f',
-    'vàng': '#e7ce7d', 'gold': '#e7ce7d', 'vàng 18k': '#d4af37',
-    'trắng': '#fcfcfc', 'white': '#fcfcfc', 'vàng trắng': '#f4f4f4',
-    'đen': '#2c2c2c', 'black': '#2c2c2c',
-    'hồng': '#f4a4b4', 'pink': '#f4a4b4', 'vàng hồng': '#b76e79',
-    'bạc': '#c0c0c0', 'silver': '#c0c0c0'
+    // Sắc Đỏ
+    'đỏ': '#cc1e2e', 'red': '#cc1e2e', 'đỏ đô': '#8b0000', 'đỏ mận': '#800000', 'đỏ tươi': '#ff0000', 'ruby': '#e0115f',
+    // Sắc Xanh
+    'xanh': '#2e5b9f', 'blue': '#2e5b9f', 'xanh dương': '#007bff', 'xanh biển': '#1e90ff', 'xanh ngọc': '#009981', 'xanh lá': '#28a745', 'green': '#28a745', 'xanh lục': '#228b22', 'emerald': '#50c878',
+    // Sắc Vàng
+    'vàng': '#e7ce7d', 'gold': '#e7ce7d', 'vàng 18k': '#d4af37', 'vàng 24k': '#ffd700', 'vàng chanh': '#fada5e', 'vàng kem': '#fdfd96',
+    // Sắc Trắng / Bạc
+    'trắng': '#ffffff', 'white': '#ffffff', 'vàng trắng': '#f4f4f4', 'bạch kim': '#e5e4e2', 'bạc': '#c0c0c0', 'silver': '#c0c0c0', 'trong suốt': '#f0f8ff',
+    // Sắc Đen / Xám
+    'đen': '#2c2c2c', 'black': '#2c2c2c', 'xám': '#808080', 'gray': '#808080', 'ghi': '#808080',
+    // Sắc Hồng / Tím
+    'hồng': '#f4a4b4', 'pink': '#f4a4b4', 'vàng hồng': '#b76e79', 'rose gold': '#b76e79', 'tím': '#800080', 'purple': '#800080', 'thạch anh tím': '#9966cc',
+    // Sắc Nâu / Cam
+    'nâu': '#8b4513', 'brown': '#8b4513', 'cam': '#fd7e14', 'orange': '#fd7e14'
   };
   return map[colorName.toLowerCase().trim()] || '#e0e0e0'; 
 };
 
-// Hàm trích xuất Màu sắc và Thuộc tính TRỰC TIẾP TỪ BIẾN THỂ (Variants)
+// Hàm kiểm tra màu sáng để hiển thị Icon Check màu ĐEN thay vì trắng
+const isLightColor = (colorName) => {
+  const code = getColorCode(colorName);
+  const lightCodes = ['#ffffff', '#fcfcfc', '#f4f4f4', '#e5e4e2', '#c0c0c0', '#e0e0e0', '#fada5e', '#fdfd96', '#f0f8ff', '#ffb6c1', '#f4a4b4'];
+  return lightCodes.includes(code);
+};
+
+// ĐÃ CẬP NHẬT: Trích xuất Màu sắc và TẤT CẢ THUỘC TÍNH ĐỘNG khác (Size, Kích thước, Loại, Chất liệu...)
 const extractFiltersFromVariants = (products) => {
   const attrsMap = {};
-  const colorsSet = new Set(colorOptions.value); // Giữ lại các màu đã load để tránh mất filter
+  const colorsSet = new Set(colorOptions.value); 
 
   products.forEach(product => {
     if (product.variants && Array.isArray(product.variants)) {
       product.variants.forEach(variant => {
-        // Hỗ trợ cả 2 dạng JSON return attribute_values hoặc attributeValues
         const attrVals = variant.attribute_values || variant.attributeValues || [];
         attrVals.forEach(av => {
           if (av.attribute && av.attribute.name) {
@@ -378,7 +415,8 @@ const extractFiltersFromVariants = (products) => {
 
             if (isColorAttribute(attrName)) {
               colorsSet.add(attrValue);
-            } else if (isMaterialAttribute(attrName)) { // CHỈ LẤY THÊM CHẤT LIỆU
+            } else { 
+              // Trích xuất TẤT CẢ thuộc tính khác thành bộ lọc
               if (!attrsMap[attrName]) {
                 attrsMap[attrName] = { id: av.attribute.id, name: attrName, values: new Set() };
               }
@@ -390,10 +428,8 @@ const extractFiltersFromVariants = (products) => {
     }
   });
 
-  // Cập nhật mảng màu sắc hiển thị
   colorOptions.value = Array.from(colorsSet);
 
-  // Cập nhật mảng thuộc tính động khác hiển thị (lúc này chỉ có chất liệu)
   Object.values(attrsMap).forEach(attr => {
     const existingAttr = dynamicAttributes.value.find(a => a.name === attr.name);
     if (existingAttr) {
@@ -414,7 +450,6 @@ const extractFiltersFromVariants = (products) => {
   isLoadingAttributes.value = false;
 };
 
-// Hàm bật/tắt bộ lọc màu sắc
 const toggleColor = (color) => {
   const index = selectedColors.value.indexOf(color);
   if (index > -1) {
@@ -450,12 +485,10 @@ const fetchProducts = async (page = 1) => {
     const queryPayload = { page, sort: filters.sort };
     if (filters.categories) queryPayload.categories = filters.categories;
     
-    // Gửi tham số màu sắc
     if (selectedColors.value.length > 0) {
       queryPayload.color = selectedColors.value.join(',');
     }
 
-    // Gửi tham số thuộc tính
     if (selectedAttributes.value.length > 0) {
       queryPayload.attribute_values = selectedAttributes.value.join(',');
     }
@@ -468,7 +501,6 @@ const fetchProducts = async (page = 1) => {
       allProducts.value = data.data.data; 
       pagination.value = { current_page: data.data.current_page, last_page: data.data.last_page, total: data.data.total };
       
-      // GỌI HÀM TRÍCH XUẤT SAU KHI CÓ DỮ LIỆU SẢN PHẨM MỚI
       extractFiltersFromVariants(allProducts.value);
     }
   } catch (e) {
@@ -683,7 +715,6 @@ const confirmAddToCart = async () => {
 };
 
 onMounted(() => { 
-  // Loại bỏ fetch API rời, tập trung render từ dữ liệu variant
   Promise.all([fetchCategories(), fetchProducts(1)]).then(() => isPageLoading.value = false); 
 });
 </script>
@@ -794,4 +825,22 @@ onMounted(() => {
 .variant-select-btn:hover { border-color: #9f273b; color: #9f273b; }
 .variant-select-btn.selected { border-color: #9f273b; color: #9f273b; font-weight: 700; background-color: #fdf5f6; box-shadow: inset 0 0 0 1px #9f273b; }
 .sora-discount-tag { background-color: #cc1e2e; color: white; font-weight: bold; border-radius: 2px; }
+
+/* HIỆU ỨNG SKELETON */
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.shimmer {
+    background: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation: placeholderShimmer 1.5s linear infinite forwards;
+}
+@keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+
+.skeleton-box { background-color: #eee; border-radius: 4px; }
+.skeleton-text { height: 14px; border-radius: 4px; }
+.skeleton-title { height: 24px; border-radius: 4px; }
+.skeleton-card { pointer-events: none; border-color: #eee !important; box-shadow: none !important; }
 </style>

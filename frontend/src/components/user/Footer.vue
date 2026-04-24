@@ -175,15 +175,15 @@ const subscribeNewsletter = () => {
     }, 1000);
 };
 </script>
-
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
-
+<style>
 :root {
   --primary: #9f273b;
   --secondary: #e7ce7d;
   --accent: #cc1e2e;
 }
+</style>
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
 .text-primary-custom { color: #9f273b !important; }
 .text-secondary-custom { color: #e7ce7d !important; }
