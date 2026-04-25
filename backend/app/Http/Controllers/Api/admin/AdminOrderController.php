@@ -217,8 +217,7 @@ class AdminOrderController extends Controller
                     'changed_by_type' => 'admin'
                 ]);
 
-                // KHI ADMIN CHUYỂN SANG TRẠNG THÁI HỦY HOẶC HOÀN TRẢ
-                // Thêm điều kiện: Chỉ restore nếu trạng thái cũ chưa phải là Hủy/Hoàn trả
+                // if dh chuyển trạng thái từ Đang giao / Đã giao sang Hủy hoặc Trả hàng => Hoàn lại
                 if (in_array($newStatus, ['cancelled', 'returned']) && !in_array($oldStatus, ['cancelled', 'returned'])) {
                     $this->restoreOrderResources($order);
                 }
@@ -269,7 +268,6 @@ class AdminOrderController extends Controller
                     $oldStatus = $order->status;
                     $order->status = 'returned'; 
                     
-                    // FIX LỖI: Khi Kế toán ép trạng thái sang Hoàn trả, phải gọi hàm Hoàn lại lượt dùng Hạng & Tồn kho
                     if (!in_array($oldStatus, ['cancelled', 'returned'])) {
                         $this->restoreOrderResources($order);
                     }
@@ -328,16 +326,19 @@ class AdminOrderController extends Controller
         return response()->json(['success' => true, 'message' => 'Đã đưa đơn hàng vào thùng rác']);
     }
 
+    //
     protected function checkAndUpgradeUserTier($userId)
     {
         $user = User::find($userId);
         if (!$user) return;
 
+        // tính tổng chi tiêu và số đơn đã hoàn thành của user
         $totalSpent = Order::where('user_id', $userId)
                            ->where('status', 'delivered')
                            ->where('payment_status', 'paid')
                            ->sum('total_amount');
 
+        // số đơn hàng đã hoàn thànhh
         $totalOrders = Order::where('user_id', $userId)
                             ->where('status', 'delivered')
                             ->where('payment_status', 'paid')
