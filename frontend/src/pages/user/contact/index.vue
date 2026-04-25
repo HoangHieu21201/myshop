@@ -55,7 +55,7 @@
               </ul>
               
               <!-- Nút Liên Hệ Trực Tiếp Cố Định Ở Khối Trái -->
-              <div class="mt-2 mb-4 pt-4 border-top border-accent">
+              <!-- <div class="mt-2 mb-4 pt-4 border-top border-accent">
                 <h4 class="h6 font-serif text-dark mb-3 fw-bold">Trợ Giúp Tức Thời</h4>
                 <p class="text-secondary small fw-light mb-3">Kết nối trực tiếp với chuyên viên SORA để nhận tư vấn ngay lập tức.</p>
                 <div class="d-flex gap-2">
@@ -66,7 +66,7 @@
                     <i class="fa-brands fa-facebook-messenger me-2 fs-5"></i> Msg
                   </a>
                 </div>
-              </div>
+              </div> -->
 
               <!-- Đoạn cam kết -->
               <div class="p-3 bg-white border border-light text-center mt-auto">

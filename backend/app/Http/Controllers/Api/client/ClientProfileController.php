@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api\client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ClientProfileUpdateRequest;
+use App\Http\Requests\ClientPasswordUpdateRequest;
+use App\Http\Requests\ClientAddressStoreRequest;
+use App\Http\Requests\ClientAddressUpdateRequest;
 use App\Models\User; 
 use App\Models\UserAddress; // BẮT BUỘC IMPORT MODEL NÀY
 use App\Models\MembershipTier;
@@ -42,19 +46,12 @@ class ClientProfileController extends Controller
         return response()->json(['status' => true, 'data' => $userData]);
     }
 
-    public function update(Request $request)
+    public function update(ClientProfileUpdateRequest $request)
     {
         $user = User::find(Auth::guard('sanctum')->id());
         if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
 
-        $request->validate([
-            'fullName' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'birthday' => 'nullable|date',
-            'gender' => 'nullable|in:Nam,Nữ,Khác',
-            'avatar' => 'nullable|image|max:5120', 
-        ]);
-
+        // Form request đã validate và chuẩn hóa số điện thoại rồi
         $user->fullName = $request->fullName;
         if ($request->has('phone')) $user->phone = $request->phone;
         if ($request->has('birthday')) $user->birthday = $request->birthday;
@@ -82,16 +79,12 @@ class ClientProfileController extends Controller
         ]);
     }
 
-    public function updatePassword(Request $request)
+    public function updatePassword(ClientPasswordUpdateRequest $request)
     {
         $user = User::find(Auth::guard('sanctum')->id());
         if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
 
-        $request->validate([
-            'current_password' => 'required',
-            'password' => 'required|string|min:6|confirmed', 
-        ]);
-
+        // Form request đã validate rồi
         if (empty($user->password) || !Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'status' => false,
@@ -125,21 +118,12 @@ class ClientProfileController extends Controller
         return response()->json(['status' => true, 'data' => $addresses]);
     }
 
-    public function storeAddress(Request $request)
+    public function storeAddress(ClientAddressStoreRequest $request)
     {
         $user = Auth::guard('sanctum')->user();
         if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
 
-        $request->validate([
-            'customer_name' => 'required|string|max:150',
-            'customer_phone' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
-            'district' => 'required|string|max:100',
-            'ward' => 'required|string|max:100',
-            'shipping_address' => 'required|string|max:255',
-            'is_default' => 'boolean'
-        ]);
-
+        // Form request đã validate và chuẩn hóa số điện thoại rồi
         $isDefault = $request->is_default ? 1 : 0;
 
         // Nếu là địa chỉ đầu tiên của user, ép nó thành mặc định luôn
@@ -166,7 +150,7 @@ class ClientProfileController extends Controller
         return response()->json(['status' => true, 'message' => 'Thêm địa chỉ mới thành công!', 'data' => $address]);
     }
 
-    public function updateAddress(Request $request, $id)
+    public function updateAddress(ClientAddressUpdateRequest $request, $id)
     {
         $user = Auth::guard('sanctum')->user();
         if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
@@ -174,16 +158,7 @@ class ClientProfileController extends Controller
         $address = UserAddress::where('user_id', $user->id)->where('id', $id)->first();
         if (!$address) return response()->json(['status' => false, 'message' => 'Không tìm thấy địa chỉ'], 404);
 
-        $request->validate([
-            'customer_name' => 'required|string|max:150',
-            'customer_phone' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
-            'district' => 'required|string|max:100',
-            'ward' => 'required|string|max:100',
-            'shipping_address' => 'required|string|max:255',
-            'is_default' => 'boolean'
-        ]);
-
+        // Form request đã validate và chuẩn hóa số điện thoại rồi
         $isDefault = $request->is_default ? 1 : 0;
 
         if ($isDefault == 1 && $address->is_default == 0) {
